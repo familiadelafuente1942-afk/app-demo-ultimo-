@@ -4492,6 +4492,13 @@ function MotorVentas() {
     mail: "",
     dolor: ""
   });
+  const [busqueda, setBusqueda] = useState({
+    zona: "",
+    perfil: "estudios de arquitectura"
+  });
+  const [candidatos, setCandidatos] = useState([]);
+  const [buscando, setBuscando] = useState(false);
+  const [avisoBusq, setAvisoBusq] = useState("");
   const [apiKey, setApiKey] = useState(() => {
     try {
       return localStorage.getItem("demo_api_key") || "";
@@ -4500,6 +4507,12 @@ function MotorVentas() {
     }
   });
   const iaLista = apiKey.trim().startsWith("sk-ant-");
+  const idioma = typeof window !== "undefined" && window.idiomaActual ? window.idiomaActual() : "es";
+  const NOMBRE_IDIOMA = {
+    es: "español rioplatense (voseo)",
+    en: "English",
+    pt: "português do Brasil"
+  }[idioma] || "español rioplatense (voseo)";
   useEffect(() => {
     try {
       localStorage.setItem("prospectos", JSON.stringify(prospectos));
@@ -4576,7 +4589,7 @@ QUIÉN LO HIZO: arquitectos que dirigen obra todos los días, no una software fa
 `.trim();
   const REGLAS = `
 Sos el asistente comercial de una empresa argentina que vende este sistema.
-Escribís en español rioplatense (voseo), cordial, directo y breve. Nada de floritura comercial.
+ESCRIBÍS SIEMPRE EN ${NOMBRE_IDIOMA}. Tono cordial, directo y breve. Nada de floritura comercial.
 
 ${PRODUCTO}
 
@@ -4654,6 +4667,105 @@ REGLAS QUE NO PODÉS ROMPER:
     }
     setGenerando(false);
   }
+
+  // ── búsqueda de posibles clientes con IA + web ──
+  async function buscarClientes() {
+    if (!iaLista) {
+      setAvisoBusq("Falta la clave de IA. Cargala en la demo con el botón 🔑.");
+      return;
+    }
+    if (!busqueda.zona.trim()) {
+      setAvisoBusq("Escribí una zona o ciudad para buscar.");
+      return;
+    }
+    setBuscando(true);
+    setAvisoBusq("");
+    setCandidatos([]);
+    const prompt = `Buscá en internet ${busqueda.perfil} que estén trabajando en ${busqueda.zona}.\n` + `Quiero empresas reales, con presencia web verificable. Priorizá las que se vea que tienen ` + `varias obras en curso o proyectos publicados recientemente.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown, con esta forma exacta:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":""}]\n\n` + `- "que_hace": una línea sobre a qué se dedican.\n` + `- "senal": por qué son un buen candidato (ej: "publicaron 3 obras nuevas este año").\n` + `- "web": la URL que encontraste.\n` + `- "contacto": el mail o formulario SI figura públicamente; si no lo encontrás, poné "" (vacío). NUNCA lo inventes.\n` + `Máximo 8 resultados. Si no encontrás nada real, devolvé [].`;
+    try {
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 2500,
+          system: "Sos un asistente de prospección comercial. Solo reportás empresas que encontraste " + "de verdad en la búsqueda web. Nunca inventás nombres, webs ni mails. " + "Si un dato no lo encontraste, lo dejás vacío.",
+          messages: [{
+            role: "user",
+            content: [{
+              type: "text",
+              text: prompt
+            }]
+          }],
+          tools: [{
+            type: "web_search_20250305",
+            name: "web_search"
+          }]
+        })
+      });
+      if (!r.ok) throw new Error("api");
+      const data = await r.json();
+      const texto = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+      const m = texto.match(/\[[\s\S]*\]/);
+      if (!m) throw new Error("sin json");
+      const lista = JSON.parse(m[0]);
+      if (!Array.isArray(lista) || lista.length === 0) {
+        setAvisoBusq("No encontró resultados con esos términos. Probá con otra zona o perfil.");
+      } else {
+        setCandidatos(lista);
+      }
+    } catch (e) {
+      setAvisoBusq("No se pudo completar la búsqueda. Revisá la conexión o probá de nuevo.");
+    }
+    setBuscando(false);
+  }
+  function sumarCandidato(cand) {
+    const p = {
+      id: Date.now() + Math.random(),
+      nombre: "",
+      empresa: cand.empresa || "",
+      rol: busqueda.perfil.includes("arquitect") ? "estudio" : busqueda.perfil.includes("desarroll") ? "desarrollador" : "constructora",
+      obras: "",
+      mail: cand.contacto || "",
+      dolor: cand.senal || "",
+      web: cand.web || "",
+      estado: "nuevo",
+      alta: hoyCorto(),
+      notas: []
+    };
+    setProspectos(prev => [p, ...prev]);
+    setCandidatos(prev => prev.filter(x => x !== cand));
+    setUltimoAviso(`${p.empresa} agregado a prospectos`);
+  }
+
+  // ── la base: exportar e importar ──
+  function exportarCSV() {
+    if (!prospectos.length) {
+      setUltimoAviso("No hay prospectos para exportar.");
+      return;
+    }
+    const cab = ["empresa", "nombre", "rol", "obras", "mail", "web", "estado", "alta", "dolor"];
+    const esc = v => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+    const filas = prospectos.map(p => cab.map(k => esc(p[k])).join(","));
+    const csv = "\uFEFF" + cab.join(",") + "\n" + filas.join("\n");
+    const blob = new Blob([csv], {
+      type: "text/csv;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "prospectos.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    setUltimoAviso(`${prospectos.length} prospectos exportados`);
+  }
   function copiar(txt) {
     try {
       navigator.clipboard.writeText(txt);
@@ -4718,7 +4830,7 @@ REGLAS QUE NO PODÉS ROMPER:
       fontSize: 14,
       marginRight: 6
     }
-  }, "Motor de ventas"), [["prospectos", `Prospectos${prospectos.length ? " · " + prospectos.length : ""}`], ["nuevo", "+ Nuevo prospecto"], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+  }, "Motor de ventas"), [["prospectos", `Prospectos${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["nuevo", "+ Nuevo prospecto"], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
     key: id,
     onClick: () => {
       setVista(id);
@@ -4921,7 +5033,224 @@ REGLAS QUE NO PODÉS ROMPER:
       minHeight: 44,
       fontFamily: "inherit"
     }
-  }, "Guardar prospecto"))), vista === "guia" && /*#__PURE__*/React.createElement(GuiaVentas, null), vista === "prospectos" && /*#__PURE__*/React.createElement("div", {
+  }, "Guardar prospecto"))), vista === "buscar" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 780
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      padding: "20px 22px",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".14em",
+      textTransform: "uppercase",
+      color: BRASS
+    }
+  }, "Prospección")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 18,
+      fontWeight: 800,
+      color: NAVY,
+      marginBottom: 4
+    }
+  }, "Buscar posibles clientes"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: T.sub,
+      lineHeight: 1.55,
+      marginBottom: 14
+    }
+  }, "La IA busca en internet empresas del rubro en la zona que le digas. Trae los datos que están publicados: nombre, web y contacto si figura. Los mails personales casi nunca son públicos, así que muchas veces vas a tener que entrar por el formulario del sitio."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      fontWeight: 700,
+      letterSpacing: ".1em",
+      textTransform: "uppercase",
+      color: T.muted,
+      marginBottom: 6
+    }
+  }, "A quién buscar"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      flexWrap: "wrap",
+      marginBottom: 12
+    }
+  }, ["estudios de arquitectura", "constructoras", "desarrolladoras inmobiliarias"].map(r => /*#__PURE__*/React.createElement("button", {
+    key: r,
+    onClick: () => setBusqueda({
+      ...busqueda,
+      perfil: r
+    }),
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      padding: "9px 13px",
+      borderRadius: 8,
+      border: `1px solid ${busqueda.perfil === r ? NAVY : T.border}`,
+      background: busqueda.perfil === r ? NAVY : "#fff",
+      color: busqueda.perfil === r ? "#fff" : T.sub,
+      cursor: "pointer",
+      minHeight: 38,
+      fontFamily: "inherit"
+    }
+  }, r))), /*#__PURE__*/React.createElement("input", {
+    className: "vinput",
+    placeholder: "Zona o ciudad (ej: Zona Norte, GBA · Córdoba capital · Montevideo)",
+    value: busqueda.zona,
+    onChange: e => setBusqueda({
+      ...busqueda,
+      zona: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: buscarClientes,
+    disabled: buscando,
+    style: {
+      width: "100%",
+      background: buscando ? "#EEF1F5" : BRASS,
+      color: buscando ? T.muted : "#fff",
+      border: "none",
+      borderRadius: 9,
+      padding: "13px",
+      fontSize: 13,
+      fontWeight: 700,
+      cursor: buscando ? "wait" : "pointer",
+      minHeight: 46,
+      fontFamily: "inherit",
+      marginTop: 4
+    }
+  }, buscando ? "⏳ Buscando en internet…" : "🔎 Buscar con IA"), avisoBusq && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12,
+      background: "#FBF2E3",
+      border: "1px solid #EBDCC0",
+      borderRadius: 9,
+      padding: "10px 12px",
+      fontSize: 12.5,
+      color: "#9A6B1E",
+      lineHeight: 1.5
+    }
+  }, avisoBusq)), candidatos.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "13px 18px",
+      borderBottom: `1px solid ${T.border}`
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 14,
+      color: NAVY
+    }
+  }, candidatos.length, " candidatos encontrados"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: T.muted,
+      marginTop: 2
+    }
+  }, "Verificá los datos antes de contactar: la IA busca, pero no garantiza que todo esté vigente.")), candidatos.map((cd, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      padding: "14px 18px",
+      borderBottom: `1px solid ${T.border}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 10,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 180
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 14,
+      color: NAVY
+    }
+  }, cd.empresa), cd.ciudad && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: T.muted
+    }
+  }, " · ", cd.ciudad), cd.que_hace && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: T.sub,
+      marginTop: 3,
+      lineHeight: 1.5
+    }
+  }, cd.que_hace), cd.senal && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: BRASS,
+      fontWeight: 700,
+      marginTop: 4
+    }
+  }, "▸ ", cd.senal), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 12,
+      marginTop: 6,
+      flexWrap: "wrap"
+    }
+  }, cd.web && /*#__PURE__*/React.createElement("a", {
+    href: cd.web,
+    target: "_blank",
+    rel: "noreferrer",
+    style: {
+      fontSize: 11.5,
+      color: "#3B6CA8",
+      fontWeight: 700
+    }
+  }, "Ver sitio ↗"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11.5,
+      color: cd.contacto ? T.ok : T.muted,
+      fontWeight: 700
+    }
+  }, cd.contacto ? "✉ " + cd.contacto : "sin contacto público"))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => sumarCandidato(cd),
+    style: {
+      background: NAVY,
+      color: "#fff",
+      border: "none",
+      borderRadius: 8,
+      padding: "10px 15px",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 40,
+      fontFamily: "inherit",
+      flexShrink: 0
+    }
+  }, "+ Agregar")))))), vista === "guia" && /*#__PURE__*/React.createElement(GuiaVentas, null), vista === "prospectos" && /*#__PURE__*/React.createElement("div", {
     className: "vcol"
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -4942,7 +5271,21 @@ REGLAS QUE NO PODÉS ROMPER:
       textTransform: "uppercase",
       color: BRASS
     }
-  }, "Embudo"), /*#__PURE__*/React.createElement("div", {
+  }, "Embudo"), /*#__PURE__*/React.createElement("button", {
+    onClick: exportarCSV,
+    style: {
+      float: "right",
+      background: "#fff",
+      border: `1px solid ${T.border}`,
+      color: T.sub,
+      borderRadius: 7,
+      padding: "5px 10px",
+      fontSize: 10.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      fontFamily: "inherit"
+    }
+  }, "↓ CSV"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 5,
@@ -5809,6 +6152,99 @@ window.DICC = {
   "📄 Descargar PDF": ["📄 Download PDF", "📄 Baixar PDF"],
   "Generando…": ["Generating…", "Gerando…"],
   "Cerrar": ["Close", "Fechar"],
+
+
+  // ── motor de ventas ──
+  "Motor de ventas": ["Sales engine", "Motor de vendas"],
+  "Demo del sistema": ["System demo", "Demo do sistema"],
+  "Prospectos": ["Prospects", "Prospects"],
+  "🔎 Buscar clientes": ["🔎 Find clients", "🔎 Buscar clientes"],
+  "+ Nuevo prospecto": ["+ New prospect", "+ Novo prospect"],
+  "Guía de ventas": ["Sales playbook", "Guia de vendas"],
+  "Cargá la clave en la demo": ["Add the key in the demo", "Carregue a chave na demo"],
+  "Embudo": ["Funnel", "Funil"],
+  "nuevo": ["new", "novo"],
+  "contactado": ["contacted", "contatado"],
+  "reunión": ["meeting", "reunião"],
+  "propuesta": ["proposal", "proposta"],
+  "cerrado": ["closed", "fechado"],
+  "perdido": ["lost", "perdido"],
+  "Alta": ["New entry", "Cadastro"],
+  "Nuevo prospecto": ["New prospect", "Novo prospect"],
+  "Nombre de la persona": ["Person's name", "Nome da pessoa"],
+  "Empresa o estudio": ["Company or firm", "Empresa ou escritório"],
+  "Rol": ["Role", "Papel"],
+  "constructora": ["builder", "construtora"],
+  "estudio": ["design firm", "escritório"],
+  "desarrollador": ["developer", "incorporadora"],
+  "capataz": ["site foreman", "encarregado"],
+  "Cuántas obras activas maneja": ["How many active sites they run", "Quantas obras ativas administra"],
+  "Mail": ["Email", "E-mail"],
+  "Qué le duele hoy (lo que te contó en la charla)": ["What hurts them today (what they told you)", "O que dói hoje (o que ele te contou)"],
+  "Guardar prospecto": ["Save prospect", "Salvar prospect"],
+  "Todavía no cargaste prospectos. Tocá": ["You haven't added prospects yet. Tap", "Você ainda não cadastrou prospects. Toque"],
+  "y empezá por el primero que tengas en la cabeza.": ["and start with the first one that comes to mind.", "e comece pelo primeiro que vier à cabeça."],
+  "Elegí un prospecto de la izquierda y la IA te escribe el mail, te prepara la reunión o te ayuda a responder una objeción, usando lo que sabés de él.":
+    ["Pick a prospect on the left and the AI writes the email, preps the meeting or helps you answer an objection, using what you know about them.",
+     "Escolha um prospect à esquerda e a IA escreve o e-mail, prepara a reunião ou ajuda a responder uma objeção, usando o que você sabe dele."],
+  "Borrar": ["Delete", "Excluir"],
+  "Lo que le duele": ["What hurts them", "O que dói nele"],
+  "Qué querés que haga la IA": ["What do you want the AI to do", "O que você quer que a IA faça"],
+  "✉️ Mail de presentación": ["✉️ Intro email", "✉️ E-mail de apresentação"],
+  "Primer contacto en frío": ["Cold first contact", "Primeiro contato frio"],
+  "↻ Mail de seguimiento": ["↻ Follow-up email", "↻ E-mail de follow-up"],
+  "Si no contestó": ["If they didn't reply", "Se não respondeu"],
+  "🗓 Preparar la reunión": ["🗓 Prep the meeting", "🗓 Preparar a reunião"],
+  "Qué mostrarle y en qué orden": ["What to show and in what order", "O que mostrar e em que ordem"],
+  "⚖ Responder una objeción": ["⚖ Answer an objection", "⚖ Responder uma objeção"],
+  "📄 Armar la propuesta": ["📄 Draft the proposal", "📄 Montar a proposta"],
+  "Texto para mandar por mail": ["Text to send by email", "Texto para enviar por e-mail"],
+  "La IA está escribiendo": ["The AI is writing", "A IA está escrevendo"],
+  "Borrador generado": ["Draft generated", "Rascunho gerado"],
+  "⏳ Un momento…": ["⏳ One moment…", "⏳ Um momento…"],
+  "Copiar": ["Copy", "Copiar"],
+  "Abrir en Mail": ["Open in Mail", "Abrir no e-mail"],
+  "Descartar": ["Discard", "Descartar"],
+  "Copiado al portapapeles": ["Copied to clipboard", "Copiado para a área de transferência"],
+  "No se pudo conectar con la IA. Probá de nuevo.": ["Couldn't reach the AI. Try again.", "Não foi possível conectar com a IA. Tente de novo."],
+
+  // ── prospección ──
+  "Prospección": ["Prospecting", "Prospecção"],
+  "Buscar posibles clientes": ["Find potential clients", "Buscar possíveis clientes"],
+  "La IA busca en internet empresas del rubro en la zona que le digas. Trae los datos que están publicados: nombre, web y contacto si figura. Los mails personales casi nunca son públicos, así que muchas veces vas a tener que entrar por el formulario del sitio.":
+    ["The AI searches the web for companies in your field, in the area you name. It brings back what's published: name, website and contact if listed. Personal emails are rarely public, so you'll often have to go through the site's contact form.",
+     "A IA busca na internet empresas do ramo na região que você indicar. Traz o que está publicado: nome, site e contato se houver. E-mails pessoais quase nunca são públicos, então muitas vezes você terá que entrar pelo formulário do site."],
+  "A quién buscar": ["Who to look for", "Quem procurar"],
+  "estudios de arquitectura": ["architecture firms", "escritórios de arquitetura"],
+  "constructoras": ["construction companies", "construtoras"],
+  "desarrolladoras inmobiliarias": ["property developers", "incorporadoras imobiliárias"],
+  "🔎 Buscar con IA": ["🔎 Search with AI", "🔎 Buscar com IA"],
+  "⏳ Buscando en internet…": ["⏳ Searching the web…", "⏳ Buscando na internet…"],
+  "candidatos encontrados": ["candidates found", "candidatos encontrados"],
+  "Verificá los datos antes de contactar: la IA busca, pero no garantiza que todo esté vigente.":
+    ["Check the details before reaching out: the AI searches, but doesn't guarantee everything is current.",
+     "Verifique os dados antes de contatar: a IA busca, mas não garante que tudo esteja atualizado."],
+  "Ver sitio ↗": ["Visit site ↗", "Ver site ↗"],
+  "sin contacto público": ["no public contact", "sem contato público"],
+  "+ Agregar": ["+ Add", "+ Adicionar"],
+  "Escribí una zona o ciudad para buscar.": ["Type an area or city to search.", "Escreva uma região ou cidade para buscar."],
+  "No encontró resultados con esos términos. Probá con otra zona o perfil.":
+    ["No results for those terms. Try another area or profile.",
+     "Sem resultados com esses termos. Tente outra região ou perfil."],
+  "No se pudo completar la búsqueda. Revisá la conexión o probá de nuevo.":
+    ["The search couldn't be completed. Check your connection or try again.",
+     "Não foi possível concluir a busca. Verifique a conexão ou tente de novo."],
+  "↓ CSV": ["↓ CSV", "↓ CSV"],
+  "No hay prospectos para exportar.": ["No prospects to export.", "Sem prospects para exportar."],
+
+  // ── guía de ventas ──
+  "El pitch en 30 segundos": ["The 30-second pitch", "O pitch em 30 segundos"],
+  "Las tres preguntas de apertura": ["The three opening questions", "As três perguntas de abertura"],
+  "Quién paga": ["Who pays", "Quem paga"],
+  "El orden de la demo": ["The demo running order", "A ordem da demo"],
+  "Objeciones frecuentes": ["Common objections", "Objeções frequentes"],
+  "Precio": ["Pricing", "Preço"],
+  "Lo que NO podés prometer": ["What you must NOT promise", "O que você NÃO pode prometer"],
 
   // ── chips de estado ──
   "RESUELTO": ["RESOLVED", "RESOLVIDO"],
