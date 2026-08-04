@@ -299,7 +299,6 @@
   .footwrap{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; font-size:12.5px; color:var(--muted); }
 
 
-  /* ── vista del panel de demo ── */
   #vista-demo { display:none; }
   body.en-demo { background:#0E1520 !important; }
   body.en-demo #vista-landing { display:none; }
@@ -1744,270 +1743,9 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
   useEffect(() => () => fotos.forEach(f => URL.revokeObjectURL(f.url)), []);
   const pendientes = pedidos.filter(p => p.estado !== "resuelto").length;
   const avance = avanceIA ?? certificados[0]?.avance ?? 45;
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      minHeight: "100vh",
-      background: "#0E1520",
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      padding: 12
-    }
-  }, /*#__PURE__*/React.createElement("style", null, `
-        .grilla { display:grid; gap:12px; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; height:calc(100vh - 96px); }
-        @media (max-width: 820px) {
-          .grilla { grid-template-columns:1fr; grid-template-rows:none; height:auto; }
-          .grilla > div { min-height:460px; }
-        }
-        button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; font-family:inherit; }
-        button:active { opacity:.6; transform:scale(.97); }
-        @keyframes pulseIn { 0%{box-shadow:0 0 0 0 rgba(176,137,79,.75)} 100%{box-shadow:0 0 0 16px rgba(176,137,79,0)} }
-        .flash { animation: pulseIn 1.4s ease-out 1; }
-        @keyframes slideIn { from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:none} }
-        .new { animation: slideIn .35s ease-out; }
-        .sc::-webkit-scrollbar{ width:5px; height:5px } .sc::-webkit-scrollbar-thumb{ background:#D3D8DF; border-radius:5px }
-      `), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 9,
-      flexWrap: "wrap",
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 20,
-      height: 2,
-      background: BRASS
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "#fff",
-      fontWeight: 800,
-      fontSize: 14
-    }
-  }, "Demo en vivo"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 5,
-      fontSize: 10,
-      fontWeight: 700,
-      color: iaOk ? "#7DBE4B" : "#E08A3E",
-      border: `1px solid ${iaOk ? "rgba(125,190,75,.4)" : "rgba(224,138,62,.4)"}`,
-      borderRadius: 20,
-      padding: "3px 9px"
-    }
-  }, /*#__PURE__*/React.createElement("i", {
-    style: {
-      width: 6,
-      height: 6,
-      borderRadius: "50%",
-      fontStyle: "normal",
-      background: iaOk ? "#7DBE4B" : "#E08A3E"
-    }
-  }), iaOk ? "IA conectada" : "IA sin configurar"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "#6C7787",
-      fontSize: 11.5,
-      marginLeft: 4
-    }
-  }, ultimo || "Tocá los botones dentro de cada app"), /*#__PURE__*/React.createElement("input", {
-    ref: fileRef,
-    type: "file",
-    accept: "image/*",
-    onChange: subirFoto,
-    style: {
-      display: "none"
-    }
-  }), /*#__PURE__*/React.createElement("input", {
-    ref: antesRef,
-    type: "file",
-    accept: "image/*",
-    onChange: e => cargarComparacion(e, "antes"),
-    style: {
-      display: "none"
-    }
-  }), /*#__PURE__*/React.createElement("input", {
-    ref: hoyRef,
-    type: "file",
-    accept: "image/*",
-    onChange: e => cargarComparacion(e, "hoy"),
-    style: {
-      display: "none"
-    }
-  }), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setVerKey(true),
-    style: {
-      marginLeft: "auto",
-      background: "transparent",
-      border: `1px solid ${iaOk ? "rgba(255,255,255,.25)" : "rgba(224,138,62,.6)"}`,
-      color: iaOk ? "#B9C2CF" : "#E8A860",
-      borderRadius: 8,
-      padding: "10px 14px",
-      fontSize: 12,
-      fontWeight: 700,
-      cursor: "pointer",
-      minHeight: 40
-    }
-  }, "🔑 Clave"), /*#__PURE__*/React.createElement("button", {
-    onClick: reiniciar,
-    style: {
-      background: "transparent",
-      border: "1px solid rgba(255,255,255,.25)",
-      color: "#B9C2CF",
-      borderRadius: 8,
-      padding: "10px 14px",
-      fontSize: 12,
-      fontWeight: 700,
-      cursor: "pointer",
-      minHeight: 40
-    }
-  }, "Reiniciar")), /*#__PURE__*/React.createElement("div", {
-    className: "grilla"
-  }, /*#__PURE__*/React.createElement(Marco, {
-    rotulo: "App 1 · Constructora",
-    flash: flash.constructora
-  }, /*#__PURE__*/React.createElement(Nav, {
-    valor: tabC,
-    onChange: setTabC,
-    items: [{
-      id: "ia",
-      t: "IA",
-      b: 57
-    }, {
-      id: "obras",
-      t: "Obras",
-      b: 5,
-      rojo: true
-    }, {
-      id: "avance",
-      t: "Avance"
-    }, {
-      id: "bitacora",
-      t: "Bitácora",
-      b: bitacora.length || null,
-      rojo: !!bitacora.length
-    }, {
-      id: "pedidos",
-      t: "Pedidos",
-      b: pedidos.length || null,
-      rojo: !!pedidos.length
-    }, {
-      id: "auditoria",
-      t: "Auditoría"
-    }]
-  }), tabC === "ia" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Inteligencia · v23",
-    titulo: "Asistente de Obra",
-    sub: "Lee todos los datos de la app en tiempo real"
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Accion, {
-    onClick: generarInforme,
-    disabled: generando,
-    principal: true
-  }, generando ? "⏳ La IA está trabajando…" : "✨ Generar informe semanal con IA"), informe && /*#__PURE__*/React.createElement(Tarjeta, {
-    nuevo: true,
-    destacada: true,
-    onClick: () => setVerInforme(true)
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      fontSize: 11.5
-    }
-  }, "✨ Informe semanal generado"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: T.sub,
-      lineHeight: 1.45,
-      marginTop: 4,
-      maxHeight: 42,
-      overflow: "hidden"
-    }
-  }, informe.texto.split("\n").filter(Boolean)[1]), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      color: BRASS,
-      marginTop: 5
-    }
-  }, "Abrir informe y PDF →")), /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10.5,
-      color: T.sub,
-      lineHeight: 1.5
-    }
-  }, "Podés preguntarme por el avance, los pedidos pendientes o pedirme que arme el informe."))), /*#__PURE__*/React.createElement(BarraChat, {
-    pills: ["⊕ Buscar en internet ON", "⌇ Debate IA"],
-    placeholder: "Escribí, adjuntá o usá el micrófono…",
-    pie: "Cargá tu API Key en Más → Configuración para activar la IA."
-  })), tabC === "obras" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Obras",
-    titulo: "Hoy en todas las obras",
-    sub: `${pedidos.length} pedido${pedidos.length === 1 ? "" : "s"} · ${certificados.length} certificado${certificados.length === 1 ? "" : "s"}`
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Tarjeta, {
-    destacada: true
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      marginBottom: 7
-    }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      flex: 1,
-      fontSize: 12
-    }
-  }, OBRA), /*#__PURE__*/React.createElement(Chip, {
-    estado: "en curso"
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 6,
-      background: "#EAEEF3",
-      borderRadius: 6,
-      overflow: "hidden"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: "100%",
-      width: `${avance}%`,
-      background: `linear-gradient(90deg,${BRASS},#D9B57C)`,
-      transition: "width .8s"
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "space-between",
-      marginTop: 6,
-      fontSize: 9.5,
-      color: T.muted,
-      fontFamily: "monospace"
-    }
-  }, /*#__PURE__*/React.createElement("span", null, "AVANCE ", avance, "%"), /*#__PURE__*/React.createElement("span", null, "cierre 30/08"))), ["Obra San Martín 250", "Obra Norte 300"].map((n, i) => /*#__PURE__*/React.createElement(Tarjeta, {
-    key: n
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      marginBottom: 7
-    }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      flex: 1,
-      fontSize: 12
-    }
-  }, n), /*#__PURE__*/React.createElement(Chip, {
-    estado: "en curso"
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 6,
-      background: "#EAEEF3",
-      borderRadius: 6,
-      overflow: "hidden"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: "100%",
-      width: `${[41, 23][i]}%`,
-      background: `linear-gradient(90deg,${BRASS},#D9B57C)`
-    }
-  })))))), tabC === "avance" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+
+  // ── pantallas compartidas: se ven igual en Constructora y en Estudio ──
+  const PantallaAvance = () => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
     eyebrow: "Seguimiento visual",
     titulo: "Avance de obra",
     sub: "Subí una o varias fotos del día y la IA compara el avance con la anterior"
@@ -2163,7 +1901,8 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       border: `1px solid ${T.border}`,
       flexShrink: 0
     }
-  })))))), tabC === "bitacora" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+  }))))));
+  const PantallaBitacora = () => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
     eyebrow: "Registro",
     titulo: "Bitácora de obra",
     sub: "Cargá lo que va pasando para justificar adicionales"
@@ -2361,127 +2100,330 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       color: BRASS,
       marginTop: 3
     }
-  }, b.autor)))))), tabC === "pedidos" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Comunicación",
-    titulo: "Pedidos enviados",
-    sub: "Enviados al estudio de arquitectura"
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, pendientes > 0 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: "#FDECEA",
-      borderLeft: `3px solid ${T.red}`,
-      border: "1px solid #F6CFC9",
-      borderRadius: 9,
-      padding: "10px 12px"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11.5,
-      fontWeight: 700,
-      color: "#B3261E"
-    }
-  }, "⚠ ", pendientes, " pedido", pendientes > 1 ? "s" : "", " esperando respuesta"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9.5,
-      color: "#9B4A3D",
-      marginTop: 3,
-      lineHeight: 1.45
-    }
-  }, pedidos.length - pendientes, " cumplido", pedidos.length - pendientes === 1 ? "" : "s", ". Se considera vencido a los 5 días sin respuesta.")), /*#__PURE__*/React.createElement(Rotulo, null, "Qué querés pedir"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 5,
-      flexWrap: "wrap"
-    }
-  }, [["todo", "Todo"], ["material", "Materiales"], ["definicion", "Definiciones"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
-    key: id,
-    onClick: () => setFiltroP(id),
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      padding: "7px 13px",
-      borderRadius: 8,
-      border: `1px solid ${filtroP === id ? "#141C2B" : T.border}`,
-      background: filtroP === id ? "#141C2B" : "#fff",
-      color: filtroP === id ? "#fff" : T.sub,
-      cursor: "pointer",
-      minHeight: 32
-    }
-  }, t))), (filtroP === "todo" ? pedidos : pedidos.filter(p => p.tipo === filtroP)).length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin pedidos. Probá pedir algo desde la app del contratista.") : (filtroP === "todo" ? pedidos : pedidos.filter(p => p.tipo === filtroP)).map((p, i) => /*#__PURE__*/React.createElement("div", {
-    key: p.id,
-    className: i === 0 ? "new" : "",
-    style: {
-      background: "#fff",
-      border: `1px solid ${i === 0 ? BRASS : T.border}`,
-      borderRadius: 10,
-      padding: "11px 12px"
-    }
+  }, b.autor))))));
+  const PantallaObras = () => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Cartera",
+    titulo: "Obras en curso",
+    sub: `${pedidos.length} pedido${pedidos.length === 1 ? "" : "s"} · ${certificados.length} certificado${certificados.length === 1 ? "" : "s"}`
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Tarjeta, {
+    destacada: true
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 6,
-      flexWrap: "wrap",
-      marginBottom: 6
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      background: p.tipo === "material" ? "#1E3A5F" : BRASS,
-      color: "#fff",
-      fontSize: 8,
-      fontWeight: 700,
-      padding: "3px 8px",
-      borderRadius: 6
-    }
-  }, p.tipo === "material" ? "Materiales" : "Definiciones"), /*#__PURE__*/React.createElement("b", {
-    style: {
-      fontSize: 10.5,
-      color: NAVY
-    }
-  }, OBRA, " · ", p.fecha || hoyCorto())), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11,
-      color: T.text,
       marginBottom: 7
     }
-  }, p.txt), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      flex: 1,
+      fontSize: 12
+    }
+  }, OBRA), /*#__PURE__*/React.createElement(Chip, {
+    estado: "en curso"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 6,
+      background: "#EAEEF3",
+      borderRadius: 6,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      width: `${avance}%`,
+      background: `linear-gradient(90deg,${BRASS},#D9B57C)`,
+      transition: "width .8s"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      marginTop: 6,
+      fontSize: 9.5,
+      color: T.muted,
+      fontFamily: "monospace"
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "AVANCE ", avance, "%"), /*#__PURE__*/React.createElement("span", null, "cierre 30/08"))), [["Obra San Martín 250", 41], ["Obra Norte 300", 23]].map(([n, v]) => /*#__PURE__*/React.createElement(Tarjeta, {
+    key: n
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 7,
-      flexWrap: "wrap",
-      marginBottom: 8
+      marginBottom: 7
     }
-  }, /*#__PURE__*/React.createElement(Chip, {
-    estado: p.estado
-  }), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("b", {
     style: {
-      fontSize: 9,
-      fontWeight: 700,
-      color: p.estado === "resuelto" ? T.ok : "#B5651D"
+      flex: 1,
+      fontSize: 12
     }
-  }, p.estado === "resuelto" ? "● Respondido por el estudio" : "● No leído por el estudio")), /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      anotar("Envío por WhatsApp", `Se reenvió el pedido "${p.txt}" a los jefes de obra por WhatsApp.`, "Constructora");
-      setUltimo("Pedido reenviado por WhatsApp → queda asentado en bitácora");
-      pulso(["estudio"]);
-    },
+  }, n), /*#__PURE__*/React.createElement(Chip, {
+    estado: "en curso"
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
-      width: "100%",
-      background: "#25D366",
-      color: "#fff",
-      border: "none",
-      borderRadius: 9,
-      padding: "11px",
-      fontSize: 11,
-      fontWeight: 700,
-      cursor: "pointer",
-      minHeight: 42,
-      fontFamily: "inherit"
+      height: 6,
+      background: "#EAEEF3",
+      borderRadius: 6,
+      overflow: "hidden"
     }
-  }, "➤ Enviar por WhatsApp a los jefes de obra"))))), tabC === "auditoria" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      width: `${v}%`,
+      background: `linear-gradient(90deg,${BRASS},#D9B57C)`
+    }
+  }))))));
+  const PantallaInformes = () => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Documentación",
+    titulo: "Informes y certificados",
+    sub: "Lo que se emite y se comparte con el cliente"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Accion, {
+    onClick: generarInforme,
+    principal: true,
+    disabled: generando
+  }, generando ? "⏳ La IA está trabajando…" : "✨ Generar informe semanal con IA"), informe && /*#__PURE__*/React.createElement(Tarjeta, {
+    nuevo: true,
+    destacada: true,
+    onClick: () => setVerInforme(true)
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 11.5
+    }
+  }, "✨ Informe semanal · ", OBRA), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: T.muted,
+      marginTop: 3
+    }
+  }, "generado ", informe.hora), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      color: BRASS,
+      marginTop: 5
+    }
+  }, "Abrir y descargar PDF →")), certificados.map((c, i) => /*#__PURE__*/React.createElement(Tarjeta, {
+    key: c.id,
+    nuevo: i === 0 && !informe
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      flex: 1,
+      fontSize: 11
+    }
+  }, "Certificado semanal Nº ", c.n), /*#__PURE__*/React.createElement(Chip, {
+    estado: "a aprobar"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: T.muted,
+      marginTop: 4,
+      fontFamily: "monospace"
+    }
+  }, "avance ", c.avance, "% · ", c.hora))), !informe && !certificados.length && /*#__PURE__*/React.createElement(Vacio, null, "Sin documentación emitida todavía.")));
+  const PantallaIA = ({
+    rol
+  }) => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Inteligencia · v23",
+    titulo: rol === "estudio" ? "Asistente del estudio" : "Asistente de Obra",
+    sub: rol === "estudio" ? "Lee los datos de todas las obras" : "Lee todos los datos de la app en tiempo real"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Accion, {
+    onClick: generarInforme,
+    disabled: generando,
+    principal: true
+  }, generando ? "⏳ La IA está trabajando…" : "✨ Generar informe semanal con IA"), informe && /*#__PURE__*/React.createElement(Tarjeta, {
+    nuevo: true,
+    destacada: true,
+    onClick: () => setVerInforme(true)
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 11.5
+    }
+  }, "✨ Informe semanal generado"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: T.sub,
+      lineHeight: 1.45,
+      marginTop: 4,
+      maxHeight: 42,
+      overflow: "hidden"
+    }
+  }, informe.texto.split("\n").filter(Boolean)[1]), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      color: BRASS,
+      marginTop: 5
+    }
+  }, "Abrir informe y PDF →")), /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: T.sub,
+      lineHeight: 1.5
+    }
+  }, pendientes > 0 ? `Hay ${pendientes} pedido${pendientes > 1 ? "s" : ""} esperando respuesta del estudio.` : "No hay pedidos pendientes de respuesta en este momento."))), /*#__PURE__*/React.createElement(BarraChat, {
+    pills: rol === "estudio" ? ["⌇ Debate IA", "◈ Narrar"] : ["⊕ Buscar en internet ON", "⌇ Debate IA"],
+    placeholder: rol === "estudio" ? "Escribí tu consulta…" : "Escribí, adjuntá o usá el micrófono…",
+    pie: rol === "estudio" ? null : "Cargá tu API Key en Más → Configuración para activar la IA."
+  }));
+  const PantallaPedidos = ({
+    rol
+  }) => {
+    const lista = filtroP === "todo" ? pedidos : pedidos.filter(p => p.tipo === filtroP);
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+      eyebrow: "Comunicación",
+      titulo: rol === "estudio" ? "Pedidos recibidos" : "Pedidos enviados",
+      sub: rol === "estudio" ? "Lo que pide la obra y espera respuesta" : "Enviados al estudio de arquitectura"
+    }), /*#__PURE__*/React.createElement(Cuerpo, null, pendientes > 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: "#FDECEA",
+        borderLeft: `3px solid ${T.red}`,
+        border: "1px solid #F6CFC9",
+        borderRadius: 9,
+        padding: "10px 12px"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11.5,
+        fontWeight: 700,
+        color: "#B3261E"
+      }
+    }, "⚠ ", pendientes, " pedido", pendientes > 1 ? "s" : "", " esperando respuesta"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9.5,
+        color: "#9B4A3D",
+        marginTop: 3,
+        lineHeight: 1.45
+      }
+    }, pedidos.length - pendientes, " cumplido", pedidos.length - pendientes === 1 ? "" : "s", ". Se considera vencido a los 5 días sin respuesta.")), /*#__PURE__*/React.createElement(Rotulo, null, "Filtrar"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 5,
+        flexWrap: "wrap"
+      }
+    }, [["todo", "Todo"], ["material", "Materiales"], ["definicion", "Definiciones"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+      key: id,
+      onClick: () => setFiltroP(id),
+      style: {
+        fontSize: 9.5,
+        fontWeight: 700,
+        padding: "7px 13px",
+        borderRadius: 8,
+        border: `1px solid ${filtroP === id ? "#141C2B" : T.border}`,
+        background: filtroP === id ? "#141C2B" : "#fff",
+        color: filtroP === id ? "#fff" : T.sub,
+        cursor: "pointer",
+        minHeight: 32
+      }
+    }, t))), lista.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin pedidos. Probá pedir algo desde la app del contratista.") : lista.map((p, i) => /*#__PURE__*/React.createElement("div", {
+      key: p.id,
+      className: i === 0 ? "new" : "",
+      style: {
+        background: "#fff",
+        border: `1px solid ${i === 0 ? BRASS : T.border}`,
+        borderRadius: 10,
+        padding: "11px 12px"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        flexWrap: "wrap",
+        marginBottom: 6
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        background: p.tipo === "material" ? "#1E3A5F" : BRASS,
+        color: "#fff",
+        fontSize: 8,
+        fontWeight: 700,
+        padding: "3px 8px",
+        borderRadius: 6
+      }
+    }, p.tipo === "material" ? "Materiales" : "Definiciones"), /*#__PURE__*/React.createElement("b", {
+      style: {
+        fontSize: 10.5,
+        color: NAVY
+      }
+    }, OBRA, " · ", p.fecha || hoyCorto())), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: T.text,
+        marginBottom: 7
+      }
+    }, p.txt), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 7,
+        flexWrap: "wrap",
+        marginBottom: 8
+      }
+    }, /*#__PURE__*/React.createElement(Chip, {
+      estado: p.estado
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 9,
+        fontWeight: 700,
+        color: p.estado === "resuelto" ? T.ok : "#B5651D"
+      }
+    }, p.estado === "resuelto" ? "● Respondido por el estudio" : "● No leído por el estudio")), rol === "estudio" && p.estado !== "resuelto" ? /*#__PURE__*/React.createElement(Accion, {
+      teal: true,
+      onClick: () => responderEstudio(p.id)
+    }, "Responder al contratista") : /*#__PURE__*/React.createElement("button", {
+      onClick: () => {
+        anotar("Envío por WhatsApp", `Se reenvió el pedido "${p.txt}" a los jefes de obra por WhatsApp.`, rol === "estudio" ? "Estudio de arquitectura" : "Constructora");
+        setUltimo("Pedido reenviado por WhatsApp → queda asentado en bitácora");
+        pulso(["estudio", "constructora"]);
+      },
+      style: {
+        width: "100%",
+        background: "#25D366",
+        color: "#fff",
+        border: "none",
+        borderRadius: 9,
+        padding: "11px",
+        fontSize: 11,
+        fontWeight: 700,
+        cursor: "pointer",
+        minHeight: 42,
+        fontFamily: "inherit"
+      }
+    }, "➤ Enviar por WhatsApp a los jefes de obra")))));
+  };
+  const PantallaPersonal = () => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Equipo",
+    titulo: "Personal en obra",
+    sub: "Documentación y vencimientos"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, [["Martín Sosa", "Director Técnico", "ART al día"], ["Diego Fernández", "Capataz", "ART vence en 3 días"]].map(([n, r, d], i) => /*#__PURE__*/React.createElement(Tarjeta, {
+    key: n
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 11
+    }
+  }, n), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: T.muted,
+      marginTop: 2
+    }
+  }, r), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      color: i === 1 ? "#B5651D" : T.ok,
+      marginTop: 4
+    }
+  }, d)))));
+  const PantallaAuditoria = () => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
     eyebrow: "Control",
-    titulo: "Auditoría de obra",
-    sub: "Certificados y conformidades"
+    titulo: "Plan de auditoría",
+    sub: "Certificados y conformidades de obra"
   }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Accion, {
     onClick: emitirCertificado,
     principal: true
@@ -2508,42 +2450,201 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       marginTop: 4,
       fontFamily: "monospace"
     }
-  }, "avance ", c.avance, "% · ", c.hora)))))), /*#__PURE__*/React.createElement(Marco, {
+  }, "avance ", c.avance, "% · ", c.hora))), /*#__PURE__*/React.createElement(Rotulo, null, "Conformidades"), ["CC-01 · Revoques", "CC-02 · Contrapisos", "CC-03 · Solados"].map(t => /*#__PURE__*/React.createElement(Tarjeta, {
+    key: t
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      fontSize: 10.5,
+      fontWeight: 600
+    }
+  }, t), /*#__PURE__*/React.createElement(Chip, {
+    estado: "pendiente"
+  }))))));
+
+  // ── las 8 secciones, iguales en Constructora y Estudio ──
+  const seccionesApp = rol => [{
+    id: "ia",
+    t: "IA",
+    b: rol === "estudio" ? null : 57
+  }, {
+    id: "obras",
+    t: "Obras",
+    b: rol === "estudio" ? 8 : 5,
+    rojo: true
+  }, {
+    id: "avance",
+    t: "Avance"
+  }, {
+    id: "informes",
+    t: "Informes",
+    b: certificados.length + (informe ? 1 : 0) || null,
+    rojo: true
+  }, {
+    id: "bitacora",
+    t: "Bitácora",
+    b: rol === "estudio" ? 89 + bitacora.length : bitacora.length || null,
+    rojo: !!bitacora.length || rol === "estudio"
+  }, {
+    id: "pedidos",
+    t: "Pedidos",
+    b: pendientes || null,
+    rojo: !!pendientes
+  }, {
+    id: "personal",
+    t: "Personal",
+    b: 42,
+    rojo: true
+  }, {
+    id: "auditoria",
+    t: "Auditoría"
+  }];
+  const contenidoApp = (tab, rol) => /*#__PURE__*/React.createElement(React.Fragment, null, tab === "ia" && /*#__PURE__*/React.createElement(PantallaIA, {
+    rol: rol
+  }), tab === "obras" && /*#__PURE__*/React.createElement(PantallaObras, null), tab === "avance" && /*#__PURE__*/React.createElement(PantallaAvance, null), tab === "informes" && /*#__PURE__*/React.createElement(PantallaInformes, null), tab === "bitacora" && /*#__PURE__*/React.createElement(PantallaBitacora, null), tab === "pedidos" && /*#__PURE__*/React.createElement(PantallaPedidos, {
+    rol: rol
+  }), tab === "personal" && /*#__PURE__*/React.createElement(PantallaPersonal, null), tab === "auditoria" && /*#__PURE__*/React.createElement(PantallaAuditoria, null));
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: "100vh",
+      background: "#0E1520",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      padding: 12
+    }
+  }, /*#__PURE__*/React.createElement("style", null, `
+        .grilla { display:grid; gap:12px; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; height:calc(100vh - 96px); }
+        @media (max-width: 820px) {
+          .grilla { grid-template-columns:1fr; grid-template-rows:none; height:auto; }
+          .grilla > div { min-height:460px; }
+        }
+        button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; font-family:inherit; }
+        button:active { opacity:.6; transform:scale(.97); }
+        @keyframes pulseIn { 0%{box-shadow:0 0 0 0 rgba(176,137,79,.75)} 100%{box-shadow:0 0 0 16px rgba(176,137,79,0)} }
+        .flash { animation: pulseIn 1.4s ease-out 1; }
+        @keyframes slideIn { from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:none} }
+        .new { animation: slideIn .35s ease-out; }
+        .sc::-webkit-scrollbar{ width:5px; height:5px } .sc::-webkit-scrollbar-thumb{ background:#D3D8DF; border-radius:5px }
+      `), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      flexWrap: "wrap",
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 20,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#fff",
+      fontWeight: 800,
+      fontSize: 14
+    }
+  }, "Demo en vivo"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 5,
+      fontSize: 10,
+      fontWeight: 700,
+      color: iaOk ? "#7DBE4B" : "#E08A3E",
+      border: `1px solid ${iaOk ? "rgba(125,190,75,.4)" : "rgba(224,138,62,.4)"}`,
+      borderRadius: 20,
+      padding: "3px 9px"
+    }
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: 6,
+      height: 6,
+      borderRadius: "50%",
+      fontStyle: "normal",
+      background: iaOk ? "#7DBE4B" : "#E08A3E"
+    }
+  }), iaOk ? "IA conectada" : "IA sin configurar"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#6C7787",
+      fontSize: 11.5,
+      marginLeft: 4
+    }
+  }, ultimo || "Tocá los botones dentro de cada app"), /*#__PURE__*/React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: "image/*",
+    onChange: subirFoto,
+    style: {
+      display: "none"
+    }
+  }), /*#__PURE__*/React.createElement("input", {
+    ref: antesRef,
+    type: "file",
+    accept: "image/*",
+    onChange: e => cargarComparacion(e, "antes"),
+    style: {
+      display: "none"
+    }
+  }), /*#__PURE__*/React.createElement("input", {
+    ref: hoyRef,
+    type: "file",
+    accept: "image/*",
+    onChange: e => cargarComparacion(e, "hoy"),
+    style: {
+      display: "none"
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setVerKey(true),
+    style: {
+      marginLeft: "auto",
+      background: "transparent",
+      border: `1px solid ${iaOk ? "rgba(255,255,255,.25)" : "rgba(224,138,62,.6)"}`,
+      color: iaOk ? "#B9C2CF" : "#E8A860",
+      borderRadius: 8,
+      padding: "10px 14px",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 40
+    }
+  }, "🔑 Clave"), /*#__PURE__*/React.createElement("button", {
+    onClick: reiniciar,
+    style: {
+      background: "transparent",
+      border: "1px solid rgba(255,255,255,.25)",
+      color: "#B9C2CF",
+      borderRadius: 8,
+      padding: "10px 14px",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 40
+    }
+  }, "Reiniciar")), /*#__PURE__*/React.createElement("div", {
+    className: "grilla"
+  }, /*#__PURE__*/React.createElement(Marco, {
+    rotulo: "App 1 · Constructora",
+    flash: flash.constructora
+  }, /*#__PURE__*/React.createElement(Nav, {
+    valor: tabC,
+    onChange: setTabC,
+    doble: true,
+    items: seccionesApp("constructora")
+  }), contenidoApp(tabC, "constructora")), /*#__PURE__*/React.createElement(Marco, {
     rotulo: "App 2 · Estudio de arquitectura",
     flash: flash.estudio
   }, /*#__PURE__*/React.createElement(Nav, {
     valor: tabE,
     onChange: setTabE,
     doble: true,
-    items: [{
-      id: "ia",
-      t: "IA"
-    }, {
-      id: "obras",
-      t: "Obras",
-      b: 8,
-      rojo: true
-    }, {
-      id: "informes",
-      t: "Informes",
-      b: certificados.length + (informe ? 1 : 0) || null,
-      rojo: true
-    }, {
-      id: "bitacora",
-      t: "Bitácora",
-      b: 89 + bitacora.length,
-      rojo: true
-    }, {
-      id: "pedidos",
-      t: "Pedidos recibidos",
-      b: pendientes || null,
-      rojo: !!pendientes
-    }, {
-      id: "personal",
-      t: "Personal",
-      b: 42,
-      rojo: true
-    }]
+    items: seccionesApp("estudio")
   }), pendientes > 0 && tabE !== "pedidos" && /*#__PURE__*/React.createElement("div", {
     className: "new",
     onClick: () => setTabE("pedidos"),
@@ -2582,221 +2683,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       fontSize: 10.5,
       color: "#C0533F"
     }
-  }, "Tocá para ver →"))), tabE === "ia" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Inteligencia",
-    titulo: "Asistente del estudio",
-    sub: "Lee los datos de todas las obras"
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10.5,
-      color: T.sub,
-      lineHeight: 1.5
-    }
-  }, pendientes > 0 ? `Hay ${pendientes} pedido${pendientes > 1 ? "s" : ""} de obra esperando respuesta del estudio.` : "No hay pedidos pendientes de respuesta en este momento.")), informe && /*#__PURE__*/React.createElement(Tarjeta, {
-    nuevo: true,
-    destacada: true,
-    onClick: () => setVerInforme(true)
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      fontSize: 11.5
-    }
-  }, "✨ Informe semanal recibido"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      color: BRASS,
-      marginTop: 5
-    }
-  }, "Ver informe →"))), /*#__PURE__*/React.createElement(BarraChat, {
-    pills: ["⌇ Debate IA", "◈ Narrar"],
-    placeholder: "Escribí tu consulta…"
-  })), tabE === "pedidos" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Obra",
-    titulo: "Pedidos recibidos",
-    sub: "Definiciones y planos que pide la obra"
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, pedidos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Nada pendiente.") : pedidos.map((p, i) => /*#__PURE__*/React.createElement(Tarjeta, {
-    key: p.id,
-    nuevo: i === 0
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11,
-      fontWeight: 600,
-      marginBottom: 7
-    }
-  }, p.txt), p.estado === "resuelto" ? /*#__PURE__*/React.createElement(Chip, {
-    estado: "resuelto"
-  }) : /*#__PURE__*/React.createElement(Accion, {
-    onClick: () => responderEstudio(p.id),
-    teal: true,
-    chico: true
-  }, "Responder al contratista"))))), tabE === "informes" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Documentación",
-    titulo: "Informes y certificados",
-    sub: "Lo que emite la constructora"
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, informe && /*#__PURE__*/React.createElement(Tarjeta, {
-    nuevo: true,
-    destacada: true,
-    onClick: () => setVerInforme(true)
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      fontSize: 11.5
-    }
-  }, "✨ Informe semanal · ", OBRA), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9.5,
-      color: T.muted,
-      marginTop: 3
-    }
-  }, "generado ", informe.hora), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      color: BRASS,
-      marginTop: 5
-    }
-  }, "Abrir y descargar PDF →")), certificados.map((c, i) => /*#__PURE__*/React.createElement(Tarjeta, {
-    key: c.id,
-    nuevo: i === 0 && !informe
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 7
-    }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      flex: 1,
-      fontSize: 11
-    }
-  }, "Certificado Nº ", c.n), /*#__PURE__*/React.createElement(Chip, {
-    estado: "a aprobar"
-  })))), !informe && !certificados.length && /*#__PURE__*/React.createElement(Vacio, null, "Sin documentación recibida."))), tabE === "obras" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Cartera",
-    titulo: "Obras en seguimiento",
-    sub: "Avance reportado por la constructora"
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Tarjeta, {
-    destacada: true
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      marginBottom: 7
-    }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      flex: 1,
-      fontSize: 12
-    }
-  }, OBRA), /*#__PURE__*/React.createElement(Chip, {
-    estado: "en curso"
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 6,
-      background: "#EAEEF3",
-      borderRadius: 6,
-      overflow: "hidden"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: "100%",
-      width: `${avance}%`,
-      background: `linear-gradient(90deg,${BRASS},#D9B57C)`,
-      transition: "width .8s"
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9.5,
-      color: T.muted,
-      marginTop: 6,
-      fontFamily: "monospace"
-    }
-  }, "AVANCE ", avance, "%")), fotos.length > 0 && /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement(Rotulo, null, "Fotos que subió la obra"), /*#__PURE__*/React.createElement("div", {
-    className: "sc",
-    style: {
-      display: "flex",
-      gap: 6,
-      overflowX: "auto"
-    }
-  }, fotos.map((f, i) => /*#__PURE__*/React.createElement("img", {
-    key: f.id,
-    src: f.url,
-    alt: "",
-    className: i === 0 ? "new" : "",
-    style: {
-      width: 74,
-      height: 56,
-      objectFit: "cover",
-      borderRadius: 7,
-      border: `1px solid ${T.border}`,
-      flexShrink: 0
-    }
-  })))))), tabE === "bitacora" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Trazabilidad",
-    titulo: "Bitácora de obra",
-    sub: "Mismo registro que ve la constructora"
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, bitacora.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin asientos todavía.") : bitacora.map((b, i) => /*#__PURE__*/React.createElement("div", {
-    key: b.id,
-    className: i === 0 ? "new" : "",
-    style: {
-      display: "flex",
-      gap: 9,
-      background: "#fff",
-      border: `1px solid ${i === 0 ? BRASS : T.border}`,
-      borderRadius: 10,
-      padding: "10px 11px",
-      marginBottom: 6
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      flexShrink: 0,
-      fontSize: 9.5,
-      fontFamily: "monospace",
-      fontWeight: 600,
-      color: T.text,
-      minWidth: 34
-    }
-  }, b.hora), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11,
-      fontWeight: 700,
-      color: NAVY
-    }
-  }, b.titulo), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9.5,
-      color: T.sub,
-      lineHeight: 1.45,
-      marginTop: 2
-    }
-  }, b.detalle), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 8.5,
-      fontWeight: 700,
-      color: BRASS,
-      marginTop: 3
-    }
-  }, b.autor)))))), tabE === "personal" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Equipo",
-    titulo: "Personal en obra",
-    sub: "Documentación y vencimientos"
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, [["Martín Sosa", "Director Técnico"], ["Diego Fernández", "Capataz"]].map(([n, r]) => /*#__PURE__*/React.createElement(Tarjeta, {
-    key: n
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      fontSize: 11
-    }
-  }, n), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9.5,
-      color: T.muted,
-      marginTop: 2
-    }
-  }, r)))))), /*#__PURE__*/React.createElement(Marco, {
+  }, "Tocá para ver →"))), contenidoApp(tabE, "estudio")), /*#__PURE__*/React.createElement(Marco, {
     rotulo: "App 3 · Contratista",
     flash: flash.contratista
   }, /*#__PURE__*/React.createElement("div", {
