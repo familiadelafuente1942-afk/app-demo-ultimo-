@@ -1452,6 +1452,12 @@ function PanelDemo() {
   const [bitTitulo, setBitTitulo] = useState("");
   const [bitDetalle, setBitDetalle] = useState("");
   const [filtroP, setFiltroP] = useState("todo");
+  const [obraAbierta, setObraAbierta] = useState(null);
+  const [tabObra, setTabObra] = useState("info");
+  const [planos, setPlanos] = useState([]);
+  const [renders, setRenders] = useState([]);
+  const planoRef = useRef(null);
+  const renderRef = useRef(null);
 
   // Cada acción deja su registro. Esto es la trazabilidad de la obra.
   function anotar(titulo, detalle, autor) {
@@ -1518,8 +1524,8 @@ function PanelDemo() {
       fecha: hoyCorto(),
       estado: "enviado"
     }, ...p]);
-    setUltimo("Pedido de materiales cargado en Contratista → visible en Constructora y Estudio");
-    anotar("Pedido de materiales", "50 bolsas de cemento + 20 hierros del 8. Cursado a la constructora.", "Contratista");
+    setUltimo("Pedido de materiales cargado por el Capataz → visible en Constructora y Estudio");
+    anotar("Pedido de materiales", "50 bolsas de cemento + 20 hierros del 8. Cursado a la constructora.", "Capataz");
     pulso(["constructora", "estudio"]);
   }
   function pedirDefinicion() {
@@ -1531,8 +1537,8 @@ function PanelDemo() {
       fecha: hoyCorto(),
       estado: "pendiente"
     }, ...p]);
-    setUltimo("Pedido de definición cargado en Contratista → el Estudio lo ve al instante");
-    anotar("Solicitud de definición técnica", "Se solicita definir el nivel de piso terminado en baño PB. Queda a la espera de respuesta del estudio.", "Contratista");
+    setUltimo("Pedido de definición cargado por el Capataz → el Estudio lo ve al instante");
+    anotar("Solicitud de definición técnica", "Se solicita definir el nivel de piso terminado en baño PB. Queda a la espera de respuesta del estudio.", "Capataz");
     pulso(["constructora", "estudio"]);
   }
   function emitirCertificado() {
@@ -1713,10 +1719,40 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       ...x,
       estado: "resuelto"
     } : x));
-    setUltimo("El Estudio respondió → el Contratista ve la respuesta al instante");
+    setUltimo("El Estudio respondió → el Capataz ve la respuesta al instante");
     const ped = pedidos.find(x => x.id === id);
     anotar("Respuesta a solicitud", `Resuelto: ${ped ? ped.txt : "solicitud pendiente"}.`, "Estudio de arquitectura");
     pulso(["contratista", "constructora"]);
+  }
+  async function cargarDoc(e, tipo) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setProcesando(true);
+    let url;
+    try {
+      url = await aDataUrl(f);
+    } catch {
+      setProcesando(false);
+      return;
+    }
+    setProcesando(false);
+    const item = {
+      id: Date.now(),
+      url,
+      nombre: f.name,
+      hora: ahora()
+    };
+    if (tipo === "plano") {
+      setPlanos(p => [item, ...p]);
+      anotar("Carga de plano", `Se incorporó el plano "${f.name}" a la documentación de obra.`, "Constructora");
+      setUltimo("Plano cargado → visible en Estudio y Propietario");
+    } else {
+      setRenders(p => [item, ...p]);
+      anotar("Carga de render", `Se incorporó el render "${f.name}" al proyecto.`, "Estudio de arquitectura");
+      setUltimo("Render cargado → visible en el panel del propietario");
+    }
+    pulso(["estudio", "propietario"]);
+    e.target.value = "";
   }
   function reiniciar() {
     fotos.forEach(f => URL.revokeObjectURL(f.url));
@@ -1739,6 +1775,10 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     setBitTitulo("");
     setBitDetalle("");
     setFiltroP("todo");
+    setObraAbierta(null);
+    setTabObra("info");
+    setPlanos([]);
+    setRenders([]);
   }
   useEffect(() => () => fotos.forEach(f => URL.revokeObjectURL(f.url)), []);
   const pendientes = pedidos.filter(p => p.estado !== "resuelto").length;
@@ -2101,77 +2141,371 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       marginTop: 3
     }
   }, b.autor))))));
-  const PantallaObras = () => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Cartera",
-    titulo: "Obras en curso",
-    sub: `${pedidos.length} pedido${pedidos.length === 1 ? "" : "s"} · ${certificados.length} certificado${certificados.length === 1 ? "" : "s"}`
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Tarjeta, {
-    destacada: true
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      marginBottom: 7
+  const PantallaObras = () => {
+    if (obraAbierta) {
+      const subTabs = [["info", "Info"], ["notas", "Notas"], ["fotos", "Fotos"], ["planos", "Planos"], ["renders", "Renders"], ["informes", "Informes"], ["gastos", "Gastos"]];
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+        style: {
+          padding: "11px 14px 9px",
+          borderBottom: `1px solid ${T.border}`,
+          background: "#fff"
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: 9
+        }
+      }, /*#__PURE__*/React.createElement("button", {
+        onClick: () => setObraAbierta(null),
+        style: {
+          background: "#F3F5F8",
+          border: "none",
+          borderRadius: 8,
+          width: 28,
+          height: 28,
+          fontSize: 13,
+          color: T.sub,
+          cursor: "pointer",
+          flexShrink: 0
+        }
+      }, "←"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 15,
+          fontWeight: 800,
+          color: NAVY
+        }
+      }, obraAbierta), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9.5,
+          color: T.muted
+        }
+      }, "NORTE · Vivienda PB+1")), /*#__PURE__*/React.createElement(Chip, {
+        estado: "en curso"
+      }))), /*#__PURE__*/React.createElement("div", {
+        style: {
+          padding: "10px 14px",
+          borderBottom: `1px solid ${T.border}`,
+          background: "#fff"
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          alignItems: "center",
+          marginBottom: 6
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          flex: 1,
+          fontSize: 11,
+          fontWeight: 600,
+          color: T.text
+        }
+      }, "Avance"), /*#__PURE__*/React.createElement("b", {
+        style: {
+          fontSize: 15,
+          color: NAVY
+        }
+      }, avance, "%")), /*#__PURE__*/React.createElement("div", {
+        style: {
+          height: 6,
+          background: "#EAEEF3",
+          borderRadius: 6,
+          overflow: "hidden"
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          height: "100%",
+          width: `${avance}%`,
+          background: "#141C2B",
+          transition: "width .8s"
+        }
+      })), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          justifyContent: "space-between",
+          marginTop: 5,
+          fontSize: 8.5,
+          color: T.muted
+        }
+      }, /*#__PURE__*/React.createElement("span", null, "Inicio: 11/11/2025"), /*#__PURE__*/React.createElement("span", null, "Cierre est.: 30/12/2026"))), /*#__PURE__*/React.createElement("div", {
+        className: "sc",
+        style: {
+          display: "flex",
+          gap: 12,
+          padding: "9px 12px",
+          background: "#fff",
+          borderBottom: `1px solid ${T.border}`,
+          overflowX: "auto",
+          whiteSpace: "nowrap"
+        }
+      }, subTabs.map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+        key: id,
+        onClick: () => setTabObra(id),
+        style: {
+          fontSize: 10,
+          fontWeight: 700,
+          flexShrink: 0,
+          background: "none",
+          border: "none",
+          color: tabObra === id ? NAVY : T.sub,
+          cursor: "pointer",
+          minHeight: 26,
+          borderBottom: tabObra === id ? "2px solid #141C2B" : "2px solid transparent",
+          paddingBottom: 3
+        }
+      }, t))), /*#__PURE__*/React.createElement(Cuerpo, null, tabObra === "info" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+        style: {
+          background: "#fff",
+          border: `1px solid ${T.border}`,
+          borderRadius: 10,
+          padding: "11px 12px"
+        }
+      }, /*#__PURE__*/React.createElement(Rotulo, null, "Nombre de la obra"), /*#__PURE__*/React.createElement("b", {
+        style: {
+          fontSize: 13,
+          color: NAVY
+        }
+      }, obraAbierta)), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 7
+        }
+      }, [["Zona/Barrio", "NORTE – Zona Norte"], ["Sector", "Vivienda PB+1"], ["Inicio", "11/11/2025"], ["Cierre est.", "30/12/2026"]].map(([l, v]) => /*#__PURE__*/React.createElement("div", {
+        key: l
+      }, /*#__PURE__*/React.createElement(Rotulo, null, l), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11,
+          fontWeight: 700,
+          color: T.text
+        }
+      }, v)))), /*#__PURE__*/React.createElement(Rotulo, null, "Estado"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 6
+        }
+      }, [["Pendiente", T.sub, false], ["En Curso", T.ok, true], ["Pausada", "#B5651D", false], ["Terminada", "#3B6CA8", false]].map(([t, col, act]) => /*#__PURE__*/React.createElement("div", {
+        key: t,
+        style: {
+          textAlign: "center",
+          fontSize: 10.5,
+          fontWeight: 700,
+          color: col,
+          border: `1px solid ${act ? T.ok : T.border}`,
+          background: act ? "#EAF3EC" : "#fff",
+          borderRadius: 9,
+          padding: "10px 4px"
+        }
+      }, t)))), tabObra === "fotos" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Accion, {
+        onClick: () => fileRef.current?.click(),
+        oscuro: true,
+        disabled: procesando
+      }, procesando ? "⏳ Procesando…" : "📷 Subir fotos de avance"), fotos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin fotos cargadas.") : /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "grid",
+          gridTemplateColumns: "repeat(3,1fr)",
+          gap: 6
+        }
+      }, fotos.map((f, i) => /*#__PURE__*/React.createElement("img", {
+        key: f.id,
+        src: f.url,
+        alt: "",
+        className: i === 0 ? "new" : "",
+        style: {
+          width: "100%",
+          height: 64,
+          objectFit: "cover",
+          borderRadius: 8,
+          border: `1px solid ${T.border}`
+        }
+      })))), tabObra === "planos" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Accion, {
+        onClick: () => planoRef.current?.click(),
+        oscuro: true,
+        disabled: procesando
+      }, procesando ? "⏳ Procesando…" : "▤ Subir plano (PDF / DWG / imagen)"), planos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin planos cargados. Subí acá los planos de la obra: los ve el estudio y también el propietario.") : planos.map((p, i) => /*#__PURE__*/React.createElement("div", {
+        key: p.id,
+        className: i === 0 ? "new" : "",
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: 9,
+          background: "#fff",
+          border: `1px solid ${i === 0 ? BRASS : T.border}`,
+          borderRadius: 10,
+          padding: "9px 11px"
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: 30,
+          height: 30,
+          borderRadius: 7,
+          background: "#EAEEF3",
+          color: "#3B6CA8",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 13,
+          flexShrink: 0
+        }
+      }, "▤"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10.5,
+          fontWeight: 700,
+          color: T.text,
+          wordBreak: "break-word"
+        }
+      }, p.nombre), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 8.5,
+          color: T.muted
+        }
+      }, p.hora))))), tabObra === "renders" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Accion, {
+        onClick: () => renderRef.current?.click(),
+        oscuro: true,
+        disabled: procesando
+      }, procesando ? "⏳ Procesando…" : "▧ Subir render del proyecto"), renders.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin renders cargados. Los renders que subas los ve el propietario en su portal.") : /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "grid",
+          gridTemplateColumns: "repeat(2,1fr)",
+          gap: 6
+        }
+      }, renders.map((r, i) => /*#__PURE__*/React.createElement("img", {
+        key: r.id,
+        src: r.url,
+        alt: "",
+        className: i === 0 ? "new" : "",
+        style: {
+          width: "100%",
+          height: 76,
+          objectFit: "cover",
+          borderRadius: 8,
+          border: `1px solid ${i === 0 ? BRASS : T.border}`
+        }
+      })))), tabObra === "notas" && (bitacora.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin notas ni observaciones cargadas.") : bitacora.slice(0, 5).map(b => /*#__PURE__*/React.createElement(Tarjeta, {
+        key: b.id
+      }, /*#__PURE__*/React.createElement("b", {
+        style: {
+          fontSize: 10.5
+        }
+      }, b.titulo), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9.5,
+          color: T.sub,
+          marginTop: 2,
+          lineHeight: 1.45
+        }
+      }, b.detalle)))), tabObra === "informes" && (!informe && !certificados.length ? /*#__PURE__*/React.createElement(Vacio, null, "Sin informes emitidos para esta obra.") : /*#__PURE__*/React.createElement(React.Fragment, null, informe && /*#__PURE__*/React.createElement(Tarjeta, {
+        nuevo: true,
+        destacada: true,
+        onClick: () => setVerInforme(true)
+      }, /*#__PURE__*/React.createElement("b", {
+        style: {
+          fontSize: 11
+        }
+      }, "✨ Informe semanal"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9.5,
+          fontWeight: 700,
+          color: BRASS,
+          marginTop: 4
+        }
+      }, "Abrir →")), certificados.map(c2 => /*#__PURE__*/React.createElement(Tarjeta, {
+        key: c2.id
+      }, /*#__PURE__*/React.createElement("b", {
+        style: {
+          fontSize: 11
+        }
+      }, "Certificado Nº ", c2.n))))), tabObra === "gastos" && /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 7
+        }
+      }, [["Presupuesto", "$ 12.400.000"], ["Pagado", "$ 8.100.000"]].map(([l, v]) => /*#__PURE__*/React.createElement("div", {
+        key: l,
+        style: {
+          background: "#fff",
+          border: `1px solid ${T.border}`,
+          borderRadius: 10,
+          padding: "11px 12px"
+        }
+      }, /*#__PURE__*/React.createElement(Rotulo, null, l), /*#__PURE__*/React.createElement("b", {
+        style: {
+          fontSize: 13,
+          color: NAVY
+        }
+      }, v))))));
     }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      flex: 1,
-      fontSize: 12
-    }
-  }, OBRA), /*#__PURE__*/React.createElement(Chip, {
-    estado: "en curso"
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 6,
-      background: "#EAEEF3",
-      borderRadius: 6,
-      overflow: "hidden"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: "100%",
-      width: `${avance}%`,
-      background: `linear-gradient(90deg,${BRASS},#D9B57C)`,
-      transition: "width .8s"
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "space-between",
-      marginTop: 6,
-      fontSize: 9.5,
-      color: T.muted,
-      fontFamily: "monospace"
-    }
-  }, /*#__PURE__*/React.createElement("span", null, "AVANCE ", avance, "%"), /*#__PURE__*/React.createElement("span", null, "cierre 30/08"))), [["Obra San Martín 250", 41], ["Obra Norte 300", 23]].map(([n, v]) => /*#__PURE__*/React.createElement(Tarjeta, {
-    key: n
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      marginBottom: 7
-    }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      flex: 1,
-      fontSize: 12
-    }
-  }, n), /*#__PURE__*/React.createElement(Chip, {
-    estado: "en curso"
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 6,
-      background: "#EAEEF3",
-      borderRadius: 6,
-      overflow: "hidden"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: "100%",
-      width: `${v}%`,
-      background: `linear-gradient(90deg,${BRASS},#D9B57C)`
-    }
-  }))))));
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+      eyebrow: "Cartera",
+      titulo: "Obras en curso",
+      sub: "Tocá una obra para abrir su ficha"
+    }), /*#__PURE__*/React.createElement(Cuerpo, null, [[OBRA, avance, true], ["Obra San Martín 250", 41, false], ["Obra Norte 300", 23, false]].map(([n, v, dest]) => /*#__PURE__*/React.createElement("div", {
+      key: n,
+      onClick: () => {
+        setObraAbierta(n);
+        setTabObra("info");
+      },
+      style: {
+        background: dest ? "#FBF6EE" : "#fff",
+        border: `1px solid ${dest ? BRASS : T.border}`,
+        borderRadius: 10,
+        padding: "11px 12px",
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        marginBottom: 7,
+        gap: 7
+      }
+    }, /*#__PURE__*/React.createElement("b", {
+      style: {
+        flex: 1,
+        fontSize: 12
+      }
+    }, n), /*#__PURE__*/React.createElement(Chip, {
+      estado: "en curso"
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: T.muted
+      }
+    }, "›")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 6,
+        background: "#EAEEF3",
+        borderRadius: 6,
+        overflow: "hidden"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: "100%",
+        width: `${v}%`,
+        background: `linear-gradient(90deg,${BRASS},#D9B57C)`,
+        transition: "width .8s"
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9.5,
+        color: T.muted,
+        marginTop: 5,
+        fontFamily: "monospace"
+      }
+    }, "AVANCE ", v, "%")))));
+  };
   const PantallaInformes = () => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
     eyebrow: "Documentación",
     titulo: "Informes y certificados",
@@ -2277,7 +2611,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
       eyebrow: "Comunicación",
       titulo: rol === "estudio" ? "Pedidos recibidos" : "Pedidos enviados",
-      sub: rol === "estudio" ? "Lo que pide la obra y espera respuesta" : "Enviados al estudio de arquitectura"
+      sub: rol === "estudio" ? "Lo que pide el capataz y espera respuesta" : "Enviados al estudio de arquitectura"
     }), /*#__PURE__*/React.createElement(Cuerpo, null, pendientes > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         background: "#FDECEA",
@@ -2319,7 +2653,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
         cursor: "pointer",
         minHeight: 32
       }
-    }, t))), lista.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin pedidos. Probá pedir algo desde la app del contratista.") : lista.map((p, i) => /*#__PURE__*/React.createElement("div", {
+    }, t))), lista.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin pedidos. Probá pedir algo desde la app del capataz.") : lista.map((p, i) => /*#__PURE__*/React.createElement("div", {
       key: p.id,
       className: i === 0 ? "new" : "",
       style: {
@@ -2375,9 +2709,9 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     }, p.estado === "resuelto" ? "● Respondido por el estudio" : "● No leído por el estudio")), rol === "estudio" && p.estado !== "resuelto" ? /*#__PURE__*/React.createElement(Accion, {
       teal: true,
       onClick: () => responderEstudio(p.id)
-    }, "Responder al contratista") : /*#__PURE__*/React.createElement("button", {
+    }, "Responder al capataz") : /*#__PURE__*/React.createElement("button", {
       onClick: () => {
-        anotar("Envío por WhatsApp", `Se reenvió el pedido "${p.txt}" a los jefes de obra por WhatsApp.`, rol === "estudio" ? "Estudio de arquitectura" : "Constructora");
+        anotar("Envío por WhatsApp", `El capataz envió el pedido "${p.txt}" al jefe de obra por WhatsApp.`, "Capataz");
         setUltimo("Pedido reenviado por WhatsApp → queda asentado en bitácora");
         pulso(["estudio", "constructora"]);
       },
@@ -2394,7 +2728,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
         minHeight: 42,
         fontFamily: "inherit"
       }
-    }, "➤ Enviar por WhatsApp a los jefes de obra")))));
+    }, "➤ Enviar por WhatsApp al jefe de obra")))));
   };
   const PantallaPersonal = () => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
     eyebrow: "Equipo",
@@ -2600,6 +2934,22 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     style: {
       display: "none"
     }
+  }), /*#__PURE__*/React.createElement("input", {
+    ref: planoRef,
+    type: "file",
+    accept: "image/*,.pdf,.dwg,.dxf",
+    onChange: e => cargarDoc(e, "plano"),
+    style: {
+      display: "none"
+    }
+  }), /*#__PURE__*/React.createElement("input", {
+    ref: renderRef,
+    type: "file",
+    accept: "image/*",
+    onChange: e => cargarDoc(e, "render"),
+    style: {
+      display: "none"
+    }
   }), /*#__PURE__*/React.createElement("button", {
     onClick: () => setVerKey(true),
     style: {
@@ -2684,7 +3034,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       color: "#C0533F"
     }
   }, "Tocá para ver →"))), contenidoApp(tabE, "estudio")), /*#__PURE__*/React.createElement(Marco, {
-    rotulo: "App 3 · Contratista",
+    rotulo: "App 3 · Capataz",
     flash: flash.contratista
   }, /*#__PURE__*/React.createElement("div", {
     style: {
