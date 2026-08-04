@@ -2,30 +2,743 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="light only" />
-<meta name="theme-color" content="#0E1520" />
-<title>Demo en vivo · Gestión de obra</title>
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Demo" />
+<title>ConstruIA — Gestión de obra con asistente de IA</title>
+<meta name="description" content="Avances, certificados, pedidos de materiales, planos y definiciones técnicas — sincronizados entre constructora, estudio de arquitectura y contratistas, con un asistente de IA que responde por vos." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; }
-  html, body, #root { margin: 0; padding: 0; min-height: 100%; }
-  body {
-    background: #0E1520;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: none;
+  :root{
+    --bg:#F5F6F8;
+    --card:#FFFFFF;
+    --border:#E6E9EE;
+    --text:#131C2B;
+    --sub:#4A5565;
+    --muted:#8B95A5;
+    --navy:#101C2C;
+    --navy2:#16283F;
+    --accent:#1E3A5F;
+    --brass:#B0894F;
+    --brass-light:#D9B57C;
+    --ok:#2F7A4F;
+    --r:14px;
+    --rsm:8px;
   }
-  #arranque { color: #6C7787; font-size: 14px; text-align: center; padding: 60px 20px; }
+  :root{ color-scheme: light; }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth; background:#F5F6F8 !important;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:.01ms !important; transition-duration:.01ms !important;} }
+  body{
+    margin:0; background:#F5F6F8 !important; color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  h1,h2,h3{ font-family:'Fraunces', serif; margin:0; letter-spacing:-0.01em; }
+  :focus-visible{ outline:2px solid var(--brass); outline-offset:3px; }
+
+  .wrap{ max-width:1120px; margin:0 auto; padding:0 24px; }
+
+  /* ── blueprint grid backdrop ── */
+  .blueprint{
+    position:absolute; inset:0; pointer-events:none; opacity:.5;
+    background-image:
+      linear-gradient(rgba(176,137,79,.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(176,137,79,.10) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: linear-gradient(to bottom, black, transparent 85%);
+  }
+
+  /* ── nav ── */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(245,246,248,.86); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .nav{ display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:1120px; margin:0 auto; }
+  .brand{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; }
+  .brand em{ font-style:normal; color:var(--brass); }
+  .brand .mark{ width:22px; height:22px; position:relative; }
+  .brand .mark::before,.brand .mark::after{ content:""; position:absolute; background:var(--brass); }
+  .brand .mark::before{ left:3px; right:3px; top:6px; height:2px; }
+  .brand .mark::after{ left:3px; right:3px; top:14px; height:2px; }
+  .navlinks{ display:flex; gap:28px; font-size:13.5px; font-weight:600; color:var(--sub); }
+  .navlinks a:hover{ color:var(--text); }
+  .navcta{ display:flex; gap:10px; }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:13.5px;
+    padding:11px 18px; border-radius:var(--rsm); border:1px solid transparent; cursor:pointer;
+    text-decoration:none; transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn-brass{ background:var(--brass); color:#fff; box-shadow:0 6px 16px rgba(176,137,79,.28); }
+  .btn-brass:hover{ box-shadow:0 10px 22px rgba(176,137,79,.36); }
+  .btn-ghost{ background:transparent; border-color:var(--border); color:var(--text); }
+  .btn-ghost:hover{ border-color:var(--brass); }
+  .btn-dark{ background:var(--brass); color:#fff; }
+
+  /* eyebrow — reused signature device from the product itself */
+  .eyebrow{ display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+  .eyebrow span{ width:20px; height:2px; background:var(--brass); flex-shrink:0; }
+  .eyebrow b{ font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--brass); }
+  .eyebrow.light b{ color:var(--brass-light); }
+
+  /* ── hero ── */
+  .hero{ position:relative; padding:96px 0 60px; overflow:hidden; background:#F5F6F8; }
+  .hero-grid{ display:grid; grid-template-columns:1.05fr .95fr; gap:56px; align-items:center; position:relative; z-index:1; }
+  .hero h1{ font-size:52px; line-height:1.05; font-weight:600; color:var(--navy); }
+  .hero h1 em{ font-style:italic; color:var(--brass); }
+  .hero p.lead{ margin-top:20px; font-size:17px; line-height:1.6; color:var(--sub); max-width:480px; }
+  .hero p.byline{ margin-top:16px; font-size:14px; line-height:1.55; color:var(--navy); max-width:470px; padding-left:14px; border-left:2px solid var(--brass); font-style:italic; }
+  .hero-cta{ margin-top:32px; display:flex; gap:12px; flex-wrap:wrap; }
+  .hero-meta{ margin-top:28px; display:flex; gap:22px; flex-wrap:wrap; }
+  .hero-meta div{ font-size:12px; color:var(--muted); }
+  .hero-meta b{ display:block; font-family:'IBM Plex Mono',monospace; font-size:18px; color:var(--navy); font-weight:500; }
+
+  /* device mock — recreated from the real product's own UI language */
+  .mock{
+    background:#fff; border-radius:22px; padding:14px;
+    border:1px solid var(--border);
+    box-shadow:0 30px 70px -24px rgba(16,28,44,.22);
+    transform:rotate(1.2deg);
+  }
+  .mock-screen{ background:var(--bg); border-radius:14px; overflow:hidden; }
+  .mock-top{ background:var(--card); padding:16px 18px 12px; border-bottom:1px solid var(--border); }
+  .mock-top .t1{ font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--brass); }
+  .mock-top .t2{ font-size:17px; font-weight:700; margin-top:3px; }
+  .mock-body{ padding:14px 16px 20px; display:flex; flex-direction:column; gap:10px; }
+  .ocard{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:13px 14px; }
+  .ocard .row1{ display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; }
+  .ocard .name{ font-weight:700; font-size:13.5px; }
+  .chip{ font-size:9.5px; font-weight:700; padding:3px 8px; border-radius:20px; letter-spacing:.03em; }
+  .chip.curso{ background:#EAF3EC; color:var(--ok); }
+  .chip.term{ background:#EEF1F5; color:var(--sub); }
+  .bar{ height:6px; background:#EAEEF3; border-radius:6px; overflow:hidden; }
+  .bar i{ display:block; height:100%; background:linear-gradient(90deg,var(--brass),var(--brass-light)); border-radius:6px; width:0%; transition:width 1.4s cubic-bezier(.16,1,.3,1); }
+  .ocard .foot{ display:flex; justify-content:space-between; margin-top:7px; font-size:10.5px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
+  .float-tag{
+    position:absolute; background:#fff; border:1px solid var(--border); border-radius:10px;
+    padding:8px 12px; font-size:11.5px; font-weight:700; box-shadow:0 12px 30px rgba(16,28,44,.14);
+    display:flex; align-items:center; gap:7px;
+  }
+  .float-tag .dot{ width:7px; height:7px; border-radius:50%; background:var(--ok); }
+  .ft1{ top:-16px; right:-18px; }
+  .ft2{ bottom:22px; left:-26px; }
+
+  /* ── pains ── */
+  .pains{ background:#EFF2F6; padding:64px 0; position:relative; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+  .pains .wrap{ position:relative; z-index:1; }
+  .pains h2{ font-size:28px; font-weight:600; color:var(--navy); max-width:640px; }
+  .pain-grid{ margin-top:38px; display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border-radius:14px; overflow:hidden; border:1px solid var(--border); }
+  .pain{ background:#fff; padding:24px 20px; }
+  .pain .num{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--brass); font-weight:600; }
+  .pain p{ margin:10px 0 0; font-size:14px; line-height:1.5; color:var(--sub); }
+
+  /* ── modules ── */
+  .section{ padding:80px 0; background:#F5F6F8; }
+  .section h2{ font-size:32px; color:var(--navy); font-weight:600; max-width:600px; }
+  .section p.sub{ margin-top:12px; color:var(--sub); font-size:15px; max-width:560px; line-height:1.6; }
+
+  .modules{ margin-top:44px; display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  .module{ background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:24px; transition:border-color .15s, transform .15s; }
+  .module:hover{ border-color:var(--brass); transform:translateY(-3px); }
+  .module .ico{ width:38px; height:38px; border-radius:10px; background:#EAEEF3; display:flex; align-items:center; justify-content:center; color:var(--accent); margin-bottom:16px; }
+  .module h3{ font-size:16px; font-weight:700; font-family:'Inter',sans-serif; letter-spacing:0; }
+  .module p{ margin:8px 0 0; font-size:13px; color:var(--sub); line-height:1.55; }
+  .module .who{ margin-top:14px; font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--brass); }
+
+  /* ── flow ── */
+  .flow{ background:#FAFAF9; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+  .flow .section{ background:transparent; }
+  .flow-row{ margin-top:44px; display:grid; grid-template-columns:repeat(4,1fr); gap:0; position:relative; }
+  .flow-row::before{ content:""; position:absolute; top:19px; left:6%; right:6%; height:1px; background:var(--border); z-index:0; }
+  .step{ position:relative; z-index:1; padding-right:20px; }
+  .step .n{ width:38px; height:38px; border-radius:50%; background:#F3E8D4; color:var(--brass); font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+  .step h3{ font-size:14.5px; font-weight:700; font-family:'Inter',sans-serif; }
+  .step p{ margin:6px 0 0; font-size:13px; color:var(--sub); line-height:1.55; }
+
+  /* ── trust strip ── */
+  .trust{ display:grid; grid-template-columns:repeat(4,1fr); gap:0; border:1px solid var(--border); border-radius:var(--r); overflow:hidden; background:var(--card); margin-top:44px; }
+  .tcell{ padding:22px 20px; border-right:1px solid var(--border); }
+  .tcell:last-child{ border-right:none; }
+  .tcell b{ display:block; font-family:'IBM Plex Mono',monospace; font-size:20px; color:var(--navy); }
+  .tcell span{ font-size:12px; color:var(--muted); }
+
+  /* ── shots: capturas reales de las 4 apps ── */
+  .shots{ margin-top:48px; display:flex; flex-direction:column; gap:40px; }
+  .shot{ margin:0; display:grid; grid-template-columns:0.85fr 1.15fr; gap:36px; align-items:center; }
+  .shot.alt{ grid-template-columns:1.15fr 0.85fr; }
+  .shot.alt figcaption{ order:2; }
+  .shot.alt .simg{ order:1; }
+  .shot figcaption{ display:flex; flex-direction:column; gap:9px; }
+  .stag{ font-size:10.5px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--brass); }
+  .shot figcaption b{ font-family:'Fraunces',serif; font-size:23px; font-weight:600; color:var(--navy); line-height:1.2; }
+  .sdesc{ font-size:14px; color:var(--sub); line-height:1.6; }
+  .simg{ border-radius:14px; overflow:hidden; border:1px solid var(--border); background:#fff; box-shadow:0 24px 50px -28px rgba(16,28,44,.4); }
+  .simg img{ display:block; width:100%; height:auto; }
+  .simg.placeholder{ min-height:230px; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--muted); background:repeating-linear-gradient(45deg,#F3F5F8,#F3F5F8 12px,#EDEFF3 12px,#EDEFF3 24px); }
+
+  /* ── UI recreada de las 4 apps ── */
+  .ui{ border:1px solid var(--border); border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 24px 50px -30px rgba(16,28,44,.42); font-size:12px; }
+  .ui-nav{ display:flex; gap:14px; padding:11px 14px; overflow:hidden; border-bottom:2px solid var(--brass); background:#fff; white-space:nowrap; }
+  .ui-nav span{ position:relative; font-size:10.5px; font-weight:700; color:#5A6472; flex-shrink:0; }
+  .ui-nav span.on{ color:var(--navy); border-bottom:2px solid var(--brass); padding-bottom:3px; }
+  .ui-nav span.hot{ color:#C0392B; }
+  .bdg{ position:absolute; top:-7px; right:-13px; background:#E23D2E; color:#fff; font-size:7px; font-weight:700; border-radius:20px; padding:1px 4px; font-style:normal; }
+  .ui-head{ padding:14px 16px 12px; border-bottom:1px solid var(--border); }
+  .ui-eyebrow{ font-size:8.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .ui-eyebrow.brass{ color:var(--brass-light); }
+  .ui-eyebrow.light{ color:rgba(255,255,255,.75); }
+  .ui-title{ font-size:17px; font-weight:800; color:var(--navy); margin-top:3px; }
+  .ui-sub{ font-size:11px; color:var(--muted); margin-top:2px; }
+  .ui-chat{ padding:14px 16px; display:flex; flex-direction:column; gap:9px; background:#FAFBFC; }
+  .msg{ max-width:82%; padding:9px 12px; border-radius:11px; line-height:1.45; font-size:11px; }
+  .msg.bot{ background:#fff; border:1px solid var(--border); color:var(--text); align-self:flex-start; }
+  .msg.me{ background:#141821; color:#fff; align-self:flex-end; }
+  .msg.me.teal{ background:#1F5560; }
+  .ui-ok{ font-size:10px; font-weight:700; color:#1E7C46; }
+  .ui-bar{ display:flex; align-items:center; gap:7px; padding:11px 14px; border-top:1px solid var(--border); flex-wrap:wrap; background:#fff; }
+  .pill{ font-size:9.5px; font-weight:700; border:1px solid var(--border); border-radius:20px; padding:5px 10px; color:var(--sub); }
+  .fake-input{ flex:1; min-width:120px; border:1px solid var(--border); border-radius:9px; padding:8px 11px; font-size:10px; color:var(--muted); }
+  .ui-alert{ display:flex; gap:10px; align-items:center; background:#FDECEA; border-bottom:1px solid #F6CFC9; padding:11px 14px; }
+  .ui-alert i{ width:22px; height:22px; border-radius:50%; background:#E23D2E; color:#fff; font-size:10px; font-weight:700; font-style:normal; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .ui-alert b{ display:block; font-size:11px; color:#9B2C1E; }
+  .ui-alert span{ font-size:10px; color:#C0533F; }
+  .ui-navydash{ background:#101C2C; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .dbtns{ display:flex; gap:6px; }
+  .dbtns span{ font-size:9px; font-weight:700; color:#DFE5EC; border:1px solid rgba(255,255,255,.22); border-radius:7px; padding:5px 9px; }
+  .ui-pad{ padding:14px 16px 18px; background:#fff; }
+  .ui-pad.grey{ background:#E9EBEE; }
+  .tabs{ display:flex; gap:7px; margin-bottom:14px; }
+  .tabs span{ flex:1; text-align:center; font-size:10px; font-weight:700; padding:8px; border-radius:20px; border:1px solid var(--border); color:var(--sub); }
+  .tabs span.on{ background:#141C2B; color:#fff; border-color:#141C2B; }
+  .lbl{ font-size:8.5px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+  .lbl.spread{ display:flex; justify-content:space-between; align-items:center; margin-top:14px; }
+  .lbl em{ font-style:normal; letter-spacing:0; text-transform:none; font-size:10px; color:var(--sub); font-weight:700; }
+  .pick{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .pick span{ text-align:center; font-size:10px; font-weight:700; color:var(--text); border:1px solid var(--border); border-radius:10px; padding:14px 6px; line-height:2; }
+  .pick .p1{ border-top:2px solid #141C2B; } .pick .p2{ border-top:2px solid var(--brass); } .pick .p3{ border-top:2px solid #3B6CA8; }
+  .obras{ border:1px solid var(--border); border-radius:11px; padding:12px; }
+  .oh{ font-size:8.5px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--text); margin-bottom:9px; }
+  .orow{ display:flex; align-items:center; gap:7px; padding:6px 0; font-size:10.5px; font-weight:700; color:var(--text); }
+  .orow em{ margin-left:auto; font-style:normal; font-weight:600; font-size:9.5px; color:var(--sub); }
+  .orow em.am{ color:#B5651D; } .orow b{ background:#EEF1F5; border-radius:20px; padding:2px 7px; font-size:9px; color:var(--sub); }
+  .dot{ width:6px; height:6px; border-radius:50%; flex-shrink:0; } .dot.am{ background:#E09A3E; } .dot.gr{ background:#3E9B62; }
+  .ofoot{ font-size:9px; color:var(--muted); margin-top:9px; line-height:1.4; }
+  .ui-hero{ background:linear-gradient(160deg,#2C3440,#171C24); padding:26px 16px 22px; text-align:center; }
+  .logo-c{ width:44px; height:44px; border-radius:50%; background:#fff; border:2px solid #7DBE4B; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:var(--navy); }
+  .ph-title{ font-size:17px; font-weight:800; color:#fff; margin-top:2px; }
+  .ph-bar{ height:5px; background:rgba(255,255,255,.25); border-radius:6px; margin:12px auto 6px; max-width:230px; overflow:hidden; }
+  .ph-bar i{ display:block; height:100%; width:80%; background:#7DBE4B; }
+  .ph-pct{ font-size:10.5px; color:#D6DCE4; }
+  .srow{ display:flex; align-items:center; gap:10px; background:#fff; border-radius:11px; padding:12px 13px; margin-bottom:7px; font-size:12px; font-weight:700; color:var(--navy); }
+  .sic{ width:26px; height:26px; border-radius:7px; background:#E9EBEE; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--sub); }
+  .srow em{ margin-left:auto; font-style:normal; color:var(--muted); }
+
+  /* ── gallery: "así se ve" ── */
+  .gallery{ margin-top:44px; display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+  .gcard{ background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden; box-shadow:0 18px 40px -26px rgba(16,28,44,.3); transition:transform .15s ease; }
+  .gcard:hover{ transform:translateY(-3px); }
+  .gtop{ background:#EDEFF3; padding:9px 12px; display:flex; align-items:center; gap:5px; }
+  .gtop .d{ width:6px; height:6px; border-radius:50%; background:#C9CFD8; }
+  .glabel{ padding:12px 14px 2px; font-size:9px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--brass); }
+  .gbody{ padding:8px 12px 16px; min-height:190px; }
+  .mini-card{ background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:9px 10px; margin-bottom:8px; }
+  .mini-card .mrow{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .mini-card .mname{ font-size:11px; font-weight:700; }
+  .mini-chip{ font-size:8px; font-weight:700; padding:2px 6px; border-radius:20px; }
+  .mini-chip.ok{ background:#EAF3EC; color:var(--ok); }
+  .mini-chip.wait{ background:#FBF2E3; color:#9A6B1E; }
+  .mini-chip.send{ background:#EAF3EC; color:var(--ok); }
+  .mini-bar{ height:4px; background:#EAEEF3; border-radius:6px; overflow:hidden; }
+  .mini-bar i{ display:block; height:100%; background:linear-gradient(90deg,var(--brass),var(--brass-light)); }
+  .ring-wrap{ display:flex; flex-direction:column; align-items:center; padding-top:6px; }
+  .ring{ width:84px; height:84px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:conic-gradient(var(--brass) 0 68%, #EAEEF3 0); }
+  .ring b{ width:64px; height:64px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:15px; color:var(--navy); }
+  .ring-label{ margin-top:10px; font-size:11px; font-weight:700; text-align:center; }
+  .thumbs{ display:flex; gap:5px; margin-top:10px; }
+  .thumbs span{ flex:1; height:26px; border-radius:5px; background:linear-gradient(135deg,#DCE3EC,#EEF1F5); }
+  .ro-badge{ margin-top:10px; font-size:8.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); text-align:center; }
+  .req-row{ display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); font-size:10.5px; }
+  .req-row:last-child{ border-bottom:none; }
+
+  .ai-strip{ margin-top:20px; background:#FBF6EE; border:1px solid #EBDCC0; border-radius:14px; padding:16px 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .ai-strip .who{ font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--brass); flex-shrink:0; }
+  .ai-bubbles{ display:flex; gap:10px; flex-wrap:wrap; flex:1; }
+  .bubble{ font-size:12.5px; padding:9px 13px; border-radius:10px; max-width:340px; line-height:1.4; }
+  .bubble.q{ background:#fff; border:1px solid var(--border); color:var(--sub); }
+  .bubble.a{ background:var(--brass); color:#fff; font-weight:500; }
+
+  /* ── demo cta ── */
+  .demo{ background:#fff; color:var(--text); border-radius:24px; padding:56px 48px; position:relative; overflow:hidden; margin:0 24px; max-width:1072px; margin-inline:auto; border:1px solid var(--border); box-shadow:0 24px 60px -30px rgba(16,28,44,.25); }
+  .demo::after{ content:""; position:absolute; right:-60px; top:-60px; width:260px; height:260px; border-radius:50%; background:radial-gradient(circle, rgba(176,137,79,.16), transparent 70%); }
+  .demo-grid{ position:relative; z-index:1; display:flex; justify-content:space-between; align-items:center; gap:30px; flex-wrap:wrap; }
+  .demo h2{ font-size:28px; color:var(--navy); max-width:420px; }
+  .demo p{ margin-top:10px; color:var(--sub); font-size:14px; max-width:420px; line-height:1.6; }
+  .demo-links{ display:grid; gap:10px; }
+  .demo-links .btn{ justify-content:center; min-width:220px; }
+
+  /* ── pricing ── */
+  .plans{ margin-top:44px; display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .plan{ background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:28px; display:flex; flex-direction:column; }
+  .plan.feat{ border-color:var(--brass); box-shadow:0 20px 40px -18px rgba(176,137,79,.35); position:relative; }
+  .plan.feat .tag{ position:absolute; top:-11px; left:24px; background:var(--brass); color:#fff; font-size:10px; font-weight:700; padding:4px 10px; border-radius:20px; letter-spacing:.05em; text-transform:uppercase; }
+  .plan h3{ font-size:15px; font-weight:700; font-family:'Inter',sans-serif; }
+  .plan .price{ margin-top:10px; font-family:'IBM Plex Mono',monospace; font-size:26px; color:var(--navy); }
+  .plan .price span{ font-size:12px; color:var(--muted); font-family:'Inter',sans-serif; }
+  .plan ul{ list-style:none; padding:0; margin:18px 0 0; display:flex; flex-direction:column; gap:9px; flex:1; }
+  .plan li{ font-size:13px; color:var(--sub); display:flex; gap:8px; align-items:flex-start; }
+  .plan li::before{ content:"—"; color:var(--brass); flex-shrink:0; }
+  .plan .btn{ margin-top:22px; justify-content:center; }
+
+  footer{ padding:40px 0; border-top:1px solid var(--border); background:#F5F6F8; }
+  .footwrap{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; font-size:12.5px; color:var(--muted); }
+
+
+  /* ── vista del panel de demo ── */
+  #vista-demo { display:none; }
+  body.en-demo { background:#0E1520 !important; }
+  body.en-demo #vista-landing { display:none; }
+  body.en-demo #vista-demo { display:block; }
+  body.en-demo header { display:none; }
+  #barra-volver {
+    position:fixed; top:0; left:0; right:0; z-index:200;
+    background:rgba(14,21,32,.94); backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(255,255,255,.1);
+    padding:9px 14px; display:none; align-items:center; gap:10px;
+  }
+  body.en-demo #barra-volver { display:flex; }
+  body.en-demo #vista-demo { padding-top:46px; }
+  #barra-volver .vb {
+    background:transparent; border:1px solid rgba(255,255,255,.25); color:#C8D0DA;
+    border-radius:8px; padding:8px 13px; font-size:12px; font-weight:700; cursor:pointer;
+    font-family:inherit; min-height:36px;
+  }
+  #barra-volver .marca { color:#fff; font-weight:800; font-size:13px; display:flex; align-items:center; gap:8px; }
+  #barra-volver .marca em { font-style:normal; color:#B0894F; }
+
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease; }
+  /* Sin JavaScript el contenido se ve igual */
+  .no-js .reveal{ opacity:1; transform:none; }
+  .reveal.in{ opacity:1; transform:none; }
+
+  @media (max-width: 920px){
+    .hero-grid{ grid-template-columns:1fr; }
+    .hero h1{ font-size:38px; }
+    .pain-grid,.modules,.flow-row,.trust,.plans,.gallery{ grid-template-columns:repeat(2,1fr); }
+    .shot,.shot.alt{ grid-template-columns:1fr; gap:20px; }
+    .shot.alt figcaption{ order:1; }
+    .shot.alt .simg{ order:2; }
+    .navlinks{ display:none; }
+    .demo-grid{ flex-direction:column; align-items:flex-start; }
+  }
+  @media (max-width: 560px){
+    .pain-grid,.modules,.flow-row,.trust,.plans,.gallery{ grid-template-columns:1fr; }
+    .ai-strip{ flex-direction:column; align-items:flex-start; }
+    .tcell,.pain{ border-right:none !important; border-bottom:1px solid var(--border); }
+    .demo{ padding:36px 24px; }
+  }
 </style>
 </head>
-<body>
-<div id="root"><div id="arranque">Cargando el panel…</div></div>
+<body class="no-js">
+
+<div id="vista-landing">
+<header>
+  <div class="nav">
+    <div class="brand"><span class="mark"></span> Constru<em>IA</em></div>
+    <nav class="navlinks">
+      <a href="#modulos">Módulos</a>
+      <a href="#flujo">Cómo funciona</a>
+      <a href="#demo">Así se ve</a>
+      <a href="#planes">Planes</a>
+    </nav>
+    <div class="navcta">
+      <a class="btn btn-ghost" href="#planes">Ver planes</a>
+      <button class="btn btn-brass" onclick="abrirDemo()">Probar demo</button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="blueprint"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow"><span></span><b>Hecha por arquitectos, para arquitectos</b></div>
+      <h1>El sistema que <em>sostiene</em><br>la obra, no el que<br>la complica.</h1>
+      <p class="lead">Avances, certificados, pedidos de materiales, planos y definiciones técnicas en un solo lugar — sin planillas sueltas ni carpetas de WhatsApp. Cuando el contratista pide algo, queda cargado a la vez en la constructora y en el estudio de arquitectura. Con un asistente de IA que conoce cada obra y responde antes de que termines de escribirlo.</p>
+      <p class="byline">No lo diseñó una software factory: lo diseñaron arquitectos que dirigen obra todos los días, sobre los problemas que tienen ellos mismos.</p>
+      <div class="hero-cta">
+        <button class="btn btn-brass" onclick="abrirDemo()">Probar la demo →</button>
+        <a class="btn btn-ghost" href="#modulos">Ver los módulos</a>
+      </div>
+      <div class="hero-meta">
+        <div><b>4</b>apps conectadas</div>
+        <div><b>IA</b>asistente por chat</div>
+        <div><b>100%</b>mobile, uso en el pozo</div>
+      </div>
+    </div>
+
+    <div style="position:relative;">
+      <div class="mock">
+        <div class="mock-screen">
+          <div class="mock-top">
+            <div class="t1">Hoy en todas las obras</div>
+            <div class="t2">3 en curso · 1 alerta</div>
+          </div>
+          <div class="mock-body">
+            <div class="ocard">
+              <div class="row1"><span class="name">Obra Los Álamos 100</span><span class="chip curso">EN CURSO</span></div>
+              <div class="bar"><i id="bar1"></i></div>
+              <div class="foot"><span>AVANCE 68%</span><span>cierre 30/08</span></div>
+            </div>
+            <div class="ocard">
+              <div class="row1"><span class="name">Obra San Martín 250</span><span class="chip curso">EN CURSO</span></div>
+              <div class="bar"><i id="bar2"></i></div>
+              <div class="foot"><span>AVANCE 41%</span><span>cierre 15/09</span></div>
+            </div>
+            <div class="ocard">
+              <div class="row1"><span class="name">Obra Belgrano 450</span><span class="chip term">TERMINADA</span></div>
+              <div class="bar"><i id="bar3"></i></div>
+              <div class="foot"><span>AVANCE 100%</span><span>cierre 28/02</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="float-tag ft1"><span class="dot"></span> Certificado enviado</div>
+      <div class="float-tag ft2"><span class="dot" style="background:var(--brass)"></span> Pedido a contratista</div>
+    </div>
+  </div>
+</section>
+
+<section class="pains">
+  <div class="wrap">
+    <div class="eyebrow"><span></span><b>El problema de hoy</b></div>
+    <h2 class="reveal">La obra se maneja perfecto en el pozo. Se pierde en la administración.</h2>
+    <div class="pain-grid">
+      <div class="pain reveal"><div class="num">01</div><p>El avance real vive en la cabeza del capataz y en fotos sueltas de WhatsApp que nadie ordena.</p></div>
+      <div class="pain reveal"><div class="num">02</div><p>Los certificados de avance se arman a mano en Excel, obra por obra, cada semana.</p></div>
+      <div class="pain reveal"><div class="num">03</div><p>El estudio de arquitectura pregunta "¿cómo viene tal obra?" y hay que armar un informe desde cero.</p></div>
+      <div class="pain reveal"><div class="num">04</div><p>Un pedido de materiales se manda por audio y se pierde entre treinta chats de obra.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="modulos">
+  <div class="wrap">
+    <div class="eyebrow"><span></span><b>Tres roles, un mismo dato</b></div>
+    <h2>Cada parte de la obra tiene su panel. Ninguno duplica carga.</h2>
+    <p class="sub">El contratista pide materiales, planos o una definición técnica desde su app — y ese pedido aparece al instante en la constructora y en el estudio de arquitectura, sin que nadie tenga que reenviarlo.</p>
+
+    <div class="modules">
+      <div class="module reveal">
+        <div class="ico">▤</div>
+        <h3>Panel principal</h3>
+        <p>Obras, personal, certificados, documentación técnica y auditorías — el centro de comando de la constructora.</p>
+        <div class="who">Para vos y tu equipo</div>
+      </div>
+      <div class="module reveal">
+        <div class="ico">◧</div>
+        <h3>Panel del estudio de arquitectura</h3>
+        <p>Ve cada pedido de plano o definición apenas lo carga el contratista, y responde sin pasar por vos.</p>
+        <div class="who">Para el estudio que proyecta</div>
+      </div>
+      <div class="module reveal">
+        <div class="ico">⌂</div>
+        <h3>Portal del propietario</h3>
+        <p>Vista de solo lectura para quien financia o va a vivir la obra — tranquilidad sin acceso a lo operativo.</p>
+        <div class="who">Para el dueño final</div>
+      </div>
+      <div class="module reveal">
+        <div class="ico">▦</div>
+        <h3>App del contratista</h3>
+        <p>Pide materiales, planos o definiciones técnicas en el momento — y queda cargado a la vez en constructora y estudio de arquitectura.</p>
+        <div class="who">Para quien ejecuta en obra</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="flow" id="flujo">
+  <div class="section wrap">
+    <div class="eyebrow"><span></span><b>Cómo funciona</b></div>
+    <h2>De la obra al certificado, en cuatro pasos reales.</h2>
+    <div class="flow-row">
+      <div class="step reveal"><div class="n">01</div><h3>Se da de alta la obra</h3><p>Datos, sector, monto y fechas. Un minuto, desde el celular.</p></div>
+      <div class="step reveal"><div class="n">02</div><h3>Se carga el avance</h3><p>Fotos, % de avance y observaciones, directo desde el pozo.</p></div>
+      <div class="step reveal"><div class="n">03</div><h3>Se emite el certificado</h3><p>El sistema arma el PDF con lo cargado — sin Excel.</p></div>
+      <div class="step reveal"><div class="n">04</div><h3>El estudio responde</h3><p>Ve el pedido, sube el plano o resuelve la duda, todo dentro del mismo hilo.</p></div>
+    </div>
+
+    <div class="trust reveal">
+      <div class="tcell"><b>Offline-first</b><span>guarda local y sincroniza solo cuando hay señal</span></div>
+      <div class="tcell"><b>Multi-obra</b><span>todas las obras activas, una sola pantalla</span></div>
+      <div class="tcell"><b>Push</b><span>alertas de vencimientos y pedidos sin abrir la app</span></div>
+      <div class="tcell"><b>PDF</b><span>certificados y actas listos para firmar</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="demo">
+  <div class="wrap">
+    <div class="eyebrow"><span></span><b>Así se ve por dentro</b></div>
+    <h2>Cuatro apps. El mismo dato, cargado una sola vez.</h2>
+    <p class="sub">Cada parte de la obra tiene su propio entorno — pero todos leen de la misma carga. Nadie duplica planillas para que el otro vea el avance.</p>
+
+    <div class="shots">
+
+      <figure class="shot reveal">
+        <figcaption>
+          <span class="stag">App 1 · Constructora</span>
+          <b>El centro de comando de la obra</b>
+          <span class="sdesc">Obras, avance, bitácora, auditoría y pedidos enviados — con un asistente de IA que lee todos los datos de la app en tiempo real y contesta por texto o por voz.</span>
+        </figcaption>
+        <div class="ui">
+          <div class="ui-nav">
+            <span class="on">IA<i class="bdg">57</i></span><span>Drone IA</span><span>Grabar reunión</span><span>Inicio</span><span class="hot">Obras<i class="bdg">5</i></span><span>Avance</span><span>Bitácora</span><span>Pedidos enviados</span><span>Auditoría</span><span class="hot">Más<i class="bdg">37</i></span>
+          </div>
+          <div class="ui-head">
+            <div class="ui-eyebrow">Inteligencia · v23</div>
+            <div class="ui-title">Asistente de obra</div>
+            <div class="ui-sub">Lee todos los datos de la app en tiempo real</div>
+          </div>
+          <div class="ui-chat">
+            <div class="msg me">Pedile al estudio los metros cuadrados reales de todas las obras activas</div>
+            <div class="msg bot">Le paso la consulta al estudio para que confirme los m² de todas las obras activas.</div>
+            <div class="ui-ok">✓ Le pasé tu consulta directo a la IA del estudio. Te muestro la respuesta apenas conteste.</div>
+            <div class="msg bot">IA del estudio respondió: no tengo ese dato cargado. Lo derivé al equipo como URGENTE (quedó en Pedidos).</div>
+          </div>
+          <div class="ui-bar">
+            <span class="pill">⊕ Buscar en internet ON</span><span class="pill">⌇ Debate IA</span>
+            <span class="fake-input">Escribí, adjuntá o usá el micrófono…</span>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="shot reveal alt">
+        <figcaption>
+          <span class="stag">App 2 · Estudio de arquitectura</span>
+          <b>Ve los pedidos apenas se cargan</b>
+          <span class="sdesc">Informes, cronogramas, formularios y pedidos recibidos. Cuando el contratista pide un plano o una definición, aparece acá sin que nadie lo reenvíe.</span>
+        </figcaption>
+        <div class="ui">
+          <div class="ui-nav">
+            <span class="on">IA</span><span>Drone IA</span><span class="hot">Obras<i class="bdg">8</i></span><span>Avance</span><span class="hot">Informes<i class="bdg">1</i></span><span>Cronogramas</span><span class="hot">Bitácora<i class="bdg">89</i></span><span class="hot">Mensajes<i class="bdg">3</i></span><span class="hot">Pedidos recibidos<i class="bdg">26</i></span><span class="hot">Personal<i class="bdg">42</i></span><span>Ajustes</span>
+          </div>
+          <div class="ui-alert"><i>1</i><div><b>1 pedido pendiente de la constructora</b><span>Obras: general →</span></div></div>
+          <div class="ui-chat">
+            <div class="msg bot">Obra Barrio Norte 011 — no tiene registros de bitácora cargados, solo el informe de albañilería del 01/07.<br><br>¿Necesitás que profundice en alguna o que gestione algo?</div>
+            <div class="msg me teal">El último certificado de Los Álamos</div>
+            <div class="msg bot"><b>📋 CERTIFICADO SEMANAL — Obra Los Álamos 100</b><br><b>Semana 27/07 al 31/07</b><br><br>La obra avanzó de mampostería a revoque grueso en varios ambientes. Avance global estimado 45-50%, con estructura terminada. El ritmo se vio afectado por definiciones de proyecto pendientes.</div>
+          </div>
+          <div class="ui-bar">
+            <span class="pill">⌇ Debate IA</span><span class="pill">◈ Narrar</span>
+            <span class="fake-input">Escribí tu consulta…</span>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="shot reveal">
+        <figcaption>
+          <span class="stag">App 3 · Contratistas</span>
+          <b>Pide materiales, planos y definiciones</b>
+          <span class="sdesc">Tres tipos de pedido en una sola pantalla, con el registro por obra y el aviso de qué obra hace días que no pide nada. Cada pedido queda cargado a la vez en las otras dos apps.</span>
+        </figcaption>
+        <div class="ui">
+          <div class="ui-navydash">
+            <div><div class="ui-eyebrow brass">Pedidos de materiales · v2</div></div>
+            <div class="dbtns"><span>↻ Actualizar</span><span>✧ Estilo</span><span>Cambiar</span></div>
+          </div>
+          <div class="ui-pad">
+            <div class="tabs"><span class="on">Pedidos</span><span>Recepción de docs</span><span>Definiciones</span></div>
+            <div class="lbl">Qué querés pedir</div>
+            <div class="pick">
+              <span class="p1">▣<br>Materiales</span><span class="p2">✎<br>Definiciones</span><span class="p3">▤<br>Planos</span>
+            </div>
+            <div class="lbl spread">Registro de pedidos <em>26 pedidos · 8 obras</em></div>
+            <div class="obras">
+              <div class="oh">Estado por obra</div>
+              <div class="orow"><span class="dot am"></span>Obra Barrio Norte 01<em class="am">sin pedidos de material</em><b>0</b></div>
+              <div class="orow"><span class="dot am"></span>Obra Sur 249<em class="am">sin pedidos de material</em><b>0</b></div>
+              <div class="orow"><span class="dot am"></span>Obra Norte 300<em class="am">hace 20 días</em><b>1</b></div>
+              <div class="orow"><span class="dot am"></span>Obra San Martín 250<em class="am">hace 13 días</em><b>2</b></div>
+              <div class="orow"><span class="dot gr"></span>Obra Belgrano 450<em>hace 6 días</em><b>5</b></div>
+              <div class="orow"><span class="dot gr"></span>Obra Los Álamos 100<em>pidió hoy</em><b>12</b></div>
+              <div class="ofoot">Tocá una obra para filtrar. En ámbar, las que hace 7 días o más que no piden materiales.</div>
+            </div>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="shot reveal alt">
+        <figcaption>
+          <span class="stag">App 4 · Propietario</span>
+          <b>El dueño sigue su obra sin llamarte</b>
+          <span class="sdesc">Renders, fotos de avance, cronograma, informes, planos y costos — en modo lectura, con el porcentaje de avance siempre a la vista.</span>
+        </figcaption>
+        <div class="ui">
+          <div class="ui-hero">
+            <div class="logo-c">Tu marca</div>
+            <div class="ui-eyebrow light">Tu proyecto</div>
+            <div class="ph-title">Obra Los Álamos 100</div>
+            <div class="ph-bar"><i></i></div>
+            <div class="ph-pct">Avance 80%</div>
+          </div>
+          <div class="ui-pad grey">
+            <div class="lbl">Secciones</div>
+            <div class="srow"><span class="sic">▤</span>Renders<em>›</em></div>
+            <div class="srow"><span class="sic">▤</span>Fotos de avance<em>›</em></div>
+            <div class="srow"><span class="sic">▦</span>Cronograma<em>›</em></div>
+            <div class="srow"><span class="sic">▥</span>Informes<em>›</em></div>
+            <div class="srow"><span class="sic">▧</span>Planos<em>›</em></div>
+            <div class="srow"><span class="sic">▨</span>Costos<em>›</em></div>
+          </div>
+        </div>
+      </figure>
+
+    </div>
+
+    <div class="ai-strip reveal">
+      <span class="who">Asistente IA</span>
+      <div class="ai-bubbles">
+        <span class="bubble q">¿cómo viene Los Álamos?</span>
+        <span class="bubble a">68% de avance, cierra 30/08. Último parte: hormigón visto en PB.</span>
+      </div>
+    </div>
+
+    <div class="demo" style="margin-top:40px;">
+      <div class="demo-grid">
+        <div>
+          <div class="eyebrow"><span></span><b>Sin compromiso</b></div>
+          <h2>Probá el sistema con datos de ejemplo, hoy.</h2>
+          <p>Es la app real, con obras ficticias ya cargadas. Entrás, tocás todo, y si querés seguimos con tus datos.</p>
+        </div>
+        <div class="demo-links">
+          <button class="btn btn-brass" onclick="abrirDemo()">Entrar al panel en vivo →</button>
+          <button class="btn btn-ghost" onclick="abrirDemo()">Ver las 4 apps sincronizadas →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="planes">
+  <div class="wrap">
+    <div class="eyebrow"><span></span><b>Planes</b></div>
+    <h2>Un precio por obra activa, no por promesa.</h2>
+    <p class="sub">Pagás por lo que estás usando de verdad. Se suma o se saca una obra cuando corresponde.</p>
+
+    <div class="plans">
+      <div class="plan reveal">
+        <h3>Una obra</h3>
+        <div class="price">Consultar</div>
+        <ul>
+          <li>1 obra activa</li>
+          <li>Panel principal + panel del estudio de arquitectura</li>
+          <li>Certificados en PDF</li>
+          <li>Soporte por WhatsApp</li>
+        </ul>
+        <a class="btn btn-ghost" href="#">Pedir precio</a>
+      </div>
+      <div class="plan feat reveal">
+        <div class="tag">Más elegido</div>
+        <h3>Constructora</h3>
+        <div class="price">Consultar</div>
+        <ul>
+          <li>Obras activas ilimitadas</li>
+          <li>Las 4 apps: constructora, estudio de arquitectura, propietario y contratista</li>
+          <li>Notificaciones push</li>
+          <li>Alta y soporte prioritario</li>
+        </ul>
+        <a class="btn btn-brass" href="#">Pedir precio</a>
+      </div>
+      <div class="plan reveal">
+        <h3>A medida</h3>
+        <div class="price">Consultar</div>
+        <ul>
+          <li>Módulos propios de tu operación</li>
+          <li>Integraciones (contable, IA, otros)</li>
+          <li>Múltiples empresas / grupos</li>
+          <li>Acompañamiento dedicado</li>
+        </ul>
+        <a class="btn btn-ghost" href="#">Hablemos</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footwrap">
+    <div class="brand" style="font-size:13px;"><span class="mark" style="width:16px;height:16px;"></span> Constru<em>IA</em></div>
+    <div>© 2026 · Hecha por arquitectos, para arquitectos · Argentina</div>
+    <button class="btn btn-dark" style="padding:9px 16px;" onclick="abrirDemo()">Probar demo</button>
+  </div>
+</footer>
+</div>
+
+<div id="barra-volver">
+  <button class="vb" onclick="volverALanding()">‹ Volver</button>
+  <span class="marca"><span style="width:14px;height:2px;background:#B0894F;display:inline-block"></span> Constru<em>IA</em> · demo en vivo</span>
+</div>
+
+<div id="vista-demo"><div id="root-demo"></div></div>
+
+
 <script>
+document.body.classList.remove("no-js");
+(function () {
+  var bars = { bar1:68, bar2:41, bar3:100 };
+
+  function mostrarBarras() {
+    Object.keys(bars).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.style.width = bars[id] + '%';
+    });
+  }
+  function mostrarTodo() {
+    var els = document.querySelectorAll('.reveal');
+    for (var i = 0; i < els.length; i++) els[i].classList.add('in');
+    mostrarBarras();
+  }
+
+  // Si el navegador no soporta IntersectionObserver (o falla por cualquier motivo),
+  // se muestra todo de una. El contenido NUNCA queda invisible.
+  try {
+    if (typeof IntersectionObserver === 'undefined') { mostrarTodo(); return; }
+
+    var heroObs = new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].isIntersecting) { mostrarBarras(); heroObs.disconnect(); }
+      }
+    }, { threshold: .3 });
+    var mockEl = document.querySelector('.mock');
+    if (mockEl) heroObs.observe(mockEl); else mostrarBarras();
+
+    var revealObs = new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].isIntersecting) {
+          entries[i].target.classList.add('in');
+          revealObs.unobserve(entries[i].target);
+        }
+      }
+    }, { threshold: .15 });
+    var els = document.querySelectorAll('.reveal');
+    for (var i = 0; i < els.length; i++) revealObs.observe(els[i]);
+
+    // Red de seguridad: si a los 3 segundos algo quedó oculto, lo muestro igual.
+    setTimeout(mostrarTodo, 3000);
+  } catch (e) {
+    mostrarTodo();
+  }
+})();
+</script>
+
+
+<script>
+
 /**
  * @license React
  * react.production.min.js
@@ -58,8 +771,10 @@ c.useEffect=function(a,b){return g.current.useEffect(a,b)};c.useId=function(){re
 c.useState=function(a){return g.current.useState(a)};c.useSyncExternalStore=function(a,b,c){return g.current.useSyncExternalStore(a,b,c)};c.useTransition=function(){return g.current.useTransition()};c.version="18.3.1"});
 })();
 
+
 </script>
 <script>
+
 /**
  * @license React
  * react-dom.production.min.js
@@ -328,8 +1043,17 @@ var d=null!=c&&c.hydratedSources||null,e=!1,f="",g=aj;null!==c&&void 0!==c&&(!0=
 function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmountComponentAtNode=function(a){if(!Vd(a))throw Error(m(40));return a._reactRootContainer?(yb(function(){Wd(null,null,a,!1,function(){a._reactRootContainer=null;a[Ja]=null})}),!0):!1};Q.unstable_batchedUpdates=Tf;Q.unstable_renderSubtreeIntoContainer=function(a,b,c,d){if(!Vd(c))throw Error(m(200));if(null==a||void 0===a._reactInternals)throw Error(m(38));return Wd(a,b,c,!1,d)};Q.version="18.3.1-next-f1338f8080-20240426"});
 })();
 
+
 </script>
 <script>
+var demoIniciada = false;
+function abrirDemo() {
+  document.body.classList.add("en-demo");
+  try { window.scrollTo(0, 0); } catch (e) {}
+  if (!demoIniciada) {
+    demoIniciada = true;
+    try {
+
 (function () {
   try {
 const {
@@ -711,6 +1435,11 @@ function PanelDemo() {
   const [procesando, setProcesando] = useState(false);
   const [bitacora, setBitacora] = useState([]);
   const [verBitacora, setVerBitacora] = useState(false);
+  // cada app navega por su cuenta, como las reales
+  const [tabC, setTabC] = useState("ia"); // constructora
+  const [tabE, setTabE] = useState("ia"); // estudio
+  const [tabK, setTabK] = useState("pedidos"); // contratista
+  const [secP, setSecP] = useState(null); // propietario
 
   // Cada acción deja su registro. Esto es la trazabilidad de la obra.
   function anotar(titulo, detalle, autor) {
@@ -989,6 +1718,10 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     setAvanceIA(null);
     setBitacora([]);
     setVerBitacora(false);
+    setTabC("ia");
+    setTabE("ia");
+    setTabK("pedidos");
+    setSecP(null);
   }
   useEffect(() => () => fotos.forEach(f => URL.revokeObjectURL(f.url)), []);
   const pendientes = pedidos.filter(p => p.estado !== "resuelto").length;
@@ -1001,13 +1734,13 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       padding: 12
     }
   }, /*#__PURE__*/React.createElement("style", null, `
-        .grilla { display:grid; gap:12px; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; height:calc(100vh - 118px); }
+        .grilla { display:grid; gap:12px; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; height:calc(100vh - 96px); }
         @media (max-width: 820px) {
           .grilla { grid-template-columns:1fr; grid-template-rows:none; height:auto; }
-          .grilla > div { min-height:420px; }
+          .grilla > div { min-height:460px; }
         }
-        button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        button:active { opacity:.65; transform:scale(.97); }
+        button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; font-family:inherit; }
+        button:active { opacity:.6; transform:scale(.97); }
         @keyframes pulseIn { 0%{box-shadow:0 0 0 0 rgba(176,137,79,.75)} 100%{box-shadow:0 0 0 16px rgba(176,137,79,0)} }
         .flash { animation: pulseIn 1.4s ease-out 1; }
         @keyframes slideIn { from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:none} }
@@ -1017,16 +1750,9 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 8,
+      gap: 9,
       flexWrap: "wrap",
       marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 9,
-      marginRight: 4
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -1047,8 +1773,8 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       gap: 5,
       fontSize: 10,
       fontWeight: 700,
-      color: iaOk ? "#7DBE4B" : iaOk === false ? "#E08A3E" : "#6C7787",
-      border: `1px solid ${iaOk ? "rgba(125,190,75,.4)" : "rgba(255,255,255,.15)"}`,
+      color: iaOk ? "#7DBE4B" : "#E08A3E",
+      border: `1px solid ${iaOk ? "rgba(125,190,75,.4)" : "rgba(224,138,62,.4)"}`,
       borderRadius: 20,
       padding: "3px 9px"
     }
@@ -1058,9 +1784,15 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       height: 6,
       borderRadius: "50%",
       fontStyle: "normal",
-      background: iaOk ? "#7DBE4B" : iaOk === false ? "#E08A3E" : "#6C7787"
+      background: iaOk ? "#7DBE4B" : "#E08A3E"
     }
-  }), iaOk ? "IA conectada" : iaOk === false ? "IA sin configurar" : "Verificando")), /*#__PURE__*/React.createElement("input", {
+  }), iaOk ? "IA conectada" : "IA sin configurar"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#6C7787",
+      fontSize: 11.5,
+      marginLeft: 4
+    }
+  }, ultimo || "Tocá los botones dentro de cada app"), /*#__PURE__*/React.createElement("input", {
     ref: fileRef,
     type: "file",
     accept: "image/*",
@@ -1084,120 +1816,199 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     style: {
       display: "none"
     }
-  }), /*#__PURE__*/React.createElement(Boton, {
-    onClick: () => antesRef.current?.click(),
-    ok: !!fotoAntes,
-    disabled: procesando
-  }, procesando ? "⏳ Procesando…" : fotoAntes ? "✓ Foto anterior" : "🖼 Foto anterior"), /*#__PURE__*/React.createElement(Boton, {
-    onClick: () => hoyRef.current?.click(),
-    ok: !!fotoHoy,
-    disabled: procesando
-  }, procesando ? "⏳ Procesando…" : fotoHoy ? "✓ Foto de hoy" : "📷 Foto de hoy"), iaOk !== false && /*#__PURE__*/React.createElement(Boton, {
-    onClick: analizarAvance,
-    principal: true,
-    disabled: !fotoAntes || !fotoHoy || generando
-  }, generando ? "⏳ Comparando…" : "✨ Analizar avance con IA"), /*#__PURE__*/React.createElement(Boton, {
-    onClick: pedirMateriales
-  }, "📦 Materiales"), /*#__PURE__*/React.createElement(Boton, {
-    onClick: pedirDefinicion
-  }, "✎ Definición"), /*#__PURE__*/React.createElement(Boton, {
-    onClick: emitirCertificado
-  }, "📋 Certificado"), /*#__PURE__*/React.createElement(Boton, {
-    onClick: generarInforme
-  }, generando ? "⏳…" : "📝 Informe"), /*#__PURE__*/React.createElement(Boton, {
-    onClick: () => setVerBitacora(true),
-    ok: bitacora.length > 0
-  }, "📔 Bitácora", bitacora.length ? ` · ${bitacora.length}` : ""), /*#__PURE__*/React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: () => setVerKey(true),
     style: {
       marginLeft: "auto",
-      background: iaOk ? "transparent" : "rgba(224,138,62,.18)",
+      background: "transparent",
       border: `1px solid ${iaOk ? "rgba(255,255,255,.25)" : "rgba(224,138,62,.6)"}`,
       color: iaOk ? "#B9C2CF" : "#E8A860",
       borderRadius: 8,
-      padding: "11px 15px",
-      fontSize: 12.5,
+      padding: "10px 14px",
+      fontSize: 12,
       fontWeight: 700,
       cursor: "pointer",
-      minHeight: 42
+      minHeight: 40
     }
-  }, iaOk ? "🔑 Clave" : "🔑 Cargar clave"), /*#__PURE__*/React.createElement("button", {
+  }, "🔑 Clave"), /*#__PURE__*/React.createElement("button", {
     onClick: reiniciar,
     style: {
       background: "transparent",
       border: "1px solid rgba(255,255,255,.25)",
       color: "#B9C2CF",
       borderRadius: 8,
-      padding: "11px 15px",
-      fontSize: 12.5,
+      padding: "10px 14px",
+      fontSize: 12,
       fontWeight: 700,
       cursor: "pointer",
-      minHeight: 42
+      minHeight: 40
     }
   }, "Reiniciar")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      minHeight: 34,
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 10,
-      background: ultimo ? "rgba(176,137,79,.16)" : "rgba(255,255,255,.05)",
-      border: `1px solid ${ultimo ? "rgba(176,137,79,.4)" : "rgba(255,255,255,.08)"}`,
-      borderRadius: 9,
-      padding: "8px 13px"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 13
-    }
-  }, ultimo ? "⚡" : "○"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: ultimo ? "#F0DCBC" : "#6C7787",
-      fontSize: 12,
-      fontWeight: 600
-    }
-  }, ultimo || "Tocá una acción: el dato aparece en las otras apps al instante.")), /*#__PURE__*/React.createElement("div", {
     className: "grilla"
   }, /*#__PURE__*/React.createElement(Marco, {
     rotulo: "App 1 · Constructora",
     flash: flash.constructora
-  }, /*#__PURE__*/React.createElement(NavReal, {
+  }, /*#__PURE__*/React.createElement(Nav, {
+    valor: tabC,
+    onChange: setTabC,
     items: [{
+      id: "ia",
       t: "IA",
-      on: true,
       b: 57
     }, {
-      t: "Drone IA"
-    }, {
-      t: "Grabar reunión"
-    }, {
-      t: "Inicio"
-    }, {
+      id: "obras",
       t: "Obras",
       b: 5,
       rojo: true
     }, {
+      id: "avance",
       t: "Avance"
     }, {
+      id: "bitacora",
       t: "Bitácora",
       b: bitacora.length || null,
       rojo: !!bitacora.length
     }, {
-      t: "Pedidos enviados"
+      id: "pedidos",
+      t: "Pedidos",
+      b: pedidos.length || null,
+      rojo: !!pedidos.length
     }, {
+      id: "auditoria",
       t: "Auditoría"
-    }, {
-      t: "Más",
-      b: 37,
-      rojo: true
     }]
-  }), /*#__PURE__*/React.createElement(CabezalReal, {
-    eyebrow: `Inteligencia · v23`,
+  }), tabC === "ia" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Inteligencia · v23",
     titulo: "Asistente de Obra",
     sub: "Lee todos los datos de la app en tiempo real"
-  }), /*#__PURE__*/React.createElement(Chat, null, fotoAntes || fotoHoy ? /*#__PURE__*/React.createElement(Bloque, {
-    titulo: "Comparación de avance"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Accion, {
+    onClick: generarInforme,
+    disabled: generando,
+    principal: true
+  }, generando ? "⏳ La IA está trabajando…" : "✨ Generar informe semanal con IA"), informe && /*#__PURE__*/React.createElement(Tarjeta, {
+    nuevo: true,
+    destacada: true,
+    onClick: () => setVerInforme(true)
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 11.5
+    }
+  }, "✨ Informe semanal generado"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: T.sub,
+      lineHeight: 1.45,
+      marginTop: 4,
+      maxHeight: 42,
+      overflow: "hidden"
+    }
+  }, informe.texto.split("\n").filter(Boolean)[1]), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      color: BRASS,
+      marginTop: 5
+    }
+  }, "Abrir informe y PDF →")), /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: T.sub,
+      lineHeight: 1.5
+    }
+  }, "Podés preguntarme por el avance, los pedidos pendientes o pedirme que arme el informe."))), /*#__PURE__*/React.createElement(BarraChat, {
+    pills: ["⊕ Buscar en internet ON", "⌇ Debate IA"],
+    placeholder: "Escribí, adjuntá o usá el micrófono…",
+    pie: "Cargá tu API Key en Más → Configuración para activar la IA."
+  })), tabC === "obras" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Obras",
+    titulo: "Hoy en todas las obras",
+    sub: `${pedidos.length} pedido${pedidos.length === 1 ? "" : "s"} · ${certificados.length} certificado${certificados.length === 1 ? "" : "s"}`
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Tarjeta, {
+    destacada: true
   }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      marginBottom: 7
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      flex: 1,
+      fontSize: 12
+    }
+  }, OBRA), /*#__PURE__*/React.createElement(Chip, {
+    estado: "en curso"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 6,
+      background: "#EAEEF3",
+      borderRadius: 6,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      width: `${avance}%`,
+      background: `linear-gradient(90deg,${BRASS},#D9B57C)`,
+      transition: "width .8s"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      marginTop: 6,
+      fontSize: 9.5,
+      color: T.muted,
+      fontFamily: "monospace"
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "AVANCE ", avance, "%"), /*#__PURE__*/React.createElement("span", null, "cierre 30/08"))), ["Obra San Martín 250", "Obra Norte 300"].map((n, i) => /*#__PURE__*/React.createElement(Tarjeta, {
+    key: n
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      marginBottom: 7
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      flex: 1,
+      fontSize: 12
+    }
+  }, n), /*#__PURE__*/React.createElement(Chip, {
+    estado: "en curso"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 6,
+      background: "#EAEEF3",
+      borderRadius: 6,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      width: `${[41, 23][i]}%`,
+      background: `linear-gradient(90deg,${BRASS},#D9B57C)`
+    }
+  })))))), tabC === "avance" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Relevamiento",
+    titulo: "Registro de avance",
+    sub: "Fotografías e informe asistido"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 7,
+      marginBottom: 4
+    }
+  }, /*#__PURE__*/React.createElement(Accion, {
+    onClick: () => antesRef.current?.click(),
+    disabled: procesando,
+    ok: !!fotoAntes
+  }, fotoAntes ? "✓ Foto anterior" : "🖼 Foto anterior"), /*#__PURE__*/React.createElement(Accion, {
+    onClick: () => hoyRef.current?.click(),
+    disabled: procesando,
+    ok: !!fotoHoy
+  }, fotoHoy ? "✓ Foto de hoy" : "📷 Foto de hoy")), (fotoAntes || fotoHoy) && /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "1fr 1fr",
@@ -1208,21 +2019,20 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     style: {
       border: `1px solid ${f ? BRASS : T.border}`,
       borderRadius: 8,
-      overflow: "hidden",
-      background: "#fff"
+      overflow: "hidden"
     }
   }, f ? /*#__PURE__*/React.createElement("img", {
     src: f.url,
     alt: rot,
     style: {
       width: "100%",
-      height: 62,
+      height: 70,
       objectFit: "cover",
       display: "block"
     }
   }) : /*#__PURE__*/React.createElement("div", {
     style: {
-      height: 62,
+      height: 70,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -1244,16 +2054,17 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     style: {
       marginTop: 8,
       fontSize: 11,
-      fontWeight: 700,
-      color: T.text
+      fontWeight: 700
     }
   }, "✨ La IA estimó ", /*#__PURE__*/React.createElement("b", {
     style: {
       color: BRASS
     }
-  }, avanceIA, "% de avance"))) : null, fotos.length > 0 && /*#__PURE__*/React.createElement(Bloque, {
-    titulo: `Fotos de avance · ${fotos.length}`
-  }, /*#__PURE__*/React.createElement("div", {
+  }, avanceIA, "% de avance"))), /*#__PURE__*/React.createElement(Accion, {
+    onClick: analizarAvance,
+    principal: true,
+    disabled: !fotoAntes || !fotoHoy || generando
+  }, generando ? "⏳ Comparando las fotos…" : "✨ Analizar avance con IA"), fotos.length > 0 && /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement(Rotulo, null, "Galería · ", fotos.length), /*#__PURE__*/React.createElement("div", {
     className: "sc",
     style: {
       display: "flex",
@@ -1266,139 +2077,175 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     alt: "",
     className: i === 0 ? "new" : "",
     style: {
-      width: 78,
-      height: 58,
+      width: 74,
+      height: 56,
       objectFit: "cover",
       borderRadius: 7,
       border: `1px solid ${T.border}`,
       flexShrink: 0
     }
-  })))), bitacora.length > 0 && /*#__PURE__*/React.createElement(Bloque, {
-    titulo: `Bitácora de obra · ${bitacora.length} asientos`
-  }, bitacora.slice(0, 4).map((b, i) => /*#__PURE__*/React.createElement("div", {
+  })))))), tabC === "bitacora" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Trazabilidad",
+    titulo: "Bitácora de obra",
+    sub: `${bitacora.length} asiento${bitacora.length === 1 ? "" : "s"} registrados`
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, bitacora.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Todavía no hay asientos. Cada acción que hagas en cualquiera de las apps queda registrada acá sola.") : bitacora.map((b, i) => /*#__PURE__*/React.createElement("div", {
     key: b.id,
     className: i === 0 ? "new" : "",
     style: {
       display: "flex",
-      gap: 8,
-      paddingBottom: 7,
-      marginBottom: 7,
-      borderBottom: i < Math.min(3, bitacora.length - 1) ? `1px solid ${T.border}` : "none"
+      gap: 9,
+      background: "#fff",
+      border: `1px solid ${i === 0 ? BRASS : T.border}`,
+      borderRadius: 10,
+      padding: "10px 11px",
+      marginBottom: 6
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 8.5,
-      fontFamily: "monospace",
-      color: T.muted,
       flexShrink: 0,
-      paddingTop: 1,
       minWidth: 34
     }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontFamily: "monospace",
+      fontWeight: 600,
+      color: T.text
+    }
   }, b.hora), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      color: T.muted
+    }
+  }, b.fecha.slice(0, 5))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 10.5,
+      fontSize: 11,
       fontWeight: 700,
-      color: T.text
+      color: NAVY
     }
   }, b.titulo), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9.5,
       color: T.sub,
-      lineHeight: 1.4,
-      marginTop: 1
+      lineHeight: 1.45,
+      marginTop: 2
     }
   }, b.detalle), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 8.5,
       fontWeight: 700,
       color: BRASS,
-      marginTop: 2
+      marginTop: 3
     }
-  }, b.autor)))), bitacora.length > 4 && /*#__PURE__*/React.createElement("div", {
-    onClick: () => setVerBitacora(true),
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      color: BRASS,
-      cursor: "pointer",
-      marginTop: 2
-    }
-  }, "Ver los ", bitacora.length, " asientos →")), pedidos.slice(0, 3).map((p, i) => /*#__PURE__*/React.createElement(BurbujaBot, {
+  }, b.autor)))))), tabC === "pedidos" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Comunicación",
+    titulo: "Pedidos recibidos",
+    sub: "Lo que pide el contratista desde la obra"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, pedidos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin pedidos. Probá pedir algo desde la app del contratista.") : pedidos.map((p, i) => /*#__PURE__*/React.createElement(Tarjeta, {
     key: p.id,
     nuevo: i === 0
-  }, "Pedido recibido del contratista: ", /*#__PURE__*/React.createElement("b", null, p.txt), /*#__PURE__*/React.createElement(EstadoChip, {
-    estado: p.estado,
-    tipo: p.tipo
-  }))), certificados.slice(0, 2).map((c, i) => /*#__PURE__*/React.createElement(BurbujaBot, {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600
+    }
+  }, p.txt), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 6,
+      display: "flex",
+      alignItems: "center",
+      gap: 7
+    }
+  }, /*#__PURE__*/React.createElement(Chip, {
+    estado: p.estado
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9,
+      color: T.muted,
+      fontFamily: "monospace"
+    }
+  }, p.hora)))))), tabC === "auditoria" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Control",
+    titulo: "Auditoría de obra",
+    sub: "Certificados y conformidades"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Accion, {
+    onClick: emitirCertificado,
+    principal: true
+  }, "📋 Emitir certificado semanal"), certificados.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin certificados emitidos.") : certificados.map((c, i) => /*#__PURE__*/React.createElement(Tarjeta, {
     key: c.id,
     nuevo: i === 0
-  }, "📋 ", /*#__PURE__*/React.createElement("b", null, "Certificado semanal Nº ", c.n), " emitido · avance ", c.avance, "% · ", c.hora)), !pedidos.length && !certificados.length && !fotos.length && !fotoAntes && /*#__PURE__*/React.createElement(BurbujaBot, null, "Todo listo. Usá los botones de arriba y vas a ver los datos aparecer acá y en las otras apps.")), /*#__PURE__*/React.createElement(BarraChat, {
-    pills: ["⊕ Buscar en internet ON", "⌇ Debate IA"],
-    placeholder: "Escribí, adjuntá o usá el micrófono…",
-    pie: "Cargá tu API Key en Más → Configuración para activar la IA."
-  })), /*#__PURE__*/React.createElement(Marco, {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      flex: 1,
+      fontSize: 11
+    }
+  }, "Certificado semanal Nº ", c.n), /*#__PURE__*/React.createElement(Chip, {
+    estado: "emitido"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: T.muted,
+      marginTop: 4,
+      fontFamily: "monospace"
+    }
+  }, "avance ", c.avance, "% · ", c.hora)))))), /*#__PURE__*/React.createElement(Marco, {
     rotulo: "App 2 · Estudio de arquitectura",
     flash: flash.estudio
-  }, /*#__PURE__*/React.createElement(NavReal, {
+  }, /*#__PURE__*/React.createElement(Nav, {
+    valor: tabE,
+    onChange: setTabE,
     doble: true,
     items: [{
-      t: "IA",
-      on: true
+      id: "ia",
+      t: "IA"
     }, {
-      t: "Drone IA"
-    }, {
-      t: "Grabar reunión"
-    }, {
+      id: "obras",
       t: "Obras",
       b: 8,
       rojo: true
     }, {
-      t: "Avance"
-    }, {
+      id: "informes",
       t: "Informes",
-      b: certificados.length || 1,
+      b: certificados.length + (informe ? 1 : 0) || null,
       rojo: true
     }, {
-      t: "Cronogramas"
-    }, {
+      id: "bitacora",
       t: "Bitácora",
       b: 89 + bitacora.length,
       rojo: true
     }, {
-      t: "Mensajes",
-      b: 3,
-      rojo: true
-    }, {
+      id: "pedidos",
       t: "Pedidos recibidos",
-      b: 26 + pedidos.length,
-      rojo: true
+      b: pendientes || null,
+      rojo: !!pendientes
     }, {
-      t: "Formularios",
-      b: 1,
-      rojo: true
-    }, {
+      id: "personal",
       t: "Personal",
       b: 42,
       rojo: true
-    }, {
-      t: "Gestión"
-    }, {
-      t: "Ajustes"
     }]
-  }), pendientes > 0 && /*#__PURE__*/React.createElement("div", {
+  }), pendientes > 0 && tabE !== "pedidos" && /*#__PURE__*/React.createElement("div", {
     className: "new",
+    onClick: () => setTabE("pedidos"),
     style: {
       display: "flex",
       alignItems: "center",
       gap: 9,
       background: "#FDECEA",
       borderBottom: "1px solid #F6CFC9",
-      padding: "9px 13px"
+      padding: "9px 13px",
+      cursor: "pointer"
     }
   }, /*#__PURE__*/React.createElement("i", {
     style: {
@@ -1426,60 +2273,135 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       fontSize: 10.5,
       color: "#C0533F"
     }
-  }, "Obras: general →"))), /*#__PURE__*/React.createElement(Chat, null, pedidos.slice(0, 3).map((p, i) => /*#__PURE__*/React.createElement(BurbujaBot, {
+  }, "Tocá para ver →"))), tabE === "ia" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Inteligencia",
+    titulo: "Asistente del estudio",
+    sub: "Lee los datos de todas las obras"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: T.sub,
+      lineHeight: 1.5
+    }
+  }, pendientes > 0 ? `Hay ${pendientes} pedido${pendientes > 1 ? "s" : ""} de obra esperando respuesta del estudio.` : "No hay pedidos pendientes de respuesta en este momento.")), informe && /*#__PURE__*/React.createElement(Tarjeta, {
+    nuevo: true,
+    destacada: true,
+    onClick: () => setVerInforme(true)
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 11.5
+    }
+  }, "✨ Informe semanal recibido"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      color: BRASS,
+      marginTop: 5
+    }
+  }, "Ver informe →"))), /*#__PURE__*/React.createElement(BarraChat, {
+    pills: ["⌇ Debate IA", "◈ Narrar"],
+    placeholder: "Escribí tu consulta…"
+  })), tabE === "pedidos" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Obra",
+    titulo: "Pedidos recibidos",
+    sub: "Definiciones y planos que pide la obra"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, pedidos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Nada pendiente.") : pedidos.map((p, i) => /*#__PURE__*/React.createElement(Tarjeta, {
     key: p.id,
     nuevo: i === 0
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      marginBottom: 6
+      fontSize: 11,
+      fontWeight: 600,
+      marginBottom: 7
     }
-  }, p.txt), p.estado === "resuelto" ? /*#__PURE__*/React.createElement(EstadoChip, {
+  }, p.txt), p.estado === "resuelto" ? /*#__PURE__*/React.createElement(Chip, {
     estado: "resuelto"
-  }) : /*#__PURE__*/React.createElement("button", {
+  }) : /*#__PURE__*/React.createElement(Accion, {
     onClick: () => responderEstudio(p.id),
-    style: {
-      background: T.teal,
-      color: "#fff",
-      border: "none",
-      borderRadius: 7,
-      padding: "7px 13px",
-      fontSize: 10.5,
-      fontWeight: 700,
-      cursor: "pointer",
-      minHeight: 32
-    }
-  }, "Responder"))), informe && /*#__PURE__*/React.createElement(BurbujaBot, {
+    teal: true,
+    chico: true
+  }, "Responder al contratista"))))), tabE === "informes" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Documentación",
+    titulo: "Informes y certificados",
+    sub: "Lo que emite la constructora"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, informe && /*#__PURE__*/React.createElement(Tarjeta, {
     nuevo: true,
-    onClick: () => setVerInforme(true),
-    destacada: true
-  }, /*#__PURE__*/React.createElement("b", null, "✨ Informe semanal analizado por IA"), /*#__PURE__*/React.createElement("div", {
+    destacada: true,
+    onClick: () => setVerInforme(true)
+  }, /*#__PURE__*/React.createElement("b", {
     style: {
-      marginTop: 5,
-      color: T.sub,
-      fontSize: 10.5,
-      lineHeight: 1.45,
-      maxHeight: 44,
-      overflow: "hidden"
+      fontSize: 11.5
     }
-  }, informe.texto.split("\n").filter(Boolean)[1]), /*#__PURE__*/React.createElement("div", {
+  }, "✨ Informe semanal · ", OBRA), /*#__PURE__*/React.createElement("div", {
     style: {
-      marginTop: 5,
+      fontSize: 9.5,
+      color: T.muted,
+      marginTop: 3
+    }
+  }, "generado ", informe.hora), /*#__PURE__*/React.createElement("div", {
+    style: {
       fontSize: 9.5,
       fontWeight: 700,
-      color: BRASS
-    }
-  }, "Ver informe completo →")), certificados.slice(0, 2).map((c, i) => /*#__PURE__*/React.createElement(BurbujaBot, {
-    key: c.id,
-    nuevo: i === 0
-  }, "📋 ", /*#__PURE__*/React.createElement("b", null, "CERTIFICADO SEMANAL Nº ", c.n), " — ", OBRA, /*#__PURE__*/React.createElement("div", {
-    style: {
+      color: BRASS,
       marginTop: 5
     }
-  }, /*#__PURE__*/React.createElement(EstadoChip, {
-    estado: "a aprobar"
-  })))), fotos.length > 0 && /*#__PURE__*/React.createElement(Bloque, {
-    titulo: "Fotos que subió la obra"
+  }, "Abrir y descargar PDF →")), certificados.map((c, i) => /*#__PURE__*/React.createElement(Tarjeta, {
+    key: c.id,
+    nuevo: i === 0 && !informe
   }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      flex: 1,
+      fontSize: 11
+    }
+  }, "Certificado Nº ", c.n), /*#__PURE__*/React.createElement(Chip, {
+    estado: "a aprobar"
+  })))), !informe && !certificados.length && /*#__PURE__*/React.createElement(Vacio, null, "Sin documentación recibida."))), tabE === "obras" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Cartera",
+    titulo: "Obras en seguimiento",
+    sub: "Avance reportado por la constructora"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Tarjeta, {
+    destacada: true
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      marginBottom: 7
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      flex: 1,
+      fontSize: 12
+    }
+  }, OBRA), /*#__PURE__*/React.createElement(Chip, {
+    estado: "en curso"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 6,
+      background: "#EAEEF3",
+      borderRadius: 6,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      width: `${avance}%`,
+      background: `linear-gradient(90deg,${BRASS},#D9B57C)`,
+      transition: "width .8s"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: T.muted,
+      marginTop: 6,
+      fontFamily: "monospace"
+    }
+  }, "AVANCE ", avance, "%")), fotos.length > 0 && /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement(Rotulo, null, "Fotos que subió la obra"), /*#__PURE__*/React.createElement("div", {
     className: "sc",
     style: {
       display: "flex",
@@ -1492,17 +2414,80 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     alt: "",
     className: i === 0 ? "new" : "",
     style: {
-      width: 72,
-      height: 54,
+      width: 74,
+      height: 56,
       objectFit: "cover",
       borderRadius: 7,
       border: `1px solid ${T.border}`,
       flexShrink: 0
     }
-  })))), !pedidos.length && !certificados.length && !fotos.length && !informe && /*#__PURE__*/React.createElement(BurbujaBot, null, "Sin novedades de la obra por ahora.")), /*#__PURE__*/React.createElement(BarraChat, {
-    pills: ["⌇ Debate IA", "◈ Narrar"],
-    placeholder: "Escribí tu consulta…"
-  })), /*#__PURE__*/React.createElement(Marco, {
+  })))))), tabE === "bitacora" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Trazabilidad",
+    titulo: "Bitácora de obra",
+    sub: "Mismo registro que ve la constructora"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, bitacora.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin asientos todavía.") : bitacora.map((b, i) => /*#__PURE__*/React.createElement("div", {
+    key: b.id,
+    className: i === 0 ? "new" : "",
+    style: {
+      display: "flex",
+      gap: 9,
+      background: "#fff",
+      border: `1px solid ${i === 0 ? BRASS : T.border}`,
+      borderRadius: 10,
+      padding: "10px 11px",
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flexShrink: 0,
+      fontSize: 9.5,
+      fontFamily: "monospace",
+      fontWeight: 600,
+      color: T.text,
+      minWidth: 34
+    }
+  }, b.hora), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      color: NAVY
+    }
+  }, b.titulo), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: T.sub,
+      lineHeight: 1.45,
+      marginTop: 2
+    }
+  }, b.detalle), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8.5,
+      fontWeight: 700,
+      color: BRASS,
+      marginTop: 3
+    }
+  }, b.autor)))))), tabE === "personal" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+    eyebrow: "Equipo",
+    titulo: "Personal en obra",
+    sub: "Documentación y vencimientos"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, [["Martín Sosa", "Director Técnico"], ["Diego Fernández", "Capataz"]].map(([n, r]) => /*#__PURE__*/React.createElement(Tarjeta, {
+    key: n
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 11
+    }
+  }, n), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: T.muted,
+      marginTop: 2
+    }
+  }, r)))))), /*#__PURE__*/React.createElement(Marco, {
     rotulo: "App 3 · Contratista",
     flash: flash.contratista
   }, /*#__PURE__*/React.createElement("div", {
@@ -1517,7 +2502,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
-      minWidth: 120
+      minWidth: 110
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1539,7 +2524,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       display: "flex",
       gap: 6
     }
-  }, ["↻ Actualizar", "✧ Estilo", "Cambiar"].map(t => /*#__PURE__*/React.createElement("span", {
+  }, ["↻ Actualizar", "✧ Estilo"].map(t => /*#__PURE__*/React.createElement("span", {
     key: t,
     style: {
       fontSize: 9.5,
@@ -1550,21 +2535,15 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       padding: "6px 10px"
     }
   }, t)))), /*#__PURE__*/React.createElement("div", {
-    className: "sc",
-    style: {
-      flex: 1,
-      overflowY: "auto",
-      padding: "13px 15px 16px",
-      background: "#F7F8FA"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 6,
-      marginBottom: 14
+      padding: "11px 14px 0",
+      background: "#F7F8FA"
     }
-  }, ["Pedidos", "Recepción de docs", "Definiciones"].map((t, i) => /*#__PURE__*/React.createElement("span", {
-    key: t,
+  }, [["pedidos", "Pedidos"], ["docs", "Recepción de docs"], ["defs", "Definiciones"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+    key: id,
+    onClick: () => setTabK(id),
     style: {
       flex: 1,
       textAlign: "center",
@@ -1572,19 +2551,30 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       fontWeight: 700,
       padding: "9px 4px",
       borderRadius: 22,
-      border: `1px solid ${i === 0 ? "#141C2B" : T.border}`,
-      background: i === 0 ? "#141C2B" : "#fff",
-      color: i === 0 ? "#fff" : T.sub
+      border: `1px solid ${tabK === id ? "#141C2B" : T.border}`,
+      background: tabK === id ? "#141C2B" : "#fff",
+      color: tabK === id ? "#fff" : T.sub,
+      cursor: "pointer",
+      minHeight: 36
     }
-  }, t))), /*#__PURE__*/React.createElement(Rotulo, null, "Qué querés pedir"), /*#__PURE__*/React.createElement("div", {
+  }, t))), /*#__PURE__*/React.createElement("div", {
+    className: "sc",
+    style: {
+      flex: 1,
+      overflowY: "auto",
+      padding: "13px 14px 16px",
+      background: "#F7F8FA"
+    }
+  }, tabK === "pedidos" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Rotulo, null, "Qué querés pedir"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "repeat(3,1fr)",
       gap: 7,
       marginBottom: 14
     }
-  }, [["▣", "Materiales", "#141C2B"], ["✎", "Definiciones", BRASS], ["▤", "Planos", "#3B6CA8"]].map(([ic, t, c]) => /*#__PURE__*/React.createElement("div", {
+  }, [["▣", "Materiales", "#141C2B", pedirMateriales], ["✎", "Definiciones", BRASS, pedirDefinicion], ["▤", "Planos", "#3B6CA8", pedirDefinicion]].map(([ic, t, col, fn]) => /*#__PURE__*/React.createElement("button", {
     key: t,
+    onClick: fn,
     style: {
       textAlign: "center",
       fontSize: 10,
@@ -1592,11 +2582,20 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       color: T.text,
       background: "#fff",
       border: `1px solid ${T.border}`,
-      borderTop: `2px solid ${c}`,
+      borderTop: `2px solid ${col}`,
       borderRadius: 10,
-      padding: "13px 4px"
+      padding: "14px 4px",
+      cursor: "pointer",
+      lineHeight: 1.9
     }
   }, ic, /*#__PURE__*/React.createElement("br", null), t))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: T.muted,
+      marginBottom: 14,
+      lineHeight: 1.45
+    }
+  }, "Tocá una tarjeta para cursar el pedido. Aparece al instante en la constructora y en el estudio."), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       justifyContent: "space-between",
@@ -1627,90 +2626,41 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       color: T.text,
       marginBottom: 9
     }
-  }, "Estado por obra"), pedidos.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "new",
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 7,
-      padding: "7px 0",
-      borderBottom: `1px solid ${T.border}`
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 6,
-      height: 6,
-      borderRadius: "50%",
-      background: "#3E9B62",
-      flexShrink: 0
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 10.5,
-      fontWeight: 700,
-      color: T.text,
-      flex: 1
-    }
-  }, OBRA), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 600,
-      color: T.sub
-    }
-  }, "pidió hoy"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      background: "#EEF1F5",
-      borderRadius: 20,
-      padding: "2px 7px",
-      fontSize: 9,
-      color: T.sub
-    }
-  }, pedidos.length)), [["Obra Barrio Norte 01", "sin pedidos de material", 0, true], ["Obra Sur 249", "sin pedidos de material", 0, true], ["Obra Norte 300", "hace 20 días", 1, true], ["Obra San Martín 250", "hace 13 días", 2, true], ["Obra Belgrano 450", "hace 6 días", 5, false]].map(([n, e, c, am]) => /*#__PURE__*/React.createElement("div", {
-    key: n,
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 7,
-      padding: "7px 0",
-      borderBottom: `1px solid ${T.border}`
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 6,
-      height: 6,
-      borderRadius: "50%",
-      background: am ? "#E09A3E" : "#3E9B62",
-      flexShrink: 0
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 10.5,
-      fontWeight: 700,
-      color: T.text,
-      flex: 1
-    }
-  }, n), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 600,
-      color: am ? "#B5651D" : T.sub
-    }
-  }, e), /*#__PURE__*/React.createElement("span", {
-    style: {
-      background: "#EEF1F5",
-      borderRadius: 20,
-      padding: "2px 7px",
-      fontSize: 9,
-      color: T.sub
-    }
-  }, c))), /*#__PURE__*/React.createElement("div", {
+  }, "Estado por obra"), pedidos.length > 0 && /*#__PURE__*/React.createElement(FilaObra, {
+    nombre: OBRA,
+    estado: "pidió hoy",
+    cant: pedidos.length,
+    verde: true,
+    nuevo: true
+  }), /*#__PURE__*/React.createElement(FilaObra, {
+    nombre: "Obra Barrio Norte 01",
+    estado: "sin pedidos de material",
+    cant: 0
+  }), /*#__PURE__*/React.createElement(FilaObra, {
+    nombre: "Obra Sur 249",
+    estado: "sin pedidos de material",
+    cant: 0
+  }), /*#__PURE__*/React.createElement(FilaObra, {
+    nombre: "Obra Norte 300",
+    estado: "hace 20 días",
+    cant: 1
+  }), /*#__PURE__*/React.createElement(FilaObra, {
+    nombre: "Obra San Martín 250",
+    estado: "hace 13 días",
+    cant: 2
+  }), /*#__PURE__*/React.createElement(FilaObra, {
+    nombre: "Obra Belgrano 450",
+    estado: "hace 6 días",
+    cant: 5,
+    verde: true
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
       color: T.muted,
       marginTop: 9,
       lineHeight: 1.4
     }
-  }, "Tocá una obra para filtrar. En ámbar, las que hace 7 días o más que no piden materiales.")), pedidos.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, "En ámbar, las que hace 7 días o más que no piden materiales.")), pedidos.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 12
     }
@@ -1724,7 +2674,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       background: "#fff",
       border: `1px solid ${i === 0 ? BRASS : T.border}`,
       borderRadius: 9,
-      padding: "9px 11px",
+      padding: "10px 11px",
       marginBottom: 5,
       fontSize: 10.5,
       fontWeight: 600,
@@ -1734,26 +2684,62 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     style: {
       flex: 1
     }
-  }, p.txt), /*#__PURE__*/React.createElement(EstadoChip, {
-    estado: p.estado,
-    tipo: p.tipo
-  })))))), /*#__PURE__*/React.createElement(Marco, {
+  }, p.txt), /*#__PURE__*/React.createElement(Chip, {
+    estado: p.estado
+  }))))), tabK === "docs" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Rotulo, null, "Recepción de documentación"), pedidos.filter(p => p.estado === "resuelto").length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Cuando el estudio responda un pedido, la documentación aparece acá.") : pedidos.filter(p => p.estado === "resuelto").map((p, i) => /*#__PURE__*/React.createElement(Tarjeta, {
+    key: p.id,
+    nuevo: i === 0
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600
+    }
+  }, p.txt), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 6
+    }
+  }, /*#__PURE__*/React.createElement(Chip, {
+    estado: "resuelto"
+  }))))), tabK === "defs" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Rotulo, null, "Definiciones solicitadas"), pedidos.filter(p => p.tipo === "definicion").length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin definiciones pedidas todavía.") : pedidos.filter(p => p.tipo === "definicion").map((p, i) => /*#__PURE__*/React.createElement(Tarjeta, {
+    key: p.id,
+    nuevo: i === 0
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600
+    }
+  }, p.txt), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 6,
+      display: "flex",
+      alignItems: "center",
+      gap: 7
+    }
+  }, /*#__PURE__*/React.createElement(Chip, {
+    estado: p.estado
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9,
+      color: T.muted,
+      fontFamily: "monospace"
+    }
+  }, p.hora))))))), /*#__PURE__*/React.createElement(Marco, {
     rotulo: "App 4 · Propietario",
     flash: flash.propietario
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: fotoHoy ? `linear-gradient(rgba(20,26,34,.62), rgba(20,26,34,.72)), url(${fotoHoy.url}) center/cover` : "linear-gradient(160deg,#2C3440,#171C24)",
-      padding: "20px 16px 18px",
+      padding: "18px 16px 16px",
       textAlign: "center"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      width: 46,
-      height: 46,
+      width: 44,
+      height: 44,
       borderRadius: "50%",
       background: "#fff",
       border: "2px solid #7DBE4B",
-      margin: "0 auto 9px",
+      margin: "0 auto 8px",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -1771,7 +2757,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     }
   }, "Tu proyecto"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 18,
+      fontSize: 17,
       fontWeight: 800,
       color: "#fff",
       marginTop: 3
@@ -1781,8 +2767,8 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       height: 5,
       background: "rgba(255,255,255,.28)",
       borderRadius: 6,
-      margin: "11px auto 6px",
-      maxWidth: 210,
+      margin: "10px auto 5px",
+      maxWidth: 200,
       overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -1805,24 +2791,103 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       padding: "13px 14px 16px",
       background: "#E9EBEE"
     }
-  }, /*#__PURE__*/React.createElement(Rotulo, null, "Secciones"), [["▤", "Renders", null], ["▤", "Fotos de avance", fotos.length || null], ["▦", "Cronograma", null], ["▥", "Informes", certificados.length + (informe ? 1 : 0) || null], ["▧", "Planos", null], ["▨", "Costos", null]].map(([ic, n, badge]) => /*#__PURE__*/React.createElement("div", {
-    key: n,
-    onClick: n === "Informes" && informe ? () => setVerInforme(true) : undefined,
-    className: badge && (n === "Informes" || n === "Fotos de avance") ? "new" : "",
+  }, secP ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setSecP(null),
     style: {
+      background: "none",
+      border: "none",
+      color: T.sub,
+      fontSize: 11,
+      fontWeight: 700,
+      cursor: "pointer",
+      padding: "2px 0 10px"
+    }
+  }, "‹ Volver a secciones"), secP === "Fotos de avance" && (fotos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Tu constructora todavía no subió fotos.") : /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(2,1fr)",
+      gap: 7
+    }
+  }, fotos.map((f, i) => /*#__PURE__*/React.createElement("img", {
+    key: f.id,
+    src: f.url,
+    alt: "",
+    className: i === 0 ? "new" : "",
+    style: {
+      width: "100%",
+      height: 82,
+      objectFit: "cover",
+      borderRadius: 9
+    }
+  })))), secP === "Informes" && (!informe && !certificados.length ? /*#__PURE__*/React.createElement(Vacio, null, "Sin informes publicados.") : /*#__PURE__*/React.createElement(React.Fragment, null, informe && /*#__PURE__*/React.createElement("div", {
+    onClick: () => setVerInforme(true),
+    className: "new",
+    style: {
+      background: "#fff",
+      border: `1px solid ${BRASS}`,
+      borderRadius: 11,
+      padding: "13px",
+      marginBottom: 7,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 12,
+      color: NAVY
+    }
+  }, "✨ Informe semanal"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: T.muted,
+      marginTop: 3
+    }
+  }, "generado ", informe.hora), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      color: BRASS,
+      marginTop: 5
+    }
+  }, "Abrir →")), certificados.map(c => /*#__PURE__*/React.createElement("div", {
+    key: c.id,
+    style: {
+      background: "#fff",
+      borderRadius: 11,
+      padding: "13px",
+      marginBottom: 7
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 12,
+      color: NAVY
+    }
+  }, "Informe semanal Nº ", c.n), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: T.muted,
+      marginTop: 3
+    }
+  }, c.hora))))), ["Renders", "Cronograma", "Planos", "Costos"].includes(secP) && /*#__PURE__*/React.createElement(Vacio, null, "La constructora todavía no publicó ", secP.toLowerCase(), " para esta obra.")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Rotulo, null, "Secciones"), [["▤", "Renders", null], ["▤", "Fotos de avance", fotos.length || null], ["▦", "Cronograma", null], ["▥", "Informes", certificados.length + (informe ? 1 : 0) || null], ["▧", "Planos", null], ["▨", "Costos", null]].map(([ic, n, badge]) => /*#__PURE__*/React.createElement("button", {
+    key: n,
+    onClick: () => setSecP(n),
+    style: {
+      width: "100%",
       display: "flex",
       alignItems: "center",
       gap: 10,
       background: "#fff",
       borderRadius: 11,
-      padding: "13px 13px",
+      padding: "13px",
       marginBottom: 7,
+      textAlign: "left",
       fontSize: 12.5,
       fontWeight: 700,
       color: NAVY,
-      cursor: n === "Informes" && informe ? "pointer" : "default",
-      border: `1px solid ${badge ? BRASS : "transparent"}`
-    }
+      cursor: "pointer",
+      border: `1px solid ${badge ? BRASS : "transparent"}`,
+      minHeight: 50
+    },
+    className: badge ? "new" : ""
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: 27,
@@ -1833,7 +2898,8 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       alignItems: "center",
       justifyContent: "center",
       fontSize: 11,
-      color: T.sub
+      color: T.sub,
+      flexShrink: 0
     }
   }, ic), /*#__PURE__*/React.createElement("span", {
     style: {
@@ -1859,215 +2925,14 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       color: T.muted,
       marginTop: 10
     }
-  }, "Modo solo lectura · no ve pedidos ni costos internos")))), verBitacora && /*#__PURE__*/React.createElement("div", {
-    onClick: () => setVerBitacora(false),
-    style: {
-      position: "fixed",
-      inset: 0,
-      background: "rgba(8,12,18,.72)",
-      zIndex: 105,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 22
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    onClick: e => e.stopPropagation(),
-    style: {
-      background: "#fff",
-      borderRadius: 15,
-      maxWidth: 680,
-      width: "100%",
-      maxHeight: "84vh",
-      display: "flex",
-      flexDirection: "column",
-      overflow: "hidden"
-    }
+  }, "Modo solo lectura · no ve pedidos ni costos internos"))))), verKey && /*#__PURE__*/React.createElement(Modal, {
+    onClose: () => setVerKey(false),
+    ancho: 480
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      padding: "16px 20px 13px",
-      borderBottom: `1px solid ${T.border}`
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 6
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 18,
-      height: 2,
-      background: BRASS
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      letterSpacing: ".14em",
-      textTransform: "uppercase",
-      color: BRASS
-    }
-  }, "Trazabilidad")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 18,
-      fontWeight: 800,
-      color: NAVY
-    }
-  }, "Bitácora de obra"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11.5,
-      color: T.muted,
-      marginTop: 2
-    }
-  }, OBRA, " · ", bitacora.length, " asiento", bitacora.length === 1 ? "" : "s")), /*#__PURE__*/React.createElement("div", {
-    className: "sc",
-    style: {
-      flex: 1,
-      overflowY: "auto",
-      padding: "6px 0"
-    }
-  }, bitacora.length === 0 ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "34px 20px",
-      textAlign: "center",
-      fontSize: 12.5,
-      color: T.muted,
-      lineHeight: 1.6
-    }
-  }, "Todavía no hay asientos.", /*#__PURE__*/React.createElement("br", null), "Cada acción que hagas queda registrada acá automáticamente.") : bitacora.map(b => /*#__PURE__*/React.createElement("div", {
-    key: b.id,
-    style: {
-      display: "flex",
-      gap: 13,
-      padding: "13px 20px",
-      borderBottom: `1px solid ${T.border}`
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      flexShrink: 0,
-      minWidth: 62
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10.5,
-      fontFamily: "monospace",
-      color: T.text,
-      fontWeight: 600
-    }
-  }, b.hora), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9,
-      color: T.muted,
-      marginTop: 1
-    }
-  }, b.fecha)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 13,
-      fontWeight: 700,
-      color: NAVY
-    }
-  }, b.titulo), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 12,
-      color: T.sub,
-      lineHeight: 1.55,
-      marginTop: 3
-    }
-  }, b.detalle), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "inline-block",
-      marginTop: 6,
-      fontSize: 9,
-      fontWeight: 700,
-      letterSpacing: ".06em",
-      textTransform: "uppercase",
-      color: BRASS,
-      background: "#FBF6EE",
-      border: `1px solid #EBDCC0`,
-      borderRadius: 20,
-      padding: "3px 9px"
-    }
-  }, b.autor))))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "12px 20px",
-      borderTop: `1px solid ${T.border}`,
-      background: "#FAFBFC",
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      flexWrap: "wrap"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 10.5,
-      color: T.muted,
-      flex: 1,
-      minWidth: 150,
-      lineHeight: 1.45
-    }
-  }, "Los asientos se registran solos al momento del hecho. Van incluidos en el PDF del informe."), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setVerBitacora(false),
-    style: {
-      background: NAVY,
-      color: "#fff",
-      border: "none",
-      borderRadius: 8,
-      padding: "11px 20px",
-      fontSize: 12.5,
-      fontWeight: 700,
-      cursor: "pointer",
-      minHeight: 42
-    }
-  }, "Cerrar")))), verKey && /*#__PURE__*/React.createElement("div", {
-    onClick: () => setVerKey(false),
-    style: {
-      position: "fixed",
-      inset: 0,
-      background: "rgba(8,12,18,.72)",
-      zIndex: 110,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 22
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    onClick: e => e.stopPropagation(),
-    style: {
-      background: "#fff",
-      borderRadius: 15,
-      maxWidth: 480,
-      width: "100%",
       padding: "22px 24px"
     }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 18,
-      height: 2,
-      background: BRASS
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      letterSpacing: ".14em",
-      textTransform: "uppercase",
-      color: BRASS
-    }
-  }, "Configuración")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(Eyebrow, null, "Configuración"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 18,
       fontWeight: 800,
@@ -2114,19 +2979,8 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       fontWeight: 700,
       color: iaOk ? T.ok : "#B5651D"
     }
-  }, iaOk ? "✓ Clave cargada — la IA está lista" : "Falta la clave (empieza con sk-ant-)"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setVerKey(false),
-    style: {
-      background: NAVY,
-      color: "#fff",
-      border: "none",
-      borderRadius: 8,
-      padding: "11px 20px",
-      fontSize: 12.5,
-      fontWeight: 700,
-      cursor: "pointer",
-      minHeight: 42
-    }
+  }, iaOk ? "✓ Clave cargada — la IA está lista" : "Falta la clave (empieza con sk-ant-)"), /*#__PURE__*/React.createElement(BotonModal, {
+    onClick: () => setVerKey(false)
   }, "Listo")))), verKey && /*#__PURE__*/React.createElement("div", {
     onClick: () => setVerKey(false),
     style: {
@@ -2229,57 +3083,15 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       cursor: "pointer",
       minHeight: 42
     }
-  }, "Listo")))), verInforme && /*#__PURE__*/React.createElement("div", {
-    onClick: () => setVerInforme(false),
-    style: {
-      position: "fixed",
-      inset: 0,
-      background: "rgba(8,12,18,.72)",
-      zIndex: 100,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 22
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    onClick: e => e.stopPropagation(),
-    style: {
-      background: "#fff",
-      borderRadius: 15,
-      maxWidth: 620,
-      width: "100%",
-      maxHeight: "84vh",
-      display: "flex",
-      flexDirection: "column",
-      overflow: "hidden"
-    }
+  }, "Listo")))), verInforme && /*#__PURE__*/React.createElement(Modal, {
+    onClose: () => setVerInforme(false),
+    ancho: 620
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "16px 20px 13px",
       borderBottom: `1px solid ${T.border}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 6
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 18,
-      height: 2,
-      background: BRASS
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      letterSpacing: ".14em",
-      textTransform: "uppercase",
-      color: BRASS
-    }
-  }, generando ? "Generando" : informe?.ia ? "Analizado por IA" : "Informe generado")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(Eyebrow, null, generando ? "Generando" : informe?.ia ? "Analizado por IA" : "Informe generado"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 18,
       fontWeight: 800,
@@ -2304,7 +3116,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       color: T.sub,
       lineHeight: 1.7
     }
-  }, "⏳ La IA está leyendo las fotos y los pedidos para armar el informe…") : /*#__PURE__*/React.createElement("pre", {
+  }, "⏳ La IA está leyendo las fotos, los pedidos y la bitácora…") : /*#__PURE__*/React.createElement("pre", {
     style: {
       margin: 0,
       fontFamily: "inherit",
@@ -2332,67 +3144,17 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       minWidth: 140,
       lineHeight: 1.4
     }
-  }, "Se publica en el panel del estudio y en el del propietario."), informe && /*#__PURE__*/React.createElement("button", {
+  }, "El PDF incluye las fotos comparadas y la bitácora completa."), informe && /*#__PURE__*/React.createElement(BotonModal, {
     onClick: descargarPDF,
-    disabled: pdfBusy,
-    style: {
-      background: BRASS,
-      color: "#fff",
-      border: "none",
-      borderRadius: 8,
-      padding: "11px 16px",
-      fontSize: 12.5,
-      fontWeight: 700,
-      cursor: pdfBusy ? "wait" : "pointer",
-      minHeight: 42
-    }
-  }, pdfBusy ? "Generando…" : "📄 Descargar PDF"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setVerInforme(false),
-    style: {
-      background: NAVY,
-      color: "#fff",
-      border: "none",
-      borderRadius: 8,
-      padding: "11px 20px",
-      fontSize: 12.5,
-      fontWeight: 700,
-      cursor: "pointer",
-      minHeight: 42
-    }
-  }, "Cerrar")))));
+    brass: true,
+    disabled: pdfBusy
+  }, pdfBusy ? "Generando…" : "📄 Descargar PDF"), /*#__PURE__*/React.createElement(BotonModal, {
+    onClick: () => setVerInforme(false)
+  }, "Cerrar"))));
 }
 
 // ── piezas visuales ───────────────────────────────────────────
 
-function Boton({
-  children,
-  onClick,
-  principal,
-  ok,
-  disabled
-}) {
-  const fondo = disabled ? "rgba(255,255,255,.05)" : ok ? "rgba(125,190,75,.18)" : principal ? BRASS : "rgba(255,255,255,.08)";
-  const borde = disabled ? "rgba(255,255,255,.1)" : ok ? "rgba(125,190,75,.5)" : principal ? BRASS : "rgba(255,255,255,.18)";
-  return /*#__PURE__*/React.createElement("button", {
-    onClick: disabled ? undefined : onClick,
-    disabled: disabled,
-    style: {
-      background: fondo,
-      color: disabled ? "#5A6472" : "#fff",
-      border: `1px solid ${borde}`,
-      borderRadius: 8,
-      padding: "11px 15px",
-      fontSize: 12.5,
-      fontWeight: 700,
-      cursor: disabled ? "not-allowed" : "pointer",
-      whiteSpace: "nowrap",
-      minHeight: 42,
-      transition: "opacity .15s, transform .1s"
-    }
-  }, children);
-}
-
-// Marco del panel: rótulo arriba y la app adentro
 function Marco({
   rotulo,
   children,
@@ -2416,7 +3178,7 @@ function Marco({
       gap: 7,
       padding: "7px 12px",
       background: "#0E1520",
-      borderBottom: `1px solid rgba(255,255,255,.08)`
+      borderBottom: "1px solid rgba(255,255,255,.08)"
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -2428,15 +3190,16 @@ function Marco({
   }), /*#__PURE__*/React.createElement("b", {
     style: {
       fontSize: 10.5,
-      color: "#C8D0DA",
-      letterSpacing: ".02em"
+      color: "#C8D0DA"
     }
   }, rotulo)), children);
 }
 
-// Barra de navegación como la de las apps reales
-function NavReal({
+// Navegación real: se toca y cambia de sección
+function Nav({
   items,
+  valor,
+  onChange,
   doble
 }) {
   return /*#__PURE__*/React.createElement("div", {
@@ -2444,48 +3207,57 @@ function NavReal({
     style: {
       display: "flex",
       flexWrap: doble ? "wrap" : "nowrap",
-      gap: doble ? "7px 13px" : 13,
-      padding: "10px 12px",
+      gap: doble ? "6px 12px" : 12,
+      padding: "9px 12px",
       borderBottom: `2px solid ${BRASS}`,
       background: "#fff",
       overflowX: doble ? "hidden" : "auto",
       whiteSpace: "nowrap",
       justifyContent: doble ? "center" : "flex-start"
     }
-  }, items.map(it => /*#__PURE__*/React.createElement("span", {
-    key: it.t,
-    style: {
-      position: "relative",
-      fontSize: 10,
-      fontWeight: 700,
-      flexShrink: 0,
-      color: it.on ? NAVY : it.rojo ? "#C0392B" : "#5A6472",
-      borderBottom: it.on ? `2px solid ${BRASS}` : "none",
-      paddingBottom: 2
-    }
-  }, it.t, it.b ? /*#__PURE__*/React.createElement("i", {
-    style: {
-      position: "absolute",
-      top: -7,
-      right: -13,
-      background: T.red,
-      color: "#fff",
-      fontSize: 7,
-      fontWeight: 700,
-      borderRadius: 20,
-      padding: "1px 4px",
-      fontStyle: "normal"
-    }
-  }, it.b) : null)));
+  }, items.map(it => {
+    const activo = valor === it.id;
+    return /*#__PURE__*/React.createElement("button", {
+      key: it.id,
+      onClick: () => onChange(it.id),
+      style: {
+        position: "relative",
+        fontSize: 10,
+        fontWeight: 700,
+        flexShrink: 0,
+        color: activo ? NAVY : it.rojo ? "#C0392B" : "#5A6472",
+        borderBottom: activo ? `2px solid ${BRASS}` : "2px solid transparent",
+        paddingBottom: 3,
+        background: "none",
+        border: "none",
+        borderBottomStyle: "solid",
+        cursor: "pointer",
+        minHeight: 26
+      }
+    }, it.t, it.b ? /*#__PURE__*/React.createElement("i", {
+      style: {
+        position: "absolute",
+        top: -6,
+        right: -13,
+        background: T.red,
+        color: "#fff",
+        fontSize: 7,
+        fontWeight: 700,
+        borderRadius: 20,
+        padding: "1px 4px",
+        fontStyle: "normal"
+      }
+    }, it.b) : null);
+  }));
 }
-function CabezalReal({
+function Cabezal({
   eyebrow,
   titulo,
   sub
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      padding: "13px 15px 11px",
+      padding: "12px 15px 10px",
       borderBottom: `1px solid ${T.border}`,
       background: "#fff"
     }
@@ -2511,20 +3283,20 @@ function CabezalReal({
     }
   }, eyebrow)), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 17,
+      fontSize: 16,
       fontWeight: 800,
       color: NAVY,
       marginTop: 4
     }
   }, titulo), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 11,
+      fontSize: 10.5,
       color: T.muted,
       marginTop: 1
     }
   }, sub));
 }
-function Chat({
+function Cuerpo({
   children
 }) {
   return /*#__PURE__*/React.createElement("div", {
@@ -2532,58 +3304,183 @@ function Chat({
     style: {
       flex: 1,
       overflowY: "auto",
-      padding: "12px 14px",
+      padding: "12px 14px 16px",
       display: "flex",
       flexDirection: "column",
-      gap: 8,
+      gap: 7,
       background: "#FAFBFC"
     }
   }, children);
 }
-function BurbujaBot({
+function Tarjeta({
   children,
   nuevo,
-  onClick,
-  destacada
+  destacada,
+  onClick
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: nuevo ? "new" : "",
     onClick: onClick,
     style: {
-      alignSelf: "flex-start",
-      maxWidth: "92%",
-      padding: "10px 12px",
-      borderRadius: 11,
       background: destacada ? "#FBF6EE" : "#fff",
       border: `1px solid ${destacada || nuevo ? BRASS : T.border}`,
-      fontSize: 11,
-      lineHeight: 1.5,
-      color: T.text,
+      borderRadius: 10,
+      padding: "11px 12px",
       cursor: onClick ? "pointer" : "default"
     }
   }, children);
 }
-function Bloque({
-  titulo,
+function Accion({
+  children,
+  onClick,
+  principal,
+  teal,
+  ok,
+  disabled,
+  chico
+}) {
+  const bg = disabled ? "#EEF1F5" : ok ? "#EAF3EC" : teal ? T.teal : principal ? BRASS : "#fff";
+  const fg = disabled ? T.muted : ok ? T.ok : teal || principal ? "#fff" : T.text;
+  const bd = disabled ? T.border : ok ? "#B9DCC5" : teal ? T.teal : principal ? BRASS : T.border;
+  return /*#__PURE__*/React.createElement("button", {
+    onClick: disabled ? undefined : onClick,
+    disabled: disabled,
+    style: {
+      width: chico ? "auto" : "100%",
+      background: bg,
+      color: fg,
+      border: `1px solid ${bd}`,
+      borderRadius: 9,
+      padding: chico ? "8px 14px" : "11px 13px",
+      fontSize: chico ? 10.5 : 11.5,
+      fontWeight: 700,
+      cursor: disabled ? "not-allowed" : "pointer",
+      minHeight: chico ? 34 : 42
+    }
+  }, children);
+}
+function Rotulo({
+  children,
+  sinMargen
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: ".13em",
+      textTransform: "uppercase",
+      color: T.muted,
+      marginBottom: sinMargen ? 0 : 8
+    }
+  }, children);
+}
+function Vacio({
   children
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#fff",
-      border: `1px solid ${T.border}`,
-      borderRadius: 11,
-      padding: "10px 12px"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 8.5,
-      fontWeight: 700,
-      letterSpacing: ".12em",
-      textTransform: "uppercase",
+      fontSize: 10.5,
       color: T.muted,
-      marginBottom: 8
+      padding: "14px 2px",
+      lineHeight: 1.5
     }
-  }, titulo), children);
+  }, children);
+}
+function Chip({
+  estado
+}) {
+  const map = {
+    resuelto: {
+      bg: "#EAF3EC",
+      fg: T.ok,
+      txt: "RESUELTO"
+    },
+    enviado: {
+      bg: "#EAF3EC",
+      fg: T.ok,
+      txt: "ENVIADO"
+    },
+    emitido: {
+      bg: "#EAF3EC",
+      fg: T.ok,
+      txt: "EMITIDO"
+    },
+    "en curso": {
+      bg: "#EAF3EC",
+      fg: T.ok,
+      txt: "EN CURSO"
+    },
+    pendiente: {
+      bg: "#FBF2E3",
+      fg: "#9A6B1E",
+      txt: "PENDIENTE"
+    },
+    "a aprobar": {
+      bg: "#FBF2E3",
+      fg: "#9A6B1E",
+      txt: "A APROBAR"
+    }
+  };
+  const c = map[estado] || map.pendiente;
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-block",
+      background: c.bg,
+      color: c.fg,
+      fontSize: 8,
+      fontWeight: 700,
+      padding: "3px 8px",
+      borderRadius: 20,
+      letterSpacing: ".03em"
+    }
+  }, c.txt);
+}
+function FilaObra({
+  nombre,
+  estado,
+  cant,
+  verde,
+  nuevo
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: nuevo ? "new" : "",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7,
+      padding: "7px 0",
+      borderBottom: `1px solid ${T.border}`
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 6,
+      height: 6,
+      borderRadius: "50%",
+      background: verde ? "#3E9B62" : "#E09A3E",
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10.5,
+      fontWeight: 700,
+      color: T.text,
+      flex: 1
+    }
+  }, nombre), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 600,
+      color: verde ? T.sub : "#B5651D"
+    }
+  }, estado), /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: "#EEF1F5",
+      borderRadius: 20,
+      padding: "2px 7px",
+      fontSize: 9,
+      color: T.sub
+    }
+  }, cant));
 }
 function BarraChat({
   pills,
@@ -2670,72 +3567,108 @@ function BarraChat({
     }
   }, pie));
 }
-function Rotulo({
+function Modal({
   children,
-  sinMargen
+  onClose,
+  ancho
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    onClick: onClose,
+    style: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(8,12,18,.72)",
+      zIndex: 100,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 22
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: e => e.stopPropagation(),
+    style: {
+      background: "#fff",
+      borderRadius: 15,
+      maxWidth: ancho,
+      width: "100%",
+      maxHeight: "84vh",
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden"
+    }
+  }, children));
+}
+function Eyebrow({
+  children
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 9,
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9.5,
       fontWeight: 700,
-      letterSpacing: ".13em",
+      letterSpacing: ".14em",
       textTransform: "uppercase",
-      color: T.muted,
-      marginBottom: sinMargen ? 0 : 8
+      color: BRASS
+    }
+  }, children));
+}
+function BotonModal({
+  children,
+  onClick,
+  brass,
+  disabled
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    onClick: disabled ? undefined : onClick,
+    disabled: disabled,
+    style: {
+      background: brass ? BRASS : NAVY,
+      color: "#fff",
+      border: "none",
+      borderRadius: 8,
+      padding: "11px 18px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: disabled ? "wait" : "pointer",
+      minHeight: 42
     }
   }, children);
 }
-function EstadoChip({
-  estado,
-  tipo
-}) {
-  const map = {
-    resuelto: {
-      bg: "#EAF3EC",
-      fg: T.ok,
-      txt: "RESUELTO"
-    },
-    enviado: {
-      bg: "#EAF3EC",
-      fg: T.ok,
-      txt: "ENVIADO"
-    },
-    pendiente: {
-      bg: "#FBF2E3",
-      fg: "#9A6B1E",
-      txt: "PENDIENTE"
-    },
-    "a aprobar": {
-      bg: "#FBF2E3",
-      fg: "#9A6B1E",
-      txt: "A APROBAR"
-    }
-  };
-  const c = map[estado] || map.pendiente;
-  return /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "inline-block",
-      background: c.bg,
-      color: c.fg,
-      fontSize: 8,
-      fontWeight: 700,
-      padding: "3px 8px",
-      borderRadius: 20,
-      letterSpacing: ".03em",
-      marginLeft: 6,
-      verticalAlign: "middle"
-    }
-  }, c.txt);
-}
-ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(PanelDemo, null));
+ReactDOM.createRoot(document.getElementById("root-demo")).render(/*#__PURE__*/React.createElement(PanelDemo, null));
   } catch (e) {
-    document.getElementById("root").innerHTML =
+    document.getElementById("root-demo").innerHTML =
       '<div style="color:#E08A3E;font-size:14px;padding:60px 20px;text-align:center;line-height:1.6">' +
       'No se pudo iniciar el panel.<br><span style="color:#6C7787;font-size:12px">' +
       String(e && e.message ? e.message : e) + '</span></div>';
     console.error(e);
   }
 })();
+
+    } catch (e) {
+      document.getElementById("root-demo").innerHTML =
+        '<div style="color:#E08A3E;font-size:14px;padding:60px 20px;text-align:center;line-height:1.6">' +
+        'No se pudo iniciar el panel.<br><span style="color:#6C7787;font-size:12px">' +
+        String(e && e.message ? e.message : e) + '</span></div>';
+      console.error(e);
+    }
+  }
+}
+function volverALanding() {
+  document.body.classList.remove("en-demo");
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
 </script>
 </body>
 </html>
