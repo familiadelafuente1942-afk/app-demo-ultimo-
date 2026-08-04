@@ -320,6 +320,35 @@
   #barra-volver .marca { color:#fff; font-weight:800; font-size:13px; display:flex; align-items:center; gap:8px; }
   #barra-volver .marca em { font-style:normal; color:#B0894F; }
 
+  /* ── selector de idioma ── */
+  .idiomas { display:flex; gap:2px; border:1px solid var(--border); border-radius:8px; padding:2px; }
+  .idiomas button {
+    background:transparent; border:none; border-radius:6px; padding:6px 9px;
+    font-size:11px; font-weight:700; color:var(--sub); cursor:pointer;
+    font-family:inherit; letter-spacing:.02em; min-height:30px;
+  }
+  #barra-volver .idiomas { border-color:rgba(255,255,255,.22); }
+  #barra-volver .idiomas button { color:#B9C2CF; }
+  @media (max-width: 560px) { .idiomas button { padding:6px 7px; font-size:10px; } }
+
+  /* el header puede envolver para que nunca se corten los botones */
+  .nav { flex-wrap:wrap; row-gap:8px; }
+
+  /* ── selector flotante: siempre visible, en cualquier vista ── */
+  #idioma-flotante {
+    position:fixed; left:14px; bottom:14px; z-index:400;
+    display:flex; gap:3px; padding:4px;
+    background:rgba(16,28,44,.92); backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.18); border-radius:22px;
+    box-shadow:0 8px 24px rgba(0,0,0,.28);
+  }
+  #idioma-flotante button {
+    background:transparent; border:none; border-radius:18px;
+    padding:8px 13px; font-size:12px; font-weight:700; color:#C8D0DA;
+    cursor:pointer; font-family:inherit; min-height:36px; letter-spacing:.03em;
+  }
+  #idioma-flotante button:active { opacity:.6; }
+
   .reveal{ opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease; }
   /* Sin JavaScript el contenido se ve igual */
   .no-js .reveal{ opacity:1; transform:none; }
@@ -356,7 +385,7 @@
       <a href="#planes">Planes</a>
     </nav>
     <div class="navcta">
-      <a class="btn btn-ghost" href="#planes">Ver planes</a>
+      <span class="idiomas"><button data-idioma="es" onclick="cambiarIdioma('es')">ES</button><button data-idioma="en" onclick="cambiarIdioma('en')">EN</button><button data-idioma="pt" onclick="cambiarIdioma('pt')">PT</button></span><a class="btn btn-ghost" href="#planes">Ver planes</a>
       <button class="btn btn-brass" onclick="abrirDemo()">Probar demo</button>
     </div>
   </div>
@@ -681,9 +710,12 @@
 <div id="barra-volver">
   <button class="vb" onclick="volverALanding()">‹ Volver</button>
   <span class="marca"><span style="width:14px;height:2px;background:#B0894F;display:inline-block"></span> Constru<em>IA</em> · demo en vivo</span>
+  <span class="idiomas" style="margin-left:auto"><button data-idioma="es" onclick="cambiarIdioma('es')">ES</button><button data-idioma="en" onclick="cambiarIdioma('en')">EN</button><button data-idioma="pt" onclick="cambiarIdioma('pt')">PT</button></span>
 </div>
 
 <div id="vista-demo"><div id="root-demo"></div></div>
+
+<div id="idioma-flotante"><button data-idioma="es" onclick="cambiarIdioma('es')">ES</button><button data-idioma="en" onclick="cambiarIdioma('en')">EN</button><button data-idioma="pt" onclick="cambiarIdioma('pt')">PT</button></div>
 
 
 <script>
@@ -3502,7 +3534,99 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       color: T.muted,
       marginTop: 3
     }
-  }, c.hora))))), ["Renders", "Cronograma", "Planos", "Costos"].includes(secP) && /*#__PURE__*/React.createElement(Vacio, null, "La constructora todavía no publicó ", secP.toLowerCase(), " para esta obra.")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Rotulo, null, "Secciones"), [["▤", "Renders", null], ["▤", "Fotos de avance", fotos.length || null], ["▦", "Cronograma", null], ["▥", "Informes", certificados.length + (informe ? 1 : 0) || null], ["▧", "Planos", null], ["▨", "Costos", null]].map(([ic, n, badge]) => /*#__PURE__*/React.createElement("button", {
+  }, c.hora))))), secP === "Renders" && (renders.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Tu estudio todavía no publicó renders del proyecto.") : /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(2,1fr)",
+      gap: 7
+    }
+  }, renders.map((r, i) => /*#__PURE__*/React.createElement("img", {
+    key: r.id,
+    src: r.url,
+    alt: "",
+    className: i === 0 ? "new" : "",
+    style: {
+      width: "100%",
+      height: 88,
+      objectFit: "cover",
+      borderRadius: 9
+    }
+  })))), secP === "Planos" && (planos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Tu constructora todavía no publicó planos para esta obra.") : planos.map((p, i) => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    className: i === 0 ? "new" : "",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      background: "#fff",
+      borderRadius: 11,
+      padding: "12px 13px",
+      marginBottom: 7,
+      border: `1px solid ${i === 0 ? BRASS : "transparent"}`
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 28,
+      height: 28,
+      borderRadius: 7,
+      background: "#EAEEF3",
+      color: "#3B6CA8",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 12,
+      flexShrink: 0
+    }
+  }, "▤"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      fontWeight: 700,
+      color: NAVY,
+      wordBreak: "break-word"
+    }
+  }, p.nombre), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: T.muted,
+      marginTop: 1
+    }
+  }, "publicado ", p.hora)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: T.muted
+    }
+  }, "›")))), secP === "Cronograma" && /*#__PURE__*/React.createElement(Vacio, null, "Tu constructora todavía no publicó el cronograma de esta obra."), secP === "Costos" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 7
+    }
+  }, [["Presupuesto", "$ 12.400.000"], ["Pagado", "$ 8.100.000"]].map(([l, v]) => /*#__PURE__*/React.createElement("div", {
+    key: l,
+    style: {
+      background: "#fff",
+      borderRadius: 11,
+      padding: "13px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: ".12em",
+      textTransform: "uppercase",
+      color: T.muted,
+      marginBottom: 5
+    }
+  }, l), /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 14,
+      color: NAVY
+    }
+  }, v))))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Rotulo, null, "Secciones"), [["▧", "Renders", renders.length || null], ["▤", "Fotos de avance", fotos.length || null], ["▦", "Cronograma", null], ["▥", "Informes", certificados.length + (informe ? 1 : 0) || null], ["▤", "Planos", planos.length || null], ["▨", "Costos", null]].map(([ic, n, badge]) => /*#__PURE__*/React.createElement("button", {
     key: n,
     onClick: () => setSecP(n),
     style: {
@@ -4331,6 +4455,551 @@ function volverALanding() {
   document.body.classList.remove("en-demo");
   try { window.scrollTo(0, 0); } catch (e) {}
 }
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// DICCIONARIO DE IDIOMAS — español (base), inglés, portugués
+// Se traduce por texto, así funciona también dentro del panel React.
+// ════════════════════════════════════════════════════════════
+window.DICC = {
+  // ── navegación y encabezado de la landing ──
+  "Módulos": ["Modules", "Módulos"],
+  "Cómo funciona": ["How it works", "Como funciona"],
+  "Así se ve": ["See it live", "Veja por dentro"],
+  "Planes": ["Pricing", "Planos"],
+  "Ver planes": ["See pricing", "Ver planos"],
+  "Probar demo": ["Try the demo", "Testar demo"],
+  "Probar la demo →": ["Try the demo →", "Testar a demo →"],
+  "Ver los módulos": ["See the modules", "Ver os módulos"],
+
+  // ── hero ──
+  "Hecha por arquitectos, para arquitectos": ["Built by architects, for architects", "Feita por arquitetos, para arquitetos"],
+  "El sistema que": ["The system that", "O sistema que"],
+  "sostiene": ["holds up", "sustenta"],
+  "la obra, no el que": ["the site, not the one", "a obra, não o que"],
+  "la complica.": ["that complicates it.", "a complica."],
+  "Avances, certificados, pedidos de materiales, planos y definiciones técnicas en un solo lugar — sin planillas sueltas ni carpetas de WhatsApp. Cuando el contratista pide algo, queda cargado a la vez en la constructora y en el estudio de arquitectura. Con un asistente de IA que conoce cada obra y responde antes de que termines de escribirlo.":
+    ["Progress, certificates, material requests, drawings and technical decisions in one place — no scattered spreadsheets or WhatsApp folders. When the site foreman requests something, it lands at once in the contractor's and the architecture firm's app. With an AI assistant that knows every project and answers before you finish typing.",
+     "Avanços, certificados, pedidos de materiais, plantas e definições técnicas num só lugar — sem planilhas soltas nem pastas de WhatsApp. Quando o encarregado pede algo, fica registrado ao mesmo tempo na construtora e no escritório de arquitetura. Com um assistente de IA que conhece cada obra e responde antes de você terminar de escrever."],
+  "No lo diseñó una software factory: lo diseñaron arquitectos que dirigen obra todos los días, sobre los problemas que tienen ellos mismos.":
+    ["It wasn't designed by a software factory: it was designed by architects who run job sites every day, around the problems they face themselves.",
+     "Não foi projetado por uma software house: foi projetado por arquitetos que dirigem obra todos os dias, sobre os problemas que eles mesmos enfrentam."],
+  "apps conectadas": ["connected apps", "apps conectados"],
+  "asistente por chat": ["chat assistant", "assistente por chat"],
+  "mobile, uso en el pozo": ["mobile, used on site", "mobile, uso em campo"],
+
+  // ── mock del hero ──
+  "Hoy en todas las obras": ["Today across all sites", "Hoje em todas as obras"],
+  "3 en curso · 1 alerta": ["3 in progress · 1 alert", "3 em andamento · 1 alerta"],
+  "EN CURSO": ["IN PROGRESS", "EM ANDAMENTO"],
+  "TERMINADA": ["COMPLETED", "CONCLUÍDA"],
+  "AVANCE 68%": ["PROGRESS 68%", "AVANÇO 68%"],
+  "AVANCE 41%": ["PROGRESS 41%", "AVANÇO 41%"],
+  "AVANCE 100%": ["PROGRESS 100%", "AVANÇO 100%"],
+  "cierre 30/08": ["due 08/30", "prazo 30/08"],
+  "cierre 15/09": ["due 09/15", "prazo 15/09"],
+  "cierre 28/02": ["due 02/28", "prazo 28/02"],
+  "Certificado enviado": ["Certificate sent", "Certificado enviado"],
+  "Pedido a contratista": ["Request to contractor", "Pedido ao empreiteiro"],
+
+  // ── el problema ──
+  "El problema de hoy": ["The problem today", "O problema de hoje"],
+  "La obra se maneja perfecto en el pozo. Se pierde en la administración.":
+    ["Work runs perfectly on site. It falls apart in the paperwork.",
+     "A obra funciona perfeito em campo. Se perde na administração."],
+  "El avance real vive en la cabeza del capataz y en fotos sueltas de WhatsApp que nadie ordena.":
+    ["Real progress lives in the foreman's head and in loose WhatsApp photos nobody organises.",
+     "O avanço real vive na cabeça do encarregado e em fotos soltas de WhatsApp que ninguém organiza."],
+  "Los certificados de avance se arman a mano en Excel, obra por obra, cada semana.":
+    ["Progress certificates are built by hand in Excel, site by site, every week.",
+     "Os certificados de avanço são feitos à mão no Excel, obra por obra, toda semana."],
+  "El estudio de arquitectura pregunta \"¿cómo viene tal obra?\" y hay que armar un informe desde cero.":
+    ["The architecture firm asks \"how's that site going?\" and a report has to be built from scratch.",
+     "O escritório de arquitetura pergunta \"como está aquela obra?\" e é preciso montar um relatório do zero."],
+  "Un pedido de materiales se manda por audio y se pierde entre treinta chats de obra.":
+    ["A material request is sent as a voice note and gets lost among thirty site chats.",
+     "Um pedido de materiais é enviado por áudio e se perde entre trinta conversas de obra."],
+
+  // ── módulos ──
+  "Tres roles, un mismo dato": ["Three roles, one single record", "Três papéis, um mesmo dado"],
+  "Cada parte de la obra tiene su panel. Ninguno duplica carga.":
+    ["Every party has its own panel. Nobody enters the same thing twice.",
+     "Cada parte da obra tem seu painel. Ninguém duplica lançamentos."],
+  "El contratista pide materiales, planos o una definición técnica desde su app — y ese pedido aparece al instante en la constructora y en el estudio de arquitectura, sin que nadie tenga que reenviarlo.":
+    ["The contractor requests materials, drawings or a technical decision from their app — and it shows up instantly in the builder's and the architecture firm's app, with nobody forwarding anything.",
+     "O empreiteiro pede materiais, plantas ou uma definição técnica pelo app — e o pedido aparece na hora na construtora e no escritório de arquitetura, sem ninguém reencaminhar nada."],
+  "Panel principal": ["Main panel", "Painel principal"],
+  "Obras, personal, certificados, documentación técnica y auditorías — el centro de comando de la constructora.":
+    ["Sites, staff, certificates, technical documentation and audits — the builder's command centre.",
+     "Obras, pessoal, certificados, documentação técnica e auditorias — o centro de comando da construtora."],
+  "Para vos y tu equipo": ["For you and your team", "Para você e sua equipe"],
+  "Panel del estudio de arquitectura": ["Architecture firm panel", "Painel do escritório de arquitetura"],
+  "Ve cada pedido de plano o definición apenas lo carga el contratista, y responde sin pasar por vos.":
+    ["Sees every drawing or decision request the moment the contractor files it, and answers without going through you.",
+     "Vê cada pedido de planta ou definição assim que o empreiteiro registra, e responde sem passar por você."],
+  "Para el estudio que proyecta": ["For the design firm", "Para o escritório que projeta"],
+  "Portal del propietario": ["Owner portal", "Portal do proprietário"],
+  "Vista de solo lectura para quien financia o va a vivir la obra — tranquilidad sin acceso a lo operativo.":
+    ["Read-only view for whoever funds or will live in the project — peace of mind without operational access.",
+     "Visão somente leitura para quem financia ou vai morar na obra — tranquilidade sem acesso ao operacional."],
+  "Para el dueño final": ["For the end owner", "Para o dono final"],
+  "App del contratista": ["Contractor app", "App do empreiteiro"],
+  "Pide materiales, planos o definiciones técnicas en el momento — y queda cargado a la vez en constructora y estudio de arquitectura.":
+    ["Requests materials, drawings or technical decisions on the spot — filed at once with the builder and the architecture firm.",
+     "Pede materiais, plantas ou definições técnicas na hora — e fica registrado ao mesmo tempo na construtora e no escritório."],
+  "Para quien ejecuta en obra": ["For whoever builds on site", "Para quem executa na obra"],
+
+  // ── cómo funciona ──
+  "De la obra al certificado, en cuatro pasos reales.":
+    ["From the site to the certificate, in four real steps.",
+     "Da obra ao certificado, em quatro passos reais."],
+  "Se da de alta la obra": ["The site is registered", "A obra é cadastrada"],
+  "Datos, sector, monto y fechas. Un minuto, desde el celular.":
+    ["Details, section, amount and dates. One minute, from your phone.",
+     "Dados, setor, valor e datas. Um minuto, pelo celular."],
+  "Se carga el avance": ["Progress is logged", "O avanço é lançado"],
+  "Fotos, % de avance y observaciones, directo desde el pozo.":
+    ["Photos, progress % and notes, straight from the site.",
+     "Fotos, % de avanço e observações, direto do canteiro."],
+  "Se emite el certificado": ["The certificate is issued", "O certificado é emitido"],
+  "El sistema arma el PDF con lo cargado — sin Excel.":
+    ["The system builds the PDF from what was logged — no Excel.",
+     "O sistema monta o PDF com o que foi lançado — sem Excel."],
+  "El estudio responde": ["The firm answers", "O escritório responde"],
+  "Ve el pedido, sube el plano o resuelve la duda, todo dentro del mismo hilo.":
+    ["Sees the request, uploads the drawing or settles the question, all in the same thread.",
+     "Vê o pedido, sobe a planta ou resolve a dúvida, tudo no mesmo fio."],
+
+  "Offline-first": ["Offline-first", "Offline-first"],
+  "guarda local y sincroniza solo cuando hay señal":
+    ["saves locally and syncs only when there's signal",
+     "salva local e sincroniza só quando há sinal"],
+  "Multi-obra": ["Multi-site", "Multi-obra"],
+  "todas las obras activas, una sola pantalla":
+    ["every active site, one single screen",
+     "todas as obras ativas, uma só tela"],
+  "Push": ["Push", "Push"],
+  "alertas de vencimientos y pedidos sin abrir la app":
+    ["due-date and request alerts without opening the app",
+     "alertas de vencimentos e pedidos sem abrir o app"],
+  "certificados y actas listos para firmar":
+    ["certificates and minutes ready to sign",
+     "certificados e atas prontos para assinar"],
+
+  // ── así se ve ──
+  "Así se ve por dentro": ["A look inside", "Veja por dentro"],
+  "Cuatro apps. El mismo dato, cargado una sola vez.":
+    ["Four apps. The same record, entered once.",
+     "Quatro apps. O mesmo dado, lançado uma só vez."],
+  "Cada parte de la obra tiene su propio entorno — pero todos leen de la misma carga. Nadie duplica planillas para que el otro vea el avance.":
+    ["Every party has its own environment — but they all read from the same entry. Nobody duplicates spreadsheets so the other can see progress.",
+     "Cada parte tem seu próprio ambiente — mas todos leem do mesmo lançamento. Ninguém duplica planilhas para o outro ver o avanço."],
+  "El centro de comando de la obra": ["The site's command centre", "O centro de comando da obra"],
+  "Obras, avance, bitácora, auditoría y pedidos enviados — con un asistente de IA que lee todos los datos de la app en tiempo real y contesta por texto o por voz.":
+    ["Sites, progress, site log, audit and sent requests — with an AI assistant that reads all the app's data in real time and answers by text or voice.",
+     "Obras, avanço, diário de obra, auditoria e pedidos enviados — com um assistente de IA que lê todos os dados do app em tempo real e responde por texto ou voz."],
+  "Ve los pedidos apenas se cargan": ["Sees requests the moment they're filed", "Vê os pedidos assim que são registrados"],
+  "Informes, cronogramas, formularios y pedidos recibidos. Cuando el contratista pide un plano o una definición, aparece acá sin que nadie lo reenvíe.":
+    ["Reports, schedules, forms and received requests. When the contractor asks for a drawing or a decision, it shows up here with nobody forwarding it.",
+     "Relatórios, cronogramas, formulários e pedidos recebidos. Quando o empreiteiro pede uma planta ou definição, aparece aqui sem ninguém reencaminhar."],
+  "Pide materiales, planos y definiciones": ["Requests materials, drawings and decisions", "Pede materiais, plantas e definições"],
+  "Tres tipos de pedido en una sola pantalla, con el registro por obra y el aviso de qué obra hace días que no pide nada. Cada pedido queda cargado a la vez en las otras dos apps.":
+    ["Three request types on one screen, with the log by site and a warning for sites that haven't ordered in days. Every request is filed at once in the other two apps.",
+     "Três tipos de pedido numa só tela, com o registro por obra e o aviso de qual obra há dias não pede nada. Cada pedido fica registrado ao mesmo tempo nos outros dois apps."],
+  "El dueño sigue su obra sin llamarte": ["The owner follows the build without calling you", "O dono acompanha a obra sem te ligar"],
+  "Renders, fotos de avance, cronograma, informes, planos y costos — en modo lectura, con el porcentaje de avance siempre a la vista.":
+    ["Renders, progress photos, schedule, reports, drawings and costs — read-only, with the progress percentage always in view.",
+     "Renders, fotos de avanço, cronograma, relatórios, plantas e custos — somente leitura, com a porcentagem de avanço sempre à vista."],
+
+  // ── demo CTA ──
+  "Sin compromiso": ["No commitment", "Sem compromisso"],
+  "Probá el sistema con datos de ejemplo, hoy.": ["Try the system with sample data, today.", "Teste o sistema com dados de exemplo, hoje."],
+  "Es la app real, con obras ficticias ya cargadas. Entrás, tocás todo, y si querés seguimos con tus datos.":
+    ["It's the real app, preloaded with fictional sites. Go in, tap everything, and if you like it we continue with your data.",
+     "É o app real, com obras fictícias já carregadas. Entre, toque em tudo, e se quiser seguimos com os seus dados."],
+  "Entrar al panel en vivo →": ["Open the live panel →", "Abrir o painel ao vivo →"],
+  "Ver las 4 apps sincronizadas →": ["See the 4 apps in sync →", "Ver os 4 apps sincronizados →"],
+
+  // ── planes ──
+  "Un precio por obra activa, no por promesa.": ["A price per active site, not per promise.", "Um preço por obra ativa, não por promessa."],
+  "Pagás por lo que estás usando de verdad. Se suma o se saca una obra cuando corresponde.":
+    ["You pay for what you're actually using. Sites are added or removed as they come and go.",
+     "Você paga pelo que está realmente usando. Uma obra entra ou sai quando for o caso."],
+  "Una obra": ["Single site", "Uma obra"],
+  "Consultar": ["Contact us", "Consultar"],
+  "1 obra activa": ["1 active site", "1 obra ativa"],
+  "Panel principal + panel del estudio de arquitectura": ["Main panel + architecture firm panel", "Painel principal + painel do escritório"],
+  "Certificados en PDF": ["PDF certificates", "Certificados em PDF"],
+  "Soporte por WhatsApp": ["WhatsApp support", "Suporte por WhatsApp"],
+  "Pedir precio": ["Request a quote", "Pedir orçamento"],
+  "Más elegido": ["Most chosen", "Mais escolhido"],
+  "Constructora": ["Builder", "Construtora"],
+  "Obras activas ilimitadas": ["Unlimited active sites", "Obras ativas ilimitadas"],
+  "Las 4 apps: constructora, estudio de arquitectura, propietario y contratista":
+    ["All 4 apps: builder, architecture firm, owner and contractor",
+     "Os 4 apps: construtora, escritório de arquitetura, proprietário e empreiteiro"],
+  "Notificaciones push": ["Push notifications", "Notificações push"],
+  "Alta y soporte prioritario": ["Onboarding and priority support", "Implantação e suporte prioritário"],
+  "A medida": ["Custom", "Sob medida"],
+  "Módulos propios de tu operación": ["Modules built for your operation", "Módulos próprios da sua operação"],
+  "Integraciones (contable, IA, otros)": ["Integrations (accounting, AI, others)", "Integrações (contábil, IA, outros)"],
+  "Múltiples empresas / grupos": ["Multiple companies / groups", "Múltiplas empresas / grupos"],
+  "Acompañamiento dedicado": ["Dedicated support", "Acompanhamento dedicado"],
+  "Hablemos": ["Let's talk", "Vamos conversar"],
+  "© 2026 · Hecha por arquitectos, para arquitectos · Argentina":
+    ["© 2026 · Built by architects, for architects · Argentina",
+     "© 2026 · Feita por arquitetos, para arquitetos · Argentina"],
+
+  // ── panel: barra superior ──
+  "‹ Volver": ["‹ Back", "‹ Voltar"],
+  "· demo en vivo": ["· live demo", "· demo ao vivo"],
+  "Demo en vivo": ["Live demo", "Demo ao vivo"],
+  "IA conectada": ["AI connected", "IA conectada"],
+  "IA sin configurar": ["AI not set up", "IA não configurada"],
+  "Tocá los botones dentro de cada app": ["Tap the buttons inside each app", "Toque nos botões dentro de cada app"],
+  "🔑 Clave": ["🔑 API key", "🔑 Chave"],
+  "Reiniciar": ["Reset", "Reiniciar"],
+
+  // ── panel: rótulos de las apps ──
+  "App 1 · Constructora": ["App 1 · Builder", "App 1 · Construtora"],
+  "App 2 · Estudio de arquitectura": ["App 2 · Architecture firm", "App 2 · Escritório de arquitetura"],
+  "App 3 · Capataz": ["App 3 · Site foreman", "App 3 · Encarregado"],
+  "App 4 · Propietario": ["App 4 · Owner", "App 4 · Proprietário"],
+
+  // ── panel: secciones ──
+  "Obras": ["Sites", "Obras"],
+  "Avance": ["Progress", "Avanço"],
+  "Informes": ["Reports", "Relatórios"],
+  "Bitácora": ["Site log", "Diário de obra"],
+  "Pedidos": ["Requests", "Pedidos"],
+  "Personal": ["Staff", "Pessoal"],
+  "Auditoría": ["Audit", "Auditoria"],
+
+  // ── panel: pantalla IA ──
+  "Inteligencia · v23": ["Intelligence · v23", "Inteligência · v23"],
+  "Asistente de Obra": ["Site assistant", "Assistente de Obra"],
+  "Asistente del estudio": ["Firm assistant", "Assistente do escritório"],
+  "Lee todos los datos de la app en tiempo real": ["Reads all the app's data in real time", "Lê todos os dados do app em tempo real"],
+  "Lee los datos de todas las obras": ["Reads data from every site", "Lê os dados de todas as obras"],
+  "✨ Generar informe semanal con IA": ["✨ Generate weekly report with AI", "✨ Gerar relatório semanal com IA"],
+  "⏳ La IA está trabajando…": ["⏳ The AI is working…", "⏳ A IA está trabalhando…"],
+  "✨ Informe semanal generado": ["✨ Weekly report generated", "✨ Relatório semanal gerado"],
+  "Abrir informe y PDF →": ["Open report and PDF →", "Abrir relatório e PDF →"],
+  "No hay pedidos pendientes de respuesta en este momento.":
+    ["There are no requests awaiting an answer right now.",
+     "Não há pedidos aguardando resposta neste momento."],
+  "⊕ Buscar en internet ON": ["⊕ Web search ON", "⊕ Buscar na internet ON"],
+  "⌇ Debate IA": ["⌇ AI debate", "⌇ Debate IA"],
+  "◈ Narrar": ["◈ Narrate", "◈ Narrar"],
+  "Limpiar": ["Clear", "Limpar"],
+  "Escribí, adjuntá o usá el micrófono…": ["Type, attach or use the microphone…", "Escreva, anexe ou use o microfone…"],
+  "Escribí tu consulta…": ["Type your question…", "Escreva sua consulta…"],
+  "Cargá tu API Key en Más → Configuración para activar la IA.":
+    ["Add your API key under More → Settings to enable the AI.",
+     "Carregue sua API key em Mais → Configurações para ativar a IA."],
+
+  // ── panel: obras ──
+  "Cartera": ["Portfolio", "Carteira"],
+  "Obras en curso": ["Sites in progress", "Obras em andamento"],
+  "Tocá una obra para abrir su ficha": ["Tap a site to open its file", "Toque numa obra para abrir a ficha"],
+  "Info": ["Info", "Info"],
+  "Notas": ["Notes", "Notas"],
+  "Fotos": ["Photos", "Fotos"],
+  "Planos": ["Drawings", "Plantas"],
+  "Renders": ["Renders", "Renders"],
+  "Gastos": ["Costs", "Custos"],
+  "Nombre de la obra": ["Site name", "Nome da obra"],
+  "Zona/Barrio": ["Zone/Area", "Zona/Bairro"],
+  "Sector": ["Section", "Setor"],
+  "Inicio": ["Start", "Início"],
+  "Cierre est.": ["Est. finish", "Término est."],
+  "Estado": ["Status", "Status"],
+  "Pendiente": ["Pending", "Pendente"],
+  "En Curso": ["In progress", "Em andamento"],
+  "Pausada": ["Paused", "Pausada"],
+  "Terminada": ["Completed", "Concluída"],
+  "Presupuesto": ["Budget", "Orçamento"],
+  "Pagado": ["Paid", "Pago"],
+  "📷 Subir fotos de avance": ["📷 Upload progress photos", "📷 Subir fotos de avanço"],
+  "▤ Subir plano (PDF / DWG / imagen)": ["▤ Upload drawing (PDF / DWG / image)", "▤ Subir planta (PDF / DWG / imagem)"],
+  "▧ Subir render del proyecto": ["▧ Upload project render", "▧ Subir render do projeto"],
+  "Sin fotos cargadas.": ["No photos uploaded.", "Sem fotos carregadas."],
+  "Sin planos cargados. Subí acá los planos de la obra: los ve el estudio y también el propietario.":
+    ["No drawings uploaded. Upload the site drawings here: the firm and the owner both see them.",
+     "Sem plantas carregadas. Suba aqui as plantas da obra: o escritório e o proprietário veem."],
+  "Sin renders cargados. Los renders que subas los ve el propietario en su portal.":
+    ["No renders uploaded. Whatever you upload, the owner sees in their portal.",
+     "Sem renders carregados. Os renders que subir, o proprietário vê no portal dele."],
+  "Sin notas ni observaciones cargadas.": ["No notes or observations logged.", "Sem notas ou observações registradas."],
+  "Sin informes emitidos para esta obra.": ["No reports issued for this site.", "Sem relatórios emitidos para esta obra."],
+
+  // ── panel: avance ──
+  "Seguimiento visual": ["Visual tracking", "Acompanhamento visual"],
+  "Avance de obra": ["Site progress", "Avanço de obra"],
+  "Subí una o varias fotos del día y la IA compara el avance con la anterior":
+    ["Upload one or more photos from today and the AI compares progress against the previous one",
+     "Suba uma ou mais fotos do dia e a IA compara o avanço com a anterior"],
+  "Elegir foto(s)": ["Choose photo(s)", "Escolher foto(s)"],
+  "🖼 Foto anterior": ["🖼 Previous photo", "🖼 Foto anterior"],
+  "✓ Foto anterior": ["✓ Previous photo", "✓ Foto anterior"],
+  "🖼 Anterior": ["🖼 Previous", "🖼 Anterior"],
+  "📷 Foto de hoy": ["📷 Today's photo", "📷 Foto de hoje"],
+  "✓ Foto de hoy": ["✓ Today's photo", "✓ Foto de hoje"],
+  "⏳ Procesando…": ["⏳ Processing…", "⏳ Processando…"],
+  "Anterior": ["Previous", "Anterior"],
+  "Hoy": ["Today", "Hoje"],
+  "sin cargar": ["not uploaded", "não carregada"],
+  "Consejo: elegí las fotos, fijate cuáles son y recién ahí poné la fecha del día en que se sacaron. El % es una estimación visual, no una medición exacta.":
+    ["Tip: pick the photos, check which ones they are, and only then set the date they were taken. The % is a visual estimate, not an exact measurement.",
+     "Dica: escolha as fotos, confira quais são e só então coloque a data em que foram tiradas. O % é uma estimativa visual, não uma medição exata."],
+  "✨ Analizar avance con IA": ["✨ Analyse progress with AI", "✨ Analisar avanço com IA"],
+  "⏳ Comparando las fotos…": ["⏳ Comparing the photos…", "⏳ Comparando as fotos…"],
+  "🗓 Certificado semanal": ["🗓 Weekly certificate", "🗓 Certificado semanal"],
+  "Junta todos los avances de la semana + la bitácora en un solo informe. La semana cierra los viernes.":
+    ["Bundles the week's progress plus the site log into a single report. The week closes on Fridays.",
+     "Junta todos os avanços da semana + o diário num único relatório. A semana fecha nas sextas."],
+  "DESDE (sáb)": ["FROM (Sat)", "DE (sáb)"],
+  "HASTA (vie)": ["TO (Fri)", "ATÉ (sex)"],
+  "✓ Generar certificado de la semana": ["✓ Generate the week's certificate", "✓ Gerar certificado da semana"],
+  "📄 PDF de toda la obra": ["📄 Full site PDF", "📄 PDF de toda a obra"],
+  "Galería": ["Gallery", "Galeria"],
+
+  // ── panel: bitácora ──
+  "Registro": ["Log", "Registro"],
+  "Bitácora de obra": ["Site log", "Diário de obra"],
+  "Cargá lo que va pasando para justificar adicionales":
+    ["Log what happens as it happens, to back up variations",
+     "Registre o que vai acontecendo para justificar aditivos"],
+  "Nuevo hecho": ["New entry", "Novo registro"],
+  "Fecha": ["Date", "Data"],
+  "— Etapa de obra (opcional) —": ["— Site stage (optional) —", "— Etapa da obra (opcional) —"],
+  "Agregar fotos": ["Add photos", "Adicionar fotos"],
+  "Adjuntar archivo": ["Attach file", "Anexar arquivo"],
+  "Cancelar": ["Cancel", "Cancelar"],
+  "Guardar hecho": ["Save entry", "Salvar registro"],
+  "Hechos registrados": ["Logged entries", "Registros lançados"],
+  "Todavía no hay asientos. Cargá un hecho arriba, o hacé cualquier acción en las otras apps y se registra solo.":
+    ["No entries yet. Log one above, or take any action in the other apps and it records itself.",
+     "Ainda não há registros. Lance um acima, ou faça qualquer ação nos outros apps e ele se registra sozinho."],
+  "Sin asientos todavía.": ["No entries yet.", "Sem registros ainda."],
+
+  // ── panel: pedidos ──
+  "Comunicación": ["Communication", "Comunicação"],
+  "Pedidos enviados": ["Sent requests", "Pedidos enviados"],
+  "Pedidos recibidos": ["Received requests", "Pedidos recebidos"],
+  "Enviados al estudio de arquitectura": ["Sent to the architecture firm", "Enviados ao escritório de arquitetura"],
+  "Lo que pide el capataz y espera respuesta": ["What the foreman asks and awaits an answer on", "O que o encarregado pede e aguarda resposta"],
+  "Filtrar": ["Filter", "Filtrar"],
+  "Todo": ["All", "Tudo"],
+  "Materiales": ["Materials", "Materiais"],
+  "Definiciones": ["Decisions", "Definições"],
+  "Sin pedidos. Probá pedir algo desde la app del capataz.":
+    ["No requests. Try filing one from the foreman's app.",
+     "Sem pedidos. Tente pedir algo pelo app do encarregado."],
+  "● No leído por el estudio": ["● Not read by the firm", "● Não lido pelo escritório"],
+  "● Respondido por el estudio": ["● Answered by the firm", "● Respondido pelo escritório"],
+  "Responder al capataz": ["Answer the foreman", "Responder ao encarregado"],
+  "➤ Enviar por WhatsApp al jefe de obra": ["➤ Send to the site manager on WhatsApp", "➤ Enviar por WhatsApp ao chefe de obra"],
+  "Mis pedidos": ["My requests", "Meus pedidos"],
+  "Qué querés pedir": ["What do you need", "O que você quer pedir"],
+  "Recepción de docs": ["Document intake", "Recepção de docs"],
+  "Registro de pedidos": ["Request log", "Registro de pedidos"],
+  "Estado por obra": ["Status by site", "Status por obra"],
+  "Pedidos de materiales · v2": ["Material requests · v2", "Pedidos de materiais · v2"],
+  "↻ Actualizar": ["↻ Refresh", "↻ Atualizar"],
+  "✧ Estilo": ["✧ Style", "✧ Estilo"],
+  "sin pedidos de material": ["no material requests", "sem pedidos de material"],
+  "hace 20 días": ["20 days ago", "há 20 dias"],
+  "hace 13 días": ["13 days ago", "há 13 dias"],
+  "hace 6 días": ["6 days ago", "há 6 dias"],
+  "pidió hoy": ["ordered today", "pediu hoje"],
+  "En ámbar, las que hace 7 días o más que no piden materiales.":
+    ["In amber, the ones that haven't ordered materials in 7 days or more.",
+     "Em âmbar, as que há 7 dias ou mais não pedem materiais."],
+  "Tocá una tarjeta para cursar el pedido. Aparece al instante en la constructora y en el estudio.":
+    ["Tap a card to file the request. It shows up instantly with the builder and the firm.",
+     "Toque num cartão para enviar o pedido. Aparece na hora na construtora e no escritório."],
+  "Definiciones solicitadas": ["Requested decisions", "Definições solicitadas"],
+  "Sin definiciones pedidas todavía.": ["No decisions requested yet.", "Nenhuma definição pedida ainda."],
+  "Recepción de documentación": ["Document intake", "Recepção de documentação"],
+  "Cuando el estudio responda un pedido, la documentación aparece acá.":
+    ["When the firm answers a request, the documentation shows up here.",
+     "Quando o escritório responder um pedido, a documentação aparece aqui."],
+
+  // ── panel: informes / auditoría / personal ──
+  "Documentación": ["Documentation", "Documentação"],
+  "Informes y certificados": ["Reports and certificates", "Relatórios e certificados"],
+  "Lo que se emite y se comparte con el cliente": ["What gets issued and shared with the client", "O que é emitido e compartilhado com o cliente"],
+  "Sin documentación emitida todavía.": ["No documentation issued yet.", "Sem documentação emitida ainda."],
+  "Control": ["Control", "Controle"],
+  "Plan de auditoría": ["Audit plan", "Plano de auditoria"],
+  "Certificados y conformidades de obra": ["Site certificates and sign-offs", "Certificados e conformidades de obra"],
+  "📋 Emitir certificado semanal": ["📋 Issue weekly certificate", "📋 Emitir certificado semanal"],
+  "Sin certificados emitidos.": ["No certificates issued.", "Sem certificados emitidos."],
+  "Conformidades": ["Sign-offs", "Conformidades"],
+  "Equipo": ["Team", "Equipe"],
+  "Personal en obra": ["Site staff", "Pessoal na obra"],
+  "Documentación y vencimientos": ["Documents and expiry dates", "Documentação e vencimentos"],
+  "Director Técnico": ["Technical Director", "Diretor Técnico"],
+  "Capataz": ["Site foreman", "Encarregado"],
+  "ART al día": ["Insurance up to date", "Seguro em dia"],
+  "ART vence en 3 días": ["Insurance expires in 3 days", "Seguro vence em 3 dias"],
+
+  // ── panel: propietario ──
+  "Tu marca": ["Your brand", "Sua marca"],
+  "Tu proyecto": ["Your project", "Seu projeto"],
+  "Secciones": ["Sections", "Seções"],
+  "Fotos de avance": ["Progress photos", "Fotos de avanço"],
+  "Cronograma": ["Schedule", "Cronograma"],
+  "Costos": ["Costs", "Custos"],
+  "‹ Volver a secciones": ["‹ Back to sections", "‹ Voltar às seções"],
+  "Modo solo lectura · no ve pedidos ni costos internos":
+    ["Read-only · doesn't see requests or internal costs",
+     "Somente leitura · não vê pedidos nem custos internos"],
+  "Tu constructora todavía no subió fotos.": ["Your builder hasn't uploaded photos yet.", "Sua construtora ainda não subiu fotos."],
+  "Tu estudio todavía no publicó renders del proyecto.": ["Your firm hasn't published project renders yet.", "Seu escritório ainda não publicou renders do projeto."],
+  "Tu constructora todavía no publicó planos para esta obra.": ["Your builder hasn't published drawings for this site yet.", "Sua construtora ainda não publicou plantas para esta obra."],
+  "Tu constructora todavía no publicó el cronograma de esta obra.": ["Your builder hasn't published this site's schedule yet.", "Sua construtora ainda não publicou o cronograma desta obra."],
+  "Sin informes publicados.": ["No reports published.", "Sem relatórios publicados."],
+
+  // ── panel: modales ──
+  "Configuración": ["Settings", "Configurações"],
+  "Clave de IA": ["AI key", "Chave de IA"],
+  "Pegá tu API key de Anthropic para activar el análisis de fotos y los informes. Queda guardada solo en este dispositivo.":
+    ["Paste your Anthropic API key to enable photo analysis and reports. It's stored on this device only.",
+     "Cole sua API key da Anthropic para ativar a análise de fotos e os relatórios. Fica salva só neste dispositivo."],
+  "✓ Clave cargada — la IA está lista": ["✓ Key loaded — the AI is ready", "✓ Chave carregada — a IA está pronta"],
+  "Falta la clave (empieza con sk-ant-)": ["Key missing (starts with sk-ant-)", "Falta a chave (começa com sk-ant-)"],
+  "Listo": ["Done", "Pronto"],
+  "Analizado por IA": ["Analysed by AI", "Analisado por IA"],
+  "Informe generado": ["Report generated", "Relatório gerado"],
+  "Generando": ["Generating", "Gerando"],
+  "Informe semanal de obra": ["Weekly site report", "Relatório semanal de obra"],
+  "⏳ La IA está leyendo las fotos, los pedidos y la bitácora…":
+    ["⏳ The AI is reading the photos, requests and site log…",
+     "⏳ A IA está lendo as fotos, os pedidos e o diário…"],
+  "El PDF incluye las fotos comparadas y la bitácora completa.":
+    ["The PDF includes the compared photos and the full site log.",
+     "O PDF inclui as fotos comparadas e o diário completo."],
+  "📄 Descargar PDF": ["📄 Download PDF", "📄 Baixar PDF"],
+  "Generando…": ["Generating…", "Gerando…"],
+  "Cerrar": ["Close", "Fechar"],
+
+  // ── chips de estado ──
+  "RESUELTO": ["RESOLVED", "RESOLVIDO"],
+  "ENVIADO": ["SENT", "ENVIADO"],
+  "EMITIDO": ["ISSUED", "EMITIDO"],
+  "PENDIENTE": ["PENDING", "PENDENTE"],
+  "A APROBAR": ["TO APPROVE", "A APROVAR"],
+};
+
+</script>
+<script>
+// ════════════════════════════════════════════════════════════
+// MOTOR DE IDIOMA
+// Traduce recorriendo los nodos de texto. Como el panel es React y
+// se vuelve a dibujar solo, un observador reaplica la traducción.
+// ════════════════════════════════════════════════════════════
+(function () {
+  var DICC = window.DICC || {};
+  var IDX = { es: -1, en: 0, pt: 1 };          // posición en el array del diccionario
+  var idioma = "es";
+  var observador = null;
+
+  // Índice inverso: desde cualquier idioma vuelvo al español.
+  var AL_ESPANOL = {};
+  Object.keys(DICC).forEach(function (es) {
+    var arr = DICC[es];
+    for (var i = 0; i < arr.length; i++) AL_ESPANOL[arr[i]] = es;
+  });
+
+  function aEspanol(txt) { return AL_ESPANOL[txt] || txt; }
+
+  function traducirTexto(txt) {
+    var base = aEspanol(txt);
+    if (idioma === "es") return base;
+    var arr = DICC[base];
+    if (!arr) return txt;                       // sin traducción: lo dejo como está
+    return arr[IDX[idioma]] || base;
+  }
+
+  function recorrer(raiz) {
+    if (!raiz) return;
+    // nodos de texto
+    var w = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT, null);
+    var pendientes = [];
+    var n;
+    while ((n = w.nextNode())) {
+      var padre = n.parentNode;
+      if (!padre) continue;
+      var tag = padre.nodeName;
+      if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT") continue;
+      var crudo = n.nodeValue;
+      var t = crudo.trim();
+      if (t.length < 2) continue;
+      var nuevo = traducirTexto(t);
+      if (nuevo !== t) pendientes.push([n, crudo.replace(t, nuevo)]);
+    }
+    pendientes.forEach(function (p) { p[0].nodeValue = p[1]; });
+
+    // placeholders de inputs y textareas
+    var campos = raiz.querySelectorAll ? raiz.querySelectorAll("input[placeholder],textarea[placeholder]") : [];
+    for (var i = 0; i < campos.length; i++) {
+      var ph = campos[i].getAttribute("placeholder");
+      if (!ph) continue;
+      var nph = traducirTexto(ph.trim());
+      if (nph !== ph) campos[i].setAttribute("placeholder", nph);
+    }
+  }
+
+  function aplicar() {
+    if (observador) observador.disconnect();
+    try { recorrer(document.body); } catch (e) { console.error(e); }
+    if (observador) observar();
+  }
+
+  function observar() {
+    if (!observador) return;
+    observador.observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+
+  window.cambiarIdioma = function (nuevo) {
+    if (!IDX.hasOwnProperty(nuevo)) return;
+    idioma = nuevo;
+    try { localStorage.setItem("idioma", nuevo); } catch (e) {}
+    document.documentElement.lang = nuevo;
+    aplicar();
+    // marco el botón activo
+    var btns = document.querySelectorAll("[data-idioma]");
+    for (var i = 0; i < btns.length; i++) {
+      var act = btns[i].getAttribute("data-idioma") === nuevo;
+      btns[i].style.background = act ? "#B0894F" : "transparent";
+      btns[i].style.color = act ? "#fff" : "";
+      btns[i].style.fontWeight = act ? "800" : "700";
+    }
+  };
+
+  window.idiomaActual = function () { return idioma; };
+
+  // Arranque: recupero el idioma elegido y monto el observador.
+  document.addEventListener("DOMContentLoaded", function () {
+    try {
+      observador = new MutationObserver(function () {
+        if (idioma === "es") return;            // en español no hay nada que reaplicar
+        if (observador) observador.disconnect();
+        try { recorrer(document.body); } catch (e) {}
+        observar();
+      });
+    } catch (e) { observador = null; }
+
+    var guardado = "es";
+    try { guardado = localStorage.getItem("idioma") || "es"; } catch (e) {}
+    window.cambiarIdioma(guardado);
+    observar();
+  });
+})();
+
 </script>
 </body>
 </html>
