@@ -25,7 +25,6 @@
 </head>
 <body>
 <div id="root"><div id="arranque">Cargando el panel…</div></div>
-
 <script>
 /**
  * @license React
@@ -60,7 +59,6 @@ c.useState=function(a){return g.current.useState(a)};c.useSyncExternalStore=func
 })();
 
 </script>
-
 <script>
 /**
  * @license React
@@ -331,7 +329,6 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 })();
 
 </script>
-
 <script>
 (function () {
   try {
@@ -575,9 +572,6 @@ async function generarPDF({
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
-
-// ── llamada directa a la API de Anthropic ──────────────────────
-// Sin servidor propio: la clave la carga el usuario y queda en su dispositivo.
 async function llamarIA({
   prompt,
   content,
@@ -652,11 +646,10 @@ function PanelDemo() {
   const [avanceIA, setAvanceIA] = useState(null); // % que estimó la IA
   const [iaOk, setIaOk] = useState(null); // null = chequeando
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [procesando, setProcesando] = useState(false);
   const fileRef = useRef(null);
   const antesRef = useRef(null);
   const hoyRef = useRef(null);
-
-  // La IA está lista cuando hay API key cargada.
   const [apiKey, setApiKey] = useState(() => {
     try {
       return localStorage.getItem("demo_api_key") || "";
@@ -784,7 +777,17 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
   async function cargarComparacion(e, cual) {
     const f = e.target.files?.[0];
     if (!f) return;
-    const dataUrl = await aDataUrl(f);
+    setProcesando(true);
+    setUltimo("Procesando la foto…");
+    let dataUrl;
+    try {
+      dataUrl = await aDataUrl(f);
+    } catch {
+      setProcesando(false);
+      setUltimo("No se pudo leer la foto. Probá con otra.");
+      return;
+    }
+    setProcesando(false);
     if (cual === "antes") setFotoAntes({
       url: dataUrl,
       hora: ahora()
@@ -912,6 +915,13 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       padding: 14
     }
   }, /*#__PURE__*/React.createElement("style", null, `
+        .grilla { display:grid; gap:12px; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; height:calc(100vh - 118px); }
+        @media (max-width: 820px) {
+          .grilla { grid-template-columns:1fr; grid-template-rows:none; height:auto; }
+          .grilla > div { min-height:340px; }
+        }
+        button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        button:active { opacity:.65; transform:scale(.97); }
         @keyframes pulseIn { 0%{box-shadow:0 0 0 0 rgba(176,137,79,.75)} 100%{box-shadow:0 0 0 16px rgba(176,137,79,0)} }
         .flash { animation: pulseIn 1.4s ease-out 1; }
         @keyframes slideIn { from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:none} }
@@ -986,18 +996,19 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     ref: hoyRef,
     type: "file",
     accept: "image/*",
-    capture: "environment",
     onChange: e => cargarComparacion(e, "hoy"),
     style: {
       display: "none"
     }
   }), /*#__PURE__*/React.createElement(Boton, {
     onClick: () => antesRef.current?.click(),
-    ok: !!fotoAntes
-  }, fotoAntes ? "✓ Foto anterior" : "🖼 Foto anterior"), /*#__PURE__*/React.createElement(Boton, {
+    ok: !!fotoAntes,
+    disabled: procesando
+  }, procesando ? "⏳ Procesando…" : fotoAntes ? "✓ Foto anterior" : "🖼 Foto anterior"), /*#__PURE__*/React.createElement(Boton, {
     onClick: () => hoyRef.current?.click(),
-    ok: !!fotoHoy
-  }, fotoHoy ? "✓ Foto de hoy" : "📷 Foto de hoy"), iaOk !== false && /*#__PURE__*/React.createElement(Boton, {
+    ok: !!fotoHoy,
+    disabled: procesando
+  }, procesando ? "⏳ Procesando…" : fotoHoy ? "✓ Foto de hoy" : "📷 Foto de hoy"), iaOk !== false && /*#__PURE__*/React.createElement(Boton, {
     onClick: analizarAvance,
     principal: true,
     disabled: !fotoAntes || !fotoHoy || generando
@@ -1017,10 +1028,11 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       border: `1px solid ${iaOk ? "rgba(255,255,255,.25)" : "rgba(224,138,62,.6)"}`,
       color: iaOk ? "#B9C2CF" : "#E8A860",
       borderRadius: 8,
-      padding: "9px 14px",
-      fontSize: 12,
+      padding: "11px 15px",
+      fontSize: 12.5,
       fontWeight: 700,
-      cursor: "pointer"
+      cursor: "pointer",
+      minHeight: 42
     }
   }, iaOk ? "🔑 Cambiar clave" : "🔑 Cargar clave de IA"), /*#__PURE__*/React.createElement("button", {
     onClick: reiniciar,
@@ -1029,10 +1041,11 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       border: "1px solid rgba(255,255,255,.25)",
       color: "#B9C2CF",
       borderRadius: 8,
-      padding: "9px 14px",
-      fontSize: 12,
+      padding: "11px 15px",
+      fontSize: 12.5,
       fontWeight: 700,
-      cursor: "pointer"
+      cursor: "pointer",
+      minHeight: 42
     }
   }, "Reiniciar demo")), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1058,13 +1071,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       fontWeight: 600
     }
   }, ultimo || "Tocá una acción arriba: vas a ver el dato aparecer en las otras apps al instante.")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gridTemplateRows: "1fr 1fr",
-      gap: 12,
-      height: "calc(100vh - 118px)"
-    }
+    className: "grilla"
   }, /*#__PURE__*/React.createElement(Panel, {
     titulo: "Constructora",
     sub: "Centro de comando",
@@ -1516,7 +1523,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: 26
+      padding: 22
     }
   }, /*#__PURE__*/React.createElement("div", {
     onClick: e => e.stopPropagation(),
@@ -1566,12 +1573,15 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     value: apiKey,
     onChange: e => guardarKey(e.target.value.trim()),
     placeholder: "sk-ant-...",
+    autoCapitalize: "off",
+    autoCorrect: "off",
+    spellCheck: "false",
     style: {
       width: "100%",
       border: `1px solid ${T.border}`,
       borderRadius: 9,
-      padding: "12px 13px",
-      fontSize: 13,
+      padding: "13px",
+      fontSize: 16,
       color: T.text,
       outline: "none",
       fontFamily: "monospace",
@@ -1582,7 +1592,8 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 10
+      gap: 10,
+      flexWrap: "wrap"
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -1598,10 +1609,11 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       color: "#fff",
       border: "none",
       borderRadius: 8,
-      padding: "9px 18px",
-      fontSize: 12,
+      padding: "11px 20px",
+      fontSize: 12.5,
       fontWeight: 700,
-      cursor: "pointer"
+      cursor: "pointer",
+      minHeight: 42
     }
   }, "Listo")))), verInforme && /*#__PURE__*/React.createElement("div", {
     onClick: () => setVerInforme(false),
@@ -1757,12 +1769,13 @@ function Boton({
       color: disabled ? "#5A6472" : "#fff",
       border: `1px solid ${borde}`,
       borderRadius: 8,
-      padding: "9px 14px",
-      fontSize: 12,
+      padding: "11px 15px",
+      fontSize: 12.5,
       fontWeight: 700,
       cursor: disabled ? "not-allowed" : "pointer",
       whiteSpace: "nowrap",
-      transition: "all .2s"
+      minHeight: 42,
+      transition: "opacity .15s, transform .1s"
     }
   }, children);
 }
