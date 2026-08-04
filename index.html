@@ -1069,6 +1069,16 @@ const ahora = () => new Date().toLocaleTimeString("es-AR", {
   minute: "2-digit"
 });
 const hoyStr = () => new Date().toLocaleDateString("es-AR");
+const hoyCorto = () => new Date().toLocaleDateString("es-AR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "2-digit"
+});
+const hoyLargo = () => new Date().toLocaleDateString("es-AR", {
+  day: "numeric",
+  month: "short",
+  year: "numeric"
+});
 
 // Convierte un File a dataURL, redimensionando para no mandar 8MB a la IA.
 function aDataUrl(file, maxLado = 1400) {
@@ -1440,6 +1450,9 @@ function PanelDemo() {
   const [tabE, setTabE] = useState("ia"); // estudio
   const [tabK, setTabK] = useState("pedidos"); // contratista
   const [secP, setSecP] = useState(null); // propietario
+  const [bitTitulo, setBitTitulo] = useState("");
+  const [bitDetalle, setBitDetalle] = useState("");
+  const [filtroP, setFiltroP] = useState("todo");
 
   // Cada acción deja su registro. Esto es la trazabilidad de la obra.
   function anotar(titulo, detalle, autor) {
@@ -1503,6 +1516,7 @@ function PanelDemo() {
       tipo: "material",
       txt: "50 bolsas de cemento + 20 hierros del 8",
       hora: ahora(),
+      fecha: hoyCorto(),
       estado: "enviado"
     }, ...p]);
     setUltimo("Pedido de materiales cargado en Contratista → visible en Constructora y Estudio");
@@ -1515,6 +1529,7 @@ function PanelDemo() {
       tipo: "definicion",
       txt: "Definición: nivel de piso terminado en baño PB",
       hora: ahora(),
+      fecha: hoyCorto(),
       estado: "pendiente"
     }, ...p]);
     setUltimo("Pedido de definición cargado en Contratista → el Estudio lo ve al instante");
@@ -1722,6 +1737,9 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     setTabE("ia");
     setTabK("pedidos");
     setSecP(null);
+    setBitTitulo("");
+    setBitDetalle("");
+    setFiltroP("todo");
   }
   useEffect(() => () => fotos.forEach(f => URL.revokeObjectURL(f.url)), []);
   const pendientes = pedidos.filter(p => p.estado !== "resuelto").length;
@@ -1990,25 +2008,30 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       background: `linear-gradient(90deg,${BRASS},#D9B57C)`
     }
   })))))), tabC === "avance" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Relevamiento",
-    titulo: "Registro de avance",
-    sub: "Fotografías e informe asistido"
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement("div", {
+    eyebrow: "Seguimiento visual",
+    titulo: "Avance de obra",
+    sub: "Subí una o varias fotos del día y la IA compara el avance con la anterior"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Selector, null, OBRA), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 7,
-      marginBottom: 4
+      gridTemplateColumns: "1.4fr 1fr",
+      gap: 7
     }
   }, /*#__PURE__*/React.createElement(Accion, {
+    onClick: () => hoyRef.current?.click(),
+    disabled: procesando,
+    oscuro: true
+  }, procesando ? "⏳ Procesando…" : "Elegir foto(s)"), /*#__PURE__*/React.createElement(Accion, {
     onClick: () => antesRef.current?.click(),
     disabled: procesando,
     ok: !!fotoAntes
-  }, fotoAntes ? "✓ Foto anterior" : "🖼 Foto anterior"), /*#__PURE__*/React.createElement(Accion, {
-    onClick: () => hoyRef.current?.click(),
-    disabled: procesando,
-    ok: !!fotoHoy
-  }, fotoHoy ? "✓ Foto de hoy" : "📷 Foto de hoy")), (fotoAntes || fotoHoy) && /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement("div", {
+  }, fotoAntes ? "✓ Foto anterior" : "🖼 Anterior")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: T.muted,
+      lineHeight: 1.45
+    }
+  }, "Consejo: elegí las fotos, fijate cuáles son y recién ahí poné la fecha del día en que se sacaron. El % es una estimación visual, no una medición exacta."), (fotoAntes || fotoHoy) && /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "1fr 1fr",
@@ -2026,13 +2049,13 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     alt: rot,
     style: {
       width: "100%",
-      height: 70,
+      height: 68,
       objectFit: "cover",
       display: "block"
     }
   }) : /*#__PURE__*/React.createElement("div", {
     style: {
-      height: 70,
+      height: 68,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -2064,7 +2087,63 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     onClick: analizarAvance,
     principal: true,
     disabled: !fotoAntes || !fotoHoy || generando
-  }, generando ? "⏳ Comparando las fotos…" : "✨ Analizar avance con IA"), fotos.length > 0 && /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement(Rotulo, null, "Galería · ", fotos.length), /*#__PURE__*/React.createElement("div", {
+  }, generando ? "⏳ Comparando las fotos…" : "✨ Analizar avance con IA"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      border: `1px solid ${BRASS}`,
+      borderRadius: 11,
+      padding: "12px",
+      background: "#fff"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      fontWeight: 700,
+      color: NAVY
+    }
+  }, "🗓 Certificado semanal"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: T.muted,
+      lineHeight: 1.45,
+      marginTop: 3,
+      marginBottom: 10
+    }
+  }, "Junta todos los avances de la semana + la bitácora en un solo informe. La semana cierra los viernes."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 7,
+      marginBottom: 9
+    }
+  }, [["DESDE (sáb)", "25 jul 2026"], ["HASTA (vie)", "31 jul 2026"]].map(([l, v]) => /*#__PURE__*/React.createElement("div", {
+    key: l
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      fontWeight: 700,
+      letterSpacing: ".1em",
+      color: T.muted,
+      marginBottom: 3
+    }
+  }, l), /*#__PURE__*/React.createElement("div", {
+    style: {
+      border: `1px solid ${T.border}`,
+      borderRadius: 8,
+      padding: "8px 9px",
+      fontSize: 10.5,
+      textAlign: "center",
+      background: "#FAFBFC"
+    }
+  }, v)))), /*#__PURE__*/React.createElement(Accion, {
+    onClick: emitirCertificado,
+    oscuro: true
+  }, "✓ Generar certificado de la semana")), /*#__PURE__*/React.createElement(Accion, {
+    onClick: generarInforme,
+    oscuro: true,
+    disabled: generando
+  }, "📩 Preparar ", certificados.length + fotos.length || 1, " informe", certificados.length + fotos.length === 1 ? "" : "s", " para el cliente"), /*#__PURE__*/React.createElement(Accion, {
+    onClick: informe ? descargarPDF : generarInforme
+  }, "📄 PDF de toda la obra"), fotos.length > 0 && /*#__PURE__*/React.createElement(Tarjeta, null, /*#__PURE__*/React.createElement(Rotulo, null, "Galería · ", fotos.length), /*#__PURE__*/React.createElement("div", {
     className: "sc",
     style: {
       display: "flex",
@@ -2085,10 +2164,151 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       flexShrink: 0
     }
   })))))), tabC === "bitacora" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
-    eyebrow: "Trazabilidad",
+    eyebrow: "Registro",
     titulo: "Bitácora de obra",
-    sub: `${bitacora.length} asiento${bitacora.length === 1 ? "" : "s"} registrados`
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, bitacora.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Todavía no hay asientos. Cada acción que hagas en cualquiera de las apps queda registrada acá sola.") : bitacora.map((b, i) => /*#__PURE__*/React.createElement("div", {
+    sub: "Cargá lo que va pasando para justificar adicionales"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 7
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement(Selector, null, OBRA)), /*#__PURE__*/React.createElement("button", {
+    onClick: informe ? descargarPDF : generarInforme,
+    style: {
+      background: "#141C2B",
+      color: "#fff",
+      border: `1px solid ${BRASS}`,
+      borderRadius: 9,
+      padding: "0 16px",
+      fontSize: 11,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 40
+    }
+  }, "PDF")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      border: `1px solid ${T.border}`,
+      borderRadius: 11,
+      padding: "12px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      fontWeight: 700,
+      color: NAVY,
+      marginBottom: 10
+    }
+  }, "Nuevo hecho"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10,
+      color: T.sub,
+      minWidth: 38
+    }
+  }, "Fecha"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      border: `1px solid ${T.border}`,
+      borderRadius: 8,
+      padding: "8px 10px",
+      fontSize: 10.5,
+      textAlign: "center",
+      background: "#FAFBFC"
+    }
+  }, hoyLargo())), /*#__PURE__*/React.createElement("div", {
+    style: {
+      border: `1px solid ${T.border}`,
+      borderRadius: 8,
+      padding: "9px 10px",
+      fontSize: 10.5,
+      color: T.muted,
+      marginBottom: 8,
+      display: "flex",
+      justifyContent: "space-between"
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "— Etapa de obra (opcional) —"), /*#__PURE__*/React.createElement("span", null, "⌄")), /*#__PURE__*/React.createElement("input", {
+    value: bitTitulo,
+    onChange: e => setBitTitulo(e.target.value),
+    placeholder: "Título (ej: Cambio de nivel de platea)",
+    style: {
+      width: "100%",
+      border: `1px solid ${T.border}`,
+      borderRadius: 8,
+      padding: "10px",
+      fontSize: 11,
+      color: T.text,
+      outline: "none",
+      marginBottom: 8,
+      boxSizing: "border-box",
+      fontFamily: "inherit"
+    }
+  }), /*#__PURE__*/React.createElement("textarea", {
+    value: bitDetalle,
+    onChange: e => setBitDetalle(e.target.value),
+    placeholder: "Descripción: qué pasó, por qué, quién lo pidió, qué implica…",
+    rows: 3,
+    style: {
+      width: "100%",
+      border: `1px solid ${T.border}`,
+      borderRadius: 8,
+      padding: "10px",
+      fontSize: 11,
+      color: T.text,
+      outline: "none",
+      marginBottom: 8,
+      boxSizing: "border-box",
+      fontFamily: "inherit",
+      resize: "none"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 7,
+      marginBottom: 9
+    }
+  }, /*#__PURE__*/React.createElement(Accion, {
+    onClick: () => fileRef.current?.click(),
+    chicoAlto: true
+  }, "Agregar fotos"), /*#__PURE__*/React.createElement(Accion, {
+    onClick: () => fileRef.current?.click(),
+    chicoAlto: true,
+    brassBorde: true
+  }, "Adjuntar archivo")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1.6fr",
+      gap: 7
+    }
+  }, /*#__PURE__*/React.createElement(Accion, {
+    onClick: () => {
+      setBitTitulo("");
+      setBitDetalle("");
+    },
+    chicoAlto: true
+  }, "Cancelar"), /*#__PURE__*/React.createElement(Accion, {
+    oscuro: true,
+    chicoAlto: true,
+    disabled: !bitTitulo.trim(),
+    onClick: () => {
+      anotar(bitTitulo.trim(), bitDetalle.trim() || "Sin descripción.", "Constructora");
+      setBitTitulo("");
+      setBitDetalle("");
+      setUltimo("Hecho registrado en bitácora → visible en el estudio");
+      pulso(["estudio"]);
+    }
+  }, "Guardar hecho"))), /*#__PURE__*/React.createElement(Rotulo, null, "Hechos registrados · ", bitacora.length), bitacora.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Todavía no hay asientos. Cargá un hecho arriba, o hacé cualquier acción en las otras apps y se registra solo.") : bitacora.map((b, i) => /*#__PURE__*/React.createElement("div", {
     key: b.id,
     className: i === 0 ? "new" : "",
     style: {
@@ -2097,8 +2317,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       background: "#fff",
       border: `1px solid ${i === 0 ? BRASS : T.border}`,
       borderRadius: 10,
-      padding: "10px 11px",
-      marginBottom: 6
+      padding: "10px 11px"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -2144,32 +2363,122 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     }
   }, b.autor)))))), tabC === "pedidos" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
     eyebrow: "Comunicación",
-    titulo: "Pedidos recibidos",
-    sub: "Lo que pide el contratista desde la obra"
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, pedidos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin pedidos. Probá pedir algo desde la app del contratista.") : pedidos.map((p, i) => /*#__PURE__*/React.createElement(Tarjeta, {
-    key: p.id,
-    nuevo: i === 0
+    titulo: "Pedidos enviados",
+    sub: "Enviados al estudio de arquitectura"
+  }), /*#__PURE__*/React.createElement(Cuerpo, null, pendientes > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#FDECEA",
+      borderLeft: `3px solid ${T.red}`,
+      border: "1px solid #F6CFC9",
+      borderRadius: 9,
+      padding: "10px 12px"
+    }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
+      fontSize: 11.5,
+      fontWeight: 700,
+      color: "#B3261E"
+    }
+  }, "⚠ ", pendientes, " pedido", pendientes > 1 ? "s" : "", " esperando respuesta"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: "#9B4A3D",
+      marginTop: 3,
+      lineHeight: 1.45
+    }
+  }, pedidos.length - pendientes, " cumplido", pedidos.length - pendientes === 1 ? "" : "s", ". Se considera vencido a los 5 días sin respuesta.")), /*#__PURE__*/React.createElement(Rotulo, null, "Qué querés pedir"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 5,
+      flexWrap: "wrap"
+    }
+  }, [["todo", "Todo"], ["material", "Materiales"], ["definicion", "Definiciones"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+    key: id,
+    onClick: () => setFiltroP(id),
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      padding: "7px 13px",
+      borderRadius: 8,
+      border: `1px solid ${filtroP === id ? "#141C2B" : T.border}`,
+      background: filtroP === id ? "#141C2B" : "#fff",
+      color: filtroP === id ? "#fff" : T.sub,
+      cursor: "pointer",
+      minHeight: 32
+    }
+  }, t))), (filtroP === "todo" ? pedidos : pedidos.filter(p => p.tipo === filtroP)).length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin pedidos. Probá pedir algo desde la app del contratista.") : (filtroP === "todo" ? pedidos : pedidos.filter(p => p.tipo === filtroP)).map((p, i) => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    className: i === 0 ? "new" : "",
+    style: {
+      background: "#fff",
+      border: `1px solid ${i === 0 ? BRASS : T.border}`,
+      borderRadius: 10,
+      padding: "11px 12px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      flexWrap: "wrap",
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: p.tipo === "material" ? "#1E3A5F" : BRASS,
+      color: "#fff",
+      fontSize: 8,
+      fontWeight: 700,
+      padding: "3px 8px",
+      borderRadius: 6
+    }
+  }, p.tipo === "material" ? "Materiales" : "Definiciones"), /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 10.5,
+      color: NAVY
+    }
+  }, OBRA, " · ", p.fecha || hoyCorto())), /*#__PURE__*/React.createElement("div", {
+    style: {
       fontSize: 11,
-      fontWeight: 600
+      color: T.text,
+      marginBottom: 7
     }
   }, p.txt), /*#__PURE__*/React.createElement("div", {
     style: {
-      marginTop: 6,
       display: "flex",
       alignItems: "center",
-      gap: 7
+      gap: 7,
+      flexWrap: "wrap",
+      marginBottom: 8
     }
   }, /*#__PURE__*/React.createElement(Chip, {
     estado: p.estado
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 9,
-      color: T.muted,
-      fontFamily: "monospace"
+      fontWeight: 700,
+      color: p.estado === "resuelto" ? T.ok : "#B5651D"
     }
-  }, p.hora)))))), tabC === "auditoria" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
+  }, p.estado === "resuelto" ? "● Respondido por el estudio" : "● No leído por el estudio")), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      anotar("Envío por WhatsApp", `Se reenvió el pedido "${p.txt}" a los jefes de obra por WhatsApp.`, "Constructora");
+      setUltimo("Pedido reenviado por WhatsApp → queda asentado en bitácora");
+      pulso(["estudio"]);
+    },
+    style: {
+      width: "100%",
+      background: "#25D366",
+      color: "#fff",
+      border: "none",
+      borderRadius: 9,
+      padding: "11px",
+      fontSize: 11,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 42,
+      fontFamily: "inherit"
+    }
+  }, "➤ Enviar por WhatsApp a los jefes de obra"))))), tabC === "auditoria" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
     eyebrow: "Control",
     titulo: "Auditoría de obra",
     sub: "Certificados y conformidades"
@@ -3337,11 +3646,14 @@ function Accion({
   teal,
   ok,
   disabled,
-  chico
+  chico,
+  oscuro,
+  chicoAlto,
+  brassBorde
 }) {
-  const bg = disabled ? "#EEF1F5" : ok ? "#EAF3EC" : teal ? T.teal : principal ? BRASS : "#fff";
-  const fg = disabled ? T.muted : ok ? T.ok : teal || principal ? "#fff" : T.text;
-  const bd = disabled ? T.border : ok ? "#B9DCC5" : teal ? T.teal : principal ? BRASS : T.border;
+  const bg = disabled ? "#EEF1F5" : ok ? "#EAF3EC" : teal ? T.teal : oscuro ? "#141C2B" : principal ? BRASS : "#fff";
+  const fg = disabled ? T.muted : ok ? T.ok : teal || principal || oscuro ? "#fff" : T.text;
+  const bd = disabled ? T.border : ok ? "#B9DCC5" : teal ? T.teal : oscuro ? "#141C2B" : principal ? BRASS : brassBorde ? BRASS : T.border;
   return /*#__PURE__*/React.createElement("button", {
     onClick: disabled ? undefined : onClick,
     disabled: disabled,
@@ -3351,13 +3663,37 @@ function Accion({
       color: fg,
       border: `1px solid ${bd}`,
       borderRadius: 9,
-      padding: chico ? "8px 14px" : "11px 13px",
-      fontSize: chico ? 10.5 : 11.5,
+      padding: chico ? "8px 14px" : chicoAlto ? "10px 11px" : "11px 13px",
+      fontSize: chico ? 10.5 : chicoAlto ? 10.5 : 11.5,
       fontWeight: 700,
       cursor: disabled ? "not-allowed" : "pointer",
-      minHeight: chico ? 34 : 42
+      minHeight: chico ? 34 : chicoAlto ? 38 : 42,
+      fontFamily: "inherit"
     }
   }, children);
+}
+function Selector({
+  children
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      border: `1px solid ${T.border}`,
+      borderRadius: 9,
+      padding: "11px 12px",
+      fontSize: 11.5,
+      fontWeight: 600,
+      color: T.text,
+      background: "#fff",
+      minHeight: 40
+    }
+  }, /*#__PURE__*/React.createElement("span", null, children), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: T.muted
+    }
+  }, "⌄"));
 }
 function Rotulo({
   children,
