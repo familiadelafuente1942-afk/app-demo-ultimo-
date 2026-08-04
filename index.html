@@ -4467,11 +4467,43 @@ function BotonModal({
 }
 
 // ════════════════════════════════════════════════════════════
-// MOTOR DE VENTAS — vive dentro de la misma app
-// Usa la misma clave de IA que el panel (localStorage "demo_api_key").
-// Todo en memoria salvo los prospectos, que quedan en el dispositivo.
+// MOTOR DE VENTAS — panel de comando comercial
+// Vive dentro de la misma app y usa la misma clave de IA.
+// La base de prospectos queda en el dispositivo y se puede exportar.
 // ════════════════════════════════════════════════════════════
 
+const ESTADOS = ["nuevo", "contactado", "reunión", "propuesta", "cerrado", "perdido"];
+const COLOR_ESTADO = {
+  nuevo: {
+    bg: "#EEF1F5",
+    fg: "#4A5565"
+  },
+  contactado: {
+    bg: "#FBF2E3",
+    fg: "#9A6B1E"
+  },
+  "reunión": {
+    bg: "#EAF0FA",
+    fg: "#3B6CA8"
+  },
+  propuesta: {
+    bg: "#FBF6EE",
+    fg: "#B0894F"
+  },
+  cerrado: {
+    bg: "#EAF3EC",
+    fg: "#2F7A4F"
+  },
+  perdido: {
+    bg: "#F5F5F5",
+    fg: "#9AA3AE"
+  }
+};
+function diasDesde(fechaIso) {
+  if (!fechaIso) return null;
+  const d = Math.floor((Date.now() - new Date(fechaIso).getTime()) / 86400000);
+  return isNaN(d) ? null : d;
+}
 function MotorVentas() {
   const [prospectos, setProspectos] = useState(() => {
     try {
@@ -4480,16 +4512,26 @@ function MotorVentas() {
       return [];
     }
   });
-  const [vista, setVista] = useState("prospectos"); // prospectos | guia | nuevo
-  const [sel, setSel] = useState(null); // prospecto abierto
-  const [borrador, setBorrador] = useState(null); // texto generado por la IA
+  const [plantillas, setPlantillas] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("plantillas") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [vista, setVista] = useState("panel");
+  const [sel, setSel] = useState(null);
+  const [borrador, setBorrador] = useState(null);
   const [generando, setGenerando] = useState(false);
+  const [alta, setAlta] = useState(false);
   const [form, setForm] = useState({
     nombre: "",
     empresa: "",
     rol: "constructora",
     obras: "",
     mail: "",
+    tel: "",
+    web: "",
     dolor: ""
   });
   const [busqueda, setBusqueda] = useState({
@@ -4499,6 +4541,8 @@ function MotorVentas() {
   const [candidatos, setCandidatos] = useState([]);
   const [buscando, setBuscando] = useState(false);
   const [avisoBusq, setAvisoBusq] = useState("");
+  const [aviso, setAviso] = useState("");
+  const importRef = useRef(null);
   const [apiKey, setApiKey] = useState(() => {
     try {
       return localStorage.getItem("demo_api_key") || "";
@@ -4518,8 +4562,11 @@ function MotorVentas() {
       localStorage.setItem("prospectos", JSON.stringify(prospectos));
     } catch {}
   }, [prospectos]);
-
-  // Releo la clave por si la cargaron en el panel de demo.
+  useEffect(() => {
+    try {
+      localStorage.setItem("plantillas", JSON.stringify(plantillas));
+    } catch {}
+  }, [plantillas]);
   useEffect(() => {
     const t = setInterval(() => {
       try {
@@ -4529,15 +4576,31 @@ function MotorVentas() {
     }, 1500);
     return () => clearInterval(t);
   }, []);
-  const ESTADOS = ["nuevo", "contactado", "reunión", "propuesta", "cerrado", "perdido"];
-  function agregar() {
+  useEffect(() => {
+    if (!aviso) return;
+    const t = setTimeout(() => setAviso(""), 2600);
+    return () => clearTimeout(t);
+  }, [aviso]);
+  const abierto = sel ? prospectos.find(p => p.id === sel) : null;
+  const porEstado = e => prospectos.filter(p => p.estado === e).length;
+  const activos = prospectos.filter(p => p.estado !== "cerrado" && p.estado !== "perdido").length;
+  const cerrados = porEstado("cerrado");
+  const tasa = prospectos.length ? Math.round(cerrados / prospectos.length * 100) : 0;
+  const necesitanSeguimiento = prospectos.filter(p => {
+    if (p.estado !== "contactado" && p.estado !== "propuesta") return false;
+    const ult = p.historial && p.historial.length ? p.historial[0].iso : p.altaIso;
+    const d = diasDesde(ult);
+    return d != null && d >= 5;
+  });
+  function guardarNuevo() {
     if (!form.empresa.trim() && !form.nombre.trim()) return;
     const p = {
       ...form,
       id: Date.now(),
       estado: "nuevo",
       alta: hoyCorto(),
-      notas: []
+      altaIso: new Date().toISOString(),
+      historial: []
     };
     setProspectos(prev => [p, ...prev]);
     setForm({
@@ -4546,33 +4609,43 @@ function MotorVentas() {
       rol: "constructora",
       obras: "",
       mail: "",
+      tel: "",
+      web: "",
       dolor: ""
     });
-    setVista("prospectos");
-    setSel(p);
+    setAlta(false);
+    setSel(p.id);
   }
-  function cambiarEstado(id, estado) {
+  function actualizar(id, campos) {
     setProspectos(prev => prev.map(p => p.id === id ? {
       ...p,
-      estado
+      ...campos
     } : p));
-    setSel(s => s && s.id === id ? {
-      ...s,
-      estado
-    } : s);
+  }
+  function registrarContacto(id, tipo, texto) {
+    const asiento = {
+      iso: new Date().toISOString(),
+      fecha: hoyCorto(),
+      hora: ahora(),
+      tipo,
+      texto
+    };
+    setProspectos(prev => prev.map(p => p.id === id ? {
+      ...p,
+      historial: [asiento, ...(p.historial || [])]
+    } : p));
+    setAviso("Contacto registrado en el historial");
   }
   function borrar(id) {
     setProspectos(prev => prev.filter(p => p.id !== id));
     setSel(null);
   }
-
-  // ── el producto, tal como lo tiene que contar la IA ──
   const PRODUCTO = `
 PRODUCTO: sistema de gestión de obra con IA. Cuatro apps que comparten los mismos datos:
 1. Constructora: obras, avance, bitácora, auditoría, certificados, pedidos.
 2. Estudio de arquitectura: ve los pedidos del capataz apenas se cargan; informes y cronogramas.
 3. Capataz: pide materiales, planos y definiciones desde la obra; los manda al jefe de obra por WhatsApp.
-4. Propietario: solo lectura. Ve avance, fotos, renders, planos e informes. Nunca ve costos internos ni pedidos.
+4. Propietario: solo lectura. Ve avance, fotos, renders, planos e informes. Nunca ve costos internos.
 
 DIFERENCIAL: la IA compara la foto anterior con la de hoy, estima el avance real y redacta el
 informe semanal cruzándolo con las definiciones sin responder. Sale en PDF con las fotos comparadas
@@ -4581,9 +4654,6 @@ y la bitácora completa.
 TRAZABILIDAD: queda registrado quién pidió qué, cuándo, y quién respondió. Si una definición no se
 resuelve a tiempo y frena una cuadrilla, el sistema lo documenta. Ese registro es lo que después se
 discute en un reclamo por perjuicio. Es el argumento de venta más fuerte.
-
-OTRAS FUNCIONES: notificaciones push, funciona offline y sincroniza cuando hay señal, certificados y
-actas en PDF, carga por voz desde la obra.
 
 QUIÉN LO HIZO: arquitectos que dirigen obra todos los días, no una software factory.
 `.trim();
@@ -4597,7 +4667,7 @@ REGLAS QUE NO PODÉS ROMPER:
 - NUNCA pongas un precio, ni un rango, ni un "desde". El precio lo define una persona.
 - NUNCA prometas funciones que no estén en la descripción de arriba.
 - NUNCA cierres condiciones contractuales.
-- Mails cortos: cinco líneas como máximo, sin asunto largo, sin viñetas decorativas.
+- Mails cortos: cinco líneas como máximo.
 `.trim();
   const ACCIONES = [{
     id: "presentacion",
@@ -4619,6 +4689,10 @@ REGLAS QUE NO PODÉS ROMPER:
     id: "propuesta",
     t: "📄 Armar la propuesta",
     desc: "Texto para mandar por mail"
+  }, {
+    id: "investigar",
+    t: "🔍 Investigar la empresa",
+    desc: "Qué saber antes de llamar"
   }];
   async function generar(accion, extra) {
     if (!iaLista) {
@@ -4627,27 +4701,32 @@ REGLAS QUE NO PODÉS ROMPER:
       });
       return;
     }
-    if (!sel) return;
+    if (!abierto) return;
     setGenerando(true);
     setBorrador({
       cargando: true,
       accion
     });
-    const p = sel;
+    const p = abierto;
+    const hist = (p.historial || []).slice(0, 5).map(h => `  ${h.fecha} ${h.hora} · ${h.tipo}: ${h.texto}`).join("\n") || "  sin contactos registrados";
     const ctx = `PROSPECTO:
-- Nombre: ${p.nombre || "—"}
 - Empresa: ${p.empresa || "—"}
+- Persona: ${p.nombre || "—"}
 - Rol: ${p.rol}
 - Obras activas: ${p.obras || "no sé"}
 - Mail: ${p.mail || "—"}
+- Web: ${p.web || "—"}
 - Lo que le duele: ${p.dolor || "todavía no lo sé"}
-- Estado: ${p.estado}`;
+- Estado en el embudo: ${p.estado}
+HISTORIAL DE CONTACTOS:
+${hist}`;
     const pedidos = {
-      presentacion: `Escribí un mail de primer contacto para este prospecto. Máximo cinco líneas.\n` + `Arrancá por el problema que tiene él, no por el producto. Cerrá pidiendo 20 minutos para mostrarle la demo.\n` + `Devolvé el asunto en la primera línea con el formato "Asunto: ..." y después el cuerpo.`,
-      seguimiento: `Escribí un mail de seguimiento: ya le escribimos y no contestó. Máximo cuatro líneas.\n` + `Sumá un motivo nuevo para responder (algo concreto del sistema que le sirva a su caso), sin sonar insistente.\n` + `Devolvé "Asunto: ..." en la primera línea.`,
-      reunion: `Preparame la reunión con este prospecto. Formato, sin markdown:\n` + `QUÉ LE IMPORTA A ESTE PERFIL\nEN QUÉ ORDEN MOSTRAR LA DEMO (4 pasos concretos usando las funciones reales)\n` + `LAS DOS PREGUNTAS QUE LE TENGO QUE HACER\nCÓMO CIERRO LA REUNIÓN\nMáximo 200 palabras.`,
-      objecion: `El prospecto puso esta objeción: "${extra || "está caro"}".\n` + `Dame, sin markdown: cómo responderla en dos o tres oraciones (texto listo para decir), ` + `y una línea aparte con qué NO decir. Máximo 120 palabras.`,
-      propuesta: `Escribí el texto de una propuesta para mandar por mail. Sin precio: dejá "[precio a definir]" donde iría.\n` + `Incluí: qué problema resuelve en su caso puntual, qué apps le corresponden según su rol, ` + `qué pasa en la implementación, y un cierre pidiendo confirmación. Máximo 200 palabras, sin markdown.`
+      presentacion: `Escribí un mail de primer contacto. Máximo cinco líneas. Arrancá por el problema que tiene él, ` + `no por el producto. Cerrá pidiendo 20 minutos para mostrarle la demo. ` + `Primera línea con el formato "Asunto: ..." y después el cuerpo.`,
+      seguimiento: `Escribí un mail de seguimiento: ya le escribimos y no contestó. Máximo cuatro líneas. ` + `Mirá el historial para no repetir lo que ya le dijimos. Sumá un motivo nuevo para responder. ` + `Primera línea "Asunto: ...".`,
+      reunion: `Preparame la reunión. Sin markdown:\nQUÉ LE IMPORTA A ESTE PERFIL\n` + `EN QUÉ ORDEN MOSTRAR LA DEMO (4 pasos con funciones reales)\nLAS DOS PREGUNTAS QUE LE TENGO QUE HACER\n` + `CÓMO CIERRO\nMáximo 200 palabras.`,
+      objecion: `Puso esta objeción: "${extra || "está caro"}". Sin markdown: cómo responderla en dos o tres ` + `oraciones listas para decir, y una línea aparte con qué NO decir. Máximo 120 palabras.`,
+      propuesta: `Escribí el texto de una propuesta para mandar por mail. Sin precio: poné "[precio a definir]". ` + `Incluí qué problema resuelve en su caso, qué apps le corresponden por su rol, cómo es la ` + `implementación, y un cierre pidiendo confirmación. Máximo 200 palabras, sin markdown.`,
+      investigar: `Antes de llamarlo, decime qué tengo que saber. Sin markdown:\nQUÉ MIRAR DE SU OPERACIÓN\n` + `CUÁL ES SU DOLOR MÁS PROBABLE SEGÚN EL PERFIL\nCON QUÉ FRASE ABRO LA CONVERSACIÓN\n` + `Máximo 150 palabras.`
     };
     try {
       const d = await llamarIA({
@@ -4667,8 +4746,6 @@ REGLAS QUE NO PODÉS ROMPER:
     }
     setGenerando(false);
   }
-
-  // ── búsqueda de posibles clientes con IA + web ──
   async function buscarClientes() {
     if (!iaLista) {
       setAvisoBusq("Falta la clave de IA. Cargala en la demo con el botón 🔑.");
@@ -4681,7 +4758,7 @@ REGLAS QUE NO PODÉS ROMPER:
     setBuscando(true);
     setAvisoBusq("");
     setCandidatos([]);
-    const prompt = `Buscá en internet ${busqueda.perfil} que estén trabajando en ${busqueda.zona}.\n` + `Quiero empresas reales, con presencia web verificable. Priorizá las que se vea que tienen ` + `varias obras en curso o proyectos publicados recientemente.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown, con esta forma exacta:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":""}]\n\n` + `- "que_hace": una línea sobre a qué se dedican.\n` + `- "senal": por qué son un buen candidato (ej: "publicaron 3 obras nuevas este año").\n` + `- "web": la URL que encontraste.\n` + `- "contacto": el mail o formulario SI figura públicamente; si no lo encontrás, poné "" (vacío). NUNCA lo inventes.\n` + `Máximo 8 resultados. Si no encontrás nada real, devolvé [].`;
+    const prompt = `Buscá en internet ${busqueda.perfil} que estén trabajando en ${busqueda.zona}.\n` + `Quiero empresas reales, con presencia web verificable. Priorizá las que se vea que tienen ` + `varias obras en curso o proyectos publicados recientemente.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":""}]\n\n` + `- "senal": por qué son buen candidato (ej: "publicaron 3 obras nuevas este año").\n` + `- "contacto": el mail o formulario SI figura públicamente; si no, "" vacío. NUNCA lo inventes.\n` + `Máximo 8 resultados. Si no encontrás nada real, devolvé [].`;
     try {
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -4694,7 +4771,7 @@ REGLAS QUE NO PODÉS ROMPER:
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
           max_tokens: 2500,
-          system: "Sos un asistente de prospección comercial. Solo reportás empresas que encontraste " + "de verdad en la búsqueda web. Nunca inventás nombres, webs ni mails. " + "Si un dato no lo encontraste, lo dejás vacío.",
+          system: "Sos un asistente de prospección comercial. Solo reportás empresas que encontraste de verdad " + "en la búsqueda web. Nunca inventás nombres, webs ni mails. Si un dato no lo encontraste, lo dejás vacío.",
           messages: [{
             role: "user",
             content: [{
@@ -4714,12 +4791,8 @@ REGLAS QUE NO PODÉS ROMPER:
       const m = texto.match(/\[[\s\S]*\]/);
       if (!m) throw new Error("sin json");
       const lista = JSON.parse(m[0]);
-      if (!Array.isArray(lista) || lista.length === 0) {
-        setAvisoBusq("No encontró resultados con esos términos. Probá con otra zona o perfil.");
-      } else {
-        setCandidatos(lista);
-      }
-    } catch (e) {
+      if (!Array.isArray(lista) || lista.length === 0) setAvisoBusq("No encontró resultados con esos términos. Probá con otra zona o perfil.");else setCandidatos(lista);
+    } catch {
       setAvisoBusq("No se pudo completar la búsqueda. Revisá la conexión o probá de nuevo.");
     }
     setBuscando(false);
@@ -4729,30 +4802,29 @@ REGLAS QUE NO PODÉS ROMPER:
       id: Date.now() + Math.random(),
       nombre: "",
       empresa: cand.empresa || "",
-      rol: busqueda.perfil.includes("arquitect") ? "estudio" : busqueda.perfil.includes("desarroll") ? "desarrollador" : "constructora",
+      rol: busqueda.perfil.indexOf("arquitect") >= 0 ? "estudio" : busqueda.perfil.indexOf("desarroll") >= 0 ? "desarrollador" : "constructora",
       obras: "",
       mail: cand.contacto || "",
-      dolor: cand.senal || "",
+      tel: "",
       web: cand.web || "",
+      dolor: cand.senal || "",
       estado: "nuevo",
       alta: hoyCorto(),
-      notas: []
+      altaIso: new Date().toISOString(),
+      historial: []
     };
     setProspectos(prev => [p, ...prev]);
     setCandidatos(prev => prev.filter(x => x !== cand));
-    setUltimoAviso(`${p.empresa} agregado a prospectos`);
+    setAviso(`${p.empresa} agregado a prospectos`);
   }
-
-  // ── la base: exportar e importar ──
+  const COLS = ["empresa", "nombre", "rol", "obras", "mail", "tel", "web", "estado", "alta", "dolor"];
   function exportarCSV() {
     if (!prospectos.length) {
-      setUltimoAviso("No hay prospectos para exportar.");
+      setAviso("No hay prospectos para exportar.");
       return;
     }
-    const cab = ["empresa", "nombre", "rol", "obras", "mail", "web", "estado", "alta", "dolor"];
     const esc = v => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
-    const filas = prospectos.map(p => cab.map(k => esc(p[k])).join(","));
-    const csv = "\uFEFF" + cab.join(",") + "\n" + filas.join("\n");
+    const csv = "\uFEFF" + COLS.join(",") + "\n" + prospectos.map(p => COLS.map(k => esc(p[k])).join(",")).join("\n");
     const blob = new Blob([csv], {
       type: "text/csv;charset=utf-8"
     });
@@ -4764,37 +4836,93 @@ REGLAS QUE NO PODÉS ROMPER:
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 4000);
-    setUltimoAviso(`${prospectos.length} prospectos exportados`);
+    setAviso(`${prospectos.length} prospectos exportados`);
+  }
+  function importarCSV(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const lineas = String(fr.result).replace(/^\uFEFF/, "").split(/\r?\n/).filter(l => l.trim());
+        const cab = lineas[0].split(",").map(h => h.replace(/^"|"$/g, "").trim());
+        const nuevos = [];
+        for (let i = 1; i < lineas.length; i++) {
+          const celdas = (lineas[i].match(/("([^"]|"")*"|[^,]*)/g) || []).filter((_, k) => k % 2 === 0);
+          const o = {};
+          cab.forEach((h, k) => {
+            o[h] = (celdas[k] || "").replace(/^"|"$/g, "").replace(/""/g, '"');
+          });
+          if (!o.empresa && !o.nombre) continue;
+          nuevos.push({
+            ...o,
+            id: Date.now() + Math.random(),
+            estado: ESTADOS.indexOf(o.estado) >= 0 ? o.estado : "nuevo",
+            alta: o.alta || hoyCorto(),
+            altaIso: new Date().toISOString(),
+            historial: []
+          });
+        }
+        if (!nuevos.length) {
+          setAviso("El archivo no tenía filas válidas.");
+          return;
+        }
+        setProspectos(prev => [...nuevos, ...prev]);
+        setAviso(`${nuevos.length} prospectos importados`);
+      } catch {
+        setAviso("No pude leer el archivo. Tiene que ser un CSV con la misma cabecera del exportado.");
+      }
+    };
+    fr.readAsText(f);
+    e.target.value = "";
   }
   function copiar(txt) {
     try {
       navigator.clipboard.writeText(txt);
-      setUltimoAviso("Copiado al portapapeles");
+      setAviso("Copiado al portapapeles");
     } catch {
-      setUltimoAviso("No se pudo copiar. Seleccioná el texto a mano.");
+      setAviso("No se pudo copiar. Seleccioná el texto a mano.");
     }
   }
-  const [ultimoAviso, setUltimoAviso] = useState("");
-  useEffect(() => {
-    if (!ultimoAviso) return;
-    const t = setTimeout(() => setUltimoAviso(""), 2500);
-    return () => clearTimeout(t);
-  }, [ultimoAviso]);
   function abrirMail(txt) {
     const lineas = String(txt).split("\n");
-    let asunto = "Gestión de obra";
-    let cuerpo = txt;
+    let asunto = "Gestión de obra",
+      cuerpo = txt;
     const m = lineas[0].match(/^Asunto:\s*(.+)$/i);
     if (m) {
       asunto = m[1].trim();
       cuerpo = lineas.slice(1).join("\n").trim();
     }
-    const url = `mailto:${sel?.mail || ""}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
     try {
-      window.location.href = url;
+      window.location.href = `mailto:${abierto && abierto.mail || ""}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
     } catch {}
+    if (abierto) {
+      registrarContacto(abierto.id, "mail", asunto);
+      if (abierto.estado === "nuevo") actualizar(abierto.id, {
+        estado: "contactado"
+      });
+    }
   }
-  const porEstado = e => prospectos.filter(p => p.estado === e).length;
+  function guardarPlantilla(txt, accion) {
+    setPlantillas(prev => [{
+      id: Date.now(),
+      nombre: `${accion} · ${hoyCorto()}`,
+      texto: txt
+    }, ...prev]);
+    setAviso("Guardado en plantillas");
+  }
+  const btnChico = {
+    background: "#fff",
+    border: `1px solid ${T.border}`,
+    color: T.sub,
+    borderRadius: 8,
+    padding: "10px 12px",
+    fontSize: 11,
+    fontWeight: 700,
+    cursor: "pointer",
+    minHeight: 38,
+    fontFamily: "inherit"
+  };
   return /*#__PURE__*/React.createElement("div", {
     style: {
       minHeight: "100vh",
@@ -4802,13 +4930,24 @@ REGLAS QUE NO PODÉS ROMPER:
       padding: "12px 12px 80px"
     }
   }, /*#__PURE__*/React.createElement("style", null, `
-        .vcol { display:grid; gap:12px; grid-template-columns: 340px 1fr; align-items:start; }
-        @media (max-width: 900px) { .vcol { grid-template-columns:1fr; } }
+        .mvgrid { display:grid; gap:12px; grid-template-columns: 320px 1fr; align-items:start; }
+        @media (max-width: 940px) { .mvgrid { grid-template-columns:1fr; } }
+        .tablero { display:grid; gap:14px; grid-template-columns: 1fr 1.25fr; align-items:stretch; }
+        .tablero > div { min-height: 420px; }
+        @media (max-width: 940px) { .tablero { grid-template-columns:1fr; } .tablero > div { min-height:auto; } }
+        .kpi { display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); }
+        .cols { display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); align-items:start; }
         .vinput {
           width:100%; border:1px solid #E6E9EE; border-radius:9px; padding:11px 12px;
           font-size:14px; color:#131C2B; outline:none; box-sizing:border-box;
           font-family:inherit; margin-bottom:8px; background:#fff;
         }
+        .mvtab {
+          background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+          color:#fff; border-radius:8px; padding:10px 14px; font-size:12px;
+          font-weight:700; cursor:pointer; min-height:40px; font-family:inherit;
+        }
+        .mvtab.act { background:#B0894F; border-color:#B0894F; }
       `), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -4830,23 +4969,13 @@ REGLAS QUE NO PODÉS ROMPER:
       fontSize: 14,
       marginRight: 6
     }
-  }, "Motor de ventas"), [["prospectos", `Prospectos${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["nuevo", "+ Nuevo prospecto"], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+  }, "Motor de ventas"), [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
     key: id,
+    className: "mvtab" + (vista === id ? " act" : ""),
     onClick: () => {
       setVista(id);
       setBorrador(null);
-    },
-    style: {
-      background: vista === id ? BRASS : "rgba(255,255,255,.08)",
-      border: `1px solid ${vista === id ? BRASS : "rgba(255,255,255,.18)"}`,
-      color: "#fff",
-      borderRadius: 8,
-      padding: "10px 14px",
-      fontSize: 12,
-      fontWeight: 700,
-      cursor: "pointer",
-      minHeight: 40,
-      fontFamily: "inherit"
+      setAlta(false);
     }
   }, t)), /*#__PURE__*/React.createElement("span", {
     style: {
@@ -4869,7 +4998,7 @@ REGLAS QUE NO PODÉS ROMPER:
       fontStyle: "normal",
       background: iaLista ? "#7DBE4B" : "#E08A3E"
     }
-  }), iaLista ? "IA conectada" : "Cargá la clave en la demo")), ultimoAviso && /*#__PURE__*/React.createElement("div", {
+  }), iaLista ? "IA conectada" : "Cargá la clave en la demo")), aviso && /*#__PURE__*/React.createElement("div", {
     style: {
       background: "rgba(176,137,79,.18)",
       border: "1px solid rgba(176,137,79,.4)",
@@ -4880,7 +5009,188 @@ REGLAS QUE NO PODÉS ROMPER:
       fontSize: 12.5,
       fontWeight: 600
     }
-  }, ultimoAviso), vista === "nuevo" && /*#__PURE__*/React.createElement("div", {
+  }, aviso), vista === "panel" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "kpi",
+    style: {
+      marginBottom: 14
+    }
+  }, [["Prospectos", prospectos.length, T.text], ["Activos", activos, "#3B6CA8"], ["Cerrados", cerrados, T.ok], ["Tasa de cierre", tasa + "%", BRASS]].map(([l, v, col]) => /*#__PURE__*/React.createElement("div", {
+    key: l,
+    style: {
+      background: "#fff",
+      borderRadius: 12,
+      padding: "19px 22px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      fontWeight: 700,
+      letterSpacing: ".12em",
+      textTransform: "uppercase",
+      color: T.muted
+    }
+  }, l), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 34,
+      fontWeight: 800,
+      color: col,
+      marginTop: 6,
+      fontFamily: "monospace"
+    }
+  }, v)))), /*#__PURE__*/React.createElement("div", {
+    className: "tablero"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      padding: "22px 24px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 20
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 20,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 16,
+      color: NAVY
+    }
+  }, "Embudo")), ESTADOS.map(e => {
+    const n = porEstado(e);
+    const pct = prospectos.length ? n / prospectos.length * 100 : 0;
+    return /*#__PURE__*/React.createElement("div", {
+      key: e,
+      onClick: () => setVista("embudo"),
+      style: {
+        marginBottom: 17,
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "baseline",
+        fontSize: 14,
+        marginBottom: 6
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        flex: 1,
+        fontWeight: 700,
+        color: T.text,
+        textTransform: "capitalize"
+      }
+    }, e), /*#__PURE__*/React.createElement("b", {
+      style: {
+        color: COLOR_ESTADO[e].fg,
+        fontSize: 18,
+        fontFamily: "monospace"
+      }
+    }, n)), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 10,
+        background: "#EEF1F5",
+        borderRadius: 8,
+        overflow: "hidden"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: "100%",
+        width: `${pct}%`,
+        background: COLOR_ESTADO[e].fg,
+        transition: "width .5s"
+      }
+    })));
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      padding: "22px 24px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 5
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 20,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 16,
+      color: NAVY
+    }
+  }, "Lo que tenés que hacer hoy")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: T.muted,
+      marginBottom: 18,
+      lineHeight: 1.55
+    }
+  }, "Prospectos que llevan 5 días o más sin movimiento."), necesitanSeguimiento.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 14,
+      color: T.muted,
+      lineHeight: 1.7,
+      padding: "14px 0"
+    }
+  }, "Nada pendiente. Si tenés poco cargado, entrá a ", /*#__PURE__*/React.createElement("b", null, "Buscar clientes"), " y armá la lista.") : necesitanSeguimiento.map(p => {
+    const ult = p.historial && p.historial.length ? p.historial[0].iso : p.altaIso;
+    return /*#__PURE__*/React.createElement("div", {
+      key: p.id,
+      onClick: () => {
+        setSel(p.id);
+        setVista("embudo");
+      },
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 11,
+        padding: "15px 16px",
+        border: `1px solid ${T.border}`,
+        borderLeft: "4px solid #B5651D",
+        borderRadius: 10,
+        marginBottom: 10,
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("b", {
+      style: {
+        fontSize: 14.5,
+        color: NAVY
+      }
+    }, p.empresa || p.nombre), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        color: T.muted,
+        marginTop: 3,
+        textTransform: "capitalize"
+      }
+    }, p.estado, " · hace ", diasDesde(ult), " días")), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12.5,
+        fontWeight: 700,
+        color: BRASS,
+        flexShrink: 0
+      }
+    }, "Escribirle →"));
+  })))), vista === "embudo" && alta && /*#__PURE__*/React.createElement("div", {
     style: {
       background: "#fff",
       borderRadius: 13,
@@ -4889,27 +5199,6 @@ REGLAS QUE NO PODÉS ROMPER:
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 18,
-      height: 2,
-      background: BRASS
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      letterSpacing: ".14em",
-      textTransform: "uppercase",
-      color: BRASS
-    }
-  }, "Alta")), /*#__PURE__*/React.createElement("div", {
-    style: {
       fontSize: 18,
       fontWeight: 800,
       color: NAVY,
@@ -4917,30 +5206,21 @@ REGLAS QUE NO PODÉS ROMPER:
     }
   }, "Nuevo prospecto"), /*#__PURE__*/React.createElement("input", {
     className: "vinput",
-    placeholder: "Nombre de la persona",
-    value: form.nombre,
-    onChange: e => setForm({
-      ...form,
-      nombre: e.target.value
-    })
-  }), /*#__PURE__*/React.createElement("input", {
-    className: "vinput",
     placeholder: "Empresa o estudio",
     value: form.empresa,
     onChange: e => setForm({
       ...form,
       empresa: e.target.value
     })
+  }), /*#__PURE__*/React.createElement("input", {
+    className: "vinput",
+    placeholder: "Nombre de la persona",
+    value: form.nombre,
+    onChange: e => setForm({
+      ...form,
+      nombre: e.target.value
+    })
   }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      fontWeight: 700,
-      letterSpacing: ".1em",
-      textTransform: "uppercase",
-      color: T.muted,
-      margin: "4px 0 6px"
-    }
-  }, "Rol"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 6,
@@ -4984,6 +5264,23 @@ REGLAS QUE NO PODÉS ROMPER:
       ...form,
       mail: e.target.value
     })
+  }), /*#__PURE__*/React.createElement("input", {
+    className: "vinput",
+    placeholder: "Teléfono",
+    value: form.tel,
+    onChange: e => setForm({
+      ...form,
+      tel: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement("input", {
+    className: "vinput",
+    placeholder: "Sitio web",
+    value: form.web,
+    autoCapitalize: "off",
+    onChange: e => setForm({
+      ...form,
+      web: e.target.value
+    })
   }), /*#__PURE__*/React.createElement("textarea", {
     className: "vinput",
     rows: 3,
@@ -5003,7 +5300,7 @@ REGLAS QUE NO PODÉS ROMPER:
       marginTop: 6
     }
   }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => setVista("prospectos"),
+    onClick: () => setAlta(false),
     style: {
       flex: 1,
       background: "#fff",
@@ -5018,13 +5315,12 @@ REGLAS QUE NO PODÉS ROMPER:
       fontFamily: "inherit"
     }
   }, "Cancelar"), /*#__PURE__*/React.createElement("button", {
-    onClick: agregar,
-    disabled: !form.empresa.trim() && !form.nombre.trim(),
+    onClick: guardarNuevo,
     style: {
       flex: 2,
-      background: form.empresa.trim() || form.nombre.trim() ? NAVY : "#EEF1F5",
+      background: NAVY,
       border: "none",
-      color: form.empresa.trim() || form.nombre.trim() ? "#fff" : T.muted,
+      color: "#fff",
       borderRadius: 9,
       padding: "12px",
       fontSize: 12.5,
@@ -5033,7 +5329,467 @@ REGLAS QUE NO PODÉS ROMPER:
       minHeight: 44,
       fontFamily: "inherit"
     }
-  }, "Guardar prospecto"))), vista === "buscar" && /*#__PURE__*/React.createElement("div", {
+  }, "Guardar prospecto"))), vista === "embudo" && !alta && /*#__PURE__*/React.createElement("div", {
+    className: "mvgrid"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "13px 15px",
+      borderBottom: `1px solid ${T.border}`,
+      display: "flex",
+      gap: 6,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setAlta(true),
+    style: {
+      flex: 1,
+      background: NAVY,
+      color: "#fff",
+      border: "none",
+      borderRadius: 8,
+      padding: "10px",
+      fontSize: 11.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 38,
+      fontFamily: "inherit"
+    }
+  }, "+ Nuevo prospecto"), /*#__PURE__*/React.createElement("button", {
+    onClick: exportarCSV,
+    style: btnChico
+  }, "↓ CSV"), /*#__PURE__*/React.createElement("input", {
+    ref: importRef,
+    type: "file",
+    accept: ".csv,text/csv",
+    onChange: importarCSV,
+    style: {
+      display: "none"
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: () => importRef.current && importRef.current.click(),
+    style: btnChico
+  }, "↑ CSV")), /*#__PURE__*/React.createElement("div", {
+    className: "sc",
+    style: {
+      maxHeight: "60vh",
+      overflowY: "auto"
+    }
+  }, prospectos.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "26px 18px",
+      fontSize: 12.5,
+      color: T.muted,
+      lineHeight: 1.6
+    }
+  }, "Todavía no cargaste prospectos. Podés agregarlos a mano o buscarlos con IA desde ", /*#__PURE__*/React.createElement("b", null, "Buscar clientes"), ".") : prospectos.map(p => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    onClick: () => {
+      setSel(p.id);
+      setBorrador(null);
+    },
+    style: {
+      padding: "12px 15px",
+      borderBottom: `1px solid ${T.border}`,
+      cursor: "pointer",
+      background: sel === p.id ? "#FBF6EE" : "#fff",
+      borderLeft: `3px solid ${sel === p.id ? BRASS : "transparent"}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      flex: 1,
+      fontSize: 13,
+      color: NAVY
+    }
+  }, p.empresa || p.nombre), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 8.5,
+      fontWeight: 700,
+      textTransform: "uppercase",
+      background: (COLOR_ESTADO[p.estado] || COLOR_ESTADO.nuevo).bg,
+      color: (COLOR_ESTADO[p.estado] || COLOR_ESTADO.nuevo).fg,
+      borderRadius: 20,
+      padding: "3px 8px"
+    }
+  }, p.estado)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: T.muted,
+      marginTop: 2
+    }
+  }, p.nombre ? p.nombre + " · " : "", p.rol, p.obras ? " · " + p.obras + " obras" : ""))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      padding: "18px 20px",
+      minHeight: 320
+    }
+  }, !abierto ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: T.muted,
+      lineHeight: 1.6,
+      padding: "24px 0"
+    }
+  }, "Elegí un prospecto de la lista. Vas a ver su ficha completa, el historial de contactos y las acciones que puede hacer la IA por vos.") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 10,
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 19,
+      fontWeight: 800,
+      color: NAVY
+    }
+  }, abierto.empresa || abierto.nombre), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: T.muted,
+      marginTop: 2
+    }
+  }, abierto.nombre ? abierto.nombre + " · " : "", abierto.rol, abierto.obras ? " · " + abierto.obras + " obras" : ""), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 12,
+      marginTop: 5,
+      flexWrap: "wrap",
+      fontSize: 11.5
+    }
+  }, abierto.mail && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: T.sub
+    }
+  }, "✉ ", abierto.mail), abierto.tel && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: T.sub
+    }
+  }, "☏ ", abierto.tel), abierto.web && /*#__PURE__*/React.createElement("a", {
+    href: abierto.web,
+    target: "_blank",
+    rel: "noreferrer",
+    style: {
+      color: "#3B6CA8",
+      fontWeight: 700
+    }
+  }, "Ver sitio ↗"))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => borrar(abierto.id),
+    style: {
+      background: "none",
+      border: "none",
+      color: T.muted,
+      fontSize: 12,
+      cursor: "pointer",
+      fontFamily: "inherit"
+    }
+  }, "Borrar")), abierto.dolor && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#FBF6EE",
+      border: "1px solid #EBDCC0",
+      borderRadius: 9,
+      padding: "10px 12px",
+      fontSize: 12.5,
+      color: T.text,
+      lineHeight: 1.5,
+      marginBottom: 13
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: BRASS,
+      fontSize: 9.5,
+      letterSpacing: ".1em",
+      textTransform: "uppercase",
+      display: "block",
+      marginBottom: 3
+    }
+  }, "Lo que le duele"), abierto.dolor), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".13em",
+      textTransform: "uppercase",
+      color: T.muted,
+      marginBottom: 7
+    }
+  }, "Estado"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 5,
+      flexWrap: "wrap",
+      marginBottom: 14
+    }
+  }, ESTADOS.map(e => /*#__PURE__*/React.createElement("button", {
+    key: e,
+    onClick: () => actualizar(abierto.id, {
+      estado: e
+    }),
+    style: {
+      fontSize: 10.5,
+      fontWeight: 700,
+      padding: "7px 12px",
+      borderRadius: 8,
+      border: `1px solid ${abierto.estado === e ? NAVY : T.border}`,
+      background: abierto.estado === e ? NAVY : "#fff",
+      color: abierto.estado === e ? "#fff" : T.sub,
+      cursor: "pointer",
+      minHeight: 34,
+      fontFamily: "inherit",
+      textTransform: "capitalize"
+    }
+  }, e))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      marginBottom: 16,
+      flexWrap: "wrap"
+    }
+  }, [["llamada", "☏ Registrar llamada"], ["reunión", "🗓 Registrar reunión"], ["nota", "✎ Agregar nota"]].map(([tipo, t]) => /*#__PURE__*/React.createElement("button", {
+    key: tipo,
+    onClick: () => {
+      const q = window.prompt(t, "");
+      if (q) registrarContacto(abierto.id, tipo, q);
+    },
+    style: btnChico
+  }, t))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".13em",
+      textTransform: "uppercase",
+      color: T.muted,
+      marginBottom: 8
+    }
+  }, "Qué querés que haga la IA"), /*#__PURE__*/React.createElement("div", {
+    className: "cols",
+    style: {
+      marginBottom: 14
+    }
+  }, ACCIONES.map(a => /*#__PURE__*/React.createElement("button", {
+    key: a.id,
+    disabled: generando,
+    onClick: () => {
+      if (a.id === "objecion") {
+        const q = window.prompt("¿Qué objeción te puso?", "Está caro");
+        if (q === null) return;
+        generar("objecion", q);
+      } else generar(a.id);
+    },
+    style: {
+      textAlign: "left",
+      background: "#fff",
+      border: `1px solid ${T.border}`,
+      borderTop: `2px solid ${BRASS}`,
+      borderRadius: 10,
+      padding: "11px 12px",
+      cursor: generando ? "wait" : "pointer",
+      fontFamily: "inherit",
+      minHeight: 56
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      fontWeight: 700,
+      color: NAVY
+    }
+  }, a.t), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: T.muted,
+      marginTop: 2
+    }
+  }, a.desc)))), borrador && /*#__PURE__*/React.createElement("div", {
+    style: {
+      border: `1px solid ${BRASS}`,
+      borderRadius: 11,
+      overflow: "hidden",
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#FBF6EE",
+      padding: "10px 13px",
+      borderBottom: "1px solid #EBDCC0"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".13em",
+      textTransform: "uppercase",
+      color: BRASS
+    }
+  }, borrador.cargando ? "La IA está escribiendo" : "Borrador generado")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "14px 15px"
+    }
+  }, borrador.cargando ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: T.sub
+    }
+  }, "⏳ Un momento…") : borrador.error === "sin_clave" ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#B5651D",
+      lineHeight: 1.6
+    }
+  }, "Falta la clave de IA. Entrá a la demo, tocá ", /*#__PURE__*/React.createElement("b", null, "🔑 Clave"), " y pegá tu API key.") : borrador.error ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#B5651D"
+    }
+  }, "No se pudo conectar con la IA. Probá de nuevo.") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("pre", {
+    style: {
+      margin: 0,
+      fontFamily: "inherit",
+      fontSize: 13.5,
+      lineHeight: 1.65,
+      color: T.text,
+      whiteSpace: "pre-wrap",
+      wordBreak: "break-word"
+    }
+  }, borrador.texto), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 7,
+      marginTop: 14,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => copiar(borrador.texto),
+    style: {
+      background: NAVY,
+      color: "#fff",
+      border: "none",
+      borderRadius: 8,
+      padding: "11px 17px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 42,
+      fontFamily: "inherit"
+    }
+  }, "Copiar"), abierto.mail && ["presentacion", "seguimiento", "propuesta"].indexOf(borrador.accion) >= 0 && /*#__PURE__*/React.createElement("button", {
+    onClick: () => abrirMail(borrador.texto),
+    style: {
+      background: BRASS,
+      color: "#fff",
+      border: "none",
+      borderRadius: 8,
+      padding: "11px 17px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 42,
+      fontFamily: "inherit"
+    }
+  }, "Abrir en Mail"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => guardarPlantilla(borrador.texto, borrador.accion),
+    style: {
+      background: "#fff",
+      color: T.sub,
+      border: `1px solid ${T.border}`,
+      borderRadius: 8,
+      padding: "11px 17px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 42,
+      fontFamily: "inherit"
+    }
+  }, "Guardar plantilla"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setBorrador(null),
+    style: {
+      background: "#fff",
+      color: T.sub,
+      border: `1px solid ${T.border}`,
+      borderRadius: 8,
+      padding: "11px 17px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 42,
+      fontFamily: "inherit"
+    }
+  }, "Descartar"))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".13em",
+      textTransform: "uppercase",
+      color: T.muted,
+      marginBottom: 8
+    }
+  }, "Historial de contactos"), !abierto.historial || abierto.historial.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: T.muted,
+      lineHeight: 1.5
+    }
+  }, "Sin contactos registrados. Cuando mandes un mail desde acá, queda asentado solo.") : abierto.historial.map((h, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      gap: 10,
+      padding: "9px 0",
+      borderBottom: i < abierto.historial.length - 1 ? `1px solid ${T.border}` : "none"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flexShrink: 0,
+      minWidth: 62
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      fontFamily: "monospace",
+      fontWeight: 600,
+      color: T.text
+    }
+  }, h.hora), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: T.muted
+    }
+  }, h.fecha)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: ".08em",
+      textTransform: "uppercase",
+      color: BRASS
+    }
+  }, h.tipo), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: T.text,
+      lineHeight: 1.5,
+      marginTop: 2
+    }
+  }, h.texto))))))), vista === "buscar" && /*#__PURE__*/React.createElement("div", {
     style: {
       maxWidth: 780
     }
@@ -5250,365 +6006,99 @@ REGLAS QUE NO PODÉS ROMPER:
       fontFamily: "inherit",
       flexShrink: 0
     }
-  }, "+ Agregar")))))), vista === "guia" && /*#__PURE__*/React.createElement(GuiaVentas, null), vista === "prospectos" && /*#__PURE__*/React.createElement("div", {
-    className: "vcol"
+  }, "+ Agregar")))))), vista === "plantillas" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 780
+    }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: "#fff",
       borderRadius: 13,
-      overflow: "hidden"
+      padding: "18px 20px",
+      marginBottom: 12
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      padding: "13px 15px",
-      borderBottom: `1px solid ${T.border}`
+      fontSize: 18,
+      fontWeight: 800,
+      color: NAVY
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, "Plantillas guardadas"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      letterSpacing: ".14em",
-      textTransform: "uppercase",
-      color: BRASS
+      fontSize: 12.5,
+      color: T.sub,
+      marginTop: 4,
+      lineHeight: 1.55
     }
-  }, "Embudo"), /*#__PURE__*/React.createElement("button", {
-    onClick: exportarCSV,
+  }, "Cuando la IA te escriba algo que funciona, guardalo acá y reusalo con el próximo prospecto.")), plantillas.length === 0 ? /*#__PURE__*/React.createElement("div", {
     style: {
-      float: "right",
       background: "#fff",
-      border: `1px solid ${T.border}`,
-      color: T.sub,
-      borderRadius: 7,
-      padding: "5px 10px",
-      fontSize: 10.5,
-      fontWeight: 700,
-      cursor: "pointer",
-      fontFamily: "inherit"
-    }
-  }, "↓ CSV"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 5,
-      marginTop: 8,
-      flexWrap: "wrap"
-    }
-  }, ESTADOS.slice(0, 5).map(e => /*#__PURE__*/React.createElement("span", {
-    key: e,
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      background: "#F3F5F8",
-      borderRadius: 20,
-      padding: "4px 9px",
-      color: T.sub,
-      textTransform: "capitalize"
-    }
-  }, e, " ", porEstado(e))))), /*#__PURE__*/React.createElement("div", {
-    className: "sc",
-    style: {
-      maxHeight: "62vh",
-      overflowY: "auto"
-    }
-  }, prospectos.length === 0 ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "26px 18px",
+      borderRadius: 13,
+      padding: "24px 20px",
       fontSize: 12.5,
       color: T.muted,
       lineHeight: 1.6
     }
-  }, "Todavía no cargaste prospectos. Tocá ", /*#__PURE__*/React.createElement("b", null, "+ Nuevo prospecto"), " y empezá por el primero que tengas en la cabeza.") : prospectos.map(p => /*#__PURE__*/React.createElement("div", {
-    key: p.id,
-    onClick: () => {
-      setSel(p);
-      setBorrador(null);
-    },
+  }, "Todavía no guardaste ninguna. Generá un mail desde la ficha de un prospecto y tocá ", /*#__PURE__*/React.createElement("b", null, "Guardar plantilla"), ".") : plantillas.map(t => /*#__PURE__*/React.createElement("div", {
+    key: t.id,
     style: {
-      padding: "12px 15px",
-      borderBottom: `1px solid ${T.border}`,
-      cursor: "pointer",
-      background: sel && sel.id === p.id ? "#FBF6EE" : "#fff",
-      borderLeft: `3px solid ${sel && sel.id === p.id ? BRASS : "transparent"}`
+      background: "#fff",
+      borderRadius: 13,
+      padding: "16px 18px",
+      marginBottom: 10
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 7
-    }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      flex: 1,
-      fontSize: 13,
-      color: NAVY
-    }
-  }, p.empresa || p.nombre), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 8.5,
-      fontWeight: 700,
-      textTransform: "uppercase",
-      background: p.estado === "cerrado" ? "#EAF3EC" : p.estado === "perdido" ? "#F3F5F8" : "#FBF2E3",
-      color: p.estado === "cerrado" ? T.ok : p.estado === "perdido" ? T.muted : "#9A6B1E",
-      borderRadius: 20,
-      padding: "3px 8px"
-    }
-  }, p.estado)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10.5,
-      color: T.muted,
-      marginTop: 2
-    }
-  }, p.nombre ? p.nombre + " · " : "", p.rol, p.obras ? " · " + p.obras + " obras" : ""))))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: "#fff",
-      borderRadius: 13,
-      padding: "18px 20px",
-      minHeight: 300
-    }
-  }, !sel ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: T.muted,
-      lineHeight: 1.6,
-      padding: "24px 0"
-    }
-  }, "Elegí un prospecto de la izquierda y la IA te escribe el mail, te prepara la reunión o te ayuda a responder una objeción, usando lo que sabés de él.") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "flex-start",
-      gap: 10,
-      marginBottom: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 19,
-      fontWeight: 800,
-      color: NAVY
-    }
-  }, sel.empresa || sel.nombre), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 12,
-      color: T.muted,
-      marginTop: 2
-    }
-  }, sel.nombre ? sel.nombre + " · " : "", sel.rol, sel.obras ? " · " + sel.obras + " obras activas" : "", sel.mail ? " · " + sel.mail : "")), /*#__PURE__*/React.createElement("button", {
-    onClick: () => borrar(sel.id),
-    style: {
-      background: "none",
-      border: "none",
-      color: T.muted,
-      fontSize: 12,
-      cursor: "pointer",
-      fontFamily: "inherit"
-    }
-  }, "Borrar")), sel.dolor && /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: "#FBF6EE",
-      border: `1px solid #EBDCC0`,
-      borderRadius: 9,
-      padding: "10px 12px",
-      fontSize: 12.5,
-      color: T.text,
-      lineHeight: 1.5,
-      marginBottom: 13
-    }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      color: BRASS,
-      fontSize: 9.5,
-      letterSpacing: ".1em",
-      textTransform: "uppercase",
-      display: "block",
-      marginBottom: 3
-    }
-  }, "Lo que le duele"), sel.dolor), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      letterSpacing: ".13em",
-      textTransform: "uppercase",
-      color: T.muted,
-      marginBottom: 7
-    }
-  }, "Estado"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 5,
-      flexWrap: "wrap",
-      marginBottom: 16
-    }
-  }, ESTADOS.map(e => /*#__PURE__*/React.createElement("button", {
-    key: e,
-    onClick: () => cambiarEstado(sel.id, e),
-    style: {
-      fontSize: 10.5,
-      fontWeight: 700,
-      padding: "7px 12px",
-      borderRadius: 8,
-      border: `1px solid ${sel.estado === e ? NAVY : T.border}`,
-      background: sel.estado === e ? NAVY : "#fff",
-      color: sel.estado === e ? "#fff" : T.sub,
-      cursor: "pointer",
-      minHeight: 34,
-      fontFamily: "inherit",
-      textTransform: "capitalize"
-    }
-  }, e))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      letterSpacing: ".13em",
-      textTransform: "uppercase",
-      color: T.muted,
+      gap: 8,
       marginBottom: 8
     }
-  }, "Qué querés que haga la IA"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("b", {
     style: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
-      gap: 7,
-      marginBottom: 14
-    }
-  }, ACCIONES.map(a => /*#__PURE__*/React.createElement("button", {
-    key: a.id,
-    disabled: generando,
-    onClick: () => {
-      if (a.id === "objecion") {
-        const q = window.prompt("¿Qué objeción te puso?", "Está caro");
-        if (q === null) return;
-        generar("objecion", q);
-      } else generar(a.id);
-    },
-    style: {
-      textAlign: "left",
-      background: "#fff",
-      border: `1px solid ${T.border}`,
-      borderTop: `2px solid ${BRASS}`,
-      borderRadius: 10,
-      padding: "11px 12px",
-      cursor: generando ? "wait" : "pointer",
-      fontFamily: "inherit",
-      minHeight: 56
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11.5,
-      fontWeight: 700,
-      color: NAVY
-    }
-  }, a.t), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: T.muted,
-      marginTop: 2
-    }
-  }, a.desc)))), borrador && /*#__PURE__*/React.createElement("div", {
-    style: {
-      border: `1px solid ${BRASS}`,
-      borderRadius: 11,
-      overflow: "hidden"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: "#FBF6EE",
-      padding: "10px 13px",
-      borderBottom: `1px solid #EBDCC0`
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      letterSpacing: ".13em",
-      textTransform: "uppercase",
-      color: BRASS
-    }
-  }, borrador.cargando ? "La IA está escribiendo" : "Borrador generado")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "14px 15px"
-    }
-  }, borrador.cargando ? /*#__PURE__*/React.createElement("div", {
-    style: {
+      flex: 1,
       fontSize: 13,
-      color: T.sub
+      color: NAVY,
+      textTransform: "capitalize"
     }
-  }, "⏳ Un momento…") : borrador.error === "sin_clave" ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: "#B5651D",
-      lineHeight: 1.6
-    }
-  }, "Falta la clave de IA. Entrá a la demo, tocá ", /*#__PURE__*/React.createElement("b", null, "🔑 Clave"), " y pegá tu API key. Después volvé acá.") : borrador.error ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: "#B5651D"
-    }
-  }, "No se pudo conectar con la IA. Probá de nuevo.") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("pre", {
-    style: {
-      margin: 0,
-      fontFamily: "inherit",
-      fontSize: 13.5,
-      lineHeight: 1.65,
-      color: T.text,
-      whiteSpace: "pre-wrap",
-      wordBreak: "break-word"
-    }
-  }, borrador.texto), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 7,
-      marginTop: 14,
-      flexWrap: "wrap"
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => copiar(borrador.texto),
+  }, t.nombre), /*#__PURE__*/React.createElement("button", {
+    onClick: () => copiar(t.texto),
     style: {
       background: NAVY,
       color: "#fff",
       border: "none",
       borderRadius: 8,
-      padding: "11px 17px",
-      fontSize: 12.5,
+      padding: "8px 14px",
+      fontSize: 11.5,
       fontWeight: 700,
       cursor: "pointer",
-      minHeight: 42,
+      minHeight: 34,
       fontFamily: "inherit"
     }
-  }, "Copiar"), sel.mail && ["presentacion", "seguimiento", "propuesta"].includes(borrador.accion) && /*#__PURE__*/React.createElement("button", {
-    onClick: () => abrirMail(borrador.texto),
+  }, "Copiar"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setPlantillas(prev => prev.filter(x => x.id !== t.id)),
     style: {
-      background: BRASS,
-      color: "#fff",
+      background: "none",
       border: "none",
-      borderRadius: 8,
-      padding: "11px 17px",
-      fontSize: 12.5,
-      fontWeight: 700,
+      color: T.muted,
+      fontSize: 11.5,
       cursor: "pointer",
-      minHeight: 42,
       fontFamily: "inherit"
     }
-  }, "Abrir en Mail"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setBorrador(null),
+  }, "Borrar")), /*#__PURE__*/React.createElement("pre", {
     style: {
-      background: "#fff",
-      color: T.sub,
-      border: `1px solid ${T.border}`,
-      borderRadius: 8,
-      padding: "11px 17px",
+      margin: 0,
+      fontFamily: "inherit",
       fontSize: 12.5,
-      fontWeight: 700,
-      cursor: "pointer",
-      minHeight: 42,
-      fontFamily: "inherit"
+      lineHeight: 1.6,
+      color: T.sub,
+      whiteSpace: "pre-wrap",
+      wordBreak: "break-word",
+      maxHeight: 130,
+      overflow: "hidden"
     }
-  }, "Descartar")))))))));
+  }, t.texto)))), vista === "guia" && /*#__PURE__*/React.createElement(GuiaVentas, null));
 }
-
-// ── guía de ventas: el playbook, siempre a mano ──
 function GuiaVentas() {
   const bloques = [{
     t: "El pitch en 30 segundos",
@@ -6245,6 +6735,65 @@ window.DICC = {
   "Objeciones frecuentes": ["Common objections", "Objeções frequentes"],
   "Precio": ["Pricing", "Preço"],
   "Lo que NO podés prometer": ["What you must NOT promise", "O que você NÃO pode prometer"],
+
+
+  // ── panel de comando de ventas ──
+  "Panel": ["Dashboard", "Painel"],
+  "Embudo": ["Funnel", "Funil"],
+  "Plantillas": ["Templates", "Modelos"],
+  "Activos": ["Active", "Ativos"],
+  "Cerrados": ["Closed", "Fechados"],
+  "Tasa de cierre": ["Close rate", "Taxa de fechamento"],
+  "Lo que tenés que hacer hoy": ["What you need to do today", "O que você precisa fazer hoje"],
+  "Prospectos que llevan 5 días o más sin movimiento.":
+    ["Prospects with no movement for 5 days or more.",
+     "Prospects sem movimento há 5 dias ou mais."],
+  "Nada pendiente. Si tenés poco cargado, entrá a": ["Nothing pending. If your list is thin, go to", "Nada pendente. Se sua lista está curta, entre em"],
+  "y armá la lista.": ["and build it out.", "e monte a lista."],
+  "Buscar clientes": ["Find clients", "Buscar clientes"],
+  "Escribirle →": ["Write to them →", "Escrever para ele →"],
+  "días": ["days", "dias"],
+  "hace": ["ago", "há"],
+
+  // ── ficha del prospecto ──
+  "Teléfono": ["Phone", "Telefone"],
+  "Sitio web": ["Website", "Site"],
+  "☏ Registrar llamada": ["☏ Log a call", "☏ Registrar ligação"],
+  "🗓 Registrar reunión": ["🗓 Log a meeting", "🗓 Registrar reunião"],
+  "✎ Agregar nota": ["✎ Add a note", "✎ Adicionar nota"],
+  "Historial de contactos": ["Contact history", "Histórico de contatos"],
+  "Sin contactos registrados. Cuando mandes un mail desde acá, queda asentado solo.":
+    ["No contacts logged. When you send an email from here, it records itself.",
+     "Sem contatos registrados. Quando enviar um e-mail daqui, fica registrado sozinho."],
+  "Contacto registrado en el historial": ["Contact logged in the history", "Contato registrado no histórico"],
+  "llamada": ["call", "ligação"],
+  "nota": ["note", "nota"],
+  "mail": ["email", "e-mail"],
+  "🔍 Investigar la empresa": ["🔍 Research the company", "🔍 Investigar a empresa"],
+  "Qué saber antes de llamar": ["What to know before calling", "O que saber antes de ligar"],
+  "Guardar plantilla": ["Save as template", "Salvar como modelo"],
+  "Guardado en plantillas": ["Saved to templates", "Salvo nos modelos"],
+  "Elegí un prospecto de la lista. Vas a ver su ficha completa, el historial de contactos y las acciones que puede hacer la IA por vos.":
+    ["Pick a prospect from the list. You'll see their full file, the contact history and what the AI can do for you.",
+     "Escolha um prospect da lista. Você verá a ficha completa, o histórico de contatos e o que a IA pode fazer por você."],
+  "Todavía no cargaste prospectos. Podés agregarlos a mano o buscarlos con IA desde":
+    ["You haven't added prospects yet. Add them by hand or find them with AI from",
+     "Você ainda não cadastrou prospects. Adicione manualmente ou busque com IA em"],
+  "Plantillas guardadas": ["Saved templates", "Modelos salvos"],
+  "Cuando la IA te escriba algo que funciona, guardalo acá y reusalo con el próximo prospecto.":
+    ["When the AI writes something that works, save it here and reuse it with the next prospect.",
+     "Quando a IA escrever algo que funciona, salve aqui e reuse com o próximo prospect."],
+  "Todavía no guardaste ninguna. Generá un mail desde la ficha de un prospecto y tocá":
+    ["You haven't saved any yet. Generate an email from a prospect's file and tap",
+     "Você ainda não salvou nenhum. Gere um e-mail na ficha de um prospect e toque em"],
+  "prospectos exportados": ["prospects exported", "prospects exportados"],
+  "prospectos importados": ["prospects imported", "prospects importados"],
+  "No hay prospectos para exportar.": ["No prospects to export.", "Sem prospects para exportar."],
+  "El archivo no tenía filas válidas.": ["The file had no valid rows.", "O arquivo não tinha linhas válidas."],
+  "No pude leer el archivo. Tiene que ser un CSV con la misma cabecera del exportado.":
+    ["Couldn't read the file. It must be a CSV with the same header as the exported one.",
+     "Não consegui ler o arquivo. Precisa ser um CSV com o mesmo cabeçalho do exportado."],
+  "agregado a prospectos": ["added to prospects", "adicionado aos prospects"],
 
   // ── chips de estado ──
   "RESUELTO": ["RESOLVED", "RESOLVIDO"],
