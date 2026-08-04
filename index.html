@@ -1456,6 +1456,7 @@ function PanelDemo() {
   const [tabObra, setTabObra] = useState("info");
   const [planos, setPlanos] = useState([]);
   const [renders, setRenders] = useState([]);
+  const [slide, setSlide] = useState(0);
   const planoRef = useRef(null);
   const renderRef = useRef(null);
 
@@ -1793,6 +1794,20 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     setRenders([]);
   }
   useEffect(() => () => fotos.forEach(f => URL.revokeObjectURL(f.url)), []);
+
+  // Banner del propietario: pasa renders y fotos como diapositivas.
+  const slides = [...renders, ...fotos, ...(fotoHoy ? [fotoHoy] : [])];
+  useEffect(() => {
+    if (slides.length < 2) {
+      setSlide(0);
+      return;
+    }
+    const t = setInterval(() => setSlide(s => (s + 1) % slides.length), 3500);
+    return () => clearInterval(t);
+  }, [slides.length]);
+  useEffect(() => {
+    if (slide >= slides.length) setSlide(0);
+  }, [slides.length, slide]);
   const pendientes = pedidos.filter(p => p.estado !== "resuelto").length;
   const avance = avanceIA ?? certificados[0]?.avance ?? 45;
 
@@ -3299,7 +3314,28 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     flash: flash.propietario
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: fotoHoy ? `linear-gradient(rgba(20,26,34,.62), rgba(20,26,34,.72)), url(${fotoHoy.url}) center/cover` : "linear-gradient(160deg,#2C3440,#171C24)",
+      position: "relative",
+      overflow: "hidden",
+      background: "linear-gradient(160deg,#2C3440,#171C24)"
+    }
+  }, slides.map((s, i) => /*#__PURE__*/React.createElement("div", {
+    key: s.id,
+    style: {
+      position: "absolute",
+      inset: 0,
+      background: `url(${s.url}) center/cover`,
+      opacity: i === slide ? 1 : 0,
+      transition: "opacity 1s ease-in-out"
+    }
+  })), slides.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      background: "linear-gradient(rgba(20,26,34,.55), rgba(20,26,34,.78))"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
       padding: "18px 16px 16px",
       textAlign: "center"
     }
@@ -3354,7 +3390,35 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       fontSize: 11,
       color: "#D6DCE4"
     }
-  }, "Avance ", avance, "%")), /*#__PURE__*/React.createElement("div", {
+  }, "Avance ", avance, "%"), slides.length > 1 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 5,
+      justifyContent: "center",
+      marginTop: 10
+    }
+  }, slides.map((s, i) => /*#__PURE__*/React.createElement("button", {
+    key: s.id,
+    onClick: () => setSlide(i),
+    style: {
+      width: i === slide ? 16 : 6,
+      height: 6,
+      borderRadius: 20,
+      padding: 0,
+      background: i === slide ? "#7DBE4B" : "rgba(255,255,255,.4)",
+      border: "none",
+      cursor: "pointer",
+      transition: "all .3s",
+      minHeight: 6
+    },
+    "aria-label": `Imagen ${i + 1}`
+  }))), slides.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8.5,
+      color: "rgba(255,255,255,.6)",
+      marginTop: 6
+    }
+  }, slides.length, " imagen", slides.length === 1 ? "" : "es", " del proyecto"))), /*#__PURE__*/React.createElement("div", {
     className: "sc",
     style: {
       flex: 1,
