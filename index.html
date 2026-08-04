@@ -911,14 +911,14 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     style: {
       minHeight: "100vh",
       background: "#0E1520",
-      fontFamily: "Inter, -apple-system, sans-serif",
-      padding: 14
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      padding: 12
     }
   }, /*#__PURE__*/React.createElement("style", null, `
         .grilla { display:grid; gap:12px; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; height:calc(100vh - 118px); }
         @media (max-width: 820px) {
           .grilla { grid-template-columns:1fr; grid-template-rows:none; height:auto; }
-          .grilla > div { min-height:340px; }
+          .grilla > div { min-height:420px; }
         }
         button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         button:active { opacity:.65; transform:scale(.97); }
@@ -926,21 +926,21 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
         .flash { animation: pulseIn 1.4s ease-out 1; }
         @keyframes slideIn { from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:none} }
         .new { animation: slideIn .35s ease-out; }
-        .scroll::-webkit-scrollbar{ width:5px } .scroll::-webkit-scrollbar-thumb{ background:#D3D8DF; border-radius:5px }
+        .sc::-webkit-scrollbar{ width:5px; height:5px } .sc::-webkit-scrollbar-thumb{ background:#D3D8DF; border-radius:5px }
       `), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 9,
+      gap: 8,
       flexWrap: "wrap",
-      marginBottom: 12
+      marginBottom: 10
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
       gap: 9,
-      marginRight: 6
+      marginRight: 4
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -952,11 +952,9 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     style: {
       color: "#fff",
       fontWeight: 800,
-      fontSize: 14,
-      letterSpacing: "-0.01em"
+      fontSize: 14
     }
-  }, "Demo en vivo · ", OBRA), /*#__PURE__*/React.createElement("span", {
-    title: iaOk ? "IA conectada" : iaOk === false ? "Sin API key: el análisis de fotos no está disponible" : "Verificando…",
+  }, "Demo en vivo"), /*#__PURE__*/React.createElement("span", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -1020,7 +1018,21 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     onClick: emitirCertificado
   }, "📋 Certificado"), /*#__PURE__*/React.createElement(Boton, {
     onClick: generarInforme
-  }, generando ? "⏳…" : "📝 Informe semanal"), /*#__PURE__*/React.createElement("button", {
+  }, generando ? "⏳…" : "📝 Informe"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setVerKey(true),
+    style: {
+      marginLeft: "auto",
+      background: iaOk ? "transparent" : "rgba(224,138,62,.18)",
+      border: `1px solid ${iaOk ? "rgba(255,255,255,.25)" : "rgba(224,138,62,.6)"}`,
+      color: iaOk ? "#B9C2CF" : "#E8A860",
+      borderRadius: 8,
+      padding: "11px 15px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 42
+    }
+  }, iaOk ? "🔑 Clave" : "🔑 Cargar clave"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setVerKey(true),
     style: {
       marginLeft: "auto",
@@ -1047,18 +1059,17 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       cursor: "pointer",
       minHeight: 42
     }
-  }, "Reiniciar demo")), /*#__PURE__*/React.createElement("div", {
+  }, "Reiniciar")), /*#__PURE__*/React.createElement("div", {
     style: {
       minHeight: 34,
       display: "flex",
       alignItems: "center",
       gap: 8,
-      marginBottom: 12,
+      marginBottom: 10,
       background: ultimo ? "rgba(176,137,79,.16)" : "rgba(255,255,255,.05)",
       border: `1px solid ${ultimo ? "rgba(176,137,79,.4)" : "rgba(255,255,255,.08)"}`,
       borderRadius: 9,
-      padding: "8px 13px",
-      transition: "all .3s"
+      padding: "8px 13px"
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -1067,38 +1078,53 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
   }, ultimo ? "⚡" : "○"), /*#__PURE__*/React.createElement("span", {
     style: {
       color: ultimo ? "#F0DCBC" : "#6C7787",
-      fontSize: 12.5,
+      fontSize: 12,
       fontWeight: 600
     }
-  }, ultimo || "Tocá una acción arriba: vas a ver el dato aparecer en las otras apps al instante.")), /*#__PURE__*/React.createElement("div", {
+  }, ultimo || "Tocá una acción: el dato aparece en las otras apps al instante.")), /*#__PURE__*/React.createElement("div", {
     className: "grilla"
-  }, /*#__PURE__*/React.createElement(Panel, {
-    titulo: "Constructora",
-    sub: "Centro de comando",
+  }, /*#__PURE__*/React.createElement(Marco, {
+    rotulo: "App 1 · Constructora",
     flash: flash.constructora
-  }, /*#__PURE__*/React.createElement(NavApp, {
+  }, /*#__PURE__*/React.createElement(NavReal, {
     items: [{
       t: "IA",
-      on: true
+      on: true,
+      b: 57
+    }, {
+      t: "Drone IA"
+    }, {
+      t: "Grabar reunión"
+    }, {
+      t: "Inicio"
     }, {
       t: "Obras",
-      b: 5
+      b: 5,
+      rojo: true
     }, {
       t: "Avance"
     }, {
       t: "Bitácora"
     }, {
-      t: "Pedidos",
-      b: pendientes || null
+      t: "Pedidos enviados"
     }, {
       t: "Auditoría"
+    }, {
+      t: "Más",
+      b: 37,
+      rojo: true
     }]
-  }), /*#__PURE__*/React.createElement(Cuerpo, null, (fotoAntes || fotoHoy) && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Lbl, null, "Comparación de avance"), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement(CabezalReal, {
+    eyebrow: `Inteligencia · v23`,
+    titulo: "Asistente de Obra",
+    sub: "Lee todos los datos de la app en tiempo real"
+  }), /*#__PURE__*/React.createElement(Chat, null, fotoAntes || fotoHoy ? /*#__PURE__*/React.createElement(Bloque, {
+    titulo: "Comparación de avance"
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "1fr 1fr",
-      gap: 6,
-      marginBottom: 11
+      gap: 6
     }
   }, [[fotoAntes, "Anterior"], [fotoHoy, "Hoy"]].map(([f, rot]) => /*#__PURE__*/React.createElement("div", {
     key: rot,
@@ -1113,13 +1139,13 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     alt: rot,
     style: {
       width: "100%",
-      height: 66,
+      height: 62,
       objectFit: "cover",
       display: "block"
     }
   }) : /*#__PURE__*/React.createElement("div", {
     style: {
-      height: 66,
+      height: 62,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -1139,12 +1165,8 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
   }, rot)))), avanceIA != null && /*#__PURE__*/React.createElement("div", {
     className: "new",
     style: {
-      background: "#FBF6EE",
-      border: `1px solid ${BRASS}`,
-      borderRadius: 8,
-      padding: "8px 11px",
-      marginBottom: 11,
-      fontSize: 10.5,
+      marginTop: 8,
+      fontSize: 11,
       fontWeight: 700,
       color: T.text
     }
@@ -1152,90 +1174,104 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     style: {
       color: BRASS
     }
-  }, avanceIA, "% de avance"), " comparando las fotos")), /*#__PURE__*/React.createElement(Lbl, null, "Fotos de avance · ", OBRA), fotos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin fotos todavía. Tocá \"Subir foto de avance\".") : /*#__PURE__*/React.createElement("div", {
+  }, avanceIA, "% de avance"))) : null, fotos.length > 0 && /*#__PURE__*/React.createElement(Bloque, {
+    titulo: `Fotos de avance · ${fotos.length}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sc",
     style: {
       display: "flex",
       gap: 6,
-      overflowX: "auto",
-      paddingBottom: 4
-    },
-    className: "scroll"
+      overflowX: "auto"
+    }
   }, fotos.map((f, i) => /*#__PURE__*/React.createElement("img", {
     key: f.id,
     src: f.url,
     alt: "",
     className: i === 0 ? "new" : "",
     style: {
-      width: 84,
-      height: 64,
+      width: 78,
+      height: 58,
       objectFit: "cover",
       borderRadius: 7,
       border: `1px solid ${T.border}`,
       flexShrink: 0
     }
-  }))), /*#__PURE__*/React.createElement(Lbl, {
-    style: {
-      marginTop: 12
-    }
-  }, "Pedidos recibidos del contratista"), pedidos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin pedidos.") : pedidos.slice(0, 3).map((p, i) => /*#__PURE__*/React.createElement(Fila, {
+  })))), pedidos.slice(0, 3).map((p, i) => /*#__PURE__*/React.createElement(BurbujaBot, {
     key: p.id,
     nuevo: i === 0
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1
-    }
-  }, p.txt), /*#__PURE__*/React.createElement(Chip, {
-    tono: p.estado === "resuelto" ? "ok" : p.tipo === "material" ? "ok" : "wait"
-  }, p.estado === "resuelto" ? "RESUELTO" : p.estado.toUpperCase()))), /*#__PURE__*/React.createElement(Lbl, {
-    style: {
-      marginTop: 12
-    }
-  }, "Certificados emitidos"), certificados.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Ninguno.") : certificados.slice(0, 2).map((c, i) => /*#__PURE__*/React.createElement(Fila, {
+  }, "Pedido recibido del contratista: ", /*#__PURE__*/React.createElement("b", null, p.txt), /*#__PURE__*/React.createElement(EstadoChip, {
+    estado: p.estado,
+    tipo: p.tipo
+  }))), certificados.slice(0, 2).map((c, i) => /*#__PURE__*/React.createElement(BurbujaBot, {
     key: c.id,
     nuevo: i === 0
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1
-    }
-  }, "Certificado semanal Nº ", c.n, " · avance ", c.avance, "%"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: T.muted,
-      fontSize: 9.5
-    }
-  }, c.hora))))), /*#__PURE__*/React.createElement(Panel, {
-    titulo: "Estudio de arquitectura",
-    sub: "Ve todo al instante",
+  }, "📋 ", /*#__PURE__*/React.createElement("b", null, "Certificado semanal Nº ", c.n), " emitido · avance ", c.avance, "% · ", c.hora)), !pedidos.length && !certificados.length && !fotos.length && !fotoAntes && /*#__PURE__*/React.createElement(BurbujaBot, null, "Todo listo. Usá los botones de arriba y vas a ver los datos aparecer acá y en las otras apps.")), /*#__PURE__*/React.createElement(BarraChat, {
+    pills: ["⊕ Buscar en internet ON", "⌇ Debate IA"],
+    placeholder: "Escribí, adjuntá o usá el micrófono…",
+    pie: "Cargá tu API Key en Más → Configuración para activar la IA."
+  })), /*#__PURE__*/React.createElement(Marco, {
+    rotulo: "App 2 · Estudio de arquitectura",
     flash: flash.estudio
-  }, /*#__PURE__*/React.createElement(NavApp, {
+  }, /*#__PURE__*/React.createElement(NavReal, {
+    doble: true,
     items: [{
       t: "IA",
       on: true
     }, {
+      t: "Drone IA"
+    }, {
+      t: "Grabar reunión"
+    }, {
       t: "Obras",
-      b: 8
+      b: 8,
+      rojo: true
+    }, {
+      t: "Avance"
     }, {
       t: "Informes",
-      b: certificados.length || null
+      b: certificados.length || 1,
+      rojo: true
+    }, {
+      t: "Cronogramas"
+    }, {
+      t: "Bitácora",
+      b: 89,
+      rojo: true
+    }, {
+      t: "Mensajes",
+      b: 3,
+      rojo: true
     }, {
       t: "Pedidos recibidos",
-      b: pendientes || null
+      b: 26 + pedidos.length,
+      rojo: true
     }, {
-      t: "Planos"
+      t: "Formularios",
+      b: 1,
+      rojo: true
+    }, {
+      t: "Personal",
+      b: 42,
+      rojo: true
+    }, {
+      t: "Gestión"
+    }, {
+      t: "Ajustes"
     }]
   }), pendientes > 0 && /*#__PURE__*/React.createElement("div", {
     className: "new",
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 8,
+      gap: 9,
       background: "#FDECEA",
       borderBottom: "1px solid #F6CFC9",
-      padding: "8px 12px"
+      padding: "9px 13px"
     }
   }, /*#__PURE__*/React.createElement("i", {
     style: {
-      width: 19,
-      height: 19,
+      width: 21,
+      height: 21,
       borderRadius: "50%",
       background: T.red,
       color: "#fff",
@@ -1247,188 +1283,374 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       justifyContent: "center",
       flexShrink: 0
     }
-  }, pendientes), /*#__PURE__*/React.createElement("b", {
+  }, pendientes), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", {
     style: {
-      fontSize: 11,
-      color: "#9B2C1E"
+      fontSize: 11.5,
+      color: "#9B2C1E",
+      display: "block"
     }
-  }, pendientes, " pedido", pendientes > 1 ? "s" : "", " pendiente", pendientes > 1 ? "s" : "", " de la obra")), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Lbl, null, "Pedidos del contratista"), pedidos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Nada pendiente.") : pedidos.slice(0, 3).map((p, i) => /*#__PURE__*/React.createElement(Fila, {
+  }, pendientes, " pedido", pendientes > 1 ? "s" : "", " pendiente", pendientes > 1 ? "s" : "", " de la obra"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10.5,
+      color: "#C0533F"
+    }
+  }, "Obras: general →"))), /*#__PURE__*/React.createElement(Chat, null, pedidos.slice(0, 3).map((p, i) => /*#__PURE__*/React.createElement(BurbujaBot, {
     key: p.id,
     nuevo: i === 0
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      flex: 1
+      marginBottom: 6
     }
-  }, p.txt), p.estado === "resuelto" ? /*#__PURE__*/React.createElement(Chip, {
-    tono: "ok"
-  }, "RESUELTO") : /*#__PURE__*/React.createElement("button", {
+  }, p.txt), p.estado === "resuelto" ? /*#__PURE__*/React.createElement(EstadoChip, {
+    estado: "resuelto"
+  }) : /*#__PURE__*/React.createElement("button", {
     onClick: () => responderEstudio(p.id),
     style: {
       background: T.teal,
       color: "#fff",
       border: "none",
-      borderRadius: 6,
-      padding: "4px 9px",
-      fontSize: 9,
+      borderRadius: 7,
+      padding: "7px 13px",
+      fontSize: 10.5,
       fontWeight: 700,
       cursor: "pointer",
-      flexShrink: 0
+      minHeight: 32
     }
-  }, "Responder"))), (informe || generando) && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Lbl, null, "Informe semanal · analizado por IA"), /*#__PURE__*/React.createElement("div", {
-    className: "new",
+  }, "Responder"))), informe && /*#__PURE__*/React.createElement(BurbujaBot, {
+    nuevo: true,
     onClick: () => setVerInforme(true),
+    destacada: true
+  }, /*#__PURE__*/React.createElement("b", null, "✨ Informe semanal analizado por IA"), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#FBF6EE",
-      border: `1px solid ${BRASS}`,
-      borderRadius: 8,
-      padding: "9px 11px",
-      marginBottom: 11,
-      cursor: "pointer"
-    }
-  }, generando ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10.5,
+      marginTop: 5,
       color: T.sub,
-      fontWeight: 600
-    }
-  }, "⏳ La IA está analizando los datos de la obra…") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 10,
-      color: T.text,
+      fontSize: 10.5,
       lineHeight: 1.45,
-      fontWeight: 600,
-      maxHeight: 46,
+      maxHeight: 44,
       overflow: "hidden"
     }
   }, informe.texto.split("\n").filter(Boolean)[1]), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 9,
-      color: BRASS,
+      marginTop: 5,
+      fontSize: 9.5,
       fontWeight: 700,
-      marginTop: 5
+      color: BRASS
     }
-  }, "Ver informe completo →")))), /*#__PURE__*/React.createElement(Lbl, {
-    style: {
-      marginTop: 12
-    }
-  }, "Certificados a aprobar"), certificados.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Ninguno.") : certificados.slice(0, 2).map((c, i) => /*#__PURE__*/React.createElement(Fila, {
+  }, "Ver informe completo →")), certificados.slice(0, 2).map((c, i) => /*#__PURE__*/React.createElement(BurbujaBot, {
     key: c.id,
     nuevo: i === 0
-  }, /*#__PURE__*/React.createElement("span", {
+  }, "📋 ", /*#__PURE__*/React.createElement("b", null, "CERTIFICADO SEMANAL Nº ", c.n), " — ", OBRA, /*#__PURE__*/React.createElement("div", {
     style: {
-      flex: 1
+      marginTop: 5
     }
-  }, "Certificado Nº ", c.n, " · ", OBRA), /*#__PURE__*/React.createElement(Chip, {
-    tono: "wait"
-  }, "A APROBAR"))), /*#__PURE__*/React.createElement(Lbl, {
-    style: {
-      marginTop: 12
-    }
-  }, "Fotos que subió la obra"), fotos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Sin fotos.") : /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(EstadoChip, {
+    estado: "a aprobar"
+  })))), fotos.length > 0 && /*#__PURE__*/React.createElement(Bloque, {
+    titulo: "Fotos que subió la obra"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sc",
     style: {
       display: "flex",
       gap: 6,
       overflowX: "auto"
-    },
-    className: "scroll"
+    }
   }, fotos.map((f, i) => /*#__PURE__*/React.createElement("img", {
     key: f.id,
     src: f.url,
     alt: "",
     className: i === 0 ? "new" : "",
     style: {
-      width: 74,
-      height: 56,
+      width: 72,
+      height: 54,
       objectFit: "cover",
       borderRadius: 7,
       border: `1px solid ${T.border}`,
       flexShrink: 0
     }
-  }))))), /*#__PURE__*/React.createElement(Panel, {
-    titulo: "Contratista",
-    sub: "Pide desde la obra",
-    flash: flash.contratista,
-    navy: true
+  })))), !pedidos.length && !certificados.length && !fotos.length && !informe && /*#__PURE__*/React.createElement(BurbujaBot, null, "Sin novedades de la obra por ahora.")), /*#__PURE__*/React.createElement(BarraChat, {
+    pills: ["⌇ Debate IA", "◈ Narrar"],
+    placeholder: "Escribí tu consulta…"
+  })), /*#__PURE__*/React.createElement(Marco, {
+    rotulo: "App 3 · Contratista",
+    flash: flash.contratista
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: NAVY,
-      padding: "10px 13px"
+      padding: "13px 15px",
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      flexWrap: "wrap"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 8.5,
+      flex: 1,
+      minWidth: 120
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
       fontWeight: 700,
       letterSpacing: ".13em",
       textTransform: "uppercase",
       color: "#D9B57C"
     }
-  }, "Pedidos · materiales, planos y definiciones")), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement("div", {
+  }, "Pedidos de materiales · v2"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 15,
+      fontWeight: 800,
+      color: "#fff",
+      marginTop: 1
+    }
+  }, "V")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6
+    }
+  }, ["↻ Actualizar", "✧ Estilo", "Cambiar"].map(t => /*#__PURE__*/React.createElement("span", {
+    key: t,
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      color: "#DFE5EC",
+      border: "1px solid rgba(255,255,255,.22)",
+      borderRadius: 8,
+      padding: "6px 10px"
+    }
+  }, t)))), /*#__PURE__*/React.createElement("div", {
+    className: "sc",
+    style: {
+      flex: 1,
+      overflowY: "auto",
+      padding: "13px 15px 16px",
+      background: "#F7F8FA"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      marginBottom: 14
+    }
+  }, ["Pedidos", "Recepción de docs", "Definiciones"].map((t, i) => /*#__PURE__*/React.createElement("span", {
+    key: t,
+    style: {
+      flex: 1,
+      textAlign: "center",
+      fontSize: 10,
+      fontWeight: 700,
+      padding: "9px 4px",
+      borderRadius: 22,
+      border: `1px solid ${i === 0 ? "#141C2B" : T.border}`,
+      background: i === 0 ? "#141C2B" : "#fff",
+      color: i === 0 ? "#fff" : T.sub
+    }
+  }, t))), /*#__PURE__*/React.createElement(Rotulo, null, "Qué querés pedir"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "repeat(3,1fr)",
-      gap: 6,
-      marginBottom: 12
+      gap: 7,
+      marginBottom: 14
     }
   }, [["▣", "Materiales", "#141C2B"], ["✎", "Definiciones", BRASS], ["▤", "Planos", "#3B6CA8"]].map(([ic, t, c]) => /*#__PURE__*/React.createElement("div", {
     key: t,
     style: {
       textAlign: "center",
-      fontSize: 9.5,
+      fontSize: 10,
       fontWeight: 700,
       color: T.text,
+      background: "#fff",
       border: `1px solid ${T.border}`,
       borderTop: `2px solid ${c}`,
-      borderRadius: 9,
-      padding: "10px 4px"
+      borderRadius: 10,
+      padding: "13px 4px"
     }
-  }, ic, /*#__PURE__*/React.createElement("br", null), t))), /*#__PURE__*/React.createElement(Lbl, null, "Mis pedidos · ", pedidos.length, " en total"), pedidos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Todavía no pediste nada.") : pedidos.map((p, i) => /*#__PURE__*/React.createElement(Fila, {
-    key: p.id,
-    nuevo: i === 0
+  }, ic, /*#__PURE__*/React.createElement("br", null), t))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement(Rotulo, {
+    sinMargen: true
+  }, "Registro de pedidos"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10,
+      fontWeight: 700,
+      color: T.sub
+    }
+  }, 26 + pedidos.length, " pedidos · 8 obras")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      border: `1px solid ${T.border}`,
+      borderRadius: 11,
+      padding: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: ".13em",
+      textTransform: "uppercase",
+      color: T.text,
+      marginBottom: 9
+    }
+  }, "Estado por obra"), pedidos.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "new",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7,
+      padding: "7px 0",
+      borderBottom: `1px solid ${T.border}`
+    }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
+      width: 6,
+      height: 6,
+      borderRadius: "50%",
+      background: "#3E9B62",
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10.5,
+      fontWeight: 700,
+      color: T.text,
       flex: 1
     }
-  }, p.txt), /*#__PURE__*/React.createElement(Chip, {
-    tono: p.estado === "resuelto" ? "ok" : p.tipo === "material" ? "ok" : "wait"
-  }, p.estado === "resuelto" ? "RESPONDIDO" : p.estado.toUpperCase()))), /*#__PURE__*/React.createElement("div", {
+  }, OBRA), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 600,
+      color: T.sub
+    }
+  }, "pidió hoy"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: "#EEF1F5",
+      borderRadius: 20,
+      padding: "2px 7px",
+      fontSize: 9,
+      color: T.sub
+    }
+  }, pedidos.length)), [["Obra Barrio Norte 01", "sin pedidos de material", 0, true], ["Obra Sur 249", "sin pedidos de material", 0, true], ["Obra Norte 300", "hace 20 días", 1, true], ["Obra San Martín 250", "hace 13 días", 2, true], ["Obra Belgrano 450", "hace 6 días", 5, false]].map(([n, e, c, am]) => /*#__PURE__*/React.createElement("div", {
+    key: n,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7,
+      padding: "7px 0",
+      borderBottom: `1px solid ${T.border}`
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 6,
+      height: 6,
+      borderRadius: "50%",
+      background: am ? "#E09A3E" : "#3E9B62",
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10.5,
+      fontWeight: 700,
+      color: T.text,
+      flex: 1
+    }
+  }, n), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 600,
+      color: am ? "#B5651D" : T.sub
+    }
+  }, e), /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: "#EEF1F5",
+      borderRadius: 20,
+      padding: "2px 7px",
+      fontSize: 9,
+      color: T.sub
+    }
+  }, c))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
       color: T.muted,
       marginTop: 9,
       lineHeight: 1.4
     }
-  }, "Cada pedido queda cargado a la vez acá, en la constructora y en el estudio."))), /*#__PURE__*/React.createElement(Panel, {
-    titulo: "Propietario",
-    sub: "Solo lectura",
+  }, "Tocá una obra para filtrar. En ámbar, las que hace 7 días o más que no piden materiales.")), pedidos.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12
+    }
+  }, /*#__PURE__*/React.createElement(Rotulo, null, "Mis pedidos"), pedidos.map((p, i) => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    className: i === 0 ? "new" : "",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7,
+      background: "#fff",
+      border: `1px solid ${i === 0 ? BRASS : T.border}`,
+      borderRadius: 9,
+      padding: "9px 11px",
+      marginBottom: 5,
+      fontSize: 10.5,
+      fontWeight: 600,
+      color: T.text
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1
+    }
+  }, p.txt), /*#__PURE__*/React.createElement(EstadoChip, {
+    estado: p.estado,
+    tipo: p.tipo
+  })))))), /*#__PURE__*/React.createElement(Marco, {
+    rotulo: "App 4 · Propietario",
     flash: flash.propietario
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "linear-gradient(160deg,#2C3440,#171C24)",
-      padding: "14px 16px 13px",
+      background: fotoHoy ? `linear-gradient(rgba(20,26,34,.62), rgba(20,26,34,.72)), url(${fotoHoy.url}) center/cover` : "linear-gradient(160deg,#2C3440,#171C24)",
+      padding: "20px 16px 18px",
       textAlign: "center"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 8.5,
+      width: 46,
+      height: 46,
+      borderRadius: "50%",
+      background: "#fff",
+      border: "2px solid #7DBE4B",
+      margin: "0 auto 9px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 7,
       fontWeight: 700,
-      letterSpacing: ".14em",
+      color: NAVY
+    }
+  }, "Tu marca"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: ".16em",
       textTransform: "uppercase",
-      color: "rgba(255,255,255,.7)"
+      color: "rgba(255,255,255,.72)"
     }
   }, "Tu proyecto"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 15,
+      fontSize: 18,
       fontWeight: 800,
       color: "#fff",
-      marginTop: 2
+      marginTop: 3
     }
   }, OBRA), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 5,
-      background: "rgba(255,255,255,.25)",
+      background: "rgba(255,255,255,.28)",
       borderRadius: 6,
-      margin: "9px auto 5px",
-      maxWidth: 190,
+      margin: "11px auto 6px",
+      maxWidth: 210,
       overflow: "hidden"
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -1440,80 +1662,174 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     }
   })), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 10,
+      fontSize: 11,
       color: "#D6DCE4"
     }
-  }, "Avance ", avance, "%")), /*#__PURE__*/React.createElement(Cuerpo, null, /*#__PURE__*/React.createElement(Lbl, null, "Fotos de avance"), fotos.length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Tu constructora todavía no subió fotos.") : /*#__PURE__*/React.createElement("div", {
+  }, "Avance ", avance, "%")), /*#__PURE__*/React.createElement("div", {
+    className: "sc",
     style: {
-      display: "grid",
-      gridTemplateColumns: "repeat(3,1fr)",
-      gap: 6
+      flex: 1,
+      overflowY: "auto",
+      padding: "13px 14px 16px",
+      background: "#E9EBEE"
     }
-  }, fotos.slice(0, 6).map((f, i) => /*#__PURE__*/React.createElement("img", {
-    key: f.id,
-    src: f.url,
-    alt: "",
-    className: i === 0 ? "new" : "",
-    style: {
-      width: "100%",
-      height: 58,
-      objectFit: "cover",
-      borderRadius: 7,
-      border: `1px solid ${T.border}`
-    }
-  }))), /*#__PURE__*/React.createElement(Lbl, {
-    style: {
-      marginTop: 12
-    }
-  }, "Informes"), informe && /*#__PURE__*/React.createElement("div", {
-    className: "new",
-    onClick: () => setVerInforme(true),
+  }, /*#__PURE__*/React.createElement(Rotulo, null, "Secciones"), [["▤", "Renders", null], ["▤", "Fotos de avance", fotos.length || null], ["▦", "Cronograma", null], ["▥", "Informes", certificados.length + (informe ? 1 : 0) || null], ["▧", "Planos", null], ["▨", "Costos", null]].map(([ic, n, badge]) => /*#__PURE__*/React.createElement("div", {
+    key: n,
+    onClick: n === "Informes" && informe ? () => setVerInforme(true) : undefined,
+    className: badge && (n === "Informes" || n === "Fotos de avance") ? "new" : "",
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 7,
-      background: "#FBF6EE",
-      border: `1px solid ${BRASS}`,
-      borderRadius: 8,
-      padding: "8px 10px",
-      marginBottom: 5,
-      fontSize: 10.5,
+      gap: 10,
+      background: "#fff",
+      borderRadius: 11,
+      padding: "13px 13px",
+      marginBottom: 7,
+      fontSize: 12.5,
       fontWeight: 700,
-      color: T.text,
-      cursor: "pointer"
+      color: NAVY,
+      cursor: n === "Informes" && informe ? "pointer" : "default",
+      border: `1px solid ${badge ? BRASS : "transparent"}`
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
+      width: 27,
+      height: 27,
+      borderRadius: 7,
+      background: "#E9EBEE",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 11,
+      color: T.sub
+    }
+  }, ic), /*#__PURE__*/React.createElement("span", {
+    style: {
       flex: 1
     }
-  }, "✨ Informe semanal · ", OBRA), /*#__PURE__*/React.createElement("span", {
+  }, n), badge ? /*#__PURE__*/React.createElement("span", {
     style: {
-      color: BRASS,
-      fontSize: 9
+      background: BRASS,
+      color: "#fff",
+      borderRadius: 20,
+      padding: "2px 8px",
+      fontSize: 9.5,
+      fontWeight: 700
     }
-  }, "Ver →")), certificados.length === 0 && !informe ? /*#__PURE__*/React.createElement(Vacio, null, "Sin informes publicados.") : certificados.slice(0, 3).map((c, i) => /*#__PURE__*/React.createElement(Fila, {
-    key: c.id,
-    nuevo: i === 0
-  }, /*#__PURE__*/React.createElement("span", {
+  }, badge) : null, /*#__PURE__*/React.createElement("span", {
     style: {
-      flex: 1
+      color: T.muted
     }
-  }, "Informe semanal Nº ", c.n), /*#__PURE__*/React.createElement("span", {
+  }, "›"))), /*#__PURE__*/React.createElement("div", {
     style: {
+      textAlign: "center",
+      fontSize: 10,
       color: T.muted,
-      fontSize: 9.5
-    }
-  }, c.hora))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 12,
-      fontSize: 8.5,
-      fontWeight: 700,
-      letterSpacing: ".08em",
-      textTransform: "uppercase",
-      color: T.muted,
-      textAlign: "center"
+      marginTop: 10
     }
   }, "Modo solo lectura · no ve pedidos ni costos internos")))), verKey && /*#__PURE__*/React.createElement("div", {
+    onClick: () => setVerKey(false),
+    style: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(8,12,18,.72)",
+      zIndex: 110,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 22
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: e => e.stopPropagation(),
+    style: {
+      background: "#fff",
+      borderRadius: 15,
+      maxWidth: 480,
+      width: "100%",
+      padding: "22px 24px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".14em",
+      textTransform: "uppercase",
+      color: BRASS
+    }
+  }, "Configuración")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 18,
+      fontWeight: 800,
+      color: NAVY,
+      marginBottom: 6
+    }
+  }, "Clave de IA"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: T.sub,
+      lineHeight: 1.55,
+      marginBottom: 14
+    }
+  }, "Pegá tu API key de Anthropic para activar el análisis de fotos y los informes. Queda guardada solo en este dispositivo."), /*#__PURE__*/React.createElement("input", {
+    value: apiKey,
+    onChange: e => guardarKey(e.target.value.trim()),
+    placeholder: "sk-ant-...",
+    autoCapitalize: "off",
+    autoCorrect: "off",
+    spellCheck: "false",
+    style: {
+      width: "100%",
+      border: `1px solid ${T.border}`,
+      borderRadius: 9,
+      padding: "13px",
+      fontSize: 16,
+      color: T.text,
+      outline: "none",
+      fontFamily: "monospace",
+      boxSizing: "border-box",
+      marginBottom: 14
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      fontSize: 11.5,
+      fontWeight: 700,
+      color: iaOk ? T.ok : "#B5651D"
+    }
+  }, iaOk ? "✓ Clave cargada — la IA está lista" : "Falta la clave (empieza con sk-ant-)"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setVerKey(false),
+    style: {
+      background: NAVY,
+      color: "#fff",
+      border: "none",
+      borderRadius: 8,
+      padding: "11px 20px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 42
+    }
+  }, "Listo")))), verKey && /*#__PURE__*/React.createElement("div", {
     onClick: () => setVerKey(false),
     style: {
       position: "fixed",
@@ -1625,7 +1941,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: 26
+      padding: 22
     }
   }, /*#__PURE__*/React.createElement("div", {
     onClick: e => e.stopPropagation(),
@@ -1634,7 +1950,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       borderRadius: 15,
       maxWidth: 620,
       width: "100%",
-      maxHeight: "82vh",
+      maxHeight: "84vh",
       display: "flex",
       flexDirection: "column",
       overflow: "hidden"
@@ -1678,7 +1994,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       marginTop: 2
     }
   }, OBRA, informe ? ` · generado ${informe.hora}` : "")), /*#__PURE__*/React.createElement("div", {
-    className: "scroll",
+    className: "sc",
     style: {
       flex: 1,
       overflowY: "auto",
@@ -1690,7 +2006,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       color: T.sub,
       lineHeight: 1.7
     }
-  }, "⏳ La IA está leyendo las fotos cargadas, los pedidos de materiales y las definiciones pendientes para armar el informe…") : /*#__PURE__*/React.createElement("pre", {
+  }, "⏳ La IA está leyendo las fotos y los pedidos para armar el informe…") : /*#__PURE__*/React.createElement("pre", {
     style: {
       margin: 0,
       fontFamily: "inherit",
@@ -1707,16 +2023,18 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       display: "flex",
       alignItems: "center",
       gap: 10,
-      background: "#FAFBFC"
+      background: "#FAFBFC",
+      flexWrap: "wrap"
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 10.5,
       color: T.muted,
       flex: 1,
+      minWidth: 140,
       lineHeight: 1.4
     }
-  }, "Se publica automáticamente en el panel del estudio y en el del propietario."), informe && /*#__PURE__*/React.createElement("button", {
+  }, "Se publica en el panel del estudio y en el del propietario."), informe && /*#__PURE__*/React.createElement("button", {
     onClick: descargarPDF,
     disabled: pdfBusy,
     style: {
@@ -1724,10 +2042,11 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       color: "#fff",
       border: "none",
       borderRadius: 8,
-      padding: "9px 16px",
-      fontSize: 12,
+      padding: "11px 16px",
+      fontSize: 12.5,
       fontWeight: 700,
-      cursor: pdfBusy ? "wait" : "pointer"
+      cursor: pdfBusy ? "wait" : "pointer",
+      minHeight: 42
     }
   }, pdfBusy ? "Generando…" : "📄 Descargar PDF"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setVerInforme(false),
@@ -1736,21 +2055,16 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       color: "#fff",
       border: "none",
       borderRadius: 8,
-      padding: "9px 18px",
-      fontSize: 12,
+      padding: "11px 20px",
+      fontSize: 12.5,
       fontWeight: 700,
-      cursor: "pointer"
+      cursor: "pointer",
+      minHeight: 42
     }
   }, "Cerrar")))));
 }
 
-// Informe de respaldo: se usa si no hay API key o si falla la red.
-// Existe para que la demo nunca quede colgada delante de un cliente.
-function informeRespaldo(nFotos, nMat, nSinResolver, avance) {
-  return ["DESARROLLO DE LA SEMANA", `La obra registró ${nFotos} ${nFotos === 1 ? "carga fotográfica" : "cargas fotográficas"} de avance y se declara un avance global del ${avance}%. Se sostuvo el ritmo de ejecución previsto en las tareas de albañilería y terminaciones.`, "", "PEDIDOS Y DEFINICIONES", `${nMat === 1 ? "Se cursó 1 pedido" : `Se cursaron ${nMat} pedidos`} de materiales. ${nSinResolver > 0 ? nSinResolver === 1 ? "Queda 1 definición pendiente de respuesta por parte del estudio." : `Quedan ${nSinResolver} definiciones pendientes de respuesta por parte del estudio.` : "No quedan definiciones pendientes de respuesta."}`, "", "RIESGOS", nSinResolver > 0 ? "Las definiciones sin resolver comprometen el avance del sector afectado. De extenderse más allá del plazo de respuesta acordado, corresponde computar el perjuicio por dotación detenida." : "No se registran riesgos de plazo atribuibles a definiciones pendientes.", "", "PRÓXIMOS PASOS", "1. Completar las tareas de terminación en los sectores habilitados.", nSinResolver > 0 ? "2. Obtener respuesta del estudio sobre las definiciones pendientes." : "2. Avanzar con la programación de la semana siguiente según cronograma."].join("\n");
-}
-
-// ── piezas reutilizables ──────────────────────────────────────
+// ── piezas visuales ───────────────────────────────────────────
 
 function Boton({
   children,
@@ -1779,16 +2093,17 @@ function Boton({
     }
   }, children);
 }
-function Panel({
-  titulo,
-  sub,
+
+// Marco del panel: rótulo arriba y la app adentro
+function Marco({
+  rotulo,
   children,
   flash
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: flash ? "flash" : "",
     style: {
-      background: T.card,
+      background: "#fff",
       borderRadius: 13,
       overflow: "hidden",
       display: "flex",
@@ -1800,61 +2115,61 @@ function Panel({
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 8,
-      padding: "8px 13px",
-      background: "#F0F2F5",
-      borderBottom: `1px solid ${T.border}`
+      gap: 7,
+      padding: "7px 12px",
+      background: "#0E1520",
+      borderBottom: `1px solid rgba(255,255,255,.08)`
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      width: 14,
+      width: 12,
       height: 2,
       background: BRASS,
       flexShrink: 0
     }
   }), /*#__PURE__*/React.createElement("b", {
     style: {
-      fontSize: 11.5,
-      color: NAVY
+      fontSize: 10.5,
+      color: "#C8D0DA",
+      letterSpacing: ".02em"
     }
-  }, titulo), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 9.5,
-      color: T.muted,
-      marginLeft: "auto"
-    }
-  }, sub)), children);
+  }, rotulo)), children);
 }
-function NavApp({
-  items
+
+// Barra de navegación como la de las apps reales
+function NavReal({
+  items,
+  doble
 }) {
   return /*#__PURE__*/React.createElement("div", {
+    className: "sc",
     style: {
       display: "flex",
-      gap: 12,
-      padding: "8px 12px",
+      flexWrap: doble ? "wrap" : "nowrap",
+      gap: doble ? "7px 13px" : 13,
+      padding: "10px 12px",
       borderBottom: `2px solid ${BRASS}`,
       background: "#fff",
-      overflowX: "auto",
-      whiteSpace: "nowrap"
-    },
-    className: "scroll"
+      overflowX: doble ? "hidden" : "auto",
+      whiteSpace: "nowrap",
+      justifyContent: doble ? "center" : "flex-start"
+    }
   }, items.map(it => /*#__PURE__*/React.createElement("span", {
     key: it.t,
     style: {
       position: "relative",
-      fontSize: 9.5,
+      fontSize: 10,
       fontWeight: 700,
       flexShrink: 0,
-      color: it.on ? NAVY : it.b ? "#C0392B" : "#5A6472",
+      color: it.on ? NAVY : it.rojo ? "#C0392B" : "#5A6472",
       borderBottom: it.on ? `2px solid ${BRASS}` : "none",
       paddingBottom: 2
     }
   }, it.t, it.b ? /*#__PURE__*/React.createElement("i", {
     style: {
       position: "absolute",
-      top: -6,
-      right: -12,
+      top: -7,
+      right: -13,
       background: T.red,
       color: "#fff",
       fontSize: 7,
@@ -1865,91 +2180,254 @@ function NavApp({
     }
   }, it.b) : null)));
 }
-function Cuerpo({
+function CabezalReal({
+  eyebrow,
+  titulo,
+  sub
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "13px 15px 11px",
+      borderBottom: `1px solid ${T.border}`,
+      background: "#fff"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 16,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 8.5,
+      fontWeight: 700,
+      letterSpacing: ".16em",
+      textTransform: "uppercase",
+      color: T.muted
+    }
+  }, eyebrow)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 17,
+      fontWeight: 800,
+      color: NAVY,
+      marginTop: 4
+    }
+  }, titulo), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: T.muted,
+      marginTop: 1
+    }
+  }, sub));
+}
+function Chat({
   children
 }) {
   return /*#__PURE__*/React.createElement("div", {
-    className: "scroll",
+    className: "sc",
     style: {
       flex: 1,
       overflowY: "auto",
-      padding: "11px 13px 14px",
+      padding: "12px 14px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
       background: "#FAFBFC"
     }
   }, children);
 }
-function Lbl({
+function BurbujaBot({
   children,
-  style
+  nuevo,
+  onClick,
+  destacada
 }) {
   return /*#__PURE__*/React.createElement("div", {
+    className: nuevo ? "new" : "",
+    onClick: onClick,
+    style: {
+      alignSelf: "flex-start",
+      maxWidth: "92%",
+      padding: "10px 12px",
+      borderRadius: 11,
+      background: destacada ? "#FBF6EE" : "#fff",
+      border: `1px solid ${destacada || nuevo ? BRASS : T.border}`,
+      fontSize: 11,
+      lineHeight: 1.5,
+      color: T.text,
+      cursor: onClick ? "pointer" : "default"
+    }
+  }, children);
+}
+function Bloque({
+  titulo,
+  children
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      border: `1px solid ${T.border}`,
+      borderRadius: 11,
+      padding: "10px 12px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 8.5,
       fontWeight: 700,
       letterSpacing: ".12em",
       textTransform: "uppercase",
       color: T.muted,
-      marginBottom: 7,
-      ...style
+      marginBottom: 8
     }
-  }, children);
+  }, titulo), children);
 }
-function Vacio({
-  children
+function BarraChat({
+  pills,
+  placeholder,
+  pie
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 10.5,
-      color: T.muted,
-      padding: "8px 0",
-      lineHeight: 1.4
+      borderTop: `1px solid ${T.border}`,
+      background: "#fff",
+      padding: "9px 12px 10px"
     }
-  }, children);
-}
-function Fila({
-  children,
-  nuevo
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: nuevo ? "new" : "",
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
+      gap: 6,
       alignItems: "center",
-      gap: 7,
-      background: "#fff",
-      border: `1px solid ${nuevo ? BRASS : T.border}`,
+      marginBottom: 8,
+      flexWrap: "wrap"
+    }
+  }, pills.map(p => /*#__PURE__*/React.createElement("span", {
+    key: p,
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      border: `1px solid ${T.border}`,
+      borderRadius: 20,
+      padding: "6px 11px",
+      color: T.sub
+    }
+  }, p)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginLeft: "auto",
+      fontSize: 9.5,
+      color: T.muted
+    }
+  }, "Limpiar")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 30,
+      height: 30,
       borderRadius: 8,
-      padding: "8px 10px",
-      marginBottom: 5,
+      border: `1px solid ${T.border}`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 12,
+      color: T.sub,
+      flexShrink: 0
+    }
+  }, "＋"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      border: `1px solid ${T.border}`,
+      borderRadius: 9,
+      padding: "8px 11px",
       fontSize: 10.5,
-      color: T.text,
-      fontWeight: 600
+      color: T.muted
+    }
+  }, placeholder), /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 30,
+      height: 30,
+      borderRadius: 8,
+      background: "#EEF1F5",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 12,
+      color: T.muted,
+      flexShrink: 0
+    }
+  }, "↑")), pie && /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      fontSize: 9,
+      color: T.muted,
+      marginTop: 8
+    }
+  }, pie));
+}
+function Rotulo({
+  children,
+  sinMargen
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: ".13em",
+      textTransform: "uppercase",
+      color: T.muted,
+      marginBottom: sinMargen ? 0 : 8
     }
   }, children);
 }
-function Chip({
-  children,
-  tono
+function EstadoChip({
+  estado,
+  tipo
 }) {
-  const c = tono === "ok" ? {
-    bg: "#EAF3EC",
-    fg: T.ok
-  } : {
-    bg: "#FBF2E3",
-    fg: "#9A6B1E"
+  const map = {
+    resuelto: {
+      bg: "#EAF3EC",
+      fg: T.ok,
+      txt: "RESUELTO"
+    },
+    enviado: {
+      bg: "#EAF3EC",
+      fg: T.ok,
+      txt: "ENVIADO"
+    },
+    pendiente: {
+      bg: "#FBF2E3",
+      fg: "#9A6B1E",
+      txt: "PENDIENTE"
+    },
+    "a aprobar": {
+      bg: "#FBF2E3",
+      fg: "#9A6B1E",
+      txt: "A APROBAR"
+    }
   };
+  const c = map[estado] || map.pendiente;
   return /*#__PURE__*/React.createElement("span", {
     style: {
+      display: "inline-block",
       background: c.bg,
       color: c.fg,
       fontSize: 8,
       fontWeight: 700,
-      padding: "3px 7px",
+      padding: "3px 8px",
       borderRadius: 20,
-      flexShrink: 0,
-      letterSpacing: ".03em"
+      letterSpacing: ".03em",
+      marginLeft: 6,
+      verticalAlign: "middle"
     }
-  }, children);
+  }, c.txt);
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(PanelDemo, null));
   } catch (e) {
