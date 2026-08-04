@@ -1754,6 +1754,18 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     pulso(["estudio", "propietario"]);
     e.target.value = "";
   }
+
+  // El capataz manda el pedido al jefe de obra por WhatsApp desde su app.
+  function enviarWhatsApp(p) {
+    const h = ahora();
+    setPedidos(prev => prev.map(x => x.id === p.id ? {
+      ...x,
+      wsp: h
+    } : x));
+    anotar("Envío por WhatsApp", `El capataz envió el pedido "${p.txt}" al jefe de obra por WhatsApp.`, "Capataz");
+    setUltimo("El capataz lo mandó por WhatsApp al jefe de obra → queda asentado en bitácora");
+    pulso(["constructora", "estudio"]);
+  }
   function reiniciar() {
     fotos.forEach(f => URL.revokeObjectURL(f.url));
     setFotos([]);
@@ -2706,29 +2718,17 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
         fontWeight: 700,
         color: p.estado === "resuelto" ? T.ok : "#B5651D"
       }
-    }, p.estado === "resuelto" ? "● Respondido por el estudio" : "● No leído por el estudio")), rol === "estudio" && p.estado !== "resuelto" ? /*#__PURE__*/React.createElement(Accion, {
+    }, p.estado === "resuelto" ? "● Respondido por el estudio" : "● No leído por el estudio")), rol === "estudio" && p.estado !== "resuelto" && /*#__PURE__*/React.createElement(Accion, {
       teal: true,
       onClick: () => responderEstudio(p.id)
-    }, "Responder al capataz") : /*#__PURE__*/React.createElement("button", {
-      onClick: () => {
-        anotar("Envío por WhatsApp", `El capataz envió el pedido "${p.txt}" al jefe de obra por WhatsApp.`, "Capataz");
-        setUltimo("Pedido reenviado por WhatsApp → queda asentado en bitácora");
-        pulso(["estudio", "constructora"]);
-      },
+    }, "Responder al capataz"), p.wsp && /*#__PURE__*/React.createElement("div", {
       style: {
-        width: "100%",
-        background: "#25D366",
-        color: "#fff",
-        border: "none",
-        borderRadius: 9,
-        padding: "11px",
-        fontSize: 11,
+        fontSize: 9,
         fontWeight: 700,
-        cursor: "pointer",
-        minHeight: 42,
-        fontFamily: "inherit"
+        color: "#128C4A",
+        marginTop: 2
       }
-    }, "➤ Enviar por WhatsApp al jefe de obra")))));
+    }, "➤ Enviado por WhatsApp al jefe de obra · ", p.wsp)))));
   };
   const PantallaPersonal = () => /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Cabezal, {
     eyebrow: "Equipo",
@@ -3214,25 +3214,50 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     key: p.id,
     className: i === 0 ? "new" : "",
     style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 7,
       background: "#fff",
       border: `1px solid ${i === 0 ? BRASS : T.border}`,
       borderRadius: 9,
       padding: "10px 11px",
-      marginBottom: 5,
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7,
+      marginBottom: 7
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
       fontSize: 10.5,
       fontWeight: 600,
       color: T.text
     }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1
-    }
   }, p.txt), /*#__PURE__*/React.createElement(Chip, {
     estado: p.estado
-  }))))), tabK === "docs" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Rotulo, null, "Recepción de documentación"), pedidos.filter(p => p.estado === "resuelto").length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Cuando el estudio responda un pedido, la documentación aparece acá.") : pedidos.filter(p => p.estado === "resuelto").map((p, i) => /*#__PURE__*/React.createElement(Tarjeta, {
+  })), p.wsp ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      color: "#128C4A"
+    }
+  }, "✓ Enviado al jefe de obra por WhatsApp · ", p.wsp) : /*#__PURE__*/React.createElement("button", {
+    onClick: () => enviarWhatsApp(p),
+    style: {
+      width: "100%",
+      background: "#25D366",
+      color: "#fff",
+      border: "none",
+      borderRadius: 9,
+      padding: "11px",
+      fontSize: 11,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 42,
+      fontFamily: "inherit"
+    }
+  }, "➤ Enviar por WhatsApp al jefe de obra"))))), tabK === "docs" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Rotulo, null, "Recepción de documentación"), pedidos.filter(p => p.estado === "resuelto").length === 0 ? /*#__PURE__*/React.createElement(Vacio, null, "Cuando el estudio responda un pedido, la documentación aparece acá.") : pedidos.filter(p => p.estado === "resuelto").map((p, i) => /*#__PURE__*/React.createElement(Tarjeta, {
     key: p.id,
     nuevo: i === 0
   }, /*#__PURE__*/React.createElement("div", {
