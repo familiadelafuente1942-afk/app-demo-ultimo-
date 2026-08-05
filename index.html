@@ -4456,10 +4456,11 @@ function BotonModal({
 // ════════════════════════════════════════════════════════════
 
 const BD_NOMBRE = "construia";
-const BD_VERSION = 1;
-const FORMATO_ARCHIVO = "construia-base";
+const BD_VERSION = 2; // v2 agrega la tabla separada de pruebas
+const FORMATO_ARCHIVO = "construia-commercial-backup";
+const FORMATO_ANTERIOR = "construia-base"; // se sigue aceptando al importar
 const FORMATO_VERSION = 1;
-const TABLAS = ["prospectos", "plantillas", "zonas_barridas", "config"];
+const TABLAS = ["prospectos", "plantillas", "zonas_barridas", "config", "prospectos_prueba"];
 let _bd = null;
 
 // ── estado observable de la base ──────────────────────────────
@@ -4551,6 +4552,94 @@ function abrirBD() {
   });
 }
 const bd = {
+  // Lectura de una ficha por identificador.
+  async obtener(tabla, id) {
+    try {
+      const db = await abrirBD();
+      return await new Promise((res, rej) => {
+        const r = db.transaction(tabla, "readonly").objectStore(tabla).get(id);
+        r.onsuccess = () => res(r.result || null);
+        r.onerror = () => rej(r.error);
+      });
+    } catch {
+      return null;
+    }
+  },
+  // Actualización de una sola fila.
+  async actualizar(tabla, fila) {
+    try {
+      const db = await abrirBD();
+      await new Promise((res, rej) => {
+        const t = db.transaction(tabla, "readwrite");
+        t.objectStore(tabla).put(fila);
+        t.oncomplete = () => res(true);
+        t.onerror = () => rej(t.error);
+      });
+      estadoBD.ultimaEscritura = new Date().toISOString();
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  // Inserción por lotes: cede el hilo entre tandas para no congelar la pantalla.
+  async agregarPorLotes(tabla, filas, tam, avisar, cancelado) {
+    const lote = tam || 1000;
+    const total = (filas || []).length;
+    for (let i = 0; i < total; i += lote) {
+      if (cancelado && cancelado()) return {
+        cancelado: true,
+        hechos: i
+      };
+      const tanda = filas.slice(i, i + lote);
+      try {
+        const db = await abrirBD();
+        await new Promise((res, rej) => {
+          const t = db.transaction(tabla, "readwrite");
+          const store = t.objectStore(tabla);
+          tanda.forEach(f => {
+            if (f && f.id != null) store.put(f);
+          });
+          t.oncomplete = () => res(true);
+          t.onerror = () => rej(t.error);
+        });
+      } catch (e) {
+        return {
+          error: true,
+          hechos: i,
+          motivo: e && e.message
+        };
+      }
+      if (avisar) avisar(Math.min(i + lote, total), total);
+      // Cede el hilo para que la interfaz respire.
+      await new Promise(r => setTimeout(r, 0));
+    }
+    estadoBD.ultimaEscritura = new Date().toISOString();
+    return {
+      hechos: total
+    };
+  },
+  async vaciar(tabla) {
+    try {
+      const db = await abrirBD();
+      await new Promise((res, rej) => {
+        const t = db.transaction(tabla, "readwrite");
+        t.objectStore(tabla).clear();
+        t.oncomplete = () => res(true);
+        t.onerror = () => rej(t.error);
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  cerrar() {
+    if (_bd) {
+      try {
+        _bd.close();
+      } catch {}
+      _bd = null;
+    }
+  },
   async listar(tabla) {
     try {
       const db = await abrirBD();
@@ -4666,10 +4755,10 @@ async function medirEspacio() {
 
 // Tamaño real de los datos de la aplicación, no de todo el origen.
 async function medirTamanoBase() {
-  const datos = await exportarDatos();
-  const bytes = new Blob([JSON.stringify(datos)]).size;
+  const archivo = await exportarDatos();
+  const bytes = new Blob([JSON.stringify(archivo)]).size;
   estadoBD.bytes.base = bytes;
-  estadoBD.registros = contarDatos(datos);
+  estadoBD.registros = archivo.recordCounts;
   avisarBD();
   return bytes;
 }
@@ -4702,25 +4791,18 @@ function contarDatos(d) {
     historiales: pros.reduce((n, p) => n + (p.historial && p.historial.length || 0), 0)
   };
 }
-function cuerpoParaChecksum(d) {
-  return JSON.stringify({
-    prospectos: d.prospectos || [],
-    plantillas: d.plantillas || [],
-    zonas_barridas: d.zonas_barridas || []
-  });
-}
 async function verificarIntegridad() {
-  const datos = await exportarDatos();
-  const cuentas = contarDatos(datos);
-  const sinId = (datos.prospectos || []).filter(p => p.id == null).length;
-  const sinNombre = (datos.prospectos || []).filter(p => !p.empresa && !p.nombre).length;
-  const ids = (datos.prospectos || []).map(p => String(p.id));
+  const archivo = await exportarDatos();
+  const pros = archivo.data.prospectos || [];
+  const sinId = pros.filter(p => p.id == null).length;
+  const sinNombre = pros.filter(p => !p.empresa && !p.nombre).length;
+  const ids = pros.map(p => String(p.id));
   const idsRepetidos = ids.length - new Set(ids).size;
-  const dominios = (datos.prospectos || []).map(p => normalizarDominio(p.web)).filter(Boolean);
+  const dominios = pros.map(p => normalizarDominio(p.web)).filter(Boolean);
   const domRepetidos = dominios.length - new Set(dominios).size;
   return {
-    ...cuentas,
-    checksum: checksum(cuerpoParaChecksum(datos)),
+    ...archivo.recordCounts,
+    checksum: archivo.checksum,
     sinId,
     sinNombre,
     idsRepetidos,
@@ -4833,29 +4915,61 @@ const archivoBD = {
 
 // ── exportar ──────────────────────────────────────────────────
 async function exportarDatos() {
-  const datos = {
-    formato: FORMATO_ARCHIVO,
-    version: FORMATO_VERSION,
-    app: "ConstruIA",
-    exportado: new Date().toISOString(),
+  const data = {
     prospectos: await bd.listar("prospectos"),
     plantillas: await bd.listar("plantillas"),
     zonas_barridas: await bd.listar("zonas_barridas")
   };
-  datos.conteo = contarDatos(datos);
-  datos.checksum = checksum(cuerpoParaChecksum(datos));
-  return datos;
+  return {
+    format: FORMATO_ARCHIVO,
+    version: FORMATO_VERSION,
+    createdAt: new Date().toISOString(),
+    recordCounts: contarDatos(data),
+    checksum: checksum(JSON.stringify(data)),
+    data
+  };
+}
+
+// Acepta el formato nuevo y el anterior, para no perder archivos ya exportados.
+function normalizarArchivo(a) {
+  if (!a || typeof a !== "object") return null;
+  if (a.format === FORMATO_ARCHIVO && a.data) {
+    return {
+      formato: a.format,
+      version: a.version,
+      createdAt: a.createdAt,
+      checksum: a.checksum,
+      data: a.data,
+      recordCounts: a.recordCounts
+    };
+  }
+  if (a.formato === FORMATO_ANTERIOR) {
+    const data = {
+      prospectos: a.prospectos || [],
+      plantillas: a.plantillas || [],
+      zonas_barridas: a.zonas_barridas || []
+    };
+    return {
+      formato: FORMATO_ANTERIOR,
+      version: a.version,
+      createdAt: a.exportado,
+      checksum: a.checksum,
+      data,
+      recordCounts: contarDatos(data),
+      migrado: true
+    };
+  }
+  return null;
 }
 async function descargarBase() {
-  const datos = await exportarDatos();
-  const texto = JSON.stringify(datos, null, 2);
-  const blob = new Blob([texto], {
+  const archivo = await exportarDatos();
+  const blob = new Blob([JSON.stringify(archivo, null, 2)], {
     type: "application/json"
   });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `construia-base-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `construia-backup-${new Date().toISOString().slice(0, 10)}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -4866,58 +4980,56 @@ async function descargarBase() {
   } catch {}
   avisarBD();
   return {
-    ...datos.conteo,
+    ...archivo.recordCounts,
     bytes: blob.size,
-    checksum: datos.checksum
+    checksum: archivo.checksum
   };
 }
 
 // ── importar, con revisión previa ─────────────────────────────
-function revisarArchivo(datos) {
-  if (!datos || typeof datos !== "object") return {
+function revisarArchivo(crudo) {
+  const a = normalizarArchivo(crudo);
+  if (!a) return {
     valido: false,
-    motivo: "El archivo no es un JSON válido."
+    motivo: "No es una copia de ConstruIA."
   };
-  if (datos.formato !== FORMATO_ARCHIVO) return {
-    valido: false,
-    motivo: "No es una base de ConstruIA."
-  };
-  if (Number(datos.version) > FORMATO_VERSION) {
+  if (Number(a.version) > FORMATO_VERSION) {
     return {
       valido: false,
-      motivo: `El archivo es de una versión más nueva (v${datos.version}). Actualizá la aplicación.`
+      motivo: `El archivo es de una versión más nueva (v${a.version}). Actualizá la aplicación.`
     };
   }
-  const cuentas = contarDatos(datos);
-  const calculado = checksum(cuerpoParaChecksum(datos));
-  const coincide = !datos.checksum || datos.checksum === calculado;
+  const cuentas = contarDatos(a.data);
+  const calculado = checksum(JSON.stringify(a.data));
   return {
     valido: true,
-    version: datos.version,
-    exportado: datos.exportado,
+    version: a.version,
+    exportado: a.createdAt,
+    formatoViejo: !!a.migrado,
     ...cuentas,
     checksum: calculado,
-    checksumOriginal: datos.checksum || null,
-    integro: coincide
+    checksumOriginal: a.checksum || null,
+    integro: !a.checksum || a.checksum === calculado,
+    data: a.data
   };
 }
 
 // Compara el archivo con lo que ya está cargado.
-async function compararConActual(datos) {
+async function compararConActual(data) {
   const actuales = await bd.listar("prospectos");
   const porId = new Set(actuales.map(p => String(p.id)));
   const porDominio = new Set(actuales.map(p => normalizarDominio(p.web)).filter(Boolean));
   const porNombre = new Set(actuales.map(p => String(p.empresa || "").toLowerCase().trim()).filter(Boolean));
   let repetidos = 0,
     nuevos = 0;
-  (datos.prospectos || []).forEach(p => {
+  (data.prospectos || []).forEach(p => {
     const d = normalizarDominio(p.web);
     const n = String(p.empresa || "").toLowerCase().trim();
     if (porId.has(String(p.id)) || d && porDominio.has(d) || n && porNombre.has(n)) repetidos++;else nuevos++;
   });
   return {
     enBase: actuales.length,
-    enArchivo: (datos.prospectos || []).length,
+    enArchivo: (data.prospectos || []).length,
     repetidos,
     nuevos
   };
@@ -4927,14 +5039,13 @@ async function compararConActual(datos) {
 async function copiaPrevia() {
   try {
     const datos = await exportarDatos();
-    const clave = "bd_copia_previa";
-    localStorage.setItem(clave, JSON.stringify({
+    localStorage.setItem("bd_copia_previa", JSON.stringify({
       fecha: new Date().toISOString(),
       datos
     }));
     return {
       ok: true,
-      registros: datos.conteo.prospectos
+      registros: datos.recordCounts.prospectos
     };
   } catch (e) {
     // Si no entra en localStorage, se descarga para no quedarse sin respaldo.
@@ -4973,11 +5084,16 @@ async function restaurarCopiaPrevia() {
       datos,
       fecha
     } = JSON.parse(crudo);
-    await aplicarDatos(datos, "reemplazar");
+    const a = normalizarArchivo(datos);
+    if (!a) return {
+      ok: false,
+      motivo: "La copia previa está dañada."
+    };
+    await aplicarDatos(a.data, "reemplazar");
     return {
       ok: true,
       fecha,
-      registros: contarDatos(datos).prospectos
+      registros: contarDatos(a.data).prospectos
     };
   } catch {
     return {
@@ -4988,29 +5104,29 @@ async function restaurarCopiaPrevia() {
 }
 
 // modo: "reemplazar" borra lo actual · "fusionar" suma sin pisar
-async function aplicarDatos(datos, modo) {
+async function aplicarDatos(data, modo) {
   if (modo === "fusionar") {
     const actuales = await bd.listar("prospectos");
     const porId = new Set(actuales.map(p => String(p.id)));
     const porDominio = new Set(actuales.map(p => normalizarDominio(p.web)).filter(Boolean));
     const porNombre = new Set(actuales.map(p => String(p.empresa || "").toLowerCase().trim()).filter(Boolean));
-    const aSumar = (datos.prospectos || []).filter(p => {
+    const aSumar = (data.prospectos || []).filter(p => {
       const d = normalizarDominio(p.web);
       const n = String(p.empresa || "").toLowerCase().trim();
       return !(porId.has(String(p.id)) || d && porDominio.has(d) || n && porNombre.has(n));
     });
     await bd.agregar("prospectos", aSumar);
-    await bd.agregar("plantillas", datos.plantillas || []);
-    await bd.agregar("zonas_barridas", datos.zonas_barridas || []);
+    await bd.agregar("plantillas", data.plantillas || []);
+    await bd.agregar("zonas_barridas", data.zonas_barridas || []);
     return {
       sumados: aSumar.length
     };
   }
-  await bd.guardar("prospectos", datos.prospectos || []);
-  await bd.guardar("plantillas", datos.plantillas || []);
-  await bd.guardar("zonas_barridas", datos.zonas_barridas || []);
+  await bd.guardar("prospectos", data.prospectos || []);
+  await bd.guardar("plantillas", data.plantillas || []);
+  await bd.guardar("zonas_barridas", data.zonas_barridas || []);
   return {
-    sumados: (datos.prospectos || []).length
+    sumados: (data.prospectos || []).length
   };
 }
 
@@ -5113,54 +5229,255 @@ function generarEmpresas(n, desde) {
   }
   return lista;
 }
-async function pruebaVolumen(n, avisar) {
-  const paso = t => {
-    if (avisar) avisar(t);
+
+// Detector de bloqueo: mide si el hilo principal quedó trabado.
+function vigilanteDeBloqueo() {
+  let maxGap = 0,
+    anterior = performance.now(),
+    vivo = true;
+  const tick = () => {
+    if (!vivo) return;
+    const ahoraT = performance.now();
+    const gap = ahoraT - anterior;
+    if (gap > maxGap) maxGap = gap;
+    anterior = ahoraT;
+    setTimeout(tick, 50);
+  };
+  setTimeout(tick, 50);
+  return {
+    detener() {
+      vivo = false;
+      return Math.round(maxGap);
+    }
+  };
+}
+async function pruebaVolumen(n, avisar, cancelado) {
+  const paso = (t, pct) => {
+    if (avisar) avisar(t, pct);
   };
   const r = {
-    n
+    n,
+    errores: [],
+    inicio: new Date().toISOString()
   };
-  paso(`Generando ${n.toLocaleString("es-AR")} empresas…`);
-  let t0 = performance.now();
-  const datos = generarEmpresas(n, 0);
-  r.generar = Math.round(performance.now() - t0);
-  paso("Escribiendo en la base…");
-  t0 = performance.now();
-  await bd.guardar("prospectos", datos);
-  r.escribir = Math.round(performance.now() - t0);
-  paso("Leyendo todo…");
-  t0 = performance.now();
-  const leidos = await bd.listar("prospectos");
-  r.leer = Math.round(performance.now() - t0);
-  r.leidos = leidos.length;
-  paso("Buscando…");
-  t0 = performance.now();
-  const q = "prueba 9";
-  const encontrados = leidos.filter(p => [p.empresa, p.nombre, p.mail, p.web, p.zona, p.dolor, p.rol].some(v => String(v || "").toLowerCase().indexOf(q) >= 0));
-  r.buscar = Math.round(performance.now() - t0);
-  r.encontrados = encontrados.length;
-  paso("Exportando…");
-  t0 = performance.now();
-  const exp = await exportarDatos();
-  const texto = JSON.stringify(exp);
-  r.exportar = Math.round(performance.now() - t0);
-  r.bytes = new Blob([texto]).size;
-  paso("Midiendo espacio…");
-  const esp = await medirEspacio();
-  r.usados = esp.usados;
-  r.cuota = esp.cuota;
-  if (performance.memory) r.memoria = performance.memory.usedJSHeapSize;
-  paso("Listo");
+  const vig = vigilanteDeBloqueo();
+  const cancel = () => cancelado ? cancelado() : false;
+  let t0;
+  try {
+    // 1 · generación
+    paso("Generando registros…", 0);
+    t0 = performance.now();
+    const datos = generarEmpresas(n, 0);
+    r.generar = Math.round(performance.now() - t0);
+    if (cancel()) throw new Error("cancelado");
+
+    // 2 · inserción por lotes
+    paso("Insertando en la base…", 5);
+    await bd.vaciar("prospectos_prueba");
+    t0 = performance.now();
+    const ins = await bd.agregarPorLotes("prospectos_prueba", datos, 1000, (hechos, total) => paso(`Insertando ${hechos.toLocaleString("es-AR")} de ${total.toLocaleString("es-AR")}…`, 5 + hechos / total * 40), cancel);
+    r.insertar = Math.round(performance.now() - t0);
+    if (ins.cancelado) throw new Error("cancelado");
+    if (ins.error) r.errores.push("Inserción: " + (ins.motivo || "error"));
+
+    // 3 · apertura de la base
+    paso("Midiendo apertura…", 48);
+    bd.cerrar();
+    t0 = performance.now();
+    await abrirBD();
+    r.abrir = Math.round(performance.now() - t0);
+
+    // 4 · lectura completa y búsqueda por texto
+    paso("Leyendo…", 55);
+    t0 = performance.now();
+    const todos = await bd.listar("prospectos_prueba");
+    r.leer = Math.round(performance.now() - t0);
+    r.leidos = todos.length;
+    if (todos.length !== n) r.errores.push(`Se insertaron ${n} y se leyeron ${todos.length}`);
+    paso("Buscando por texto…", 62);
+    const q = "prueba 9";
+    t0 = performance.now();
+    const porTexto = todos.filter(p => [p.empresa, p.nombre, p.mail, p.web, p.zona, p.dolor, p.rol].some(v => String(v || "").toLowerCase().indexOf(q) >= 0));
+    r.buscarTexto = Math.round(performance.now() - t0);
+    r.resultadosTexto = porTexto.length;
+
+    // 5 · filtros combinados
+    paso("Filtros combinados…", 68);
+    t0 = performance.now();
+    const combinado = todos.filter(p => p.estado === "nuevo" && p.rol === "constructora" && String(p.zona || "").indexOf("Buenos Aires") >= 0 && Number(p.obras) > 5);
+    r.filtros = Math.round(performance.now() - t0);
+    r.resultadosFiltros = combinado.length;
+
+    // 6 · lectura de una ficha
+    paso("Leyendo una ficha…", 72);
+    const idMedio = datos[Math.floor(n / 2)].id;
+    t0 = performance.now();
+    const ficha = await bd.obtener("prospectos_prueba", idMedio);
+    r.ficha = Math.round(performance.now() - t0);
+    if (!ficha) r.errores.push("No se pudo leer una ficha por identificador");
+
+    // 7 · actualización
+    paso("Actualizando…", 76);
+    t0 = performance.now();
+    await bd.actualizar("prospectos_prueba", {
+      ...ficha,
+      estado: "contactado",
+      tocado: true
+    });
+    r.actualizar = Math.round(performance.now() - t0);
+
+    // 8 · exportación
+    paso("Exportando a JSON…", 80);
+    t0 = performance.now();
+    const paquete = {
+      format: FORMATO_ARCHIVO,
+      version: FORMATO_VERSION,
+      createdAt: new Date().toISOString(),
+      recordCounts: {
+        prospectos: todos.length,
+        plantillas: 0,
+        zonas_barridas: 0,
+        historiales: todos.reduce((a, p) => a + (p.historial && p.historial.length || 0), 0)
+      },
+      checksum: "",
+      data: {
+        prospectos: todos,
+        plantillas: [],
+        zonas_barridas: []
+      }
+    };
+    const texto = JSON.stringify(paquete);
+    r.exportar = Math.round(performance.now() - t0);
+    r.bytesArchivo = new Blob([texto]).size;
+
+    // 9 · importación
+    paso("Importando desde JSON…", 88);
+    t0 = performance.now();
+    const releido = JSON.parse(texto);
+    await bd.vaciar("prospectos_prueba");
+    const imp = await bd.agregarPorLotes("prospectos_prueba", releido.data.prospectos, 1000, null, cancel);
+    r.importar = Math.round(performance.now() - t0);
+    if (imp.error) r.errores.push("Importación: " + (imp.motivo || "error"));
+
+    // 10 y 11 · tamaños
+    paso("Midiendo tamaños…", 94);
+    r.bytesBase = r.bytesArchivo;
+
+    // 12 · uso y cuota
+    const esp = await medirEspacio();
+    r.usados = esp.usados;
+    r.cuota = esp.cuota;
+    r.porcentaje = esp.porcentaje;
+    if (performance.memory) r.memoria = performance.memory.usedJSHeapSize;
+    paso("Listo", 100);
+  } catch (e) {
+    if (String(e.message) === "cancelado") r.cancelado = true;else r.errores.push(String(e && e.message ? e.message : e));
+  }
+
+  // 14 · bloqueo de la interfaz
+  r.bloqueoMs = vig.detener();
+  r.bloqueo = r.bloqueoMs > 1000 ? "sí, notorio" : r.bloqueoMs > 300 ? "leve" : "no";
+  r.fin = new Date().toISOString();
+  r.duracion = Math.round((new Date(r.fin) - new Date(r.inicio)) / 100) / 10;
   return r;
 }
-async function limpiarDatosPrueba() {
-  const todos = await bd.listar("prospectos");
-  const reales = todos.filter(p => !p.esPrueba);
-  await bd.guardar("prospectos", reales);
+
+// Informe descargable
+function informePrueba(resultados) {
+  const nav = navigator.userAgent;
+  const navegador = /Edg\//.test(nav) ? "Edge" : /Chrome\//.test(nav) ? "Chrome" : /Safari\//.test(nav) ? "Safari" : /Firefox\//.test(nav) ? "Firefox" : "Otro";
+  const so = /Windows/.test(nav) ? "Windows" : /Mac OS X/.test(nav) ? "macOS" : /iPhone|iPad/.test(nav) ? "iOS" : /Android/.test(nav) ? "Android" : /Linux/.test(nav) ? "Linux" : "Otro";
+  const L = [];
+  L.push("INFORME DE PRUEBA DE VOLUMEN · ConstruIA");
+  L.push("=".repeat(60));
+  L.push("");
+  L.push("DISPOSITIVO Y NAVEGADOR");
+  L.push(`  Navegador: ${navegador}`);
+  L.push(`  Sistema: ${so}`);
+  L.push(`  Núcleos de CPU: ${navigator.hardwareConcurrency || "no informado"}`);
+  L.push(`  Memoria del equipo: ${navigator.deviceMemory ? navigator.deviceMemory + " GB" : "no informada"}`);
+  L.push(`  Pantalla: ${window.screen.width}×${window.screen.height}`);
+  L.push(`  Agente: ${nav}`);
+  L.push(`  Fecha: ${new Date().toLocaleString("es-AR")}`);
+  L.push("");
+  resultados.slice().reverse().forEach(r => {
+    L.push("-".repeat(60));
+    L.push(`PRUEBA CON ${r.n.toLocaleString("es-AR")} REGISTROS${r.cancelado ? "  (CANCELADA)" : ""}`);
+    L.push("-".repeat(60));
+    const fila = (k, v) => L.push("  " + k.padEnd(34) + v);
+    fila("1. Generación", (r.generar ?? "—") + " ms");
+    fila("2. Inserción en IndexedDB", (r.insertar ?? "—") + " ms");
+    fila("3. Apertura de la base", (r.abrir ?? "—") + " ms");
+    fila("4. Búsqueda por texto", (r.buscarTexto ?? "—") + " ms  → " + (r.resultadosTexto ?? "—") + " resultados");
+    fila("5. Filtros combinados", (r.filtros ?? "—") + " ms  → " + (r.resultadosFiltros ?? "—") + " resultados");
+    fila("6. Lectura de una ficha", (r.ficha ?? "—") + " ms");
+    fila("7. Actualización", (r.actualizar ?? "—") + " ms");
+    fila("8. Exportación a JSON", (r.exportar ?? "—") + " ms");
+    fila("9. Importación desde JSON", (r.importar ?? "—") + " ms");
+    fila("10. Tamaño de la base", formatoBytes(r.bytesBase));
+    fila("11. Tamaño del archivo", formatoBytes(r.bytesArchivo));
+    fila("12. Espacio usado / cuota", formatoBytes(r.usados) + " / " + formatoBytes(r.cuota) + (r.porcentaje != null ? "  (" + r.porcentaje + "%)" : ""));
+    fila("13. Errores", r.errores.length ? r.errores.length : "ninguno");
+    fila("14. Interfaz bloqueada", r.bloqueo + "  (máx " + r.bloqueoMs + " ms sin responder)");
+    fila("Memoria de JavaScript", r.memoria ? formatoBytes(r.memoria) : "no disponible");
+    fila("Duración total", r.duracion + " s");
+    if (r.errores.length) {
+      L.push("");
+      L.push("  DETALLE DE ERRORES:");
+      r.errores.forEach(e => L.push("    · " + e));
+    }
+    L.push("");
+
+    // advertencias y conclusión
+    const adv = [];
+    if (r.buscarTexto > 500) adv.push("La búsqueda por texto supera 500 ms: conviene indexar en vez de recorrer en memoria.");
+    if (r.bloqueoMs > 1000) adv.push("La interfaz quedó trabada más de 1 segundo. Achicar el tamaño de lote.");
+    if (r.insertar > 30000) adv.push("La inserción tardó más de 30 segundos.");
+    if (r.porcentaje != null && r.porcentaje > 70) adv.push("El almacenamiento supera el 70% de la cuota.");
+    if (r.errores.length) adv.push("Hubo errores durante la prueba: revisar el detalle.");
+    if (adv.length) {
+      L.push("  ADVERTENCIAS:");
+      adv.forEach(a => L.push("    ⚠ " + a));
+      L.push("");
+    }
+    const conc = r.errores.length ? "CON PROBLEMAS · revisar los errores antes de usar este volumen." : r.buscarTexto > 800 || r.bloqueoMs > 2000 ? "AL LÍMITE · funciona pero la experiencia se degrada. Conviene pasar a base en servidor." : r.buscarTexto > 300 || r.bloqueoMs > 700 ? "ACEPTABLE · usable, con margen ajustado." : "BUENO · el volumen se maneja con holgura.";
+    L.push("  CONCLUSIÓN: " + conc);
+    L.push("");
+  });
+  L.push("=".repeat(60));
+  L.push("Nota: la base operativa es IndexedDB. El archivo JSON es una copia");
+  L.push("portable para respaldo e intercambio, no una base SQLite ni un motor");
+  L.push("de consultas. Para consultar y modificar los datos se usa la aplicación.");
+  const texto = L.join("\n");
+  const blob = new Blob([texto], {
+    type: "text/plain;charset=utf-8"
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `construia-prueba-${navegador.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
   return {
-    quedaron: reales.length,
-    borrados: todos.length - reales.length
+    navegador,
+    so
   };
+}
+
+// Los registros de prueba NUNCA tocan la tabla real: viven en prospectos_prueba.
+async function limpiarDatosPrueba() {
+  const antes = (await bd.listar("prospectos_prueba")).length;
+  await bd.vaciar("prospectos_prueba");
+  const reales = (await bd.listar("prospectos")).length;
+  return {
+    borrados: antes,
+    quedaron: reales
+  };
+}
+async function contarDatosPrueba() {
+  return (await bd.listar("prospectos_prueba")).length;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -6430,8 +6747,11 @@ function AreaComercial() {
   const [prueba, setPrueba] = useState({
     corriendo: false,
     paso: "",
-    resultados: []
+    pct: 0,
+    resultados: [],
+    enPrueba: 0
   });
+  const cancelarPruebaRef = useRef(false);
   const [hayRespaldo, setHayRespaldo] = useState(false);
   const [busqTexto, setBusqTexto] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
@@ -7024,40 +7344,66 @@ ${hist}`;
   // ── prueba de volumen ──
   async function correrPrueba(n) {
     if (prueba.corriendo) return;
-    if (!window.confirm(`Se van a generar ${n.toLocaleString("es-AR")} empresas de prueba y se va a reemplazar el contenido actual de la base.\n\n¿Descargaste una copia? Al terminar podés limpiarlas con un botón.`)) return;
-    setPrueba({
+    if (n >= 30000) {
+      if (!window.confirm(`Prueba con ${n.toLocaleString("es-AR")} registros.\n\n` + `Puede tardar varios minutos y usar bastante memoria. Los datos de prueba van a una tabla separada: ` + `tus empresas reales NO se tocan.\n\n¿Empezamos?`)) return;
+    }
+    cancelarPruebaRef.current = false;
+    setPrueba(v => ({
+      ...v,
       corriendo: true,
       paso: "Preparando…",
-      resultados: prueba.resultados
-    });
+      pct: 0
+    }));
     try {
-      const r = await pruebaVolumen(n, p => setPrueba(v => ({
+      const r = await pruebaVolumen(n, (p, pct) => setPrueba(v => ({
         ...v,
-        paso: p
-      })));
+        paso: p,
+        pct: pct || v.pct
+      })), () => cancelarPruebaRef.current);
+      const enPrueba = await contarDatosPrueba();
       setPrueba(v => ({
         corriendo: false,
         paso: "",
-        resultados: [r, ...v.resultados]
+        pct: 0,
+        resultados: [r, ...v.resultados],
+        enPrueba
       }));
-      const [pros] = await Promise.all([bd.listar("prospectos")]);
-      setProspectos(pros);
-      await medirTamanoBase();
+      await medirEspacio();
+      if (r.cancelado) setAviso("Prueba cancelada. Los datos de prueba quedaron en su tabla.");
     } catch (e) {
       setPrueba(v => ({
         ...v,
         corriendo: false,
-        paso: ""
+        paso: "",
+        pct: 0
       }));
       setAviso("La prueba falló: " + (e && e.message ? e.message : "error"));
     }
   }
+  function cancelarPrueba() {
+    cancelarPruebaRef.current = true;
+    setPrueba(v => ({
+      ...v,
+      paso: "Cancelando…"
+    }));
+  }
   async function limpiarPrueba() {
     const r = await limpiarDatosPrueba();
-    const pros = await bd.listar("prospectos");
-    setProspectos(pros);
+    setPrueba(v => ({
+      ...v,
+      enPrueba: 0
+    }));
+    await medirEspacio();
     await medirTamanoBase();
-    setAviso(`${r.borrados} registros de prueba borrados · quedaron ${r.quedaron}`);
+    setAviso(`${r.borrados.toLocaleString("es-AR")} registros de prueba borrados · tus ${r.quedaron} empresas reales intactas`);
+  }
+  function descargarInforme() {
+    if (!prueba.resultados.length) {
+      setAviso("Todavía no corriste ninguna prueba.");
+      return;
+    }
+    const r = informePrueba(prueba.resultados);
+    setAviso(`Informe descargado · ${r.navegador} en ${r.so}`);
   }
 
   // ── búsqueda dentro de la base ──
@@ -8638,16 +8984,63 @@ ${hist}`;
     }
   }, "↺ Restaurar copia previa")), /*#__PURE__*/React.createElement("div", {
     style: {
-      marginTop: 12,
+      marginTop: 14,
+      background: "#F7F8FA",
+      border: `1px solid ${T.border}`,
+      borderRadius: 10,
+      padding: "14px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".12em",
+      textTransform: "uppercase",
+      color: T.muted,
+      marginBottom: 9
+    }
+  }, "Cómo funciona el almacenamiento"), [["La base operativa es IndexedDB", "Vive en este dispositivo. Es donde la aplicación lee y escribe."], ["El archivo JSON es una copia portable", "Sirve para respaldo, para pasar los datos a otra máquina y para intercambio."], ["El JSON no es una base SQLite", "No es un motor de consultas: es un archivo de texto con los datos adentro."], ["Para consultar y modificar se usa la aplicación", "El archivo se puede leer desde afuera, pero los cambios se hacen acá."]].map(([t, d2], i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      gap: 9,
+      marginBottom: i < 3 ? 9 : 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: BRASS,
+      fontSize: 11,
+      flexShrink: 0,
+      marginTop: 1
+    }
+  }, "▸"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      fontWeight: 700,
+      color: NAVY
+    }
+  }, t), /*#__PURE__*/React.createElement("div", {
+    style: {
       fontSize: 11.5,
       color: T.muted,
-      lineHeight: 1.55
+      marginTop: 1,
+      lineHeight: 1.45
     }
-  }, /*#__PURE__*/React.createElement("b", {
+  }, d2)))), /*#__PURE__*/React.createElement("div", {
     style: {
-      color: T.sub
+      fontSize: 11,
+      color: T.muted,
+      marginTop: 11,
+      paddingTop: 10,
+      borderTop: `1px solid ${T.border}`,
+      lineHeight: 1.5
     }
-  }, "Formato del archivo:"), " JSON (.json), no SQLite. Es texto plano, se abre con cualquier editor y se puede leer desde Excel o Python sin la aplicación. Contiene empresas, plantillas, zonas barridas, conteos y una verificación de integridad.", !archivoBD.soportado() && /*#__PURE__*/React.createElement(React.Fragment, null, " En Safari e iPad no se puede vincular un archivo: usá Descargar e Importar."))), /*#__PURE__*/React.createElement("div", {
+  }, "Formato: ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: T.sub,
+      fontFamily: "monospace"
+    }
+  }, "construia-commercial-backup"), " v1 · extensión .json", !archivoBD.soportado() && /*#__PURE__*/React.createElement(React.Fragment, null, " · En Safari e iPad no se puede vincular un archivo: usá Descargar e Importar.")))), /*#__PURE__*/React.createElement("div", {
     style: {
       background: "#fff",
       borderRadius: 13,
@@ -8760,7 +9153,8 @@ ${hist}`;
       display: "flex",
       alignItems: "center",
       gap: 9,
-      marginBottom: 6
+      marginBottom: 6,
+      flexWrap: "wrap"
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -8771,23 +9165,33 @@ ${hist}`;
   }), /*#__PURE__*/React.createElement("b", {
     style: {
       fontSize: 14,
-      color: NAVY
+      color: NAVY,
+      flex: 1
     }
-  }, "Prueba de volumen")), /*#__PURE__*/React.createElement("div", {
+  }, "Prueba de volumen"), prueba.enPrueba > 0 && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10.5,
+      fontWeight: 700,
+      background: "#FBF2E3",
+      color: "#9A6B1E",
+      borderRadius: 20,
+      padding: "4px 10px"
+    }
+  }, prueba.enPrueba.toLocaleString("es-AR"), " registros de prueba")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12.5,
       color: T.sub,
       lineHeight: 1.55,
       marginBottom: 13
     }
-  }, "Genera empresas de prueba y mide en ", /*#__PURE__*/React.createElement("b", null, "este"), " navegador y esta máquina. Reemplaza el contenido actual de la base, así que descargá una copia antes. Al terminar podés borrar los datos de prueba con un botón."), /*#__PURE__*/React.createElement("div", {
+  }, "Mide el rendimiento real de ", /*#__PURE__*/React.createElement("b", null, "este"), " navegador y esta máquina. Los registros de prueba van a una tabla aparte: ", /*#__PURE__*/React.createElement("b", null, "tus empresas reales no se tocan"), " y las métricas comerciales no se mezclan."), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 7,
       flexWrap: "wrap",
       marginBottom: 12
     }
-  }, [10000, 30000, 100000].map(n => /*#__PURE__*/React.createElement("button", {
+  }, [1000, 10000, 30000, 100000].map(n => /*#__PURE__*/React.createElement("button", {
     key: n,
     onClick: () => correrPrueba(n),
     disabled: prueba.corriendo,
@@ -8803,7 +9207,7 @@ ${hist}`;
       minHeight: 42,
       fontFamily: "inherit"
     }
-  }, n.toLocaleString("es-AR"), " empresas")), /*#__PURE__*/React.createElement("button", {
+  }, n.toLocaleString("es-AR"))), /*#__PURE__*/React.createElement("button", {
     onClick: limpiarPrueba,
     disabled: prueba.corriendo,
     style: {
@@ -8811,17 +9215,74 @@ ${hist}`;
       minHeight: 42,
       padding: "11px 15px"
     }
-  }, "Borrar datos de prueba")), prueba.corriendo && /*#__PURE__*/React.createElement("div", {
+  }, "Borrar datos de prueba"), prueba.resultados.length > 0 && /*#__PURE__*/React.createElement("button", {
+    onClick: descargarInforme,
+    disabled: prueba.corriendo,
+    style: {
+      background: BRASS,
+      color: "#fff",
+      border: "none",
+      borderRadius: 9,
+      padding: "11px 15px",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 42,
+      fontFamily: "inherit"
+    }
+  }, "↓ Descargar informe")), prueba.corriendo && /*#__PURE__*/React.createElement("div", {
     style: {
       background: "#FBF6EE",
-      border: `1px solid #EBDCC0`,
-      borderRadius: 9,
-      padding: "12px 14px",
-      fontSize: 12.5,
-      color: "#9A6B1E",
+      border: "1px solid #EBDCC0",
+      borderRadius: 10,
+      padding: "14px 16px",
       marginBottom: 12
     }
-  }, "⏳ ", prueba.paso), prueba.resultados.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      marginBottom: 9,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      fontSize: 12.5,
+      color: "#9A6B1E",
+      fontWeight: 700,
+      minWidth: 160
+    }
+  }, "⏳ ", prueba.paso), /*#__PURE__*/React.createElement("button", {
+    onClick: cancelarPrueba,
+    style: {
+      background: "#fff",
+      border: "1px solid #EBDCC0",
+      color: "#B3261E",
+      borderRadius: 8,
+      padding: "8px 14px",
+      fontSize: 11.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 34,
+      fontFamily: "inherit"
+    }
+  }, "Cancelar")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 8,
+      background: "#fff",
+      borderRadius: 8,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      width: `${prueba.pct}%`,
+      background: `linear-gradient(90deg,${BRASS},#D9B57C)`,
+      transition: "width .3s"
+    }
+  }))), prueba.resultados.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "sc",
     style: {
       overflowX: "auto"
@@ -8830,75 +9291,118 @@ ${hist}`;
     style: {
       width: "100%",
       borderCollapse: "collapse",
-      fontSize: 11.5,
-      minWidth: 620
+      fontSize: 11,
+      minWidth: 880
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
     style: {
       borderBottom: `2px solid ${T.border}`
     }
-  }, ["Empresas", "Escribir", "Leer", "Buscar", "Exportar", "Archivo", "Memoria"].map(h => /*#__PURE__*/React.createElement("th", {
+  }, ["Registros", "Generar", "Insertar", "Abrir", "Buscar", "Filtros", "Ficha", "Actualizar", "Exportar", "Importar", "Archivo", "Errores", "Bloqueo"].map(h => /*#__PURE__*/React.createElement("th", {
     key: h,
     style: {
       textAlign: "left",
-      padding: "8px 10px 8px 0",
-      fontSize: 9.5,
+      padding: "8px 9px 8px 0",
+      fontSize: 9,
       fontWeight: 700,
-      letterSpacing: ".08em",
+      letterSpacing: ".06em",
       textTransform: "uppercase",
-      color: T.muted
+      color: T.muted,
+      whiteSpace: "nowrap"
     }
-  }, h)))), /*#__PURE__*/React.createElement("tbody", null, prueba.resultados.map((r, i) => /*#__PURE__*/React.createElement("tr", {
-    key: i,
-    style: {
-      borderBottom: `1px solid ${T.border}`
-    }
-  }, /*#__PURE__*/React.createElement("td", {
-    style: {
-      padding: "9px 10px 9px 0",
-      fontWeight: 700,
-      color: NAVY
-    }
-  }, r.n.toLocaleString("es-AR")), /*#__PURE__*/React.createElement("td", {
-    style: {
-      padding: "9px 10px 9px 0",
-      fontFamily: "monospace"
-    }
-  }, r.escribir, " ms"), /*#__PURE__*/React.createElement("td", {
-    style: {
-      padding: "9px 10px 9px 0",
-      fontFamily: "monospace"
-    }
-  }, r.leer, " ms"), /*#__PURE__*/React.createElement("td", {
-    style: {
-      padding: "9px 10px 9px 0",
-      fontFamily: "monospace",
-      color: r.buscar > 500 ? "#B5651D" : T.ok
-    }
-  }, r.buscar, " ms"), /*#__PURE__*/React.createElement("td", {
-    style: {
-      padding: "9px 10px 9px 0",
-      fontFamily: "monospace"
-    }
-  }, r.exportar, " ms"), /*#__PURE__*/React.createElement("td", {
-    style: {
-      padding: "9px 10px 9px 0",
-      fontFamily: "monospace"
-    }
-  }, formatoBytes(r.bytes)), /*#__PURE__*/React.createElement("td", {
-    style: {
-      padding: "9px 10px 9px 0",
-      fontFamily: "monospace",
-      color: T.muted
-    }
-  }, r.memoria ? formatoBytes(r.memoria) : "—"))))), /*#__PURE__*/React.createElement("div", {
+  }, h)))), /*#__PURE__*/React.createElement("tbody", null, prueba.resultados.map((r, i) => {
+    const ms = v => v == null ? "—" : v + " ms";
+    const col = (v, lim) => v == null ? T.muted : v > lim ? "#B5651D" : T.ok;
+    return /*#__PURE__*/React.createElement("tr", {
+      key: i,
+      style: {
+        borderBottom: `1px solid ${T.border}`
+      }
+    }, /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontWeight: 700,
+        color: NAVY,
+        whiteSpace: "nowrap"
+      }
+    }, r.n.toLocaleString("es-AR"), r.cancelado && /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: "#B5651D",
+        fontWeight: 600
+      }
+    }, " (cancelada)")), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace"
+      }
+    }, ms(r.generar)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace"
+      }
+    }, ms(r.insertar)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace"
+      }
+    }, ms(r.abrir)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace",
+        color: col(r.buscarTexto, 500)
+      }
+    }, ms(r.buscarTexto)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace",
+        color: col(r.filtros, 500)
+      }
+    }, ms(r.filtros)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace"
+      }
+    }, ms(r.ficha)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace"
+      }
+    }, ms(r.actualizar)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace"
+      }
+    }, ms(r.exportar)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace"
+      }
+    }, ms(r.importar)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace"
+      }
+    }, formatoBytes(r.bytesArchivo)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace",
+        color: r.errores.length ? "#B3261E" : T.ok
+      }
+    }, r.errores.length || "0"), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: "9px 9px 9px 0",
+        fontFamily: "monospace",
+        color: r.bloqueoMs > 1000 ? "#B3261E" : r.bloqueoMs > 300 ? "#B5651D" : T.ok
+      }
+    }, r.bloqueo));
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
       color: T.muted,
       marginTop: 10,
-      lineHeight: 1.5
+      lineHeight: 1.55
     }
-  }, "La columna Memoria solo aparece en Chrome y Edge. Los tiempos dependen de tu máquina: correla en cada navegador que quieras evaluar."))), /*#__PURE__*/React.createElement("div", {
+  }, "Búsqueda y filtros en ámbar si superan 500 ms. Bloqueo mide cuánto tiempo seguido quedó trabada la pantalla. El informe descargable incluye dispositivo, navegador, advertencias y conclusión."))), /*#__PURE__*/React.createElement("div", {
     style: {
       background: "#fff",
       borderRadius: 13,
