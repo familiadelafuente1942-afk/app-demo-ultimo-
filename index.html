@@ -417,7 +417,7 @@
       <a href="#planes">Planes</a>
     </nav>
     <div class="navcta">
-      <button class="btn btn-ghost" onclick="abrirVentas()">Motor de ventas</button><span class="idiomas"><button data-idioma="es" onclick="cambiarIdioma('es')">ES</button><button data-idioma="en" onclick="cambiarIdioma('en')">EN</button><button data-idioma="pt" onclick="cambiarIdioma('pt')">PT</button></span><a class="btn btn-ghost" href="#planes">Ver planes</a>
+      <button class="btn btn-ghost btn-motor" onclick="abrirVentas()">Motor de ventas</button><span class="idiomas"><button data-idioma="es" onclick="cambiarIdioma('es')">ES</button><button data-idioma="en" onclick="cambiarIdioma('en')">EN</button><button data-idioma="pt" onclick="cambiarIdioma('pt')">PT</button></span><a class="btn btn-ghost" href="#planes">Ver planes</a>
       <button class="btn btn-brass" onclick="abrirDemo()">Probar demo</button>
     </div>
   </div>
@@ -678,7 +678,7 @@
         </div>
         <div class="demo-links">
           <button class="btn btn-brass" onclick="abrirDemo()">Entrar al panel en vivo →</button>
-          <button class="btn btn-ghost" onclick="abrirVentas()">Abrir el motor de ventas →</button>
+          <button class="btn btn-ghost btn-motor" onclick="abrirVentas()">Abrir el motor de ventas →</button>
         </div>
       </div>
     </div>
@@ -4467,6 +4467,1022 @@ function BotonModal({
 }
 
 // ════════════════════════════════════════════════════════════
+// CAPA DE REPOSITORIO
+// Aísla el acceso a datos del resto de la aplicación.
+// Hoy usa localStorage. Cuando exista backend, solo cambia este archivo:
+// ningún componente sabe de dónde vienen los datos.
+// ════════════════════════════════════════════════════════════
+
+function leerJSON(clave, porDefecto) {
+  try {
+    const crudo = localStorage.getItem(clave);
+    if (!crudo) return porDefecto;
+    const val = JSON.parse(crudo);
+    return val == null ? porDefecto : val;
+  } catch {
+    return porDefecto;
+  }
+}
+function escribirJSON(clave, valor) {
+  try {
+    localStorage.setItem(clave, JSON.stringify(valor));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ── prospectos ────────────────────────────────────────────────
+// Clave y formato SIN CAMBIOS respecto de la versión anterior.
+const prospectosRepository = {
+  clave: "prospectos",
+  listar() {
+    const lista = leerJSON(this.clave, []);
+    return Array.isArray(lista) ? lista : [];
+  },
+  guardarTodos(lista) {
+    return escribirJSON(this.clave, Array.isArray(lista) ? lista : []);
+  },
+  obtener(id) {
+    return this.listar().find(p => p.id === id) || null;
+  },
+  contarPorEstado(estado) {
+    return this.listar().filter(p => p.estado === estado).length;
+  }
+};
+
+// ── plantillas ────────────────────────────────────────────────
+const plantillasRepository = {
+  clave: "plantillas",
+  listar() {
+    const lista = leerJSON(this.clave, []);
+    return Array.isArray(lista) ? lista : [];
+  },
+  guardarTodas(lista) {
+    return escribirJSON(this.clave, Array.isArray(lista) ? lista : []);
+  }
+};
+
+// ── clave de IA ───────────────────────────────────────────────
+// Compartida con el panel de demo. Misma clave de siempre.
+const claveIaRepository = {
+  clave: "demo_api_key",
+  obtener() {
+    try {
+      return localStorage.getItem(this.clave) || "";
+    } catch {
+      return "";
+    }
+  },
+  estaLista() {
+    return this.obtener().trim().indexOf("sk-ant-") === 0;
+  }
+};
+
+// ════════════════════════════════════════════════════════════
+// FICHA DE AGENTE — componente reutilizable
+// No calcula ni inventa nada: todo llega por propiedades.
+// Una métrica sin valor se muestra como NO DISPONIBLE, nunca como cero.
+// ════════════════════════════════════════════════════════════
+
+const ESTADOS_AGENTE = {
+  activo: {
+    txt: "Activo",
+    bg: "#EAF3EC",
+    fg: "#2F7A4F",
+    punto: "#3E9B62"
+  },
+  trabajando: {
+    txt: "Trabajando",
+    bg: "#EAF0FA",
+    fg: "#3B6CA8",
+    punto: "#3B6CA8"
+  },
+  pausado: {
+    txt: "Pausado",
+    bg: "#F3F5F8",
+    fg: "#6C7787",
+    punto: "#9AA3AE"
+  },
+  esperando: {
+    txt: "Esperando aprobación",
+    bg: "#FBF2E3",
+    fg: "#9A6B1E",
+    punto: "#E09A3E"
+  },
+  alerta: {
+    txt: "Con alerta",
+    bg: "#FDECEA",
+    fg: "#B3261E",
+    punto: "#E23D2E"
+  },
+  pendiente: {
+    txt: "Pendiente de activación",
+    bg: "#F3F5F8",
+    fg: "#6C7787",
+    punto: "#C3CAD3"
+  }
+};
+
+// Marca visual de que un dato no existe todavía.
+const NO_DISPONIBLE = "—";
+function EstadoAgente({
+  estado
+}) {
+  const e = ESTADOS_AGENTE[estado] || ESTADOS_AGENTE.pendiente;
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6,
+      background: e.bg,
+      color: e.fg,
+      borderRadius: 20,
+      padding: "5px 12px",
+      fontSize: 11,
+      fontWeight: 700,
+      whiteSpace: "nowrap"
+    }
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: 7,
+      height: 7,
+      borderRadius: "50%",
+      background: e.punto,
+      fontStyle: "normal",
+      flexShrink: 0
+    }
+  }), e.txt);
+}
+
+// Una métrica. Si valor es null o undefined, se muestra como no disponible.
+function Metrica({
+  etiqueta,
+  valor,
+  color,
+  nota
+}) {
+  const hay = valor !== null && valor !== undefined && valor !== "";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 11,
+      padding: "15px 17px",
+      border: hay ? "1px solid transparent" : "1px dashed #D7DDE5"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".11em",
+      textTransform: "uppercase",
+      color: "#8B95A5"
+    }
+  }, etiqueta), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: hay ? 28 : 20,
+      fontWeight: 800,
+      marginTop: 5,
+      fontFamily: "monospace",
+      color: hay ? color || "#131C2B" : "#C3CAD3"
+    }
+  }, hay ? valor : NO_DISPONIBLE), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      color: "#8B95A5",
+      marginTop: 3,
+      lineHeight: 1.4
+    }
+  }, hay ? nota || "" : "Métrica no disponible"));
+}
+function BloqueFicha({
+  titulo,
+  children,
+  vacio
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      padding: "18px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 13
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      height: 2,
+      background: BRASS,
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 14,
+      color: NAVY
+    }
+  }, titulo)), children || /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: "#8B95A5",
+      lineHeight: 1.6
+    }
+  }, vacio));
+}
+function ListaFicha({
+  items,
+  vacio,
+  icono
+}) {
+  if (!items || items.length === 0) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: "#8B95A5",
+        lineHeight: 1.6
+      }
+    }, vacio);
+  }
+  return /*#__PURE__*/React.createElement("div", null, items.map((it, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      gap: 9,
+      alignItems: "flex-start",
+      padding: "9px 0",
+      borderBottom: i < items.length - 1 ? "1px solid #E6E9EE" : "none"
+    }
+  }, icono && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: BRASS,
+      fontSize: 11,
+      flexShrink: 0,
+      marginTop: 2
+    }
+  }, icono), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: "#131C2B",
+      lineHeight: 1.5,
+      fontWeight: it.destacado ? 700 : 500
+    }
+  }, it.texto), it.detalle && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: "#8B95A5",
+      marginTop: 2,
+      lineHeight: 1.45
+    }
+  }, it.detalle)), it.marca && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: ".05em",
+      textTransform: "uppercase",
+      color: "#9A6B1E",
+      background: "#FBF2E3",
+      borderRadius: 20,
+      padding: "3px 8px",
+      flexShrink: 0,
+      whiteSpace: "nowrap"
+    }
+  }, it.marca))));
+}
+
+/**
+ * FichaAgente — recibe TODO por propiedades.
+ *
+ * nombre, departamento, estado, objetivo, autonomia (texto), autonomiaNivel
+ * capacidades: [{titulo, detalle}]
+ * metricas: [{etiqueta, valor, color, nota}]   valor null = no disponible
+ * tareas, proximas, aprobaciones, historial, alertas, errores: [{texto, detalle, marca}]
+ * costo: {texto, nota} o null
+ * activable: boolean — si false, el botón queda deshabilitado
+ * contenido: nodo React que reemplaza el cuerpo (lo usa el área Comercial)
+ */
+function FichaAgente(props) {
+  const {
+    nombre,
+    departamento,
+    estado,
+    objetivo,
+    autonomia,
+    autonomiaNivel,
+    capacidades,
+    metricas,
+    tareas,
+    proximas,
+    aprobaciones,
+    historial,
+    alertas,
+    errores,
+    costo,
+    activable,
+    contenido
+  } = props;
+  const pendiente = estado === "pendiente";
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      padding: "20px 22px",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 12,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 220
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 20,
+      height: 2,
+      background: BRASS,
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".14em",
+      textTransform: "uppercase",
+      color: BRASS
+    }
+  }, departamento)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 23,
+      fontWeight: 800,
+      color: NAVY,
+      lineHeight: 1.15
+    }
+  }, nombre), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#4A5565",
+      marginTop: 7,
+      lineHeight: 1.55,
+      maxWidth: 640
+    }
+  }, objetivo)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 9,
+      alignItems: "flex-end"
+    }
+  }, /*#__PURE__*/React.createElement(EstadoAgente, {
+    estado: estado
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: "#8B95A5",
+      textAlign: "right"
+    }
+  }, "Autonomía: ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "#4A5565"
+    }
+  }, autonomiaNivel), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 1
+    }
+  }, autonomia)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 16,
+      display: "flex",
+      gap: 9,
+      alignItems: "center",
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    disabled: !activable,
+    title: activable ? "" : "Requiere el motor de agentes",
+    style: {
+      background: activable ? NAVY : "#F3F5F8",
+      color: activable ? "#fff" : "#9AA3AE",
+      border: activable ? "none" : "1px solid #E6E9EE",
+      borderRadius: 9,
+      padding: "11px 18px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: activable ? "pointer" : "not-allowed",
+      minHeight: 42,
+      fontFamily: "inherit"
+    }
+  }, activable ? "Configurar agente" : "Próxima etapa: conexión al motor de agentes"), pendiente && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      color: "#8B95A5",
+      lineHeight: 1.5,
+      maxWidth: 380
+    }
+  }, "Esta área todavía no está conectada al motor de agentes. La estructura está definida; faltan la base de datos y el servidor."))), capacidades && capacidades.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Capacidades del agente"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 9,
+      gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))"
+    }
+  }, capacidades.map((c, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      border: "1px solid #E6E9EE",
+      borderTop: `2px solid ${BRASS}`,
+      borderRadius: 10,
+      padding: "12px 13px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      fontWeight: 700,
+      color: NAVY
+    }
+  }, c.titulo), c.detalle && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: "#8B95A5",
+      marginTop: 3,
+      lineHeight: 1.45
+    }
+  }, c.detalle)))))), metricas && metricas.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 12,
+      marginBottom: 12,
+      gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))"
+    }
+  }, metricas.map((m, i) => /*#__PURE__*/React.createElement(Metrica, {
+    key: i,
+    ...m
+  }))), contenido, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 12,
+      gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))"
+    }
+  }, /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Tareas actuales"
+  }, /*#__PURE__*/React.createElement(ListaFicha, {
+    items: tareas,
+    icono: "▸",
+    vacio: pendiente ? "Sin tareas. El agente no está conectado al motor." : "No hay tareas en curso."
+  })), /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Próximas tareas"
+  }, /*#__PURE__*/React.createElement(ListaFicha, {
+    items: proximas,
+    icono: "○",
+    vacio: pendiente ? "Sin tareas programadas." : "No hay tareas programadas."
+  })), /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Acciones pendientes de aprobación"
+  }, /*#__PURE__*/React.createElement(ListaFicha, {
+    items: aprobaciones,
+    icono: "⚑",
+    vacio: pendiente ? "Ninguna. El agente todavía no puede proponer acciones." : "No hay acciones esperando aprobación."
+  })), /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Historial de actividad"
+  }, /*#__PURE__*/React.createElement(ListaFicha, {
+    items: historial,
+    icono: "·",
+    vacio: pendiente ? "Sin actividad registrada." : "Todavía no hay actividad registrada."
+  })), /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Alertas"
+  }, /*#__PURE__*/React.createElement(ListaFicha, {
+    items: alertas,
+    icono: "⚠",
+    vacio: "Sin alertas."
+  })), /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Errores"
+  }, /*#__PURE__*/React.createElement(ListaFicha, {
+    items: errores,
+    icono: "✕",
+    vacio: "Sin errores registrados."
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12
+    }
+  }, /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Costo estimado de IA"
+  }, costo ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 20,
+      fontWeight: 800,
+      color: NAVY,
+      fontFamily: "monospace"
+    }
+  }, costo.texto), costo.nota && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: "#8B95A5",
+      marginTop: 4,
+      lineHeight: 1.5
+    }
+  }, costo.nota)) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: "#8B95A5",
+      lineHeight: 1.6
+    }
+  }, "No hay consumo medido. El costo se registra cuando el agente empieza a ejecutar."))));
+}
+
+// ════════════════════════════════════════════════════════════
+// ÁREAS DEL CENTRO DE OPERACIONES IA
+// Las siete pendientes declaran su estructura, sin datos inventados.
+// El CEO calcula únicamente métricas reales del área Comercial.
+// ════════════════════════════════════════════════════════════
+
+// Base común de las áreas todavía no conectadas.
+function fichaPendiente(datos) {
+  return {
+    estado: "pendiente",
+    autonomiaNivel: "—",
+    autonomia: "sin definir",
+    metricas: (datos.metricas || []).map(e => ({
+      etiqueta: e,
+      valor: null
+    })),
+    tareas: [],
+    proximas: [],
+    aprobaciones: [],
+    historial: [],
+    alertas: [],
+    errores: [],
+    costo: null,
+    activable: false,
+    ...datos
+  };
+}
+function AreaMarketing() {
+  return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
+    nombre: "Director de Marketing IA",
+    departamento: "Marketing",
+    objetivo: "Generar demanda calificada: atraer constructoras, estudios y desarrolladoras hasta el punto en que el área Comercial pueda trabajarlas.",
+    capacidades: [{
+      titulo: "Generación de leads",
+      detalle: "Captación desde el sitio, formularios y campañas"
+    }, {
+      titulo: "Contenido",
+      detalle: "Artículos y material técnico para el rubro"
+    }, {
+      titulo: "Campañas",
+      detalle: "Planificación y seguimiento por segmento"
+    }, {
+      titulo: "Redes sociales",
+      detalle: "Publicación y respuesta"
+    }, {
+      titulo: "Analítica",
+      detalle: "Origen de cada lead y costo de adquisición"
+    }],
+    metricas: ["Leads del mes", "Costo por lead", "Conversión a prospecto", "Alcance"]
+  }));
+}
+function AreaOperaciones() {
+  return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
+    nombre: "Director de Operaciones IA",
+    departamento: "Operaciones",
+    objetivo: "Que cada cliente nuevo llegue a usar el sistema de verdad, y que los que ya están lo sigan usando.",
+    capacidades: [{
+      titulo: "Onboarding",
+      detalle: "Alta y puesta en marcha del cliente"
+    }, {
+      titulo: "Configuración de clientes",
+      detalle: "Obras, usuarios y permisos iniciales"
+    }, {
+      titulo: "Capacitación",
+      detalle: "Material y sesiones por rol"
+    }, {
+      titulo: "Customer Success",
+      detalle: "Seguimiento de cuentas activas"
+    }, {
+      titulo: "Adopción",
+      detalle: "Detección de clientes que dejaron de usar"
+    }],
+    metricas: ["Clientes en onboarding", "Días hasta primer uso", "Adopción", "Cuentas en riesgo"]
+  }));
+}
+function AreaSoporte() {
+  return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
+    nombre: "Director de Soporte IA",
+    departamento: "Soporte",
+    objetivo: "Resolver los problemas del cliente antes de que se conviertan en motivo de baja.",
+    capacidades: [{
+      titulo: "Tickets",
+      detalle: "Recepción, clasificación y respuesta"
+    }, {
+      titulo: "Incidentes",
+      detalle: "Detección y escalamiento"
+    }, {
+      titulo: "Base de conocimiento",
+      detalle: "Respuestas que se reutilizan"
+    }, {
+      titulo: "Servicio técnico",
+      detalle: "Diagnóstico de fallas reportadas"
+    }],
+    metricas: ["Tickets abiertos", "Tiempo de respuesta", "Resueltos sin humano", "Satisfacción"]
+  }));
+}
+function AreaFinanzas() {
+  return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
+    nombre: "Director Financiero IA",
+    departamento: "Finanzas",
+    objetivo: "Que se facture lo que corresponde, se cobre a tiempo y sepas siempre cómo viene la caja.",
+    capacidades: [{
+      titulo: "Facturación",
+      detalle: "Emisión según plan de cada cliente"
+    }, {
+      titulo: "Cobranzas",
+      detalle: "Seguimiento de vencidos"
+    }, {
+      titulo: "Gastos",
+      detalle: "Registro y clasificación"
+    }, {
+      titulo: "Flujo de caja",
+      detalle: "Proyección de entradas y salidas"
+    }, {
+      titulo: "MRR y ARR",
+      detalle: "Ingreso recurrente mensual y anual"
+    }],
+    metricas: ["MRR", "ARR", "Por cobrar", "Caja proyectada"],
+    nota: "La facturación electrónica requiere integración con AFIP y validación contable. No es un módulo que el agente pueda operar sin supervisión."
+  }));
+}
+function AreaProducto() {
+  return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
+    nombre: "Director de Producto IA",
+    departamento: "Producto",
+    objetivo: "Convertir lo que dicen los clientes en decisiones de desarrollo priorizadas.",
+    capacidades: [{
+      titulo: "Feedback",
+      detalle: "Recolección desde soporte y ventas"
+    }, {
+      titulo: "Bugs",
+      detalle: "Registro y seguimiento"
+    }, {
+      titulo: "Solicitudes",
+      detalle: "Pedidos de funciones nuevas"
+    }, {
+      titulo: "Prioridades",
+      detalle: "Qué construir primero y por qué"
+    }, {
+      titulo: "Hoja de ruta",
+      detalle: "Plan de desarrollo"
+    }],
+    metricas: ["Pedidos abiertos", "Bugs activos", "En desarrollo", "Entregado este mes"]
+  }));
+}
+function AreaSeguridad() {
+  return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
+    nombre: "Director de Seguridad IA",
+    departamento: "Seguridad",
+    objetivo: "Proteger los datos de los clientes y dejar rastro de todo lo que hace el sistema.",
+    capacidades: [{
+      titulo: "Accesos",
+      detalle: "Quién entra, desde dónde y cuándo"
+    }, {
+      titulo: "Auditoría",
+      detalle: "Registro inalterable de acciones"
+    }, {
+      titulo: "Respaldos",
+      detalle: "Copias y prueba de restauración"
+    }, {
+      titulo: "Incidentes",
+      detalle: "Detección y respuesta"
+    }, {
+      titulo: "Permisos",
+      detalle: "Qué puede hacer cada usuario y cada agente"
+    }],
+    metricas: ["Accesos hoy", "Incidentes abiertos", "Último respaldo", "Alertas"]
+  }));
+}
+
+// ── CEO / Orquestador ─────────────────────────────────────────
+// Solo lee datos reales del Comercial. El resto queda marcado como no disponible.
+function AreaCEO({
+  datosComercial,
+  irA
+}) {
+  const c = datosComercial;
+  const areas = [{
+    id: "comercial",
+    nombre: "Comercial",
+    estado: "activo",
+    nota: `${c.total} prospectos en base`
+  }, {
+    id: "marketing",
+    nombre: "Marketing",
+    estado: "pendiente",
+    nota: "Sin conectar"
+  }, {
+    id: "operaciones",
+    nombre: "Operaciones",
+    estado: "pendiente",
+    nota: "Sin conectar"
+  }, {
+    id: "soporte",
+    nombre: "Soporte",
+    estado: "pendiente",
+    nota: "Sin conectar"
+  }, {
+    id: "finanzas",
+    nombre: "Finanzas",
+    estado: "pendiente",
+    nota: "Sin conectar"
+  }, {
+    id: "producto",
+    nombre: "Producto",
+    estado: "pendiente",
+    nota: "Sin conectar"
+  }, {
+    id: "seguridad",
+    nombre: "Seguridad",
+    estado: "pendiente",
+    nota: "Sin conectar"
+  }];
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      padding: "20px 22px",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 20,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".14em",
+      textTransform: "uppercase",
+      color: BRASS
+    }
+  }, "Dirección general")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 23,
+      fontWeight: 800,
+      color: NAVY
+    }
+  }, "CEO / Orquestador IA"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#4A5565",
+      marginTop: 7,
+      lineHeight: 1.55,
+      maxWidth: 640
+    }
+  }, "Coordina las ocho áreas: reparte objetivos, detecta qué está trabado y te dice dónde hace falta que decidas vos."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 14
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6,
+      background: "#FBF2E3",
+      color: "#9A6B1E",
+      borderRadius: 20,
+      padding: "6px 13px",
+      fontSize: 11.5,
+      fontWeight: 700
+    }
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: 7,
+      height: 7,
+      borderRadius: "50%",
+      background: "#E09A3E",
+      fontStyle: "normal"
+    }
+  }), "1 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".13em",
+      textTransform: "uppercase",
+      color: "#8B95A5",
+      marginBottom: 9
+    }
+  }, "Métricas comerciales · datos reales"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 12,
+      gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))"
+    }
+  }, /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Prospectos",
+    valor: c.total,
+    nota: "en la base"
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Activos",
+    valor: c.activos,
+    color: "#3B6CA8",
+    nota: "sin cerrar ni perder"
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Cerrados",
+    valor: c.cerrados,
+    color: "#2F7A4F",
+    nota: "ganados"
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Tasa de cierre",
+    valor: c.total ? c.tasa + "%" : null,
+    color: BRASS,
+    nota: c.total ? "sobre el total" : ""
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".13em",
+      textTransform: "uppercase",
+      color: "#8B95A5",
+      marginBottom: 9
+    }
+  }, "Métricas de la compañía · requieren áreas no conectadas"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 12,
+      gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))"
+    }
+  }, /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Ingreso recurrente",
+    valor: null
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Clientes activos",
+    valor: null
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Leads del mes",
+    valor: null
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Tickets abiertos",
+    valor: null
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 12,
+      gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))"
+    }
+  }, /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Estado de las ocho áreas"
+  }, areas.map(a => /*#__PURE__*/React.createElement("div", {
+    key: a.id,
+    onClick: () => irA && irA(a.id),
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      padding: "11px 0",
+      borderBottom: "1px solid #E6E9EE",
+      cursor: irA ? "pointer" : "default"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700,
+      color: NAVY
+    }
+  }, a.nombre), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: "#8B95A5",
+      marginTop: 1
+    }
+  }, a.nota)), /*#__PURE__*/React.createElement(EstadoAgente, {
+    estado: a.estado
+  })))), /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Decisiones pendientes"
+  }, /*#__PURE__*/React.createElement(ListaFicha, {
+    items: c.pendientes > 0 ? [{
+      texto: `${c.pendientes} prospecto${c.pendientes > 1 ? "s" : ""} sin movimiento hace 5 días o más`,
+      detalle: "Área Comercial · requiere que definas si seguís o descartás",
+      marca: "comercial"
+    }] : [],
+    icono: "⚑",
+    vacio: "No hay decisiones esperándote."
+  })), /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Resumen del día"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: "#4A5565",
+      lineHeight: 1.65
+    }
+  }, c.total === 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, "Todavía no hay prospectos cargados. El primer paso es cargar o buscar empresas desde el área Comercial.") : /*#__PURE__*/React.createElement(React.Fragment, null, "Hay ", /*#__PURE__*/React.createElement("b", null, c.total), " prospecto", c.total > 1 ? "s" : "", " en la base,", " ", /*#__PURE__*/React.createElement("b", null, c.activos), " activo", c.activos !== 1 ? "s" : "", ".", c.pendientes > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, " ", /*#__PURE__*/React.createElement("b", null, c.pendientes), " necesita", c.pendientes > 1 ? "n" : "", " seguimiento.") : /*#__PURE__*/React.createElement(React.Fragment, null, " Ninguno requiere seguimiento urgente."))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: "#8B95A5",
+      marginTop: 10,
+      lineHeight: 1.5,
+      paddingTop: 10,
+      borderTop: "1px solid #E6E9EE"
+    }
+  }, "El resumen se limita al área Comercial, que es la única con datos reales.")), /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Prioridades y recomendaciones"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: "#4A5565",
+      lineHeight: 1.65
+    }
+  }, "El orquestador reparte objetivos entre las áreas y detecta cuellos de botella. Necesita al menos dos áreas conectadas para tener algo que coordinar."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 11,
+      background: "#FBF2E3",
+      border: "1px solid #EBDCC0",
+      borderRadius: 9,
+      padding: "10px 12px",
+      fontSize: 11.5,
+      color: "#9A6B1E",
+      lineHeight: 1.5
+    }
+  }, "Pendiente de conexión al motor de agentes.")), /*#__PURE__*/React.createElement(BloqueFicha, {
+    titulo: "Estado general del sistema"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 9
+    }
+  }, [["Almacenamiento de datos", "Local en este dispositivo", "aviso"], ["Motor de agentes", "No instalado", "pendiente"], ["Envío de correo", "No configurado", "pendiente"], ["Ejecución programada", "No disponible", "pendiente"], ["Registro de auditoría", "No disponible", "pendiente"]].map(([k, v, t]) => /*#__PURE__*/React.createElement("div", {
+    key: k,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      fontSize: 12
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 7,
+      height: 7,
+      borderRadius: "50%",
+      flexShrink: 0,
+      background: t === "aviso" ? "#E09A3E" : "#C3CAD3"
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      color: "#131C2B",
+      fontWeight: 600
+    }
+  }, k), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#8B95A5"
+    }
+  }, v)))))));
+}
+
+// ════════════════════════════════════════════════════════════
 // MOTOR DE VENTAS — panel de comando comercial
 // Vive dentro de la misma app y usa la misma clave de IA.
 // La base de prospectos queda en el dispositivo y se puede exportar.
@@ -4504,21 +5520,9 @@ function diasDesde(fechaIso) {
   const d = Math.floor((Date.now() - new Date(fechaIso).getTime()) / 86400000);
   return isNaN(d) ? null : d;
 }
-function MotorVentas() {
-  const [prospectos, setProspectos] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("prospectos") || "[]");
-    } catch {
-      return [];
-    }
-  });
-  const [plantillas, setPlantillas] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("plantillas") || "[]");
-    } catch {
-      return [];
-    }
-  });
+function AreaComercial() {
+  const [prospectos, setProspectos] = useState(() => prospectosRepository.listar());
+  const [plantillas, setPlantillas] = useState(() => plantillasRepository.listar());
   const [vista, setVista] = useState("panel");
   const [sel, setSel] = useState(null);
   const [borrador, setBorrador] = useState(null);
@@ -4543,13 +5547,7 @@ function MotorVentas() {
   const [avisoBusq, setAvisoBusq] = useState("");
   const [aviso, setAviso] = useState("");
   const importRef = useRef(null);
-  const [apiKey, setApiKey] = useState(() => {
-    try {
-      return localStorage.getItem("demo_api_key") || "";
-    } catch {
-      return "";
-    }
-  });
+  const [apiKey, setApiKey] = useState(() => claveIaRepository.obtener());
   const iaLista = apiKey.trim().startsWith("sk-ant-");
   const idioma = typeof window !== "undefined" && window.idiomaActual ? window.idiomaActual() : "es";
   const NOMBRE_IDIOMA = {
@@ -4558,21 +5556,15 @@ function MotorVentas() {
     pt: "português do Brasil"
   }[idioma] || "español rioplatense (voseo)";
   useEffect(() => {
-    try {
-      localStorage.setItem("prospectos", JSON.stringify(prospectos));
-    } catch {}
+    prospectosRepository.guardarTodos(prospectos);
   }, [prospectos]);
   useEffect(() => {
-    try {
-      localStorage.setItem("plantillas", JSON.stringify(plantillas));
-    } catch {}
+    plantillasRepository.guardarTodas(plantillas);
   }, [plantillas]);
   useEffect(() => {
     const t = setInterval(() => {
-      try {
-        const k = localStorage.getItem("demo_api_key") || "";
-        setApiKey(prev => prev === k ? prev : k);
-      } catch {}
+      const k = claveIaRepository.obtener();
+      setApiKey(prev => prev === k ? prev : k);
     }, 1500);
     return () => clearInterval(t);
   }, []);
@@ -4923,13 +5915,7 @@ ${hist}`;
     minHeight: 38,
     fontFamily: "inherit"
   };
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      minHeight: "100vh",
-      background: "#0E1520",
-      padding: "12px 12px 80px"
-    }
-  }, /*#__PURE__*/React.createElement("style", null, `
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("style", null, `
         .mvgrid { display:grid; gap:12px; grid-template-columns: 320px 1fr; align-items:start; }
         @media (max-width: 940px) { .mvgrid { grid-template-columns:1fr; } }
         .tablero { display:grid; gap:14px; grid-template-columns: 1fr 1.25fr; align-items:stretch; }
@@ -4956,20 +5942,7 @@ ${hist}`;
       flexWrap: "wrap",
       alignItems: "center"
     }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 20,
-      height: 2,
-      background: BRASS
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "#fff",
-      fontWeight: 800,
-      fontSize: 14,
-      marginRight: 6
-    }
-  }, "Motor de ventas"), [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+  }, [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
     key: id,
     className: "mvtab" + (vista === id ? " act" : ""),
     onClick: () => {
@@ -6166,6 +7139,220 @@ function GuiaVentas() {
     }
   }, l)))));
 }
+
+// ════════════════════════════════════════════════════════════
+// CENTRO DE OPERACIONES IA — contenedor de las ocho áreas
+// Solo el área Comercial tiene funciones reales.
+// Las otras siete declaran su estructura, sin datos inventados.
+// ════════════════════════════════════════════════════════════
+
+const AREAS = [{
+  id: "ceo",
+  nombre: "CEO / Orquestador",
+  corto: "CEO",
+  activa: true
+}, {
+  id: "comercial",
+  nombre: "Comercial",
+  corto: "Comercial",
+  activa: true
+}, {
+  id: "marketing",
+  nombre: "Marketing",
+  corto: "Marketing",
+  activa: false
+}, {
+  id: "operaciones",
+  nombre: "Operaciones",
+  corto: "Operaciones",
+  activa: false
+}, {
+  id: "soporte",
+  nombre: "Soporte",
+  corto: "Soporte",
+  activa: false
+}, {
+  id: "finanzas",
+  nombre: "Finanzas",
+  corto: "Finanzas",
+  activa: false
+}, {
+  id: "producto",
+  nombre: "Producto",
+  corto: "Producto",
+  activa: false
+}, {
+  id: "seguridad",
+  nombre: "Seguridad",
+  corto: "Seguridad",
+  activa: false
+}];
+function CentroOperaciones() {
+  const [area, setArea] = useState("ceo");
+
+  // Métricas reales del Comercial, leídas del repositorio.
+  // Se recalculan al cambiar de área para reflejar cambios recientes.
+  const [datosComercial, setDatosComercial] = useState(() => calcularComercial());
+  function calcularComercial() {
+    const lista = prospectosRepository.listar();
+    const cerrados = lista.filter(p => p.estado === "cerrado").length;
+    const activos = lista.filter(p => p.estado !== "cerrado" && p.estado !== "perdido").length;
+    const pendientes = lista.filter(p => {
+      if (p.estado !== "contactado" && p.estado !== "propuesta") return false;
+      const ult = p.historial && p.historial.length ? p.historial[0].iso : p.altaIso;
+      const d = diasDesde(ult);
+      return d != null && d >= 5;
+    }).length;
+    return {
+      total: lista.length,
+      activos,
+      cerrados,
+      pendientes,
+      tasa: lista.length ? Math.round(cerrados / lista.length * 100) : 0,
+      porEstado: e => lista.filter(p => p.estado === e).length
+    };
+  }
+  useEffect(() => {
+    setDatosComercial(calcularComercial());
+  }, [area]);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: "100vh",
+      background: "#0E1520",
+      padding: "12px 12px 80px"
+    }
+  }, /*#__PURE__*/React.createElement("style", null, `
+        .co-nav { display:flex; gap:6px; overflow-x:auto; white-space:nowrap; padding-bottom:2px; }
+        .co-nav::-webkit-scrollbar { height:4px }
+        .co-nav::-webkit-scrollbar-thumb { background:rgba(255,255,255,.2); border-radius:4px }
+        .co-tab {
+          background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16);
+          color:#C8D0DA; border-radius:9px; padding:10px 15px; font-size:12.5px;
+          font-weight:700; cursor:pointer; min-height:42px; font-family:inherit;
+          flex-shrink:0; display:flex; align-items:center; gap:7px;
+        }
+        .co-tab.act { background:#B0894F; border-color:#B0894F; color:#fff; }
+        .co-tab i { width:6px; height:6px; border-radius:50%; font-style:normal; flex-shrink:0; }
+      `), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      marginBottom: 12,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 20,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#fff",
+      fontWeight: 800,
+      fontSize: 15
+    }
+  }, "Centro de Operaciones IA"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 10,
+      fontWeight: 700,
+      color: "#8B95A5",
+      border: "1px solid rgba(255,255,255,.16)",
+      borderRadius: 20,
+      padding: "3px 9px"
+    }
+  }, "1 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
+    className: "co-nav",
+    style: {
+      marginBottom: 14
+    }
+  }, AREAS.map(a => /*#__PURE__*/React.createElement("button", {
+    key: a.id,
+    className: "co-tab" + (area === a.id ? " act" : ""),
+    onClick: () => setArea(a.id)
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      background: a.activa ? "#7DBE4B" : "#6C7787"
+    }
+  }), a.corto))), area === "ceo" && /*#__PURE__*/React.createElement(AreaCEO, {
+    datosComercial: datosComercial,
+    irA: setArea
+  }), area === "comercial" && /*#__PURE__*/React.createElement(FichaAgente, {
+    nombre: "Director Comercial IA",
+    departamento: "Comercial",
+    estado: datosComercial.pendientes > 0 ? "alerta" : "activo",
+    objetivo: "Conseguir, calificar y acompañar constructoras, estudios de arquitectura, desarrolladoras y gerenciadoras hasta convertirlas en clientes de la plataforma.",
+    autonomiaNivel: "Nivel 1",
+    autonomia: "asistente supervisado",
+    metricas: [{
+      etiqueta: "Prospectos",
+      valor: datosComercial.total,
+      nota: "en la base"
+    }, {
+      etiqueta: "Activos",
+      valor: datosComercial.activos,
+      color: "#3B6CA8",
+      nota: "sin cerrar"
+    }, {
+      etiqueta: "Correos enviados",
+      valor: null
+    }, {
+      etiqueta: "Respuestas",
+      valor: null
+    }, {
+      etiqueta: "Reuniones",
+      valor: null
+    }, {
+      etiqueta: "Propuestas",
+      valor: null
+    }, {
+      etiqueta: "Ventas",
+      valor: datosComercial.cerrados,
+      color: "#2F7A4F",
+      nota: "cerradas"
+    }, {
+      etiqueta: "Conversión",
+      valor: datosComercial.total ? datosComercial.tasa + "%" : null,
+      color: BRASS,
+      nota: "sobre el total"
+    }],
+    tareas: datosComercial.pendientes > 0 ? [{
+      texto: `${datosComercial.pendientes} prospecto${datosComercial.pendientes > 1 ? "s" : ""} sin movimiento hace 5 días o más`,
+      detalle: "Ver el detalle en la pestaña Panel, abajo",
+      destacado: true
+    }] : [],
+    proximas: [],
+    aprobaciones: [],
+    historial: [],
+    alertas: [],
+    errores: [],
+    costo: null,
+    activable: false,
+    contenido: /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginBottom: 12
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: "#FBF2E3",
+        border: "1px solid #EBDCC0",
+        borderRadius: 9,
+        padding: "11px 13px",
+        marginBottom: 12,
+        fontSize: 11.5,
+        color: "#9A6B1E",
+        lineHeight: 1.55
+      }
+    }, "Las métricas de correos, respuestas y reuniones necesitan el motor de agentes y el envío de correo. Lo que ves abajo son las herramientas que ya funcionan."), /*#__PURE__*/React.createElement(AreaComercial, null))
+  }), area === "marketing" && /*#__PURE__*/React.createElement(AreaMarketing, null), area === "operaciones" && /*#__PURE__*/React.createElement(AreaOperaciones, null), area === "soporte" && /*#__PURE__*/React.createElement(AreaSoporte, null), area === "finanzas" && /*#__PURE__*/React.createElement(AreaFinanzas, null), area === "producto" && /*#__PURE__*/React.createElement(AreaProducto, null), area === "seguridad" && /*#__PURE__*/React.createElement(AreaSeguridad, null));
+}
+
+// Alias de transición: el punto de montaje sigue funcionando con el nombre viejo.
+// Permite volver atrás sin tocar el arranque de la aplicación.
+function MotorVentas() {
+  return /*#__PURE__*/React.createElement(CentroOperaciones, null);
+}
 ReactDOM.createRoot(document.getElementById("root-demo")).render(/*#__PURE__*/React.createElement(PanelDemo, null));
 var nodoVentas = document.getElementById("root-ventas");
 if (nodoVentas) ReactDOM.createRoot(nodoVentas).render(/*#__PURE__*/React.createElement(MotorVentas, null));
@@ -6201,17 +7388,34 @@ function abrirDemo() {
   iniciarApps();
 }
 function abrirVentas() {
+  if (!revisarMotor()) return;
   document.body.classList.remove("en-demo");
   document.body.classList.add("en-ventas");
   try { window.scrollTo(0, 0); } catch (e) {}
   marcarVista("ventas");
   iniciarApps();
 }
+// ── llave del motor de ventas ──
+// Con ?motor=LLAVE queda activado en ese dispositivo. Con ?motor=off se apaga.
+var LLAVE_MOTOR = "vv2026";
+function revisarMotor() {
+  var p = "";
+  try { p = new URLSearchParams(window.location.search).get("motor") || ""; } catch (e) {}
+  if (p === "off") { try { localStorage.removeItem("motor_ok"); } catch (e) {} }
+  else if (p === LLAVE_MOTOR) { try { localStorage.setItem("motor_ok", "1"); } catch (e) {} }
+  var activo = false;
+  try { activo = localStorage.getItem("motor_ok") === "1"; } catch (e) {}
+  if (activo) document.body.classList.add("con-motor");
+  else document.body.classList.remove("con-motor");
+  return activo;
+}
 function volverALanding() {
   document.body.classList.remove("en-demo");
   document.body.classList.remove("en-ventas");
   try { window.scrollTo(0, 0); } catch (e) {}
 }
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", revisarMotor);
+else revisarMotor();
 </script>
 
 <script>
@@ -6794,6 +7998,51 @@ window.DICC = {
     ["Couldn't read the file. It must be a CSV with the same header as the exported one.",
      "Não consegui ler o arquivo. Precisa ser um CSV com o mesmo cabeçalho do exportado."],
   "agregado a prospectos": ["added to prospects", "adicionado aos prospects"],
+
+
+  // ── chat simulado y listas de la landing ──
+  "Asistente de obra": ["Site assistant", "Assistente de obra"],
+  "Pedile al estudio los metros cuadrados reales de todas las obras activas":
+    ["Ask the firm for the real square metres of every active site",
+     "Peça ao escritório os metros quadrados reais de todas as obras ativas"],
+  "Le paso la consulta al estudio para que confirme los m² de todas las obras activas.":
+    ["I'm passing the question to the firm so they confirm the m² of every active site.",
+     "Estou repassando a consulta ao escritório para confirmar os m² de todas as obras ativas."],
+  "✓ Le pasé tu consulta directo a la IA del estudio. Te muestro la respuesta apenas conteste.":
+    ["✓ I sent your question straight to the firm's AI. I'll show you the answer as soon as it replies.",
+     "✓ Enviei sua consulta direto para a IA do escritório. Mostro a resposta assim que responder."],
+  "IA del estudio respondió: no tengo ese dato cargado. Lo derivé al equipo como URGENTE (quedó en Pedidos).":
+    ["The firm's AI replied: I don't have that on file. I escalated it to the team as URGENT (it's in Requests).",
+     "A IA do escritório respondeu: não tenho esse dado. Encaminhei à equipe como URGENTE (ficou em Pedidos)."],
+  "1 pedido pendiente de la constructora": ["1 request pending from the builder", "1 pedido pendente da construtora"],
+  "Obras: general →": ["Sites: general →", "Obras: geral →"],
+  "Obra Barrio Norte 011 — no tiene registros de bitácora cargados, solo el informe de albañilería del 01/07.":
+    ["Barrio Norte 011 site — no log entries recorded, only the masonry report from 07/01.",
+     "Obra Barrio Norte 011 — sem registros de diário, apenas o relatório de alvenaria de 01/07."],
+  "¿Necesitás que profundice en alguna o que gestione algo?":
+    ["Want me to dig into any of them or handle something?",
+     "Quer que eu aprofunde em alguma ou resolva algo?"],
+  "El último certificado de Los Álamos": ["The latest Los Álamos certificate", "O último certificado de Los Álamos"],
+  "📋 CERTIFICADO SEMANAL — Obra Los Álamos 100": ["📋 WEEKLY CERTIFICATE — Los Álamos 100 site", "📋 CERTIFICADO SEMANAL — Obra Los Álamos 100"],
+  "Semana 27/07 al 31/07": ["Week 07/27 to 07/31", "Semana 27/07 a 31/07"],
+  "La obra avanzó de mampostería a revoque grueso en varios ambientes. Avance global estimado 45-50%, con estructura terminada. El ritmo se vio afectado por definiciones de proyecto pendientes.":
+    ["The site moved from masonry to base render in several rooms. Overall progress estimated at 45-50%, structure complete. Pace was affected by pending design decisions.",
+     "A obra avançou de alvenaria para reboco grosso em vários ambientes. Avanço global estimado em 45-50%, com estrutura concluída. O ritmo foi afetado por definições de projeto pendentes."],
+  "Tocá una obra para filtrar. En ámbar, las que hace 7 días o más que no piden materiales.":
+    ["Tap a site to filter. In amber, the ones that haven't ordered materials in 7 days or more.",
+     "Toque numa obra para filtrar. Em âmbar, as que há 7 dias ou mais não pedem materiais."],
+  "¿cómo viene Los Álamos?": ["how's Los Álamos going?", "como está Los Álamos?"],
+  "68% de avance, cierra 30/08. Último parte: hormigón visto en PB.":
+    ["68% progress, due 08/30. Latest note: exposed concrete finished on the ground floor.",
+     "68% de avanço, prazo 30/08. Último informe: concreto aparente concluído no térreo."],
+  "Obra Los Álamos 100": ["Los Álamos 100 site", "Obra Los Álamos 100"],
+  "Obra San Martín 250": ["San Martín 250 site", "Obra San Martín 250"],
+  "Obra Belgrano 450": ["Belgrano 450 site", "Obra Belgrano 450"],
+  "Obra Norte 300": ["Norte 300 site", "Obra Norte 300"],
+  "Obra Sur 249": ["Sur 249 site", "Obra Sur 249"],
+  "Obra Barrio Norte 01": ["Barrio Norte 01 site", "Obra Barrio Norte 01"],
+  "Mensajes": ["Messages", "Mensagens"],
+  "Asistente IA": ["AI assistant", "Assistente IA"],
 
   // ── chips de estado ──
   "RESUELTO": ["RESOLVED", "RESOLVIDO"],
