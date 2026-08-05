@@ -273,6 +273,20 @@
   .bubble.q{ background:#fff; border:1px solid var(--border); color:var(--sub); }
   .bubble.a{ background:var(--brass); color:#fff; font-weight:500; }
 
+  /* ── resultados operativos ── */
+  .resultados{ margin-top:44px; display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; }
+  .res{ background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:22px; position:relative; }
+  .res .antes{ font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+  .res .frase{ font-size:14.5px; color:var(--sub); line-height:1.55; margin-top:6px; }
+  .res .flecha{ width:22px; height:2px; background:var(--brass); margin:14px 0; }
+  .res .ahora{ font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--brass); }
+  .res .valor{ font-size:15px; color:var(--navy); line-height:1.5; margin-top:6px; font-weight:600; }
+  .nota-medicion{
+    margin-top:26px; background:#FBF6EE; border:1px solid #EBDCC0; border-radius:var(--r);
+    padding:18px 22px; font-size:13.5px; color:var(--sub); line-height:1.6;
+  }
+  .nota-medicion b{ color:var(--navy); }
+
   /* ── demo cta ── */
   .demo{ background:#fff; color:var(--text); border-radius:24px; padding:56px 48px; position:relative; overflow:hidden; margin:0 24px; max-width:1072px; margin-inline:auto; border:1px solid var(--border); box-shadow:0 24px 60px -30px rgba(16,28,44,.25); }
   .demo::after{ content:""; position:absolute; right:-60px; top:-60px; width:260px; height:260px; border-radius:50%; background:radial-gradient(circle, rgba(176,137,79,.16), transparent 70%); }
@@ -414,6 +428,7 @@
       <a href="#modulos">Módulos</a>
       <a href="#flujo">Cómo funciona</a>
       <a href="#demo">Así se ve</a>
+      <a href="#resultados">Resultados</a>
       <a href="#planes">Planes</a>
     </nav>
     <div class="navcta">
@@ -427,10 +442,10 @@
   <div class="blueprint"></div>
   <div class="wrap hero-grid">
     <div>
-      <div class="eyebrow"><span></span><b>Hecha por arquitectos, para arquitectos</b></div>
+      <div class="eyebrow"><span></span><b>Creada por profesionales que dirigen obras todos los días</b></div>
       <h1>El sistema que <em>sostiene</em><br>la obra, no el que<br>la complica.</h1>
       <p class="lead">Avances, certificados, pedidos de materiales, planos y definiciones técnicas en un solo lugar — sin planillas sueltas ni carpetas de WhatsApp. Cuando el contratista pide algo, queda cargado a la vez en la constructora y en el estudio de arquitectura. Con un asistente de IA que conoce cada obra y responde antes de que termines de escribirlo.</p>
-      <p class="byline">No lo diseñó una software factory: lo diseñaron arquitectos que dirigen obra todos los días, sobre los problemas que tienen ellos mismos.</p>
+      <p class="byline">No lo diseñó una software factory: lo diseñó gente que dirige obra todos los días, sobre los problemas que tiene ella misma.</p>
       <div class="hero-cta">
         <button class="btn btn-brass" onclick="abrirDemo()">Probar la demo →</button>
         <a class="btn btn-ghost" href="#modulos">Ver los módulos</a>
@@ -489,8 +504,8 @@
 
 <section class="section" id="modulos">
   <div class="wrap">
-    <div class="eyebrow"><span></span><b>Tres roles, un mismo dato</b></div>
-    <h2>Cada parte de la obra tiene su panel. Ninguno duplica carga.</h2>
+    <div class="eyebrow"><span></span><b>Cuatro actores. Un mismo dato.</b></div>
+    <h2>Empresa, estudio, obra y propietario sobre la misma información.</h2>
     <p class="sub">El contratista pide materiales, planos o una definición técnica desde su app — y ese pedido aparece al instante en la constructora y en el estudio de arquitectura, sin que nadie tenga que reenviarlo.</p>
 
     <div class="modules">
@@ -514,9 +529,9 @@
       </div>
       <div class="module reveal">
         <div class="ico">▦</div>
-        <h3>App del contratista</h3>
+        <h3>App de obra</h3>
         <p>Pide materiales, planos o definiciones técnicas en el momento — y queda cargado a la vez en constructora y estudio de arquitectura.</p>
-        <div class="who">Para quien ejecuta en obra</div>
+        <div class="who">Para capataces, contratistas y responsables de ejecución</div>
       </div>
     </div>
   </div>
@@ -603,7 +618,7 @@
 
       <figure class="shot reveal">
         <figcaption>
-          <span class="stag">App 3 · Contratistas</span>
+          <span class="stag">App 3 · Obra</span>
           <b>Pide materiales, planos y definiciones</b>
           <span class="sdesc">Tres tipos de pedido en una sola pantalla, con el registro por obra y el aviso de qué obra hace días que no pide nada. Cada pedido queda cargado a la vez en las otras dos apps.</span>
         </figcaption>
@@ -685,6 +700,72 @@
   </div>
 </section>
 
+<section class="section" id="resultados">
+  <div class="wrap">
+    <div class="eyebrow"><span></span><b>Qué cambia en la operación</b></div>
+    <h2>Lo que hoy te cuesta tiempo, deja de costarlo.</h2>
+    <p class="sub">Estos son los efectos operativos directos del sistema. Cuando tengamos obras
+    de clientes midiendo, los reemplazamos por números verificados.</p>
+
+    <div class="resultados">
+      <div class="res reveal">
+        <div class="antes">Hoy</div>
+        <div class="frase">El certificado semanal se arma a mano en Excel, obra por obra.</div>
+        <div class="flecha"></div>
+        <div class="ahora">Con ConstruIA</div>
+        <div class="valor">Se genera con lo que ya se cargó durante la semana.</div>
+      </div>
+
+      <div class="res reveal">
+        <div class="antes">Hoy</div>
+        <div class="frase">Un pedido se manda por audio y se pierde entre los chats de obra.</div>
+        <div class="flecha"></div>
+        <div class="ahora">Con ConstruIA</div>
+        <div class="valor">Queda registrado, con estado y responsable, hasta que se resuelve.</div>
+      </div>
+
+      <div class="res reveal">
+        <div class="antes">Hoy</div>
+        <div class="frase">La misma consulta se repite entre obra, estudio y oficina.</div>
+        <div class="flecha"></div>
+        <div class="ahora">Con ConstruIA</div>
+        <div class="valor">Se pregunta una vez y la respuesta queda a la vista de todos.</div>
+      </div>
+
+      <div class="res reveal">
+        <div class="antes">Hoy</div>
+        <div class="frase">El mismo dato se carga en la planilla, en el informe y en el mail.</div>
+        <div class="flecha"></div>
+        <div class="ahora">Con ConstruIA</div>
+        <div class="valor">Se carga una sola vez y lo leen las cuatro apps.</div>
+      </div>
+
+      <div class="res reveal">
+        <div class="antes">Hoy</div>
+        <div class="frase">El propietario llama para saber cómo viene su obra.</div>
+        <div class="flecha"></div>
+        <div class="ahora">Con ConstruIA</div>
+        <div class="valor">Entra a su portal y ve el avance, las fotos y los informes.</div>
+      </div>
+
+      <div class="res reveal">
+        <div class="antes">Hoy</div>
+        <div class="frase">Cuando una definición pendiente frena la obra, no hay cómo probarlo.</div>
+        <div class="flecha"></div>
+        <div class="ahora">Con ConstruIA</div>
+        <div class="valor">Queda asentado quién pidió qué, cuándo, y quién respondió.</div>
+      </div>
+    </div>
+
+    <div class="nota-medicion reveal">
+      <b>Sobre estos resultados:</b> son efectos directos de cómo funciona el sistema, no
+      estimaciones. Todavía no publicamos porcentajes de ahorro porque no tenemos obras de
+      clientes midiéndolo. Cuando las tengamos, los números van acá con el nombre de la empresa
+      que los validó.
+    </div>
+  </div>
+</section>
+
 <section class="section" id="planes">
   <div class="wrap">
     <div class="eyebrow"><span></span><b>Planes</b></div>
@@ -733,7 +814,7 @@
 <footer>
   <div class="wrap footwrap">
     <div class="brand" style="font-size:13px;"><img src="data:image/png;base64,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" alt="" style="width:22px;height:22px;border-radius:5px;display:block" /> Constru<em>IA</em></div>
-    <div>© 2026 · Hecha por arquitectos, para arquitectos · Argentina</div>
+    <div>© 2026 · Creada por profesionales que dirigen obras · Argentina</div>
     <button class="btn btn-dark" style="padding:9px 16px;" onclick="abrirDemo()">Probar demo</button>
   </div>
 </footer>
@@ -7358,7 +7439,38 @@ window.DICC = {
   "Ver los módulos": ["See the modules", "Ver os módulos"],
 
   // ── hero ──
-  "Hecha por arquitectos, para arquitectos": ["Built by architects, for architects", "Feita por arquitetos, para arquitetos"],
+  "Creada por profesionales que dirigen obras todos los días": ["Built by people who run job sites every day", "Criada por profissionais que dirigem obras todos os dias"],
+  "© 2026 · Creada por profesionales que dirigen obras · Argentina": ["© 2026 · Built by people who run job sites · Argentina", "© 2026 · Criada por profissionais que dirigem obras · Argentina"],
+  "Cuatro actores. Un mismo dato.": ["Four parties. One single record.", "Quatro atores. Um mesmo dado."],
+  "Empresa, estudio, obra y propietario sobre la misma información.": ["Company, design firm, site and owner on the same information.", "Empresa, escritório, obra e proprietário sobre a mesma informação."],
+  "App de obra": ["Site app", "App de obra"],
+  "Para capataces, contratistas y responsables de ejecución": ["For foremen, contractors and site leads", "Para encarregados, empreiteiros e responsáveis de execução"],
+  "App 3 · Obra": ["App 3 · Site", "App 3 · Obra"],
+
+  "Qué cambia en la operación": ["What changes in day-to-day work", "O que muda na operação"],
+  "Resultados": ["Results", "Resultados"],
+  "Lo que hoy te cuesta tiempo, deja de costarlo.": ["What costs you time today stops costing it.", "O que hoje te custa tempo deixa de custar."],
+  "Estos son los efectos operativos directos del sistema. Cuando tengamos obras de clientes midiendo, los reemplazamos por números verificados.":
+    ["These are the system's direct operational effects. Once client sites are measuring, we'll replace them with verified figures.",
+     "Estes são os efeitos operacionais diretos do sistema. Quando tivermos obras de clientes medindo, substituímos por números verificados."],
+  "Hoy": ["Today", "Hoje"],
+  "Con ConstruIA": ["With ConstruIA", "Com ConstruIA"],
+  "El certificado semanal se arma a mano en Excel, obra por obra.": ["The weekly certificate is built by hand in Excel, site by site.", "O certificado semanal é feito à mão no Excel, obra por obra."],
+  "Se genera con lo que ya se cargó durante la semana.": ["It's generated from what was already logged during the week.", "É gerado com o que já foi lançado durante a semana."],
+  "Un pedido se manda por audio y se pierde entre los chats de obra.": ["A request is sent as a voice note and gets lost among site chats.", "Um pedido é enviado por áudio e se perde entre as conversas de obra."],
+  "Queda registrado, con estado y responsable, hasta que se resuelve.": ["It's recorded, with status and owner, until it's resolved.", "Fica registrado, com status e responsável, até ser resolvido."],
+  "La misma consulta se repite entre obra, estudio y oficina.": ["The same question gets repeated between site, firm and office.", "A mesma consulta se repete entre obra, escritório e sede."],
+  "Se pregunta una vez y la respuesta queda a la vista de todos.": ["It's asked once and the answer stays visible to everyone.", "Pergunta-se uma vez e a resposta fica visível para todos."],
+  "El mismo dato se carga en la planilla, en el informe y en el mail.": ["The same data is entered in the spreadsheet, the report and the email.", "O mesmo dado é lançado na planilha, no relatório e no e-mail."],
+  "Se carga una sola vez y lo leen las cuatro apps.": ["It's entered once and all four apps read it.", "É lançado uma vez e os quatro apps leem."],
+  "El propietario llama para saber cómo viene su obra.": ["The owner calls to ask how their project is going.", "O proprietário liga para saber como está a obra."],
+  "Entra a su portal y ve el avance, las fotos y los informes.": ["They open their portal and see progress, photos and reports.", "Ele entra no portal e vê o avanço, as fotos e os relatórios."],
+  "Cuando una definición pendiente frena la obra, no hay cómo probarlo.": ["When a pending decision stalls the site, there's no way to prove it.", "Quando uma definição pendente trava a obra, não há como provar."],
+  "Queda asentado quién pidió qué, cuándo, y quién respondió.": ["It's on record who asked what, when, and who answered.", "Fica registrado quem pediu o quê, quando, e quem respondeu."],
+  "Sobre estos resultados:": ["About these results:", "Sobre estes resultados:"],
+  "son efectos directos de cómo funciona el sistema, no estimaciones. Todavía no publicamos porcentajes de ahorro porque no tenemos obras de clientes midiéndolo. Cuando las tengamos, los números van acá con el nombre de la empresa que los validó.":
+    ["these are direct effects of how the system works, not estimates. We're not publishing savings percentages yet because no client sites are measuring them. Once they are, the figures go here with the name of the company that validated them.",
+     "são efeitos diretos de como o sistema funciona, não estimativas. Ainda não publicamos percentuais de economia porque não temos obras de clientes medindo. Quando tivermos, os números vêm aqui com o nome da empresa que os validou."],
   "El sistema que": ["The system that", "O sistema que"],
   "sostiene": ["holds up", "sustenta"],
   "la obra, no el que": ["the site, not the one", "a obra, não o que"],
@@ -7366,9 +7478,9 @@ window.DICC = {
   "Avances, certificados, pedidos de materiales, planos y definiciones técnicas en un solo lugar — sin planillas sueltas ni carpetas de WhatsApp. Cuando el contratista pide algo, queda cargado a la vez en la constructora y en el estudio de arquitectura. Con un asistente de IA que conoce cada obra y responde antes de que termines de escribirlo.":
     ["Progress, certificates, material requests, drawings and technical decisions in one place — no scattered spreadsheets or WhatsApp folders. When the site foreman requests something, it lands at once in the contractor's and the architecture firm's app. With an AI assistant that knows every project and answers before you finish typing.",
      "Avanços, certificados, pedidos de materiais, plantas e definições técnicas num só lugar — sem planilhas soltas nem pastas de WhatsApp. Quando o encarregado pede algo, fica registrado ao mesmo tempo na construtora e no escritório de arquitetura. Com um assistente de IA que conhece cada obra e responde antes de você terminar de escrever."],
-  "No lo diseñó una software factory: lo diseñaron arquitectos que dirigen obra todos los días, sobre los problemas que tienen ellos mismos.":
-    ["It wasn't designed by a software factory: it was designed by architects who run job sites every day, around the problems they face themselves.",
-     "Não foi projetado por uma software house: foi projetado por arquitetos que dirigem obra todos os dias, sobre os problemas que eles mesmos enfrentam."],
+  "No lo diseñó una software factory: lo diseñó gente que dirige obra todos los días, sobre los problemas que tiene ella misma.":
+    ["It wasn't designed by a software factory: it was designed by people who run job sites every day, around the problems they face themselves.",
+     "Não foi projetado por uma software house: foi projetado por gente que dirige obra todos os dias, sobre os problemas que ela mesma enfrenta."],
   "apps conectadas": ["connected apps", "apps conectados"],
   "asistente por chat": ["chat assistant", "assistente por chat"],
   "mobile, uso en el pozo": ["mobile, used on site", "mobile, uso em campo"],
