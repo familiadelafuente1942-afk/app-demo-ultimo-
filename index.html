@@ -4446,6 +4446,724 @@ function BotonModal({
 }
 
 // ════════════════════════════════════════════════════════════
+// BASE DE DATOS
+//
+// FORMATO DEL ARCHIVO: JSON (.json). NO es SQLite.
+// Es una exportación de IndexedDB en texto plano, legible con
+// cualquier editor y abrible desde Excel o Python sin la aplicación.
+// Se eligió JSON porque SQLite en el navegador exige cargar una
+// librería de ~1,5 MB y no aporta nada a este volumen.
+// ════════════════════════════════════════════════════════════
+
+const BD_NOMBRE = "construia";
+const BD_VERSION = 1;
+const FORMATO_ARCHIVO = "construia-base";
+const FORMATO_VERSION = 1;
+const TABLAS = ["prospectos", "plantillas", "zonas_barridas", "config"];
+let _bd = null;
+
+// ── estado observable de la base ──────────────────────────────
+const estadoBD = {
+  fuente: "memoria",
+  // memoria | indexeddb | archivo | importado
+  archivoNombre: null,
+  persistente: null,
+  // resultado de navigator.storage.persist()
+  ultimaEscritura: null,
+  // ISO
+  ultimaCopia: null,
+  // ISO
+  ultimoError: null,
+  registros: {
+    prospectos: 0,
+    plantillas: 0,
+    zonas_barridas: 0,
+    historiales: 0
+  },
+  bytes: {
+    usados: null,
+    cuota: null,
+    porcentaje: null,
+    base: null
+  }
+};
+const oyentes = [];
+function alCambiarBD(fn) {
+  oyentes.push(fn);
+  return () => {
+    const i = oyentes.indexOf(fn);
+    if (i >= 0) oyentes.splice(i, 1);
+  };
+}
+function avisarBD() {
+  oyentes.forEach(f => {
+    try {
+      f({
+        ...estadoBD
+      });
+    } catch {}
+  });
+}
+
+// ── apertura ──────────────────────────────────────────────────
+function abrirBD() {
+  if (_bd) return Promise.resolve(_bd);
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) {
+      estadoBD.fuente = "memoria";
+      reject(new Error("sin_indexeddb"));
+      return;
+    }
+    const req = indexedDB.open(BD_NOMBRE, BD_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      TABLAS.forEach(t => {
+        if (!db.objectStoreNames.contains(t)) {
+          const store = db.createObjectStore(t, {
+            keyPath: "id"
+          });
+          if (t === "prospectos") {
+            store.createIndex("estado", "estado", {
+              unique: false
+            });
+            store.createIndex("zona", "zona", {
+              unique: false
+            });
+            store.createIndex("dominio", "dominio", {
+              unique: false
+            });
+          }
+          if (t === "zonas_barridas") store.createIndex("localidad", "localidad", {
+            unique: false
+          });
+        }
+      });
+    };
+    req.onsuccess = () => {
+      _bd = req.result;
+      if (estadoBD.fuente === "memoria") estadoBD.fuente = "indexeddb";
+      resolve(_bd);
+    };
+    req.onerror = () => {
+      estadoBD.ultimoError = "No se pudo abrir la base del navegador";
+      reject(req.error);
+    };
+  });
+}
+const bd = {
+  async listar(tabla) {
+    try {
+      const db = await abrirBD();
+      return await new Promise((res, rej) => {
+        const r = db.transaction(tabla, "readonly").objectStore(tabla).getAll();
+        r.onsuccess = () => res(r.result || []);
+        r.onerror = () => rej(r.error);
+      });
+    } catch {
+      return [];
+    }
+  },
+  async guardar(tabla, filas) {
+    try {
+      const db = await abrirBD();
+      await new Promise((res, rej) => {
+        const t = db.transaction(tabla, "readwrite");
+        const store = t.objectStore(tabla);
+        store.clear();
+        (filas || []).forEach(f => {
+          if (f && f.id != null) store.put(f);
+        });
+        t.oncomplete = () => res(true);
+        t.onerror = () => rej(t.error);
+      });
+      estadoBD.ultimaEscritura = new Date().toISOString();
+      estadoBD.ultimoError = null;
+      avisarBD();
+      return true;
+    } catch (e) {
+      estadoBD.ultimoError = "No se pudo escribir en la base: " + (e && e.message ? e.message : "error");
+      avisarBD();
+      return false;
+    }
+  },
+  async agregar(tabla, filas) {
+    try {
+      const db = await abrirBD();
+      await new Promise((res, rej) => {
+        const t = db.transaction(tabla, "readwrite");
+        const store = t.objectStore(tabla);
+        (filas || []).forEach(f => {
+          if (f && f.id != null) store.put(f);
+        });
+        t.oncomplete = () => res(true);
+        t.onerror = () => rej(t.error);
+      });
+      estadoBD.ultimaEscritura = new Date().toISOString();
+      avisarBD();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+};
+
+// ── espacio y permanencia ─────────────────────────────────────
+async function pedirPersistencia() {
+  try {
+    if (!navigator.storage || !navigator.storage.persist) return {
+      soportado: false
+    };
+    const yaEs = navigator.storage.persisted ? await navigator.storage.persisted() : false;
+    if (yaEs) {
+      estadoBD.persistente = true;
+      avisarBD();
+      return {
+        soportado: true,
+        otorgado: true,
+        yaEstaba: true
+      };
+    }
+    const ok = await navigator.storage.persist();
+    estadoBD.persistente = ok;
+    avisarBD();
+    return {
+      soportado: true,
+      otorgado: ok
+    };
+  } catch {
+    return {
+      soportado: false
+    };
+  }
+}
+async function medirEspacio() {
+  try {
+    if (!navigator.storage || !navigator.storage.estimate) {
+      estadoBD.bytes = {
+        usados: null,
+        cuota: null,
+        porcentaje: null,
+        base: estadoBD.bytes.base
+      };
+      avisarBD();
+      return estadoBD.bytes;
+    }
+    const e = await navigator.storage.estimate();
+    const usados = e.usage || 0;
+    const cuota = e.quota || 0;
+    estadoBD.bytes = {
+      usados,
+      cuota,
+      porcentaje: cuota ? Math.round(usados / cuota * 1000) / 10 : null,
+      base: estadoBD.bytes.base
+    };
+    avisarBD();
+    return estadoBD.bytes;
+  } catch {
+    return estadoBD.bytes;
+  }
+}
+
+// Tamaño real de los datos de la aplicación, no de todo el origen.
+async function medirTamanoBase() {
+  const datos = await exportarDatos();
+  const bytes = new Blob([JSON.stringify(datos)]).size;
+  estadoBD.bytes.base = bytes;
+  estadoBD.registros = contarDatos(datos);
+  avisarBD();
+  return bytes;
+}
+function formatoBytes(b) {
+  if (b == null) return "—";
+  if (b < 1024) return b + " B";
+  if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
+  if (b < 1073741824) return (b / 1048576).toFixed(1) + " MB";
+  return (b / 1073741824).toFixed(2) + " GB";
+}
+
+// ── integridad ────────────────────────────────────────────────
+// Hash FNV-1a de 32 bits sobre el contenido ordenado.
+// No es criptográfico: sirve para detectar que un archivo cambió o se cortó.
+function checksum(texto) {
+  let h = 0x811c9dc5;
+  const s = String(texto);
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24)) >>> 0;
+  }
+  return ("00000000" + h.toString(16)).slice(-8);
+}
+function contarDatos(d) {
+  const pros = d.prospectos || [];
+  return {
+    prospectos: pros.length,
+    plantillas: (d.plantillas || []).length,
+    zonas_barridas: (d.zonas_barridas || []).length,
+    historiales: pros.reduce((n, p) => n + (p.historial && p.historial.length || 0), 0)
+  };
+}
+function cuerpoParaChecksum(d) {
+  return JSON.stringify({
+    prospectos: d.prospectos || [],
+    plantillas: d.plantillas || [],
+    zonas_barridas: d.zonas_barridas || []
+  });
+}
+async function verificarIntegridad() {
+  const datos = await exportarDatos();
+  const cuentas = contarDatos(datos);
+  const sinId = (datos.prospectos || []).filter(p => p.id == null).length;
+  const sinNombre = (datos.prospectos || []).filter(p => !p.empresa && !p.nombre).length;
+  const ids = (datos.prospectos || []).map(p => String(p.id));
+  const idsRepetidos = ids.length - new Set(ids).size;
+  const dominios = (datos.prospectos || []).map(p => normalizarDominio(p.web)).filter(Boolean);
+  const domRepetidos = dominios.length - new Set(dominios).size;
+  return {
+    ...cuentas,
+    checksum: checksum(cuerpoParaChecksum(datos)),
+    sinId,
+    sinNombre,
+    idsRepetidos,
+    domRepetidos,
+    ok: sinId === 0 && idsRepetidos === 0
+  };
+}
+function normalizarDominio(web) {
+  return String(web || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+}
+
+// ── archivo vinculado ─────────────────────────────────────────
+const archivoBD = {
+  handle: null,
+  soportado() {
+    return typeof window !== "undefined" && typeof window.showSaveFilePicker === "function";
+  },
+  // Verifica permiso de escritura y lo vuelve a pedir si hace falta.
+  async permisoEscritura() {
+    if (!this.handle) return "sin_archivo";
+    try {
+      const opts = {
+        mode: "readwrite"
+      };
+      let p = await this.handle.queryPermission(opts);
+      if (p === "granted") return "granted";
+      p = await this.handle.requestPermission(opts);
+      return p;
+    } catch {
+      return "error";
+    }
+  },
+  async vincular() {
+    if (!this.soportado()) throw new Error("no_soportado");
+    this.handle = await window.showSaveFilePicker({
+      suggestedName: "construia-base.json",
+      types: [{
+        description: "Base ConstruIA (JSON)",
+        accept: {
+          "application/json": [".json"]
+        }
+      }]
+    });
+    estadoBD.fuente = "archivo";
+    estadoBD.archivoNombre = this.handle.name;
+    const r = await this.guardar();
+    if (!r.ok) throw new Error(r.motivo);
+    avisarBD();
+    return this.handle.name;
+  },
+  async abrirExistente() {
+    if (typeof window.showOpenFilePicker !== "function") throw new Error("no_soportado");
+    const [h] = await window.showOpenFilePicker({
+      types: [{
+        description: "Base ConstruIA (JSON)",
+        accept: {
+          "application/json": [".json"]
+        }
+      }]
+    });
+    const file = await h.getFile();
+    const datos = JSON.parse(await file.text());
+    const rev = revisarArchivo(datos);
+    if (!rev.valido) throw new Error(rev.motivo);
+    this.handle = h;
+    return {
+      handle: h,
+      nombre: h.name,
+      datos,
+      revision: rev
+    };
+  },
+  async guardar() {
+    if (!this.handle) return {
+      ok: false,
+      motivo: "sin_archivo"
+    };
+    const permiso = await this.permisoEscritura();
+    if (permiso !== "granted") {
+      estadoBD.ultimoError = permiso === "denied" ? "El archivo ya no tiene permiso de escritura. Volvé a vincularlo." : "No se pudo verificar el permiso del archivo.";
+      avisarBD();
+      return {
+        ok: false,
+        motivo: estadoBD.ultimoError
+      };
+    }
+    try {
+      const datos = await exportarDatos();
+      const w = await this.handle.createWritable();
+      await w.write(JSON.stringify(datos, null, 2));
+      await w.close();
+      estadoBD.ultimaEscritura = new Date().toISOString();
+      estadoBD.ultimaCopia = estadoBD.ultimaEscritura;
+      estadoBD.ultimoError = null;
+      avisarBD();
+      return {
+        ok: true
+      };
+    } catch (e) {
+      const msg = String(e && e.name || "");
+      estadoBD.ultimoError = msg === "NotFoundError" ? "El archivo fue movido o eliminado. Volvé a vincularlo." : msg === "NotAllowedError" ? "Se revocó el permiso sobre el archivo. Volvé a vincularlo." : "No se pudo escribir en el archivo: " + (e && e.message ? e.message : "error");
+      avisarBD();
+      return {
+        ok: false,
+        motivo: estadoBD.ultimoError
+      };
+    }
+  }
+};
+
+// ── exportar ──────────────────────────────────────────────────
+async function exportarDatos() {
+  const datos = {
+    formato: FORMATO_ARCHIVO,
+    version: FORMATO_VERSION,
+    app: "ConstruIA",
+    exportado: new Date().toISOString(),
+    prospectos: await bd.listar("prospectos"),
+    plantillas: await bd.listar("plantillas"),
+    zonas_barridas: await bd.listar("zonas_barridas")
+  };
+  datos.conteo = contarDatos(datos);
+  datos.checksum = checksum(cuerpoParaChecksum(datos));
+  return datos;
+}
+async function descargarBase() {
+  const datos = await exportarDatos();
+  const texto = JSON.stringify(datos, null, 2);
+  const blob = new Blob([texto], {
+    type: "application/json"
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `construia-base-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  estadoBD.ultimaCopia = new Date().toISOString();
+  try {
+    localStorage.setItem("bd_ultima_copia", estadoBD.ultimaCopia);
+  } catch {}
+  avisarBD();
+  return {
+    ...datos.conteo,
+    bytes: blob.size,
+    checksum: datos.checksum
+  };
+}
+
+// ── importar, con revisión previa ─────────────────────────────
+function revisarArchivo(datos) {
+  if (!datos || typeof datos !== "object") return {
+    valido: false,
+    motivo: "El archivo no es un JSON válido."
+  };
+  if (datos.formato !== FORMATO_ARCHIVO) return {
+    valido: false,
+    motivo: "No es una base de ConstruIA."
+  };
+  if (Number(datos.version) > FORMATO_VERSION) {
+    return {
+      valido: false,
+      motivo: `El archivo es de una versión más nueva (v${datos.version}). Actualizá la aplicación.`
+    };
+  }
+  const cuentas = contarDatos(datos);
+  const calculado = checksum(cuerpoParaChecksum(datos));
+  const coincide = !datos.checksum || datos.checksum === calculado;
+  return {
+    valido: true,
+    version: datos.version,
+    exportado: datos.exportado,
+    ...cuentas,
+    checksum: calculado,
+    checksumOriginal: datos.checksum || null,
+    integro: coincide
+  };
+}
+
+// Compara el archivo con lo que ya está cargado.
+async function compararConActual(datos) {
+  const actuales = await bd.listar("prospectos");
+  const porId = new Set(actuales.map(p => String(p.id)));
+  const porDominio = new Set(actuales.map(p => normalizarDominio(p.web)).filter(Boolean));
+  const porNombre = new Set(actuales.map(p => String(p.empresa || "").toLowerCase().trim()).filter(Boolean));
+  let repetidos = 0,
+    nuevos = 0;
+  (datos.prospectos || []).forEach(p => {
+    const d = normalizarDominio(p.web);
+    const n = String(p.empresa || "").toLowerCase().trim();
+    if (porId.has(String(p.id)) || d && porDominio.has(d) || n && porNombre.has(n)) repetidos++;else nuevos++;
+  });
+  return {
+    enBase: actuales.length,
+    enArchivo: (datos.prospectos || []).length,
+    repetidos,
+    nuevos
+  };
+}
+
+// Copia de seguridad antes de tocar nada.
+async function copiaPrevia() {
+  try {
+    const datos = await exportarDatos();
+    const clave = "bd_copia_previa";
+    localStorage.setItem(clave, JSON.stringify({
+      fecha: new Date().toISOString(),
+      datos
+    }));
+    return {
+      ok: true,
+      registros: datos.conteo.prospectos
+    };
+  } catch (e) {
+    // Si no entra en localStorage, se descarga para no quedarse sin respaldo.
+    try {
+      const datos = await exportarDatos();
+      const blob = new Blob([JSON.stringify(datos)], {
+        type: "application/json"
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "construia-copia-previa.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      return {
+        ok: true,
+        descargada: true
+      };
+    } catch {
+      return {
+        ok: false
+      };
+    }
+  }
+}
+async function restaurarCopiaPrevia() {
+  try {
+    const crudo = localStorage.getItem("bd_copia_previa");
+    if (!crudo) return {
+      ok: false,
+      motivo: "No hay copia previa."
+    };
+    const {
+      datos,
+      fecha
+    } = JSON.parse(crudo);
+    await aplicarDatos(datos, "reemplazar");
+    return {
+      ok: true,
+      fecha,
+      registros: contarDatos(datos).prospectos
+    };
+  } catch {
+    return {
+      ok: false,
+      motivo: "No se pudo restaurar."
+    };
+  }
+}
+
+// modo: "reemplazar" borra lo actual · "fusionar" suma sin pisar
+async function aplicarDatos(datos, modo) {
+  if (modo === "fusionar") {
+    const actuales = await bd.listar("prospectos");
+    const porId = new Set(actuales.map(p => String(p.id)));
+    const porDominio = new Set(actuales.map(p => normalizarDominio(p.web)).filter(Boolean));
+    const porNombre = new Set(actuales.map(p => String(p.empresa || "").toLowerCase().trim()).filter(Boolean));
+    const aSumar = (datos.prospectos || []).filter(p => {
+      const d = normalizarDominio(p.web);
+      const n = String(p.empresa || "").toLowerCase().trim();
+      return !(porId.has(String(p.id)) || d && porDominio.has(d) || n && porNombre.has(n));
+    });
+    await bd.agregar("prospectos", aSumar);
+    await bd.agregar("plantillas", datos.plantillas || []);
+    await bd.agregar("zonas_barridas", datos.zonas_barridas || []);
+    return {
+      sumados: aSumar.length
+    };
+  }
+  await bd.guardar("prospectos", datos.prospectos || []);
+  await bd.guardar("plantillas", datos.plantillas || []);
+  await bd.guardar("zonas_barridas", datos.zonas_barridas || []);
+  return {
+    sumados: (datos.prospectos || []).length
+  };
+}
+
+// ── migración desde localStorage ──────────────────────────────
+// El original NO se borra hasta que confirmes la migración.
+async function migrarDesdeLocalStorage() {
+  try {
+    if (localStorage.getItem("bd_migrada") === "1") {
+      return {
+        migrado: false,
+        yaEstaba: true,
+        respaldoVigente: localStorage.getItem("prospectos") != null
+      };
+    }
+    const pros = JSON.parse(localStorage.getItem("prospectos") || "[]");
+    const plan = JSON.parse(localStorage.getItem("plantillas") || "[]");
+    const total = (Array.isArray(pros) ? pros.length : 0) + (Array.isArray(plan) ? plan.length : 0);
+    if (!total) {
+      localStorage.setItem("bd_migrada", "1");
+      return {
+        migrado: false,
+        vacio: true
+      };
+    }
+    await bd.agregar("prospectos", (pros || []).map(f => f.id != null ? f : {
+      ...f,
+      id: Date.now() + Math.random()
+    }));
+    await bd.agregar("plantillas", (plan || []).map(f => f.id != null ? f : {
+      ...f,
+      id: Date.now() + Math.random()
+    }));
+    const enBase = (await bd.listar("prospectos")).length;
+    localStorage.setItem("bd_migrada", "1");
+    return {
+      migrado: true,
+      total,
+      enBase,
+      respaldoVigente: true
+    };
+  } catch {
+    return {
+      migrado: false,
+      error: true
+    };
+  }
+}
+
+// Solo después de que confirmes que todo está bien.
+function borrarRespaldoLocalStorage() {
+  try {
+    localStorage.removeItem("prospectos");
+    localStorage.removeItem("plantillas");
+    localStorage.setItem("bd_respaldo_borrado", new Date().toISOString());
+    return true;
+  } catch {
+    return false;
+  }
+}
+function hayRespaldoLocalStorage() {
+  try {
+    return localStorage.getItem("prospectos") != null;
+  } catch {
+    return false;
+  }
+}
+
+// ── prueba de volumen ─────────────────────────────────────────
+// Genera empresas ficticias y mide en el navegador real del usuario.
+function generarEmpresas(n, desde) {
+  const tipos = ["constructora", "estudio", "desarrollador", "gerenciadora", "contratista"];
+  const provs = GEO_AR.map(g => g.prov);
+  const lista = new Array(n);
+  for (let i = 0; i < n; i++) {
+    const k = (desde || 0) + i;
+    const g = GEO_AR[k % GEO_AR.length];
+    lista[i] = {
+      id: "prueba-" + k,
+      empresa: "Empresa de prueba " + k,
+      nombre: "Contacto " + k,
+      rol: tipos[k % tipos.length],
+      obras: String(k % 20 + 1),
+      mail: "contacto" + k + "@ejemplo.com",
+      tel: "11-0000-" + String(k).slice(-4),
+      web: "https://ejemplo" + k + ".com.ar",
+      dolor: "Caso de prueba para medir rendimiento del almacenamiento.",
+      estado: ESTADOS[k % ESTADOS.length],
+      zona: g.zonas[k % g.zonas.length] + ", " + g.prov,
+      alta: "01/01/26",
+      altaIso: new Date().toISOString(),
+      historial: k % 3 === 0 ? [{
+        iso: new Date().toISOString(),
+        fecha: "01/01/26",
+        hora: "10:00",
+        tipo: "llamada",
+        texto: "Contacto de prueba"
+      }] : [],
+      esPrueba: true
+    };
+  }
+  return lista;
+}
+async function pruebaVolumen(n, avisar) {
+  const paso = t => {
+    if (avisar) avisar(t);
+  };
+  const r = {
+    n
+  };
+  paso(`Generando ${n.toLocaleString("es-AR")} empresas…`);
+  let t0 = performance.now();
+  const datos = generarEmpresas(n, 0);
+  r.generar = Math.round(performance.now() - t0);
+  paso("Escribiendo en la base…");
+  t0 = performance.now();
+  await bd.guardar("prospectos", datos);
+  r.escribir = Math.round(performance.now() - t0);
+  paso("Leyendo todo…");
+  t0 = performance.now();
+  const leidos = await bd.listar("prospectos");
+  r.leer = Math.round(performance.now() - t0);
+  r.leidos = leidos.length;
+  paso("Buscando…");
+  t0 = performance.now();
+  const q = "prueba 9";
+  const encontrados = leidos.filter(p => [p.empresa, p.nombre, p.mail, p.web, p.zona, p.dolor, p.rol].some(v => String(v || "").toLowerCase().indexOf(q) >= 0));
+  r.buscar = Math.round(performance.now() - t0);
+  r.encontrados = encontrados.length;
+  paso("Exportando…");
+  t0 = performance.now();
+  const exp = await exportarDatos();
+  const texto = JSON.stringify(exp);
+  r.exportar = Math.round(performance.now() - t0);
+  r.bytes = new Blob([texto]).size;
+  paso("Midiendo espacio…");
+  const esp = await medirEspacio();
+  r.usados = esp.usados;
+  r.cuota = esp.cuota;
+  if (performance.memory) r.memoria = performance.memory.usedJSHeapSize;
+  paso("Listo");
+  return r;
+}
+async function limpiarDatosPrueba() {
+  const todos = await bd.listar("prospectos");
+  const reales = todos.filter(p => !p.esPrueba);
+  await bd.guardar("prospectos", reales);
+  return {
+    quedaron: reales.length,
+    borrados: todos.length - reales.length
+  };
+}
+
+// ════════════════════════════════════════════════════════════
 // GEOGRAFÍA ARGENTINA
 // Provincias, ciudades principales, barrios de CABA y partidos del GBA.
 // Sirve para que la búsqueda recorra el país sin que haya que escribir nada.
@@ -5683,8 +6401,65 @@ function diasDesde(fechaIso) {
   return isNaN(d) ? null : d;
 }
 function AreaComercial() {
-  const [prospectos, setProspectos] = useState(() => prospectosRepository.listar());
-  const [plantillas, setPlantillas] = useState(() => plantillasRepository.listar());
+  const [prospectos, setProspectos] = useState([]);
+  const [plantillas, setPlantillas] = useState([]);
+  const [bdLista, setBdLista] = useState(false);
+  const [estBD, setEstBD] = useState({
+    fuente: "memoria",
+    archivoNombre: null,
+    persistente: null,
+    ultimaEscritura: null,
+    ultimaCopia: null,
+    ultimoError: null,
+    registros: {
+      prospectos: 0,
+      plantillas: 0,
+      zonas_barridas: 0,
+      historiales: 0
+    },
+    bytes: {
+      usados: null,
+      cuota: null,
+      porcentaje: null,
+      base: null
+    }
+  });
+  const [guardando, setGuardando] = useState(false);
+  const [integridad, setIntegridad] = useState(null);
+  const [importPendiente, setImportPendiente] = useState(null);
+  const [prueba, setPrueba] = useState({
+    corriendo: false,
+    paso: "",
+    resultados: []
+  });
+  const [hayRespaldo, setHayRespaldo] = useState(false);
+  const [busqTexto, setBusqTexto] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [filtroProv, setFiltroProv] = useState("todas");
+  const archivoRef = useRef(null);
+
+  // Carga inicial: migra de localStorage si hace falta y lee de IndexedDB.
+  useEffect(() => {
+    const soltar = alCambiarBD(e => setEstBD(e));
+    (async () => {
+      const mig = await migrarDesdeLocalStorage();
+      const [pros, plan] = await Promise.all([bd.listar("prospectos"), bd.listar("plantillas")]);
+      setProspectos(pros);
+      setPlantillas(plan);
+      setHayRespaldo(hayRespaldoLocalStorage());
+      try {
+        const c2 = localStorage.getItem("bd_ultima_copia");
+        if (c2) estadoBD.ultimaCopia = c2;
+      } catch {}
+      await medirEspacio();
+      await medirTamanoBase();
+      setBdLista(true);
+      if (mig.migrado && mig.total) {
+        setAviso(`${mig.total} registros migrados. El respaldo anterior sigue guardado hasta que lo confirmes.`);
+      }
+    })();
+    return soltar;
+  }, []);
   const [vista, setVista] = useState("panel");
   const [sel, setSel] = useState(null);
   const [borrador, setBorrador] = useState(null);
@@ -5726,11 +6501,22 @@ function AreaComercial() {
     pt: "português do Brasil"
   }[idioma] || "español rioplatense (voseo)";
   useEffect(() => {
-    prospectosRepository.guardarTodos(prospectos);
-  }, [prospectos]);
+    if (!bdLista) return;
+    (async () => {
+      await bd.guardar("prospectos", prospectos);
+      if (archivoBD.handle) {
+        setGuardando(true);
+        const r = await archivoBD.guardar();
+        setGuardando(false);
+        if (!r.ok) setAviso(r.motivo || "No se pudo escribir en el archivo vinculado.");
+      }
+      medirTamanoBase();
+    })();
+  }, [prospectos, bdLista]);
   useEffect(() => {
-    plantillasRepository.guardarTodas(plantillas);
-  }, [plantillas]);
+    if (!bdLista) return;
+    bd.guardar("plantillas", plantillas);
+  }, [plantillas, bdLista]);
   useEffect(() => {
     const t = setInterval(() => {
       const k = claveIaRepository.obtener();
@@ -6140,6 +6926,161 @@ ${hist}`;
     setCandidatos(prev => prev.filter(x => x !== cand));
     setAviso(`${p.empresa} agregado a prospectos`);
   }
+
+  // ── archivo en tu disco ──
+  async function vincularArchivo() {
+    try {
+      const nombre = await archivoBD.vincular();
+      setAviso(`Base vinculada a ${nombre}. Se guarda sola con cada cambio.`);
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      setAviso(e && e.message === "no_soportado" ? "Este navegador no permite vincular archivos. Usá Descargar e Importar." : "No se pudo vincular: " + (e && e.message ? e.message : "error"));
+    }
+  }
+  async function abrirArchivo() {
+    try {
+      const r = await archivoBD.abrirExistente();
+      const comp = await compararConActual(r.datos);
+      setImportPendiente({
+        ...r.revision,
+        datos: r.datos,
+        comp,
+        origen: r.nombre,
+        vincular: true
+      });
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      setAviso(e && e.message ? e.message : "No se pudo abrir el archivo.");
+    }
+  }
+  async function descargar() {
+    try {
+      const r = await descargarBase();
+      setAviso(`Base descargada · ${r.prospectos} empresas · ${formatoBytes(r.bytes)} · verificación ${r.checksum}`);
+    } catch {
+      setAviso("No se pudo descargar la base.");
+    }
+  }
+  async function elegirImportar(e) {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    try {
+      const datos = JSON.parse(await f.text());
+      const rev = revisarArchivo(datos);
+      if (!rev.valido) {
+        setAviso(rev.motivo);
+        return;
+      }
+      const comp = await compararConActual(datos);
+      setImportPendiente({
+        ...rev,
+        datos,
+        comp,
+        origen: f.name,
+        vincular: false
+      });
+    } catch {
+      setAviso("El archivo no se pudo leer. Tiene que ser un .json exportado por ConstruIA.");
+    }
+  }
+  async function confirmarImportacion(modo) {
+    if (!importPendiente) return;
+    const cp = await copiaPrevia();
+    const r = await aplicarDatos(importPendiente.datos, modo);
+    const [pros, plan] = await Promise.all([bd.listar("prospectos"), bd.listar("plantillas")]);
+    setProspectos(pros);
+    setPlantillas(plan);
+    await medirTamanoBase();
+    setImportPendiente(null);
+    setAviso((modo === "fusionar" ? `${r.sumados} empresas nuevas sumadas` : `Base reemplazada · ${r.sumados} empresas`) + (cp.ok ? " · se guardó copia previa" : ""));
+  }
+  async function restaurarCopia() {
+    const r = await restaurarCopiaPrevia();
+    if (!r.ok) {
+      setAviso(r.motivo || "No se pudo restaurar.");
+      return;
+    }
+    const [pros, plan] = await Promise.all([bd.listar("prospectos"), bd.listar("plantillas")]);
+    setProspectos(pros);
+    setPlantillas(plan);
+    setAviso(`Copia previa restaurada · ${r.registros} empresas`);
+  }
+  async function activarPersistencia() {
+    const r = await pedirPersistencia();
+    setAviso(!r.soportado ? "Este navegador no permite pedir almacenamiento permanente." : r.otorgado ? r.yaEstaba ? "El almacenamiento ya era permanente." : "Almacenamiento permanente activado." : "El navegador rechazó el pedido. Los datos podrían borrarse si falta espacio.");
+  }
+  async function correrIntegridad() {
+    const r = await verificarIntegridad();
+    setIntegridad(r);
+  }
+  async function confirmarMigracion() {
+    if (!window.confirm("¿Borrar el respaldo anterior? Los datos ya están en la base nueva. Descargá una copia antes si querés estar seguro.")) return;
+    borrarRespaldoLocalStorage();
+    setHayRespaldo(false);
+    setAviso("Respaldo anterior borrado.");
+  }
+
+  // ── prueba de volumen ──
+  async function correrPrueba(n) {
+    if (prueba.corriendo) return;
+    if (!window.confirm(`Se van a generar ${n.toLocaleString("es-AR")} empresas de prueba y se va a reemplazar el contenido actual de la base.\n\n¿Descargaste una copia? Al terminar podés limpiarlas con un botón.`)) return;
+    setPrueba({
+      corriendo: true,
+      paso: "Preparando…",
+      resultados: prueba.resultados
+    });
+    try {
+      const r = await pruebaVolumen(n, p => setPrueba(v => ({
+        ...v,
+        paso: p
+      })));
+      setPrueba(v => ({
+        corriendo: false,
+        paso: "",
+        resultados: [r, ...v.resultados]
+      }));
+      const [pros] = await Promise.all([bd.listar("prospectos")]);
+      setProspectos(pros);
+      await medirTamanoBase();
+    } catch (e) {
+      setPrueba(v => ({
+        ...v,
+        corriendo: false,
+        paso: ""
+      }));
+      setAviso("La prueba falló: " + (e && e.message ? e.message : "error"));
+    }
+  }
+  async function limpiarPrueba() {
+    const r = await limpiarDatosPrueba();
+    const pros = await bd.listar("prospectos");
+    setProspectos(pros);
+    await medirTamanoBase();
+    setAviso(`${r.borrados} registros de prueba borrados · quedaron ${r.quedaron}`);
+  }
+
+  // ── búsqueda dentro de la base ──
+  // ── búsqueda dentro de la base ──
+  const provinciasEnBase = (() => {
+    const s = new Set();
+    prospectos.forEach(p => {
+      if (p.zona) s.add(String(p.zona).split(",").pop().trim());
+    });
+    return [...s].sort();
+  })();
+  const resultados = (() => {
+    const q = busqTexto.trim().toLowerCase();
+    return prospectos.filter(p => {
+      if (filtroEstado !== "todos" && p.estado !== filtroEstado) return false;
+      if (filtroProv !== "todas") {
+        const prov = p.zona ? String(p.zona).split(",").pop().trim() : "";
+        if (prov !== filtroProv) return false;
+      }
+      if (!q) return true;
+      return [p.empresa, p.nombre, p.mail, p.web, p.zona, p.dolor, p.rol].some(v => String(v || "").toLowerCase().indexOf(q) >= 0);
+    });
+  })();
   const COLS = ["empresa", "nombre", "rol", "obras", "mail", "tel", "web", "estado", "alta", "dolor"];
   function exportarCSV() {
     if (!prospectos.length) {
@@ -6273,7 +7214,7 @@ ${hist}`;
       flexWrap: "wrap",
       alignItems: "center"
     }
-  }, [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+  }, [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["base", `Base de datos${prospectos.length ? " · " + prospectos.length : ""}`], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
     key: id,
     className: "mvtab" + (vista === id ? " act" : ""),
     onClick: () => {
@@ -7411,7 +8352,851 @@ ${hist}`;
       color: b.tipo === "ok" ? T.ok : b.tipo === "error" ? "#B3261E" : b.tipo === "stop" ? "#B5651D" : T.sub,
       fontWeight: b.tipo === "ok" || b.tipo === "fin" ? 700 : 500
     }
-  }, b.texto)))))), vista === "plantillas" && /*#__PURE__*/React.createElement("div", {
+  }, b.texto)))))), vista === "base" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 960
+    }
+  }, (() => {
+    const F = {
+      memoria: {
+        t: "Solo memoria temporal",
+        d: "Los datos se pierden al cerrar. La base del navegador no está disponible.",
+        c: "#B3261E",
+        bg: "#FDECEA"
+      },
+      indexeddb: {
+        t: "Base del navegador",
+        d: "Los datos viven en este dispositivo (IndexedDB).",
+        c: "#3B6CA8",
+        bg: "#EAF0FA"
+      },
+      archivo: {
+        t: "Archivo vinculado",
+        d: "Se escribe en tu archivo con cada cambio.",
+        c: "#2F7A4F",
+        bg: "#EAF3EC"
+      },
+      importado: {
+        t: "Archivo importado",
+        d: "Datos cargados desde un archivo, guardados en el navegador.",
+        c: "#9A6B1E",
+        bg: "#FBF2E3"
+      }
+    }[estBD.fuente] || {};
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: "#fff",
+        borderRadius: 13,
+        padding: "20px 22px",
+        marginBottom: 12
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 12
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 18,
+        height: 2,
+        background: BRASS
+      }
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 9.5,
+        fontWeight: 700,
+        letterSpacing: ".14em",
+        textTransform: "uppercase",
+        color: BRASS
+      }
+    }, "Fuente activa")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "14px 16px",
+        background: F.bg,
+        border: `1px solid ${F.c}33`,
+        borderRadius: 10,
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 10,
+        height: 10,
+        borderRadius: "50%",
+        background: F.c,
+        flexShrink: 0
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 200
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 15,
+        fontWeight: 800,
+        color: F.c
+      }
+    }, F.t, estBD.archivoNombre ? ` · ${estBD.archivoNombre}` : ""), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        color: T.sub,
+        marginTop: 2,
+        lineHeight: 1.45
+      }
+    }, F.d)), guardando && /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11.5,
+        fontWeight: 700,
+        color: T.sub
+      }
+    }, "guardando…")), estBD.ultimoError && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 10,
+        background: "#FDECEA",
+        border: "1px solid #F6CFC9",
+        borderRadius: 9,
+        padding: "11px 13px",
+        fontSize: 12.5,
+        color: "#B3261E",
+        lineHeight: 1.5
+      }
+    }, "⚠ ", estBD.ultimoError), hayRespaldo && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 10,
+        background: "#FBF2E3",
+        border: "1px solid #EBDCC0",
+        borderRadius: 9,
+        padding: "11px 13px",
+        fontSize: 12.5,
+        color: "#9A6B1E",
+        lineHeight: 1.5,
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        flex: 1,
+        minWidth: 200
+      }
+    }, "El respaldo anterior sigue guardado. Cuando verifiques que está todo bien, podés borrarlo."), /*#__PURE__*/React.createElement("button", {
+      onClick: confirmarMigracion,
+      style: {
+        ...btnChico,
+        minHeight: 36
+      }
+    }, "Confirmar migración")));
+  })(), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 12,
+      gridTemplateColumns: "repeat(auto-fit,minmax(165px,1fr))",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Empresas",
+    valor: estBD.registros.prospectos,
+    nota: "en la base"
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Historiales",
+    valor: estBD.registros.historiales,
+    nota: "contactos registrados"
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Zonas barridas",
+    valor: estBD.registros.zonas_barridas,
+    nota: "búsquedas hechas"
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Tamaño de la base",
+    valor: estBD.bytes.base != null ? formatoBytes(estBD.bytes.base) : null,
+    color: "#3B6CA8",
+    nota: "datos de la app"
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Espacio usado",
+    valor: estBD.bytes.usados != null ? formatoBytes(estBD.bytes.usados) : null,
+    nota: "todo el sitio"
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Cuota del navegador",
+    valor: estBD.bytes.cuota != null ? formatoBytes(estBD.bytes.cuota) : null,
+    nota: estBD.bytes.porcentaje != null ? `${estBD.bytes.porcentaje}% ocupado` : ""
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Última escritura",
+    valor: estBD.ultimaEscritura ? new Date(estBD.ultimaEscritura).toLocaleString("es-AR", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    }) : null
+  }), /*#__PURE__*/React.createElement(Metrica, {
+    etiqueta: "Última copia",
+    valor: estBD.ultimaCopia ? new Date(estBD.ultimaCopia).toLocaleString("es-AR", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    }) : null,
+    nota: estBD.ultimaCopia ? "" : "nunca descargaste"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      padding: "18px 20px",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 13
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 14,
+      color: NAVY
+    }
+  }, "Archivo y respaldo")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 7,
+      gridTemplateColumns: "repeat(auto-fit,minmax(165px,1fr))"
+    }
+  }, archivoBD.soportado() && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    onClick: vincularArchivo,
+    style: {
+      background: NAVY,
+      color: "#fff",
+      border: "none",
+      borderRadius: 9,
+      padding: "12px",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 44,
+      fontFamily: "inherit"
+    }
+  }, "🔗 Vincular archivo"), /*#__PURE__*/React.createElement("button", {
+    onClick: abrirArchivo,
+    style: {
+      ...btnChico,
+      minHeight: 44,
+      padding: "12px"
+    }
+  }, "📂 Abrir una base")), /*#__PURE__*/React.createElement("button", {
+    onClick: descargar,
+    style: {
+      ...btnChico,
+      minHeight: 44,
+      padding: "12px"
+    }
+  }, "↓ Descargar base"), /*#__PURE__*/React.createElement("input", {
+    ref: archivoRef,
+    type: "file",
+    accept: ".json,application/json",
+    onChange: elegirImportar,
+    style: {
+      display: "none"
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: () => archivoRef.current && archivoRef.current.click(),
+    style: {
+      ...btnChico,
+      minHeight: 44,
+      padding: "12px"
+    }
+  }, "↑ Importar base"), /*#__PURE__*/React.createElement("button", {
+    onClick: exportarCSV,
+    style: {
+      ...btnChico,
+      minHeight: 44,
+      padding: "12px"
+    }
+  }, "↓ Exportar CSV"), /*#__PURE__*/React.createElement("button", {
+    onClick: activarPersistencia,
+    style: {
+      ...btnChico,
+      minHeight: 44,
+      padding: "12px"
+    }
+  }, estBD.persistente ? "✓ Permanente" : "🔒 Hacer permanente"), /*#__PURE__*/React.createElement("button", {
+    onClick: restaurarCopia,
+    style: {
+      ...btnChico,
+      minHeight: 44,
+      padding: "12px"
+    }
+  }, "↺ Restaurar copia previa")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12,
+      fontSize: 11.5,
+      color: T.muted,
+      lineHeight: 1.55
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: T.sub
+    }
+  }, "Formato del archivo:"), " JSON (.json), no SQLite. Es texto plano, se abre con cualquier editor y se puede leer desde Excel o Python sin la aplicación. Contiene empresas, plantillas, zonas barridas, conteos y una verificación de integridad.", !archivoBD.soportado() && /*#__PURE__*/React.createElement(React.Fragment, null, " En Safari e iPad no se puede vincular un archivo: usá Descargar e Importar."))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      padding: "18px 20px",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 13,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 14,
+      color: NAVY,
+      flex: 1
+    }
+  }, "Prueba de integridad"), /*#__PURE__*/React.createElement("button", {
+    onClick: correrIntegridad,
+    style: {
+      ...btnChico,
+      minHeight: 36
+    }
+  }, "Verificar ahora")), !integridad ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: T.muted,
+      lineHeight: 1.6
+    }
+  }, "Cuenta los registros, busca identificadores repetidos y calcula una verificación del contenido para detectar si un archivo se cortó o cambió.") : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 9,
+      gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))",
+      marginBottom: 12
+    }
+  }, [["Empresas", integridad.prospectos], ["Historiales", integridad.historiales], ["Zonas", integridad.zonas_barridas], ["Plantillas", integridad.plantillas]].map(([l, v]) => /*#__PURE__*/React.createElement("div", {
+    key: l,
+    style: {
+      border: `1px solid ${T.border}`,
+      borderRadius: 9,
+      padding: "10px 12px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: ".1em",
+      textTransform: "uppercase",
+      color: T.muted
+    }
+  }, l), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 18,
+      fontWeight: 800,
+      color: NAVY,
+      fontFamily: "monospace",
+      marginTop: 3
+    }
+  }, v)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: integridad.ok ? "#EAF3EC" : "#FDECEA",
+      border: `1px solid ${integridad.ok ? "#B9DCC5" : "#F6CFC9"}`,
+      borderRadius: 9,
+      padding: "12px 14px",
+      fontSize: 12.5,
+      color: integridad.ok ? "#256B42" : "#B3261E",
+      lineHeight: 1.6
+    }
+  }, /*#__PURE__*/React.createElement("b", null, integridad.ok ? "✓ Sin problemas" : "⚠ Revisar"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 5,
+      fontFamily: "monospace",
+      fontSize: 11.5
+    }
+  }, "verificación: ", integridad.checksum), integridad.idsRepetidos > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 4
+    }
+  }, integridad.idsRepetidos, " identificadores repetidos"), integridad.sinId > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 4
+    }
+  }, integridad.sinId, " registros sin identificador"), integridad.sinNombre > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 4
+    }
+  }, integridad.sinNombre, " sin nombre de empresa"), integridad.domRepetidos > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 4
+    }
+  }, integridad.domRepetidos, " dominios web repetidos · posibles duplicados")))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      padding: "18px 20px",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 14,
+      color: NAVY
+    }
+  }, "Prueba de volumen")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: T.sub,
+      lineHeight: 1.55,
+      marginBottom: 13
+    }
+  }, "Genera empresas de prueba y mide en ", /*#__PURE__*/React.createElement("b", null, "este"), " navegador y esta máquina. Reemplaza el contenido actual de la base, así que descargá una copia antes. Al terminar podés borrar los datos de prueba con un botón."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 7,
+      flexWrap: "wrap",
+      marginBottom: 12
+    }
+  }, [10000, 30000, 100000].map(n => /*#__PURE__*/React.createElement("button", {
+    key: n,
+    onClick: () => correrPrueba(n),
+    disabled: prueba.corriendo,
+    style: {
+      background: prueba.corriendo ? "#EEF1F5" : "#fff",
+      border: `1px solid ${T.border}`,
+      color: prueba.corriendo ? T.muted : T.text,
+      borderRadius: 9,
+      padding: "11px 15px",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: prueba.corriendo ? "wait" : "pointer",
+      minHeight: 42,
+      fontFamily: "inherit"
+    }
+  }, n.toLocaleString("es-AR"), " empresas")), /*#__PURE__*/React.createElement("button", {
+    onClick: limpiarPrueba,
+    disabled: prueba.corriendo,
+    style: {
+      ...btnChico,
+      minHeight: 42,
+      padding: "11px 15px"
+    }
+  }, "Borrar datos de prueba")), prueba.corriendo && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#FBF6EE",
+      border: `1px solid #EBDCC0`,
+      borderRadius: 9,
+      padding: "12px 14px",
+      fontSize: 12.5,
+      color: "#9A6B1E",
+      marginBottom: 12
+    }
+  }, "⏳ ", prueba.paso), prueba.resultados.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "sc",
+    style: {
+      overflowX: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("table", {
+    style: {
+      width: "100%",
+      borderCollapse: "collapse",
+      fontSize: 11.5,
+      minWidth: 620
+    }
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+    style: {
+      borderBottom: `2px solid ${T.border}`
+    }
+  }, ["Empresas", "Escribir", "Leer", "Buscar", "Exportar", "Archivo", "Memoria"].map(h => /*#__PURE__*/React.createElement("th", {
+    key: h,
+    style: {
+      textAlign: "left",
+      padding: "8px 10px 8px 0",
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".08em",
+      textTransform: "uppercase",
+      color: T.muted
+    }
+  }, h)))), /*#__PURE__*/React.createElement("tbody", null, prueba.resultados.map((r, i) => /*#__PURE__*/React.createElement("tr", {
+    key: i,
+    style: {
+      borderBottom: `1px solid ${T.border}`
+    }
+  }, /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "9px 10px 9px 0",
+      fontWeight: 700,
+      color: NAVY
+    }
+  }, r.n.toLocaleString("es-AR")), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "9px 10px 9px 0",
+      fontFamily: "monospace"
+    }
+  }, r.escribir, " ms"), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "9px 10px 9px 0",
+      fontFamily: "monospace"
+    }
+  }, r.leer, " ms"), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "9px 10px 9px 0",
+      fontFamily: "monospace",
+      color: r.buscar > 500 ? "#B5651D" : T.ok
+    }
+  }, r.buscar, " ms"), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "9px 10px 9px 0",
+      fontFamily: "monospace"
+    }
+  }, r.exportar, " ms"), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "9px 10px 9px 0",
+      fontFamily: "monospace"
+    }
+  }, formatoBytes(r.bytes)), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "9px 10px 9px 0",
+      fontFamily: "monospace",
+      color: T.muted
+    }
+  }, r.memoria ? formatoBytes(r.memoria) : "—"))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: T.muted,
+      marginTop: 10,
+      lineHeight: 1.5
+    }
+  }, "La columna Memoria solo aparece en Chrome y Edge. Los tiempos dependen de tu máquina: correla en cada navegador que quieras evaluar."))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 13,
+      padding: "18px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 13
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 14,
+      color: NAVY,
+      flex: 1
+    }
+  }, "Buscar en la base"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12,
+      color: T.sub,
+      fontWeight: 700
+    }
+  }, resultados.length, " de ", prospectos.length)), /*#__PURE__*/React.createElement("input", {
+    className: "vinput",
+    placeholder: "Buscar por empresa, contacto, mail, web, zona o problema…",
+    value: busqTexto,
+    onChange: e => setBusqTexto(e.target.value)
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 5,
+      flexWrap: "wrap",
+      marginBottom: 12
+    }
+  }, ["todos", ...ESTADOS].map(e => /*#__PURE__*/React.createElement("button", {
+    key: e,
+    onClick: () => setFiltroEstado(e),
+    style: {
+      fontSize: 10.5,
+      fontWeight: 700,
+      padding: "7px 12px",
+      borderRadius: 8,
+      border: `1px solid ${filtroEstado === e ? NAVY : T.border}`,
+      background: filtroEstado === e ? NAVY : "#fff",
+      color: filtroEstado === e ? "#fff" : T.sub,
+      cursor: "pointer",
+      minHeight: 34,
+      fontFamily: "inherit",
+      textTransform: "capitalize"
+    }
+  }, e))), provinciasEnBase.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "sc",
+    style: {
+      display: "flex",
+      gap: 5,
+      flexWrap: "wrap",
+      marginBottom: 14,
+      maxHeight: 90,
+      overflowY: "auto"
+    }
+  }, ["todas", ...provinciasEnBase].map(p => /*#__PURE__*/React.createElement("button", {
+    key: p,
+    onClick: () => setFiltroProv(p),
+    style: {
+      fontSize: 10.5,
+      fontWeight: 700,
+      padding: "7px 12px",
+      borderRadius: 8,
+      border: `1px solid ${filtroProv === p ? BRASS : T.border}`,
+      background: filtroProv === p ? "#FBF6EE" : "#fff",
+      color: filtroProv === p ? "#8A6A38" : T.sub,
+      cursor: "pointer",
+      minHeight: 34,
+      fontFamily: "inherit"
+    }
+  }, p))), /*#__PURE__*/React.createElement("div", {
+    className: "sc",
+    style: {
+      maxHeight: "46vh",
+      overflowY: "auto"
+    }
+  }, resultados.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: T.muted,
+      padding: "20px 0",
+      lineHeight: 1.6
+    }
+  }, prospectos.length === 0 ? "La base está vacía. Cargá empresas a mano, importá un archivo o usá Buscar clientes." : "Ningún resultado con esos filtros.") : resultados.slice(0, 300).map(p => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    onClick: () => {
+      setSel(p.id);
+      setVista("embudo");
+    },
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      padding: "11px 0",
+      borderBottom: `1px solid ${T.border}`,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700,
+      color: NAVY
+    }
+  }, p.empresa || p.nombre), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: T.muted,
+      marginTop: 2
+    }
+  }, p.rol, p.zona ? " · " + p.zona : "", p.mail ? " · " + p.mail : "")), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 8.5,
+      fontWeight: 700,
+      textTransform: "uppercase",
+      flexShrink: 0,
+      background: (COLOR_ESTADO[p.estado] || COLOR_ESTADO.nuevo).bg,
+      color: (COLOR_ESTADO[p.estado] || COLOR_ESTADO.nuevo).fg,
+      borderRadius: 20,
+      padding: "3px 8px"
+    }
+  }, p.estado))), resultados.length > 300 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: T.muted,
+      padding: "12px 0",
+      textAlign: "center"
+    }
+  }, "Mostrando 300 de ", resultados.length, ". Afiná la búsqueda para ver el resto.")))), importPendiente && /*#__PURE__*/React.createElement("div", {
+    onClick: () => setImportPendiente(null),
+    style: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(8,12,18,.72)",
+      zIndex: 120,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 22
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: e => e.stopPropagation(),
+    style: {
+      background: "#fff",
+      borderRadius: 15,
+      maxWidth: 560,
+      width: "100%",
+      maxHeight: "84vh",
+      overflowY: "auto",
+      padding: "22px 24px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 9.5,
+      fontWeight: 700,
+      letterSpacing: ".14em",
+      textTransform: "uppercase",
+      color: BRASS
+    }
+  }, "Importar")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 18,
+      fontWeight: 800,
+      color: NAVY,
+      marginBottom: 4
+    }
+  }, importPendiente.origen), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: T.muted,
+      marginBottom: 14
+    }
+  }, "Versión ", importPendiente.version, " · exportado ", importPendiente.exportado ? new Date(importPendiente.exportado).toLocaleString("es-AR") : "sin fecha"), !importPendiente.integro && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#FDECEA",
+      border: "1px solid #F6CFC9",
+      borderRadius: 9,
+      padding: "11px 13px",
+      fontSize: 12.5,
+      color: "#B3261E",
+      lineHeight: 1.5,
+      marginBottom: 12
+    }
+  }, "⚠ La verificación de integridad no coincide. El archivo pudo haberse cortado o editado a mano. Podés importarlo igual, pero revisá los datos después."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 9,
+      gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))",
+      marginBottom: 14
+    }
+  }, [["En el archivo", importPendiente.comp.enArchivo], ["Ya en tu base", importPendiente.comp.enBase], ["Nuevas", importPendiente.comp.nuevos], ["Repetidas", importPendiente.comp.repetidos]].map(([l, v]) => /*#__PURE__*/React.createElement("div", {
+    key: l,
+    style: {
+      border: `1px solid ${T.border}`,
+      borderRadius: 9,
+      padding: "10px 12px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: ".1em",
+      textTransform: "uppercase",
+      color: T.muted
+    }
+  }, l), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 19,
+      fontWeight: 800,
+      color: NAVY,
+      fontFamily: "monospace",
+      marginTop: 3
+    }
+  }, v)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: T.sub,
+      lineHeight: 1.6,
+      marginBottom: 16
+    }
+  }, "También trae ", importPendiente.historiales, " contacto", importPendiente.historiales === 1 ? "" : "s", " de historial,", " ", importPendiente.plantillas, " plantilla", importPendiente.plantillas === 1 ? "" : "s", " y", " ", importPendiente.zonas_barridas, " zona", importPendiente.zonas_barridas === 1 ? "" : "s", " barrida", importPendiente.zonas_barridas === 1 ? "" : "s", ".", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("b", null, "Antes de aplicar se guarda una copia de tu base actual"), ", que podés restaurar desde el botón Restaurar copia previa."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => confirmarImportacion("fusionar"),
+    style: {
+      background: NAVY,
+      color: "#fff",
+      border: "none",
+      borderRadius: 9,
+      padding: "13px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 46,
+      fontFamily: "inherit"
+    }
+  }, "Sumar las ", importPendiente.comp.nuevos, " nuevas · conservar lo que ya tengo"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => confirmarImportacion("reemplazar"),
+    style: {
+      background: "#fff",
+      color: "#B3261E",
+      border: "1px solid #F6CFC9",
+      borderRadius: 9,
+      padding: "13px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 46,
+      fontFamily: "inherit"
+    }
+  }, "Reemplazar todo · borra las ", importPendiente.comp.enBase, " actuales"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setImportPendiente(null),
+    style: {
+      background: "#fff",
+      color: T.sub,
+      border: `1px solid ${T.border}`,
+      borderRadius: 9,
+      padding: "13px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 46,
+      fontFamily: "inherit"
+    }
+  }, "Cancelar")))), vista === "plantillas" && /*#__PURE__*/React.createElement("div", {
     style: {
       maxWidth: 780
     }
