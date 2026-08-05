@@ -4446,6 +4446,175 @@ function BotonModal({
 }
 
 // ════════════════════════════════════════════════════════════
+// GEOGRAFÍA ARGENTINA
+// Provincias, ciudades principales, barrios de CABA y partidos del GBA.
+// Sirve para que la búsqueda recorra el país sin que haya que escribir nada.
+// ════════════════════════════════════════════════════════════
+
+const GEO_AR = [{
+  prov: "Ciudad Autónoma de Buenos Aires",
+  corto: "CABA",
+  zonas: ["Palermo", "Belgrano", "Recoleta", "Núñez", "Caballito", "Villa Urquiza", "Colegiales", "Saavedra", "Villa Devoto", "Flores", "Almagro", "Barracas", "Puerto Madero", "San Telmo", "Villa Crespo", "Coghlan", "Parque Chas", "Villa del Parque", "Mataderos", "Boedo"]
+}, {
+  prov: "Buenos Aires · Zona Norte",
+  corto: "GBA Norte",
+  zonas: ["San Isidro", "Vicente López", "Tigre", "San Fernando", "Pilar", "Escobar", "Nordelta", "Martínez", "Olivos", "Beccar", "Acassuso", "Del Viso", "Garín", "Benavídez"]
+}, {
+  prov: "Buenos Aires · Zona Oeste",
+  corto: "GBA Oeste",
+  zonas: ["Morón", "Ituzaingó", "Castelar", "Ramos Mejía", "Haedo", "Merlo", "Moreno", "La Matanza", "San Justo", "Hurlingham", "Villa Tesei"]
+}, {
+  prov: "Buenos Aires · Zona Sur",
+  corto: "GBA Sur",
+  zonas: ["Avellaneda", "Quilmes", "Lomas de Zamora", "Lanús", "Berazategui", "Florencio Varela", "Adrogué", "Temperley", "Banfield", "Canning", "Ezeiza", "San Vicente"]
+}, {
+  prov: "Buenos Aires · Interior",
+  corto: "PBA Interior",
+  zonas: ["La Plata", "Mar del Plata", "Bahía Blanca", "Tandil", "Pinamar", "Cariló", "Necochea", "Junín", "Pergamino", "Olavarría", "Campana", "Zárate", "Chascomús", "Villa Gesell"]
+}, {
+  prov: "Córdoba",
+  corto: "Córdoba",
+  zonas: ["Córdoba Capital", "Villa Carlos Paz", "Río Cuarto", "Villa Allende", "Alta Gracia", "Villa General Belgrano", "Jesús María", "San Francisco"]
+}, {
+  prov: "Santa Fe",
+  corto: "Santa Fe",
+  zonas: ["Rosario", "Santa Fe Capital", "Rafaela", "Venado Tuerto", "Funes", "Roldán", "Reconquista"]
+}, {
+  prov: "Mendoza",
+  corto: "Mendoza",
+  zonas: ["Mendoza Capital", "Godoy Cruz", "Luján de Cuyo", "Maipú", "San Rafael", "Chacras de Coria", "Tunuyán"]
+}, {
+  prov: "Neuquén",
+  corto: "Neuquén",
+  zonas: ["Neuquén Capital", "San Martín de los Andes", "Villa La Angostura", "Plottier", "Centenario", "Añelo"]
+}, {
+  prov: "Río Negro",
+  corto: "Río Negro",
+  zonas: ["Bariloche", "General Roca", "Cipolletti", "Viedma", "Las Grutas", "El Bolsón"]
+}, {
+  prov: "Salta",
+  corto: "Salta",
+  zonas: ["Salta Capital", "San Lorenzo", "Cafayate", "Orán", "Tartagal"]
+}, {
+  prov: "Tucumán",
+  corto: "Tucumán",
+  zonas: ["San Miguel de Tucumán", "Yerba Buena", "Tafí Viejo", "Concepción"]
+}, {
+  prov: "Entre Ríos",
+  corto: "Entre Ríos",
+  zonas: ["Paraná", "Concordia", "Gualeguaychú", "Colón", "Concepción del Uruguay"]
+}, {
+  prov: "Chubut",
+  corto: "Chubut",
+  zonas: ["Comodoro Rivadavia", "Trelew", "Puerto Madryn", "Esquel", "Rawson"]
+}, {
+  prov: "Misiones",
+  corto: "Misiones",
+  zonas: ["Posadas", "Puerto Iguazú", "Oberá", "Eldorado"]
+}, {
+  prov: "San Juan",
+  corto: "San Juan",
+  zonas: ["San Juan Capital", "Rivadavia", "Rawson", "Pocito"]
+}, {
+  prov: "Corrientes",
+  corto: "Corrientes",
+  zonas: ["Corrientes Capital", "Goya", "Paso de los Libres", "Mercedes"]
+}, {
+  prov: "Chaco",
+  corto: "Chaco",
+  zonas: ["Resistencia", "Presidencia Roque Sáenz Peña", "Villa Ángela"]
+}, {
+  prov: "Santiago del Estero",
+  corto: "Sgo. del Estero",
+  zonas: ["Santiago del Estero", "La Banda", "Termas de Río Hondo"]
+}, {
+  prov: "San Luis",
+  corto: "San Luis",
+  zonas: ["San Luis Capital", "Villa Mercedes", "Merlo"]
+}, {
+  prov: "Jujuy",
+  corto: "Jujuy",
+  zonas: ["San Salvador de Jujuy", "Palpalá", "Tilcara", "Perico"]
+}, {
+  prov: "La Pampa",
+  corto: "La Pampa",
+  zonas: ["Santa Rosa", "General Pico"]
+}, {
+  prov: "Formosa",
+  corto: "Formosa",
+  zonas: ["Formosa Capital", "Clorinda"]
+}, {
+  prov: "Catamarca",
+  corto: "Catamarca",
+  zonas: ["San Fernando del Valle de Catamarca", "Andalgalá"]
+}, {
+  prov: "La Rioja",
+  corto: "La Rioja",
+  zonas: ["La Rioja Capital", "Chilecito"]
+}, {
+  prov: "Santa Cruz",
+  corto: "Santa Cruz",
+  zonas: ["Río Gallegos", "El Calafate", "Caleta Olivia"]
+}, {
+  prov: "Tierra del Fuego",
+  corto: "Tierra del Fuego",
+  zonas: ["Ushuaia", "Río Grande"]
+}];
+
+// Perfiles del sector que la IA puede buscar.
+const PERFILES_BUSQUEDA = [{
+  id: "estudios",
+  t: "Estudios de arquitectura",
+  q: "estudios de arquitectura"
+}, {
+  id: "constructoras",
+  t: "Constructoras",
+  q: "empresas constructoras"
+}, {
+  id: "contratistas",
+  t: "Contratistas de construcción",
+  q: "contratistas y empresas de construcción"
+}, {
+  id: "desarrolladores",
+  t: "Desarrolladores inmobiliarios",
+  q: "desarrolladoras inmobiliarias y fideicomisos de construcción"
+}, {
+  id: "gerenciadoras",
+  t: "Gerenciadoras de obra",
+  q: "empresas de gerenciamiento y dirección de obra"
+}, {
+  id: "industriales",
+  t: "Empresas industriales",
+  q: "empresas industriales con obras de infraestructura o naves"
+}, {
+  id: "mantenimiento",
+  t: "Empresas de mantenimiento",
+  q: "empresas de mantenimiento edilicio e industrial"
+}];
+
+// Dónde buscar además de la web general.
+const FUENTES_BUSQUEDA = ["sitios propios de las empresas", "cámaras y colegios profesionales del rubro", "revistas y portales de arquitectura y construcción", "directorios de proveedores de la construcción", "notas de prensa sobre obras en curso"];
+
+// Arma todas las combinaciones zona × perfil, para recorrerlas una por una.
+function armarCombinaciones(provinciasElegidas, perfilesElegidos, porZona) {
+  const provs = GEO_AR.filter(g => provinciasElegidas.indexOf(g.prov) >= 0);
+  const perfs = PERFILES_BUSQUEDA.filter(p => perfilesElegidos.indexOf(p.id) >= 0);
+  const combos = [];
+  provs.forEach(g => {
+    const lugares = porZona ? g.zonas : [g.prov];
+    lugares.forEach(lugar => {
+      perfs.forEach(p => combos.push({
+        lugar,
+        prov: g.prov,
+        perfil: p.t,
+        consulta: p.q
+      }));
+    });
+  });
+  return combos;
+}
+
+// ════════════════════════════════════════════════════════════
 // CAPA DE REPOSITORIO
 // Aísla el acceso a datos del resto de la aplicación.
 // Hoy usa localStorage. Cuando exista backend, solo cambia este archivo:
@@ -5531,10 +5700,18 @@ function AreaComercial() {
     web: "",
     dolor: ""
   });
-  const [busqueda, setBusqueda] = useState({
-    zona: "",
-    perfil: "estudios de arquitectura"
+  const [provs, setProvs] = useState(["Ciudad Autónoma de Buenos Aires"]);
+  const [perfs, setPerfs] = useState(["estudios", "constructoras"]);
+  const [porZona, setPorZona] = useState(true);
+  const [corriendo, setCorriendo] = useState(false);
+  const [progreso, setProgreso] = useState({
+    hechas: 0,
+    total: 0,
+    lugar: "",
+    nuevos: 0
   });
+  const [bitacoraBusq, setBitacoraBusq] = useState([]);
+  const pararRef = useRef(false);
   const [candidatos, setCandidatos] = useState([]);
   const [buscando, setBuscando] = useState(false);
   const [avisoBusq, setAvisoBusq] = useState("");
@@ -5730,6 +5907,167 @@ ${hist}`;
       });
     }
     setGenerando(false);
+  }
+
+  // Registro de lo que va haciendo la campaña, para que se vea el avance.
+  function anotarBusq(texto, tipo) {
+    setBitacoraBusq(p => [{
+      id: Date.now() + Math.random(),
+      hora: ahora(),
+      texto,
+      tipo
+    }, ...p].slice(0, 60));
+  }
+
+  // Evita volver a traer empresas que ya están en la base.
+  function yaEsta(nombre, web) {
+    const n = String(nombre || "").toLowerCase().trim();
+    const w = String(web || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+    return prospectos.some(p => {
+      const pn = String(p.empresa || "").toLowerCase().trim();
+      const pw = String(p.web || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+      return n && pn === n || w && pw && pw === w;
+    });
+  }
+
+  // Una consulta puntual: un lugar y un perfil.
+  async function buscarUno(combo) {
+    const prompt = `Buscá en internet ${combo.consulta} que trabajen en ${combo.lugar}, ${combo.prov}, Argentina.\n` + `Revisá: ${FUENTES_BUSQUEDA.join(", ")}.\n` + `Priorizá las que tengan obras en curso o proyectos publicados en el último año.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":""}]\n\n` + `- "senal": por qué es buen candidato (ej: "publicó 3 obras nuevas este año").\n` + `- "contacto": mail o formulario SI figura públicamente; si no, "" vacío. NUNCA lo inventes.\n` + `Máximo 6 resultados. Si no encontrás nada real, devolvé [].`;
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": claveIaRepository.obtener(),
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 2200,
+        system: "Sos un asistente de prospección comercial. Solo reportás empresas que encontraste de verdad " + "en la búsqueda web. Nunca inventás nombres, webs ni mails. Si un dato no lo encontraste, lo dejás vacío.",
+        messages: [{
+          role: "user",
+          content: [{
+            type: "text",
+            text: prompt
+          }]
+        }],
+        tools: [{
+          type: "web_search_20250305",
+          name: "web_search"
+        }]
+      })
+    });
+    if (!r.ok) throw new Error("api");
+    const data = await r.json();
+    const texto = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+    const m = texto.match(/\[[\s\S]*\]/);
+    if (!m) return [];
+    const lista = JSON.parse(m[0]);
+    return Array.isArray(lista) ? lista : [];
+  }
+
+  // La campaña: recorre todas las combinaciones hasta terminar o hasta que toques Detener.
+  async function correrCampania() {
+    if (!iaLista) {
+      setAvisoBusq("Falta la clave de IA. Cargala en la demo con el botón 🔑.");
+      return;
+    }
+    if (!provs.length) {
+      setAvisoBusq("Elegí al menos una provincia o zona.");
+      return;
+    }
+    if (!perfs.length) {
+      setAvisoBusq("Elegí al menos un tipo de empresa.");
+      return;
+    }
+    const combos = armarCombinaciones(provs, perfs, porZona);
+    if (!combos.length) {
+      setAvisoBusq("No hay combinaciones para buscar.");
+      return;
+    }
+    pararRef.current = false;
+    setCorriendo(true);
+    setAvisoBusq("");
+    setBitacoraBusq([]);
+    setProgreso({
+      hechas: 0,
+      total: combos.length,
+      lugar: "",
+      nuevos: 0
+    });
+    anotarBusq(`Campaña iniciada · ${combos.length} búsquedas por delante`, "inicio");
+    let nuevos = 0;
+    let fallos = 0;
+    for (let i = 0; i < combos.length; i++) {
+      if (pararRef.current) {
+        anotarBusq("Detenida por vos", "stop");
+        break;
+      }
+      const c2 = combos[i];
+      setProgreso({
+        hechas: i,
+        total: combos.length,
+        lugar: `${c2.lugar} · ${c2.perfil}`,
+        nuevos
+      });
+      try {
+        const lista = await buscarUno(c2);
+        let agregados = 0;
+        const aSumar = [];
+        lista.forEach(cand => {
+          if (!cand || !cand.empresa) return;
+          if (yaEsta(cand.empresa, cand.web)) return;
+          if (aSumar.some(x => String(x.empresa).toLowerCase() === String(cand.empresa).toLowerCase())) return;
+          aSumar.push({
+            id: Date.now() + Math.random(),
+            nombre: "",
+            empresa: cand.empresa,
+            rol: c2.perfil.toLowerCase().indexOf("arquitect") >= 0 ? "estudio" : c2.perfil.toLowerCase().indexOf("desarroll") >= 0 ? "desarrollador" : "constructora",
+            obras: "",
+            mail: cand.contacto || "",
+            tel: "",
+            web: cand.web || "",
+            dolor: cand.senal || "",
+            estado: "nuevo",
+            alta: hoyCorto(),
+            altaIso: new Date().toISOString(),
+            historial: [],
+            zona: `${cand.ciudad || c2.lugar}, ${c2.prov}`,
+            fuente: "búsqueda IA"
+          });
+          agregados++;
+        });
+        if (aSumar.length) setProspectos(prev => [...aSumar, ...prev]);
+        nuevos += agregados;
+        anotarBusq(`${c2.lugar} · ${c2.perfil} → ${agregados} nuevo${agregados === 1 ? "" : "s"}`, agregados ? "ok" : "vacio");
+        fallos = 0;
+      } catch (e) {
+        fallos++;
+        anotarBusq(`${c2.lugar} · ${c2.perfil} → error de conexión`, "error");
+        if (fallos >= 3) {
+          anotarBusq("Tres errores seguidos. Campaña detenida para no gastar de más.", "stop");
+          break;
+        }
+        await new Promise(res => setTimeout(res, 4000));
+      }
+
+      // Pausa entre consultas: evita el límite de la API y da margen para detener.
+      await new Promise(res => setTimeout(res, 1200));
+    }
+    setProgreso(p => ({
+      ...p,
+      hechas: p.total,
+      lugar: "",
+      nuevos
+    }));
+    anotarBusq(`Campaña terminada · ${nuevos} empresa${nuevos === 1 ? "" : "s"} nueva${nuevos === 1 ? "" : "s"}`, "fin");
+    setCorriendo(false);
+    setAviso(`${nuevos} prospecto${nuevos === 1 ? "" : "s"} incorporado${nuevos === 1 ? "" : "s"}`);
+  }
+  function detenerCampania() {
+    pararRef.current = true;
+    anotarBusq("Deteniendo… termina la búsqueda en curso", "stop");
   }
   async function buscarClientes() {
     if (!iaLista) {
@@ -6757,7 +7095,7 @@ ${hist}`;
     }
   }, h.texto))))))), vista === "buscar" && /*#__PURE__*/React.createElement("div", {
     style: {
-      maxWidth: 780
+      maxWidth: 900
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6787,80 +7125,194 @@ ${hist}`;
       textTransform: "uppercase",
       color: BRASS
     }
-  }, "Prospección")), /*#__PURE__*/React.createElement("div", {
+  }, "Prospección autónoma")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 18,
       fontWeight: 800,
       color: NAVY,
       marginBottom: 4
     }
-  }, "Buscar posibles clientes"), /*#__PURE__*/React.createElement("div", {
+  }, "Buscar empresas del sector"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12.5,
       color: T.sub,
       lineHeight: 1.55,
-      marginBottom: 14
+      marginBottom: 16
     }
-  }, "La IA busca en internet empresas del rubro en la zona que le digas. Trae los datos que están publicados: nombre, web y contacto si figura. Los mails personales casi nunca son públicos, así que muchas veces vas a tener que entrar por el formulario del sitio."), /*#__PURE__*/React.createElement("div", {
+  }, "Elegí dónde y a quién buscar. La IA recorre una zona por vez, revisa sitios de empresas, cámaras del rubro, revistas y portales de construcción, y va cargando lo que encuentra. No para hasta terminar o hasta que toques Detener."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 8,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
       fontWeight: 700,
       letterSpacing: ".1em",
       textTransform: "uppercase",
       color: T.muted,
-      marginBottom: 6
+      flex: 1
+    }
+  }, "Dónde buscar · ", provs.length, " seleccionada", provs.length === 1 ? "" : "s"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setProvs(GEO_AR.map(g => g.prov)),
+    style: btnChico
+  }, "Todo el país"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setProvs([]),
+    style: btnChico
+  }, "Ninguna")), /*#__PURE__*/React.createElement("div", {
+    className: "sc",
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 6,
+      marginBottom: 12,
+      maxHeight: 168,
+      overflowY: "auto",
+      padding: 2
+    }
+  }, GEO_AR.map(g => {
+    const on = provs.indexOf(g.prov) >= 0;
+    return /*#__PURE__*/React.createElement("button", {
+      key: g.prov,
+      onClick: () => setProvs(p => on ? p.filter(x => x !== g.prov) : [...p, g.prov]),
+      style: {
+        fontSize: 11,
+        fontWeight: 700,
+        padding: "8px 12px",
+        borderRadius: 8,
+        border: `1px solid ${on ? NAVY : T.border}`,
+        background: on ? NAVY : "#fff",
+        color: on ? "#fff" : T.sub,
+        cursor: "pointer",
+        minHeight: 36,
+        fontFamily: "inherit"
+      },
+      title: g.zonas.join(", ")
+    }, g.corto, " ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        opacity: .65,
+        fontWeight: 600
+      }
+    }, g.zonas.length));
+  })), /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 14,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: porZona,
+    onChange: e => setPorZona(e.target.checked),
+    style: {
+      width: 17,
+      height: 17
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12,
+      color: T.text,
+      lineHeight: 1.45
+    }
+  }, "Buscar barrio por barrio y ciudad por ciudad", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: T.muted
+    }
+  }, " — más lento pero encuentra bastante más"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      fontWeight: 700,
+      letterSpacing: ".1em",
+      textTransform: "uppercase",
+      color: T.muted,
+      marginBottom: 7
     }
   }, "A quién buscar"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
-      gap: 6,
       flexWrap: "wrap",
-      marginBottom: 12
+      gap: 6,
+      marginBottom: 16
     }
-  }, ["estudios de arquitectura", "constructoras", "desarrolladoras inmobiliarias"].map(r => /*#__PURE__*/React.createElement("button", {
-    key: r,
-    onClick: () => setBusqueda({
-      ...busqueda,
-      perfil: r
-    }),
-    style: {
-      fontSize: 11,
-      fontWeight: 700,
-      padding: "9px 13px",
-      borderRadius: 8,
-      border: `1px solid ${busqueda.perfil === r ? NAVY : T.border}`,
-      background: busqueda.perfil === r ? NAVY : "#fff",
-      color: busqueda.perfil === r ? "#fff" : T.sub,
-      cursor: "pointer",
-      minHeight: 38,
-      fontFamily: "inherit"
-    }
-  }, r))), /*#__PURE__*/React.createElement("input", {
-    className: "vinput",
-    placeholder: "Zona o ciudad (ej: Zona Norte, GBA · Córdoba capital · Montevideo)",
-    value: busqueda.zona,
-    onChange: e => setBusqueda({
-      ...busqueda,
-      zona: e.target.value
-    })
-  }), /*#__PURE__*/React.createElement("button", {
-    onClick: buscarClientes,
-    disabled: buscando,
+  }, PERFILES_BUSQUEDA.map(p => {
+    const on = perfs.indexOf(p.id) >= 0;
+    return /*#__PURE__*/React.createElement("button", {
+      key: p.id,
+      onClick: () => setPerfs(v => on ? v.filter(x => x !== p.id) : [...v, p.id]),
+      style: {
+        fontSize: 11,
+        fontWeight: 700,
+        padding: "9px 13px",
+        borderRadius: 8,
+        border: `1px solid ${on ? BRASS : T.border}`,
+        background: on ? "#FBF6EE" : "#fff",
+        color: on ? "#8A6A38" : T.sub,
+        cursor: "pointer",
+        minHeight: 38,
+        fontFamily: "inherit"
+      }
+    }, on ? "✓ " : "", p.t);
+  })), (() => {
+    const combos = armarCombinaciones(provs, perfs, porZona);
+    const min = Math.round(combos.length * 0.5);
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: "#FAFBFC",
+        border: `1px solid ${T.border}`,
+        borderRadius: 10,
+        padding: "13px 15px",
+        marginBottom: 12
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: T.text,
+        lineHeight: 1.6
+      }
+    }, /*#__PURE__*/React.createElement("b", null, combos.length), " búsqueda", combos.length === 1 ? "" : "s", " · unos ", /*#__PURE__*/React.createElement("b", null, min < 1 ? "menos de 1" : min), " minuto", min === 1 ? "" : "s", " · costo estimado ", /*#__PURE__*/React.createElement("b", null, "USD ", (combos.length * 0.06).toFixed(2))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: T.muted,
+        marginTop: 5,
+        lineHeight: 1.5
+      }
+    }, "El costo es aproximado. Podés detenerla en cualquier momento y lo encontrado queda guardado."));
+  })(), !corriendo ? /*#__PURE__*/React.createElement("button", {
+    onClick: correrCampania,
     style: {
       width: "100%",
-      background: buscando ? "#EEF1F5" : BRASS,
-      color: buscando ? T.muted : "#fff",
+      background: BRASS,
+      color: "#fff",
       border: "none",
       borderRadius: 9,
-      padding: "13px",
-      fontSize: 13,
+      padding: "14px",
+      fontSize: 13.5,
       fontWeight: 700,
-      cursor: buscando ? "wait" : "pointer",
-      minHeight: 46,
-      fontFamily: "inherit",
-      marginTop: 4
+      cursor: "pointer",
+      minHeight: 50,
+      fontFamily: "inherit"
     }
-  }, buscando ? "⏳ Buscando en internet…" : "🔎 Buscar con IA"), avisoBusq && /*#__PURE__*/React.createElement("div", {
+  }, "🔎 Empezar a buscar") : /*#__PURE__*/React.createElement("button", {
+    onClick: detenerCampania,
+    style: {
+      width: "100%",
+      background: "#B3261E",
+      color: "#fff",
+      border: "none",
+      borderRadius: 9,
+      padding: "14px",
+      fontSize: 13.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 50,
+      fontFamily: "inherit"
+    }
+  }, "■ Detener"), avisoBusq && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 12,
       background: "#FBF2E3",
@@ -6871,108 +7323,95 @@ ${hist}`;
       color: "#9A6B1E",
       lineHeight: 1.5
     }
-  }, avisoBusq)), candidatos.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, avisoBusq)), (corriendo || bitacoraBusq.length > 0) && /*#__PURE__*/React.createElement("div", {
     style: {
       background: "#fff",
       borderRadius: 13,
-      overflow: "hidden"
+      padding: "18px 20px"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      padding: "13px 18px",
-      borderBottom: `1px solid ${T.border}`
+      display: "flex",
+      alignItems: "center",
+      gap: 9,
+      marginBottom: 12,
+      flexWrap: "wrap"
     }
-  }, /*#__PURE__*/React.createElement("b", {
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      height: 2,
+      background: BRASS
+    }
+  }), /*#__PURE__*/React.createElement("b", {
     style: {
       fontSize: 14,
-      color: NAVY
+      color: NAVY,
+      flex: 1
     }
-  }, candidatos.length, " candidatos encontrados"), /*#__PURE__*/React.createElement("div", {
+  }, corriendo ? "Buscando…" : "Última campaña"), /*#__PURE__*/React.createElement("span", {
     style: {
+      fontSize: 12,
+      fontWeight: 700,
+      color: BRASS
+    }
+  }, progreso.nuevos, " nueva", progreso.nuevos === 1 ? "" : "s")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 8,
+      background: "#EEF1F5",
+      borderRadius: 8,
+      overflow: "hidden",
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      background: `linear-gradient(90deg,${BRASS},#D9B57C)`,
+      width: progreso.total ? `${progreso.hechas / progreso.total * 100}%` : "0%",
+      transition: "width .4s"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
       fontSize: 11,
       color: T.muted,
-      marginTop: 2
+      marginBottom: 14
     }
-  }, "Verificá los datos antes de contactar: la IA busca, pero no garantiza que todo esté vigente.")), candidatos.map((cd, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
+  }, /*#__PURE__*/React.createElement("span", null, progreso.lugar || (corriendo ? "preparando…" : "terminada")), /*#__PURE__*/React.createElement("span", {
     style: {
-      padding: "14px 18px",
-      borderBottom: `1px solid ${T.border}`
+      fontFamily: "monospace"
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, progreso.hechas, " / ", progreso.total)), /*#__PURE__*/React.createElement("div", {
+    className: "sc",
+    style: {
+      maxHeight: 260,
+      overflowY: "auto"
+    }
+  }, bitacoraBusq.map(b => /*#__PURE__*/React.createElement("div", {
+    key: b.id,
     style: {
       display: "flex",
-      alignItems: "flex-start",
-      gap: 10,
-      flexWrap: "wrap"
+      gap: 9,
+      padding: "7px 0",
+      borderBottom: `1px solid ${T.border}`,
+      fontSize: 11.5
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: "monospace",
+      color: T.muted,
+      flexShrink: 0,
+      minWidth: 38
+    }
+  }, b.hora), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
-      minWidth: 180
+      lineHeight: 1.45,
+      color: b.tipo === "ok" ? T.ok : b.tipo === "error" ? "#B3261E" : b.tipo === "stop" ? "#B5651D" : T.sub,
+      fontWeight: b.tipo === "ok" || b.tipo === "fin" ? 700 : 500
     }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      fontSize: 14,
-      color: NAVY
-    }
-  }, cd.empresa), cd.ciudad && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 11,
-      color: T.muted
-    }
-  }, " · ", cd.ciudad), cd.que_hace && /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 12,
-      color: T.sub,
-      marginTop: 3,
-      lineHeight: 1.5
-    }
-  }, cd.que_hace), cd.senal && /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 11.5,
-      color: BRASS,
-      fontWeight: 700,
-      marginTop: 4
-    }
-  }, "▸ ", cd.senal), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 12,
-      marginTop: 6,
-      flexWrap: "wrap"
-    }
-  }, cd.web && /*#__PURE__*/React.createElement("a", {
-    href: cd.web,
-    target: "_blank",
-    rel: "noreferrer",
-    style: {
-      fontSize: 11.5,
-      color: "#3B6CA8",
-      fontWeight: 700
-    }
-  }, "Ver sitio ↗"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 11.5,
-      color: cd.contacto ? T.ok : T.muted,
-      fontWeight: 700
-    }
-  }, cd.contacto ? "✉ " + cd.contacto : "sin contacto público"))), /*#__PURE__*/React.createElement("button", {
-    onClick: () => sumarCandidato(cd),
-    style: {
-      background: NAVY,
-      color: "#fff",
-      border: "none",
-      borderRadius: 8,
-      padding: "10px 15px",
-      fontSize: 12,
-      fontWeight: 700,
-      cursor: "pointer",
-      minHeight: 40,
-      fontFamily: "inherit",
-      flexShrink: 0
-    }
-  }, "+ Agregar")))))), vista === "plantillas" && /*#__PURE__*/React.createElement("div", {
+  }, b.texto)))))), vista === "plantillas" && /*#__PURE__*/React.createElement("div", {
     style: {
       maxWidth: 780
     }
@@ -7979,6 +8418,38 @@ window.DICC = {
 
   // ── prospección ──
   "Prospección": ["Prospecting", "Prospecção"],
+  "Prospección autónoma": ["Autonomous prospecting", "Prospecção autônoma"],
+  "Buscar empresas del sector": ["Find companies in the sector", "Buscar empresas do setor"],
+  "Elegí dónde y a quién buscar. La IA recorre una zona por vez, revisa sitios de empresas, cámaras del rubro, revistas y portales de construcción, y va cargando lo que encuentra. No para hasta terminar o hasta que toques Detener.":
+    ["Choose where and who to look for. The AI works through one area at a time, checking company sites, trade associations, magazines and construction portals, adding what it finds. It doesn't stop until it's done or until you hit Stop.",
+     "Escolha onde e quem procurar. A IA percorre uma área por vez, revisa sites de empresas, câmaras do setor, revistas e portais de construção, e vai carregando o que encontra. Não para até terminar ou até você tocar em Parar."],
+  "Todo el país": ["Whole country", "País inteiro"],
+  "Ninguna": ["None", "Nenhuma"],
+  "A quién buscar": ["Who to look for", "Quem procurar"],
+  "Estudios de arquitectura": ["Architecture firms", "Escritórios de arquitetura"],
+  "Constructoras": ["Construction companies", "Construtoras"],
+  "Contratistas de construcción": ["Construction contractors", "Empreiteiros de construção"],
+  "Desarrolladores inmobiliarios": ["Property developers", "Incorporadoras imobiliárias"],
+  "Gerenciadoras de obra": ["Construction management firms", "Gerenciadoras de obra"],
+  "Empresas industriales": ["Industrial companies", "Empresas industriais"],
+  "Empresas de mantenimiento": ["Maintenance companies", "Empresas de manutenção"],
+  "🔎 Empezar a buscar": ["🔎 Start searching", "🔎 Começar a buscar"],
+  "■ Detener": ["■ Stop", "■ Parar"],
+  "Buscando…": ["Searching…", "Buscando…"],
+  "Última campaña": ["Last campaign", "Última campanha"],
+  "preparando…": ["getting ready…", "preparando…"],
+  "terminada": ["finished", "concluída"],
+  "Deteniendo… termina la búsqueda en curso": ["Stopping… finishing the current search", "Parando… terminando a busca atual"],
+  "Detenida por vos": ["Stopped by you", "Parada por você"],
+  "Elegí al menos una provincia o zona.": ["Pick at least one province or area.", "Escolha ao menos uma província ou área."],
+  "Elegí al menos un tipo de empresa.": ["Pick at least one company type.", "Escolha ao menos um tipo de empresa."],
+  "El costo es aproximado. Podés detenerla en cualquier momento y lo encontrado queda guardado.":
+    ["The cost is approximate. You can stop it at any time and whatever was found stays saved.",
+     "O custo é aproximado. Você pode parar a qualquer momento e o encontrado fica salvo."],
+  "Tres errores seguidos. Campaña detenida para no gastar de más.":
+    ["Three errors in a row. Campaign stopped to avoid overspending.",
+     "Três erros seguidos. Campanha parada para não gastar demais."],
+
   "Buscar posibles clientes": ["Find potential clients", "Buscar possíveis clientes"],
   "La IA busca en internet empresas del rubro en la zona que le digas. Trae los datos que están publicados: nombre, web y contacto si figura. Los mails personales casi nunca son públicos, así que muchas veces vas a tener que entrar por el formulario del sitio.":
     ["The AI searches the web for companies in your field, in the area you name. It brings back what's published: name, website and contact if listed. Personal emails are rarely public, so you'll often have to go through the site's contact form.",
