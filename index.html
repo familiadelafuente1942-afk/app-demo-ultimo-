@@ -7388,7 +7388,18 @@ function abrirDemo() {
   iniciarApps();
 }
 function abrirVentas() {
-  if (!revisarMotor()) return;
+  if (!revisarMotor()) {
+    // Nunca fallar en silencio: si no está activado, lo explico y ofrezco activarlo.
+    var k = window.prompt("El Centro de Operaciones IA está protegido.\n\nIngresá la llave para activarlo en este dispositivo:", "");
+    if (k === null) return;
+    if (k.trim() === LLAVE_MOTOR) {
+      try { localStorage.setItem("motor_ok", "1"); } catch (e) {}
+      revisarMotor();
+    } else {
+      window.alert("Llave incorrecta. El Centro de Operaciones queda oculto.");
+      return;
+    }
+  }
   document.body.classList.remove("en-demo");
   document.body.classList.add("en-ventas");
   try { window.scrollTo(0, 0); } catch (e) {}
@@ -8105,20 +8116,21 @@ window.DICC = {
   var idioma = "es";
   var observador = null;
 
-  // Índice inverso: desde cualquier idioma vuelvo al español.
-  var AL_ESPANOL = {};
-  Object.keys(DICC).forEach(function (es) {
-    var arr = DICC[es];
-    for (var i = 0; i < arr.length; i++) AL_ESPANOL[arr[i]] = es;
-  });
+  // Guardo el texto original de cada nodo. Así volver al español es exacto,
+  // sin depender de un mapeo inverso (que falla cuando dos frases distintas
+  // se traducen igual, por ejemplo "Activo" y "Activos" → "Active").
+  var ORIGINALES = (typeof WeakMap !== "undefined") ? new WeakMap() : null;
 
-  function aEspanol(txt) { return AL_ESPANOL[txt] || txt; }
+  function originalDe(nodo, actual) {
+    if (!ORIGINALES) return actual;
+    if (!ORIGINALES.has(nodo)) ORIGINALES.set(nodo, actual);
+    return ORIGINALES.get(nodo);
+  }
 
-  function traducirTexto(txt) {
-    var base = aEspanol(txt);
+  function traducirDesde(base) {
     if (idioma === "es") return base;
     var arr = DICC[base];
-    if (!arr) return txt;                       // sin traducción: lo dejo como está
+    if (!arr) return base;
     return arr[IDX[idioma]] || base;
   }
 
@@ -8136,7 +8148,8 @@ window.DICC = {
       var crudo = n.nodeValue;
       var t = crudo.trim();
       if (t.length < 2) continue;
-      var nuevo = traducirTexto(t);
+      var base = originalDe(n, t);
+      var nuevo = traducirDesde(base);
       if (nuevo !== t) pendientes.push([n, crudo.replace(t, nuevo)]);
     }
     pendientes.forEach(function (p) { p[0].nodeValue = p[1]; });
@@ -8144,10 +8157,12 @@ window.DICC = {
     // placeholders de inputs y textareas
     var campos = raiz.querySelectorAll ? raiz.querySelectorAll("input[placeholder],textarea[placeholder]") : [];
     for (var i = 0; i < campos.length; i++) {
-      var ph = campos[i].getAttribute("placeholder");
+      var el = campos[i];
+      var ph = el.getAttribute("placeholder");
       if (!ph) continue;
-      var nph = traducirTexto(ph.trim());
-      if (nph !== ph) campos[i].setAttribute("placeholder", nph);
+      if (!el.hasAttribute("data-ph-es")) el.setAttribute("data-ph-es", ph.trim());
+      var nph = traducirDesde(el.getAttribute("data-ph-es"));
+      if (nph !== ph) el.setAttribute("placeholder", nph);
     }
   }
 
@@ -8184,7 +8199,6 @@ window.DICC = {
   document.addEventListener("DOMContentLoaded", function () {
     try {
       observador = new MutationObserver(function () {
-        if (idioma === "es") return;            // en español no hay nada que reaplicar
         if (observador) observador.disconnect();
         try { recorrer(document.body); } catch (e) {}
         observar();
