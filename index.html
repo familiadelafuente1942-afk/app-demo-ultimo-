@@ -1126,6 +1126,11 @@ const {
   useEffect
 } = React;
 
+// Quita espacios, saltos de línea y caracteres invisibles de una API key pegada.
+function limpiarClave(txt) {
+  return String(txt == null ? "" : txt).replace(/\s+/g, "").replace(/[\u200B\u200C\u200D\uFEFF]/g, "");
+}
+
 // ── utilidades compartidas ────────────────────────────────────
 
 const ahora = () => new Date().toLocaleTimeString("es-AR", {
@@ -1439,7 +1444,8 @@ async function llamarIA({
   apiKey,
   max_tokens
 }) {
-  if (!apiKey || !apiKey.startsWith("sk-ant-")) throw new Error("sin_clave");
+  apiKey = limpiarClave(apiKey);
+  if (apiKey.length < 20 || apiKey.indexOf("sk-") !== 0) throw new Error("sin_clave");
   const userContent = Array.isArray(content) && content.length ? content : [{
     type: "text",
     text: prompt
@@ -1504,7 +1510,18 @@ function PanelDemo() {
   const [fotoAntes, setFotoAntes] = useState(null); // foto de referencia
   const [fotoHoy, setFotoHoy] = useState(null); // foto actual
   const [avanceIA, setAvanceIA] = useState(null); // % que estimó la IA
-  const [iaOk, setIaOk] = useState(null); // null = chequeando
+  // La clave y su validez se calculan juntas, en cada render.
+  const [apiKey, setApiKey] = useState(() => limpiarClave(localStorage.getItem("demo_api_key")));
+  const [verKey, setVerKey] = useState(false);
+  const claveLimpia = limpiarClave(apiKey);
+  const iaOk = claveLimpia.length >= 20 && claveLimpia.indexOf("sk-") === 0;
+  function guardarKey(k) {
+    setApiKey(k);
+    const limpia = limpiarClave(k);
+    try {
+      limpia ? localStorage.setItem("demo_api_key", limpia) : localStorage.removeItem("demo_api_key");
+    } catch {}
+  }
   const [pdfBusy, setPdfBusy] = useState(false);
   const [procesando, setProcesando] = useState(false);
   const [bitacora, setBitacora] = useState([]);
@@ -1539,23 +1556,6 @@ function PanelDemo() {
   const fileRef = useRef(null);
   const antesRef = useRef(null);
   const hoyRef = useRef(null);
-  const [apiKey, setApiKey] = useState(() => {
-    try {
-      return localStorage.getItem("demo_api_key") || "";
-    } catch {
-      return "";
-    }
-  });
-  const [verKey, setVerKey] = useState(false);
-  useEffect(() => {
-    setIaOk(apiKey.trim().startsWith("sk-ant-"));
-  }, [apiKey]);
-  function guardarKey(k) {
-    setApiKey(k);
-    try {
-      k ? localStorage.setItem("demo_api_key", k) : localStorage.removeItem("demo_api_key");
-    } catch {}
-  }
 
   // pulso visual en los paneles que reciben el dato
   function pulso(paneles) {
@@ -3773,108 +3773,6 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     }
   }, iaOk ? "✓ Clave cargada — la IA está lista" : "Falta la clave (empieza con sk-ant-)"), /*#__PURE__*/React.createElement(BotonModal, {
     onClick: () => setVerKey(false)
-  }, "Listo")))), verKey && /*#__PURE__*/React.createElement("div", {
-    onClick: () => setVerKey(false),
-    style: {
-      position: "fixed",
-      inset: 0,
-      background: "rgba(8,12,18,.72)",
-      zIndex: 110,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 22
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    onClick: e => e.stopPropagation(),
-    style: {
-      background: "#fff",
-      borderRadius: 15,
-      maxWidth: 480,
-      width: "100%",
-      padding: "22px 24px"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: 18,
-      height: 2,
-      background: BRASS
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 9.5,
-      fontWeight: 700,
-      letterSpacing: ".14em",
-      textTransform: "uppercase",
-      color: BRASS
-    }
-  }, "Configuración")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 18,
-      fontWeight: 800,
-      color: NAVY,
-      marginBottom: 6
-    }
-  }, "Clave de IA"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 12.5,
-      color: T.sub,
-      lineHeight: 1.55,
-      marginBottom: 14
-    }
-  }, "Pegá tu API key de Anthropic para activar el análisis de fotos y los informes. Queda guardada solo en este dispositivo."), /*#__PURE__*/React.createElement("input", {
-    value: apiKey,
-    onChange: e => guardarKey(e.target.value.trim()),
-    placeholder: "sk-ant-...",
-    autoCapitalize: "off",
-    autoCorrect: "off",
-    spellCheck: "false",
-    style: {
-      width: "100%",
-      border: `1px solid ${T.border}`,
-      borderRadius: 9,
-      padding: "13px",
-      fontSize: 16,
-      color: T.text,
-      outline: "none",
-      fontFamily: "monospace",
-      boxSizing: "border-box",
-      marginBottom: 14
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      flexWrap: "wrap"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      fontSize: 11.5,
-      fontWeight: 700,
-      color: iaOk ? T.ok : "#B5651D"
-    }
-  }, iaOk ? "✓ Clave cargada — la IA está lista" : "Falta la clave (empieza con sk-ant-)"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setVerKey(false),
-    style: {
-      background: NAVY,
-      color: "#fff",
-      border: "none",
-      borderRadius: 8,
-      padding: "11px 20px",
-      fontSize: 12.5,
-      fontWeight: 700,
-      cursor: "pointer",
-      minHeight: 42
-    }
   }, "Listo")))), verInforme && /*#__PURE__*/React.createElement(Modal, {
     onClose: () => setVerInforme(false),
     ancho: 620
@@ -4527,15 +4425,29 @@ const plantillasRepository = {
 // Compartida con el panel de demo. Misma clave de siempre.
 const claveIaRepository = {
   clave: "demo_api_key",
+  // Limpia espacios, saltos de línea y caracteres invisibles que se cuelan al pegar.
+  normalizar(txt) {
+    return limpiarClave(txt);
+  },
   obtener() {
     try {
-      return localStorage.getItem(this.clave) || "";
+      return this.normalizar(localStorage.getItem(this.clave));
     } catch {
       return "";
     }
   },
+  guardar(k) {
+    const limpia = this.normalizar(k);
+    try {
+      if (limpia) localStorage.setItem(this.clave, limpia);else localStorage.removeItem(this.clave);
+    } catch {}
+    return limpia;
+  },
+  // Tolerante a propósito: cualquier clave de Anthropic razonable pasa.
+  // Antes exigía el prefijo exacto y rechazaba claves válidas por un espacio.
   estaLista() {
-    return this.obtener().trim().indexOf("sk-ant-") === 0;
+    const k = this.obtener();
+    return k.length >= 20 && k.indexOf("sk-") === 0;
   }
 };
 
@@ -5548,7 +5460,7 @@ function AreaComercial() {
   const [aviso, setAviso] = useState("");
   const importRef = useRef(null);
   const [apiKey, setApiKey] = useState(() => claveIaRepository.obtener());
-  const iaLista = apiKey.trim().startsWith("sk-ant-");
+  const iaLista = claveIaRepository.estaLista();
   const idioma = typeof window !== "undefined" && window.idiomaActual ? window.idiomaActual() : "es";
   const NOMBRE_IDIOMA = {
     es: "español rioplatense (voseo)",
@@ -5724,7 +5636,7 @@ ${hist}`;
       const d = await llamarIA({
         system: REGLAS,
         prompt: `${ctx}\n\n${pedidos[accion]}`,
-        apiKey,
+        apiKey: claveIaRepository.obtener(),
         max_tokens: 900
       });
       setBorrador({
@@ -5756,7 +5668,7 @@ ${hist}`;
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": apiKey,
+          "x-api-key": claveIaRepository.obtener(),
           "anthropic-version": "2023-06-01",
           "anthropic-dangerous-direct-browser-access": "true"
         },
@@ -8119,12 +8031,23 @@ window.DICC = {
   // Guardo el texto original de cada nodo. Así volver al español es exacto,
   // sin depender de un mapeo inverso (que falla cuando dos frases distintas
   // se traducen igual, por ejemplo "Activo" y "Activos" → "Active").
-  var ORIGINALES = (typeof WeakMap !== "undefined") ? new WeakMap() : null;
+  // Solo recuerdo los nodos que YO traduje. Si la aplicación cambia un texto
+  // por su cuenta (React redibujando), el nodo deja de estar controlado y no
+  // lo vuelvo a pisar: antes eso deshacía los cambios de la app.
+  var TRADUCIDOS = (typeof WeakMap !== "undefined") ? new WeakMap() : null;
 
-  function originalDe(nodo, actual) {
-    if (!ORIGINALES) return actual;
-    if (!ORIGINALES.has(nodo)) ORIGINALES.set(nodo, actual);
-    return ORIGINALES.get(nodo);
+  // Devuelve el español base de un nodo, o null si el nodo no lo controlo yo.
+  function baseDe(nodo, actual) {
+    if (!TRADUCIDOS) return actual;
+    var reg = TRADUCIDOS.get(nodo);
+    if (reg && reg.puesto === actual) return reg.base;   // sigue como lo dejé
+    return actual;                                       // texto nuevo de la app
+  }
+
+  function marcar(nodo, base, puesto) {
+    if (!TRADUCIDOS) return;
+    if (base === puesto) TRADUCIDOS.delete(nodo);
+    else TRADUCIDOS.set(nodo, { base: base, puesto: puesto });
   }
 
   function traducirDesde(base) {
@@ -8148,11 +8071,14 @@ window.DICC = {
       var crudo = n.nodeValue;
       var t = crudo.trim();
       if (t.length < 2) continue;
-      var base = originalDe(n, t);
+      var base = baseDe(n, t);
       var nuevo = traducirDesde(base);
-      if (nuevo !== t) pendientes.push([n, crudo.replace(t, nuevo)]);
+      if (nuevo !== t) pendientes.push([n, crudo.replace(t, nuevo), base, nuevo]);
     }
-    pendientes.forEach(function (p) { p[0].nodeValue = p[1]; });
+    pendientes.forEach(function (p) {
+      p[0].nodeValue = p[1];
+      marcar(p[0], p[2], p[3]);
+    });
 
     // placeholders de inputs y textareas
     var campos = raiz.querySelectorAll ? raiz.querySelectorAll("input[placeholder],textarea[placeholder]") : [];
