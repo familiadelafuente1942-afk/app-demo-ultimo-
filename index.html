@@ -3191,6 +3191,8 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     }
   }, /*#__PURE__*/React.createElement("style", null, `
         .grilla { display:grid; gap:12px; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; height:calc(100vh - 96px); }
+        .marco-oscuro { display:flex; flex-direction:column; flex:1; min-height:0; filter: invert(0.93) hue-rotate(180deg); background:#fff; }
+        .marco-oscuro img { filter: invert(0.93) hue-rotate(180deg); }
         @media (max-width: 820px) {
           .grilla { grid-template-columns:1fr; grid-template-rows:none; height:auto; }
           .grilla > div { min-height:460px; }
@@ -3320,14 +3322,18 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
   }, /*#__PURE__*/React.createElement(Marco, {
     rotulo: "App 1 · Constructora",
     flash: flash.constructora
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "marco-oscuro"
   }, /*#__PURE__*/React.createElement(Nav, {
     valor: tabC,
     onChange: setTabC,
     doble: true,
     items: seccionesApp("constructora")
-  }), contenidoApp(tabC, "constructora")), /*#__PURE__*/React.createElement(Marco, {
+  }), contenidoApp(tabC, "constructora"))), /*#__PURE__*/React.createElement(Marco, {
     rotulo: "App 2 · Estudio de arquitectura",
     flash: flash.estudio
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "marco-oscuro"
   }, /*#__PURE__*/React.createElement(Nav, {
     valor: tabE,
     onChange: setTabE,
@@ -3371,7 +3377,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       fontSize: 10.5,
       color: "#C0533F"
     }
-  }, "Tocá para ver →"))), contenidoApp(tabE, "estudio")), /*#__PURE__*/React.createElement(Marco, {
+  }, "Tocá para ver →"))), contenidoApp(tabE, "estudio"))), /*#__PURE__*/React.createElement(Marco, {
     rotulo: "App 3 · Capataz",
     flash: flash.contratista
   }, /*#__PURE__*/React.createElement("div", {
