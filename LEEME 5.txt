@@ -1,0 +1,45 @@
+MARKETING · ETAPA 3 · Calendario de contenido + Campañas pagas
+════════════════════════════════════════════════════════════════
+
+QUÉ HACE:
+Dentro de Centro de Operaciones → pestaña Marketing, ahora hay una
+pantalla real debajo de la ficha del agente, con dos secciones:
+
+- CONTENIDO: lista de posts/blog/redes con título, canal, fecha y
+  estado (idea / en progreso / programado / publicado). El estado
+  se cambia con un selector, sin recargar nada.
+
+- CAMPAÑAS: lista de campañas pagas con nombre, canal, presupuesto
+  y estado (planificada / activa / pausada / finalizada).
+
+Los dos tienen botón "+ Nuevo" para cargar rápido, y "Borrar" en
+cada fila. Todo se guarda directo en Supabase (marketing_contenido
+y marketing_campanias) — nada queda solo en el celular.
+
+SESIÓN:
+Usa la misma sesión de correo/contraseña que ya tenés abierta en
+Comercial. Si entrás primero a Marketing sin haber iniciado sesión
+en ningún otro lado, te va a pedir correo y contraseña — son los
+mismos que ya usás (vvconstrucciones@yahoo.com.ar).
+
+REQUISITO:
+Necesita que ya hayas corrido el SQL de la Etapa 1
+(marketing_tablas.sql) en Supabase. Si no lo corriste, al entrar a
+Marketing vas a ver un cartel rojo con el error.
+
+CÓMO SUBIRLO:
+Subí este index.html a GitHub reemplazando al actual. Ojo con el
+nombre: tiene que quedar exactamente "index.html", sin duplicar
+la extensión (ya tuvimos ese problema antes).
+
+VERIFICADO ANTES DE ENTREGAR:
+- Sintaxis de JavaScript revisada con Node, sin errores.
+- Render de prueba con navegador simulado: la app carga sin
+  excepciones en ningún punto.
+- Bloque de Contratista comparado byte a byte contra el original:
+  idéntico, no se tocó.
+- La prueba interactiva completa (entrar a Marketing y cargar un
+  dato) no se pudo simular en el entorno de pruebas porque necesita
+  el cartel nativo de "ingresá la llave", que el navegador de
+  pruebas no soporta — probalo vos en el celular y avisame si algo
+  no anda.
