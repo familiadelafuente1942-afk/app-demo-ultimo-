@@ -37,10 +37,10 @@
   // de nuevo en cada pestaña nueva, pero no dura para siempre en el
   // dispositivo. Ajustable si se prefiere otra política.
   function tokenGuardado() {
-    try { return sessionStorage.getItem('supa_token'); } catch { return null; }
+    try { return localStorage.getItem('supa_token'); } catch { return null; }
   }
   function guardarToken(t) {
-    try { sessionStorage.setItem('supa_token', t); } catch {}
+    try { localStorage.setItem('supa_token', t); } catch {}
   }
 
   async function iniciarSesion(email, clave) {

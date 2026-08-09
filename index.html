@@ -6669,29 +6669,314 @@ function fichaPendiente(datos) {
     ...datos
   };
 }
+// ── conexión a Supabase reutilizando la sesión que ya abrió supabase-sync.js ──
+const MKT_SUPA_URL = "https://agcmhrbxqtibrtmhwrrx.supabase.co";
+const MKT_SUPA_KEY = "sb_publishable_kGPLp-DPPglnf6Eo3zPu6Q_OvE0MCkZ";
+function mktTokenGuardado() {
+  try { return localStorage.getItem("supa_token"); } catch (e) { return null; }
+}
+async function mktPedirSesion() {
+  let t = mktTokenGuardado();
+  if (t) return t;
+  const email = window.prompt("Correo para sincronizar (Supabase):");
+  if (!email) throw new Error("Sin correo");
+  const clave = window.prompt("Contraseña:");
+  if (!clave) throw new Error("Sin contraseña");
+  const r = await fetch(`${MKT_SUPA_URL}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password: clave })
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error_description || d.msg || "No se pudo iniciar sesión");
+  try { localStorage.setItem("supa_token", d.access_token); } catch (e) {}
+  return d.access_token;
+}
+async function mktFetch(ruta, opciones) {
+  const t = await mktPedirSesion();
+  const r = await fetch(`${MKT_SUPA_URL}/rest/v1/${ruta}`, {
+    ...opciones,
+    headers: {
+      apikey: MKT_SUPA_KEY,
+      Authorization: `Bearer ${t}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+      ...(opciones && opciones.headers)
+    }
+  });
+  if (!r.ok) { const txt = await r.text(); throw new Error(`${r.status} · ${txt.slice(0, 200)}`); }
+  const txt2 = await r.text();
+  return txt2 ? JSON.parse(txt2) : null;
+}
+
+// ════════════════════════════════════════════════════════════
+// MARKETING · ETAPA 4 · Métricas de página propias
+// Registra una visita al cargar la landing, y una conversión
+// cuando alguien entra a la demo. Sin Google Analytics.
+// ════════════════════════════════════════════════════════════
+(function registrarVisitaPropia() {
+  try {
+    if (sessionStorage.getItem("visita_registrada")) return;
+    sessionStorage.setItem("visita_registrada", "1");
+  } catch (e) {}
+  const params = new URLSearchParams(window.location.search);
+  const origen = params.get("utm_source") || document.referrer || "directo";
+  fetch(`${LEAD_SUPA_URL}/rest/v1/marketing_metricas_pagina`, {
+    method: "POST",
+    headers: { apikey: LEAD_SUPA_KEY, Authorization: `Bearer ${LEAD_SUPA_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ pagina: window.location.pathname || "/", origen, visitas: 1, conversiones: 0 })
+  }).catch(() => {});
+})();
+function registrarConversionPropia() {
+  fetch(`${LEAD_SUPA_URL}/rest/v1/marketing_metricas_pagina`, {
+    method: "POST",
+    headers: { apikey: LEAD_SUPA_KEY, Authorization: `Bearer ${LEAD_SUPA_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ pagina: "demo_click", origen: "conversion", visitas: 0, conversiones: 1 })
+  }).catch(() => {});
+}
+
+function PanelMarketing() {
+  const [tab, setTab] = useState("contenido");
+  const [contenido, setContenido] = useState([]);
+  const [campanias, setCampanias] = useState([]);
+  const [competencia, setCompetencia] = useState([]);
+  const [metricas, setMetricas] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  const [nuevo, setNuevo] = useState(false);
+
+  async function cargarTodo() {
+    setCargando(true);
+    setError("");
+    try {
+      const [c, k, comp, met] = await Promise.all([
+        mktFetch("marketing_contenido?select=*&order=creado.desc&limit=200"),
+        mktFetch("marketing_campanias?select=*&order=creado.desc&limit=200"),
+        mktFetch("marketing_competencia?select=*&order=creado.desc&limit=200"),
+        mktFetch("marketing_metricas_pagina?select=*&order=creado.desc&limit=1000")
+      ]);
+      setContenido(c || []);
+      setCampanias(k || []);
+      setCompetencia(comp || []);
+      setMetricas(met || []);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setCargando(false);
+    }
+  }
+  useEffect(() => { cargarTodo(); }, []);
+
+  async function cambiarEstadoContenido(id, estado) {
+    try {
+      await mktFetch(`marketing_contenido?id=eq.${id}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ estado, actualizado: new Date().toISOString() })
+      });
+      setContenido(prev => prev.map(x => x.id === id ? { ...x, estado } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function cambiarEstadoCampania(id, estado) {
+    try {
+      await mktFetch(`marketing_campanias?id=eq.${id}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ estado, actualizado: new Date().toISOString() })
+      });
+      setCampanias(prev => prev.map(x => x.id === id ? { ...x, estado } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function borrarContenido(id) {
+    try {
+      await mktFetch(`marketing_contenido?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      setContenido(prev => prev.filter(x => x.id !== id));
+    } catch (e) { setError(e.message); }
+  }
+  async function borrarCampania(id) {
+    try {
+      await mktFetch(`marketing_campanias?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      setCampanias(prev => prev.filter(x => x.id !== id));
+    } catch (e) { setError(e.message); }
+  }
+  async function borrarCompetidor(id) {
+    try {
+      await mktFetch(`marketing_competencia?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      setCompetencia(prev => prev.filter(x => x.id !== id));
+    } catch (e) { setError(e.message); }
+  }
+
+  const chipEstilo = { border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
+  const th = { textAlign: "left", fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", padding: "0 10px 8px" };
+  const td = { padding: "10px", fontSize: 12.5, color: "#1A1A1A", borderTop: "1px solid #EEF0F3" };
+
+  function FormNuevoContenido() {
+    const [f, setF] = useState({ titulo: "", tipo: "post", canal: "instagram", fecha_programada: "" });
+    async function guardar() {
+      if (!f.titulo.trim()) return;
+      try {
+        const [fila] = await mktFetch("marketing_contenido", {
+          method: "POST",
+          body: JSON.stringify({ ...f, fecha_programada: f.fecha_programada || null })
+        });
+        setContenido(prev => [fila, ...prev]);
+        setNuevo(false);
+      } catch (e) { setError(e.message); }
+    }
+    return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" } },
+      React.createElement("input", { placeholder: "Título", value: f.titulo, onChange: e => setF({ ...f, titulo: e.target.value }), style: { flex: "1 1 180px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("select", { value: f.tipo, onChange: e => setF({ ...f, tipo: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
+        ["post", "blog", "video", "historia", "email"].map(t => React.createElement("option", { key: t, value: t }, t))),
+      React.createElement("select", { value: f.canal, onChange: e => setF({ ...f, canal: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
+        ["instagram", "linkedin", "blog", "email", "otro"].map(c => React.createElement("option", { key: c, value: c }, c))),
+      React.createElement("input", { type: "date", value: f.fecha_programada, onChange: e => setF({ ...f, fecha_programada: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar"));
+  }
+  function FormNuevaCampania() {
+    const [f, setF] = useState({ nombre: "", canal: "google ads", presupuesto: "", fecha_inicio: "" });
+    async function guardar() {
+      if (!f.nombre.trim()) return;
+      try {
+        const [fila] = await mktFetch("marketing_campanias", {
+          method: "POST",
+          body: JSON.stringify({ ...f, presupuesto: f.presupuesto ? Number(f.presupuesto) : null, fecha_inicio: f.fecha_inicio || null })
+        });
+        setCampanias(prev => [fila, ...prev]);
+        setNuevo(false);
+      } catch (e) { setError(e.message); }
+    }
+    return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" } },
+      React.createElement("input", { placeholder: "Nombre de campaña", value: f.nombre, onChange: e => setF({ ...f, nombre: e.target.value }), style: { flex: "1 1 180px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("select", { value: f.canal, onChange: e => setF({ ...f, canal: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
+        ["google ads", "meta ads", "linkedin ads", "otro"].map(c => React.createElement("option", { key: c, value: c }, c))),
+      React.createElement("input", { placeholder: "Presupuesto USD", type: "number", value: f.presupuesto, onChange: e => setF({ ...f, presupuesto: e.target.value }), style: { width: 120, padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("input", { type: "date", value: f.fecha_inicio, onChange: e => setF({ ...f, fecha_inicio: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar"));
+  }
+  function FormNuevoCompetidor() {
+    const [f, setF] = useState({ nombre_competidor: "", web: "", precio_estimado: "", descripcion: "" });
+    async function guardar() {
+      if (!f.nombre_competidor.trim()) return;
+      try {
+        const [fila] = await mktFetch("marketing_competencia", {
+          method: "POST",
+          body: JSON.stringify({ ...f, ultima_revision: new Date().toISOString().slice(0, 10) })
+        });
+        setCompetencia(prev => [fila, ...prev]);
+        setNuevo(false);
+      } catch (e) { setError(e.message); }
+    }
+    return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" } },
+      React.createElement("input", { placeholder: "Nombre del competidor", value: f.nombre_competidor, onChange: e => setF({ ...f, nombre_competidor: e.target.value }), style: { flex: "1 1 160px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("input", { placeholder: "Web", value: f.web, onChange: e => setF({ ...f, web: e.target.value }), style: { flex: "1 1 140px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("input", { placeholder: "Precio estimado", value: f.precio_estimado, onChange: e => setF({ ...f, precio_estimado: e.target.value }), style: { width: 130, padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("input", { placeholder: "Descripción breve", value: f.descripcion, onChange: e => setF({ ...f, descripcion: e.target.value }), style: { flex: "1 1 200px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar"));
+  }
+
+  return /*#__PURE__*/React.createElement("div", { style: { background: "#fff", borderRadius: 13, padding: "18px 20px" } },
+    React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" } },
+      ["contenido", "campanias", "competencia", "metricas"].map(tb => React.createElement("button", {
+        key: tb,
+        onClick: () => setTab(tb),
+        style: { ...chipEstilo, background: tab === tb ? NAVY : "#F3F5F8", color: tab === tb ? "#fff" : "#4A5565", padding: "8px 16px" }
+      }, tb === "contenido" ? `Contenido · ${contenido.length}` : tb === "campanias" ? `Campañas · ${campanias.length}` : tb === "competencia" ? `Competencia · ${competencia.length}` : `Métricas · ${metricas.length}`)),
+      tab !== "metricas" && React.createElement("button", { onClick: () => setNuevo(v => !v), style: { ...chipEstilo, background: "#EAF3EC", color: "#2F7A4F", padding: "8px 16px", marginLeft: "auto" } }, nuevo ? "Cancelar" : "+ Nuevo")
+    ),
+    error && React.createElement("div", { style: { background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 12 } }, error),
+    nuevo && (tab === "contenido" ? React.createElement(FormNuevoContenido) : tab === "campanias" ? React.createElement(FormNuevaCampania) : tab === "competencia" ? React.createElement(FormNuevoCompetidor) : null),
+    cargando ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Cargando…") :
+    tab === "contenido" ? (
+      contenido.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin contenido cargado todavía.") :
+      React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+        React.createElement("thead", null, React.createElement("tr", null,
+          React.createElement("th", { style: th }, "Título"), React.createElement("th", { style: th }, "Canal"),
+          React.createElement("th", { style: th }, "Fecha"), React.createElement("th", { style: th }, "Estado"), React.createElement("th", { style: th }, ""))),
+        React.createElement("tbody", null, contenido.map(c => React.createElement("tr", { key: c.id },
+          React.createElement("td", { style: td }, c.titulo),
+          React.createElement("td", { style: td }, c.canal || "—"),
+          React.createElement("td", { style: td }, c.fecha_programada || "—"),
+          React.createElement("td", { style: td }, React.createElement("select", {
+            value: c.estado, onChange: e => cambiarEstadoContenido(c.id, e.target.value),
+            style: { fontSize: 11.5, padding: "4px 6px", borderRadius: 6, border: "1px solid #E6E9EE" }
+          }, ["idea", "en_progreso", "programado", "publicado"].map(s => React.createElement("option", { key: s, value: s }, s)))),
+          React.createElement("td", { style: td }, React.createElement("button", { onClick: () => borrarContenido(c.id), style: { border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 } }, "Borrar")))))))
+    ) : tab === "campanias" ? (
+      campanias.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin campañas cargadas todavía.") :
+      React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+        React.createElement("thead", null, React.createElement("tr", null,
+          React.createElement("th", { style: th }, "Campaña"), React.createElement("th", { style: th }, "Canal"),
+          React.createElement("th", { style: th }, "Presupuesto"), React.createElement("th", { style: th }, "Estado"), React.createElement("th", { style: th }, ""))),
+        React.createElement("tbody", null, campanias.map(c => React.createElement("tr", { key: c.id },
+          React.createElement("td", { style: td }, c.nombre),
+          React.createElement("td", { style: td }, c.canal || "—"),
+          React.createElement("td", { style: td }, c.presupuesto != null ? `USD ${c.presupuesto}` : "—"),
+          React.createElement("td", { style: td }, React.createElement("select", {
+            value: c.estado, onChange: e => cambiarEstadoCampania(c.id, e.target.value),
+            style: { fontSize: 11.5, padding: "4px 6px", borderRadius: 6, border: "1px solid #E6E9EE" }
+          }, ["planificada", "activa", "pausada", "finalizada"].map(s => React.createElement("option", { key: s, value: s }, s)))),
+          React.createElement("td", { style: td }, React.createElement("button", { onClick: () => borrarCampania(c.id), style: { border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 } }, "Borrar")))))))
+    ) : tab === "competencia" ? (
+      competencia.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin competidores cargados todavía.") :
+      React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+        React.createElement("thead", null, React.createElement("tr", null,
+          React.createElement("th", { style: th }, "Competidor"), React.createElement("th", { style: th }, "Web"),
+          React.createElement("th", { style: th }, "Precio est."), React.createElement("th", { style: th }, "Descripción"), React.createElement("th", { style: th }, ""))),
+        React.createElement("tbody", null, competencia.map(c => React.createElement("tr", { key: c.id },
+          React.createElement("td", { style: td }, c.nombre_competidor),
+          React.createElement("td", { style: td }, c.web || "—"),
+          React.createElement("td", { style: td }, c.precio_estimado || "—"),
+          React.createElement("td", { style: td }, c.descripcion || "—"),
+          React.createElement("td", { style: td }, React.createElement("button", { onClick: () => borrarCompetidor(c.id), style: { border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 } }, "Borrar")))))))
+    ) : (
+      (() => {
+        const totVisitas = metricas.reduce((a, m) => a + (m.visitas || 0), 0);
+        const totConv = metricas.reduce((a, m) => a + (m.conversiones || 0), 0);
+        const porOrigen = {};
+        metricas.forEach(m => { const o = m.origen || "directo"; porOrigen[o] = (porOrigen[o] || 0) + (m.visitas || 0); });
+        const topOrigenes = Object.entries(porOrigen).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        return metricas.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Todavía no hay visitas registradas.") :
+        React.createElement("div", null,
+          React.createElement("div", { style: { display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" } },
+            React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: "13px 16px", minWidth: 130 } },
+              React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, color: "#8B95A5", textTransform: "uppercase" } }, "Visitas totales"),
+              React.createElement("div", { style: { fontSize: 22, fontWeight: 800, color: NAVY, marginTop: 4 } }, totVisitas)),
+            React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: "13px 16px", minWidth: 130 } },
+              React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, color: "#8B95A5", textTransform: "uppercase" } }, "Entradas a demo"),
+              React.createElement("div", { style: { fontSize: 22, fontWeight: 800, color: BRASS, marginTop: 4 } }, totConv))),
+          React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", marginBottom: 8 } }, "De dónde vienen"),
+          topOrigenes.map(([o, n]) => React.createElement("div", { key: o, style: { display: "flex", justifyContent: "space-between", padding: "7px 0", borderTop: "1px solid #EEF0F3", fontSize: 12.5 } },
+            React.createElement("span", { style: { color: "#4A5565", wordBreak: "break-all", maxWidth: 320 } }, o), React.createElement("b", { style: { color: NAVY } }, n))));
+      })()
+    )
+  );
+}
+
 function AreaMarketing() {
-  return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
-    nombre: "Director de Marketing IA",
-    departamento: "Marketing",
-    objetivo: "Generar demanda calificada: atraer constructoras, estudios y desarrolladoras hasta el punto en que el área Comercial pueda trabajarlas.",
-    capacidades: [{
-      titulo: "Generación de leads",
-      detalle: "Captación desde el sitio, formularios y campañas"
-    }, {
-      titulo: "Contenido",
-      detalle: "Artículos y material técnico para el rubro"
-    }, {
-      titulo: "Campañas",
-      detalle: "Planificación y seguimiento por segmento"
-    }, {
-      titulo: "Redes sociales",
-      detalle: "Publicación y respuesta"
-    }, {
-      titulo: "Analítica",
-      detalle: "Origen de cada lead y costo de adquisición"
-    }],
-    metricas: ["Leads del mes", "Costo por lead", "Conversión a prospecto", "Alcance"]
-  }));
+  return /*#__PURE__*/React.createElement("div", null,
+    React.createElement(FichaAgente, fichaPendiente({
+      nombre: "Director de Marketing IA",
+      departamento: "Marketing",
+      objetivo: "Generar demanda calificada: atraer constructoras, estudios y desarrolladoras hasta el punto en que el área Comercial pueda trabajarlas.",
+      capacidades: [{
+        titulo: "Generación de leads",
+        detalle: "Captación desde el sitio, formularios y campañas"
+      }, {
+        titulo: "Contenido",
+        detalle: "Artículos y material técnico para el rubro"
+      }, {
+        titulo: "Campañas",
+        detalle: "Planificación y seguimiento por segmento"
+      }, {
+        titulo: "Redes sociales",
+        detalle: "Publicación y respuesta"
+      }, {
+        titulo: "Analítica",
+        detalle: "Origen de cada lead y costo de adquisición"
+      }],
+      metricas: ["Leads del mes", "Costo por lead", "Conversión a prospecto", "Alcance"]
+    })),
+    React.createElement(PanelMarketing));
 }
 function AreaOperaciones() {
   return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
@@ -6827,8 +7112,8 @@ function AreaCEO({
   }, {
     id: "marketing",
     nombre: "Marketing",
-    estado: "pendiente",
-    nota: "Sin conectar"
+    estado: "activo",
+    nota: "Contenido, campañas y leads"
   }, {
     id: "operaciones",
     nombre: "Operaciones",
@@ -6921,7 +7206,7 @@ function AreaCEO({
       background: "#E09A3E",
       fontStyle: "normal"
     }
-  }), "1 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
+  }), "2 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 12
     }
@@ -10313,7 +10598,7 @@ const AREAS = [{
   id: "marketing",
   nombre: "Marketing",
   corto: "Marketing",
-  activa: false
+  activa: true
 }, {
   id: "operaciones",
   nombre: "Operaciones",
@@ -10415,7 +10700,7 @@ function CentroOperaciones() {
       borderRadius: 20,
       padding: "3px 9px"
     }
-  }, "1 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
+  }, "2 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
     className: "co-nav",
     style: {
       marginBottom: 14
@@ -10533,12 +10818,88 @@ function marcarVista(cual) {
   if (d) d.className = cual === "demo" ? "act" : "";
   if (v) v.className = cual === "ventas" ? "act" : "";
 }
+// ════════════════════════════════════════════════════════════
+// MARKETING · ETAPA 2 · Captura de leads de demo
+// Antes de abrir la demo por primera vez en este navegador, pide
+// nombre y mail, y lo guarda en marketing_leads_demo (Supabase).
+// Solo se pregunta una vez por dispositivo/navegador.
+// ════════════════════════════════════════════════════════════
+const LEAD_SUPA_URL = "https://agcmhrbxqtibrtmhwrrx.supabase.co";
+const LEAD_SUPA_KEY = "sb_publishable_kGPLp-DPPglnf6Eo3zPu6Q_OvE0MCkZ";
+
+function yaCapturoLead() {
+  try { return localStorage.getItem("lead_demo_capturado") === "1"; }
+  catch (e) { return false; }
+}
+function marcarLeadCapturado() {
+  try { localStorage.setItem("lead_demo_capturado", "1"); } catch (e) {}
+}
+
+async function enviarLeadDemo(datos) {
+  try {
+    await fetch(`${LEAD_SUPA_URL}/rest/v1/marketing_leads_demo`, {
+      method: "POST",
+      headers: {
+        apikey: LEAD_SUPA_KEY,
+        Authorization: `Bearer ${LEAD_SUPA_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify({
+        nombre: datos.nombre || null,
+        email: datos.email || null,
+        empresa: datos.empresa || null,
+        origen: "landing_probar_demo"
+      })
+    });
+  } catch (e) {
+    console.warn("[lead demo] no se pudo guardar", e.message);
+  }
+}
+
+function mostrarModalLead(alContinuar) {
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;z-index:99998;background:rgba(11,11,12,.7);display:flex;align-items:center;justify-content:center;padding:16px;";
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;max-width:360px;width:100%;padding:26px 24px;font-family:inherit;">
+      <div style="font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B0894F;margin-bottom:8px;">Antes de entrar</div>
+      <div style="font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:#101C2C;margin-bottom:6px;">¿A quién le mostramos NEXO?</div>
+      <div style="font-size:12.5px;color:#4A5565;line-height:1.5;margin-bottom:16px;">Un dato rápido, así podemos escribirte si te sirvió la demo. No hace falta si no querés.</div>
+      <input id="leadNombre" type="text" placeholder="Nombre" style="width:100%;box-sizing:border-box;padding:11px 13px;border:1.5px solid #E6E9EE;border-radius:9px;font-size:14px;margin-bottom:9px;" />
+      <input id="leadEmail" type="email" placeholder="Mail" style="width:100%;box-sizing:border-box;padding:11px 13px;border:1.5px solid #E6E9EE;border-radius:9px;font-size:14px;margin-bottom:9px;" />
+      <input id="leadEmpresa" type="text" placeholder="Empresa (opcional)" style="width:100%;box-sizing:border-box;padding:11px 13px;border:1.5px solid #E6E9EE;border-radius:9px;font-size:14px;margin-bottom:14px;" />
+      <button id="leadContinuar" style="width:100%;padding:13px;border:none;border-radius:9px;background:#B0894F;color:#fff;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:8px;">Entrar a la demo →</button>
+      <button id="leadSaltar" style="width:100%;padding:11px;border:none;background:transparent;color:#8B95A5;font-size:12.5px;cursor:pointer;">Continuar sin dejar datos</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  function cerrar(conDatos) {
+    if (conDatos) {
+      const datos = {
+        nombre: document.getElementById("leadNombre").value.trim(),
+        email: document.getElementById("leadEmail").value.trim(),
+        empresa: document.getElementById("leadEmpresa").value.trim()
+      };
+      if (datos.nombre || datos.email) enviarLeadDemo(datos);
+    }
+    marcarLeadCapturado();
+    overlay.remove();
+    alContinuar();
+  }
+  overlay.querySelector("#leadContinuar").onclick = () => cerrar(true);
+  overlay.querySelector("#leadSaltar").onclick = () => cerrar(false);
+}
+
 function abrirDemo() {
-  document.body.classList.remove("en-ventas");
-  document.body.classList.add("en-demo");
-  try { window.scrollTo(0, 0); } catch (e) {}
-  marcarVista("demo");
-  iniciarApps();
+  function seguir() {
+    document.body.classList.remove("en-ventas");
+    document.body.classList.add("en-demo");
+    try { window.scrollTo(0, 0); } catch (e) {}
+    marcarVista("demo");
+    iniciarApps();
+  }
+  if (yaCapturoLead()) { seguir(); registrarConversionPropia(); return; }
+  mostrarModalLead(() => { seguir(); registrarConversionPropia(); });
 }
 function abrirVentas() {
   if (!revisarMotor()) {
@@ -11048,7 +11409,7 @@ window.DICC = {
   "Centro de Operaciones": ["Operations Center", "Centro de Operações"],
   "◈ Centro de Operaciones IA": ["◈ AI Operations Center", "◈ Centro de Operações IA"],
   "Abrir el Centro de Operaciones IA →": ["Open the AI Operations Center →", "Abrir o Centro de Operações IA →"],
-  "1 de 8 áreas conectadas": ["1 of 8 areas connected", "1 de 8 áreas conectadas"],
+  "2 de 8 áreas conectadas": ["2 of 8 areas connected", "2 de 8 áreas conectadas"],
   "CEO / Orquestador": ["CEO / Orchestrator", "CEO / Orquestrador"],
   "CEO / Orquestador IA": ["AI CEO / Orchestrator", "CEO / Orquestrador IA"],
   "Comercial": ["Sales", "Comercial"],
