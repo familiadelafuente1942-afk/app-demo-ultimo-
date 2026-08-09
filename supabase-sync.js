@@ -40,7 +40,7 @@
     try { return localStorage.getItem('supa_token'); } catch { return null; }
   }
   function guardarToken(t) {
-    try { localStorage.setItem('supa_token', t); } catch {}
+    try { localStorage.setItem('supa_token', (t || '').trim()); } catch {}
   }
 
   async function iniciarSesion(email, clave) {
@@ -65,9 +65,9 @@
     // Pide credenciales una sola vez por pestaña. Se puede envolver
     // en una pantalla más prolija más adelante; por ahora usa prompt
     // nativo para no tocar el diseño existente de la app.
-    const email = window.prompt('Correo para sincronizar (Supabase):');
+    const email = (window.prompt('Correo para sincronizar (Supabase):') || '').trim();
     if (!email) throw new Error('Sin correo, no se puede sincronizar');
-    const clave = window.prompt('Contraseña:');
+    const clave = (window.prompt('Contraseña:') || '').trim();
     if (!clave) throw new Error('Sin contraseña, no se puede sincronizar');
     return iniciarSesion(email, clave);
   }
@@ -75,21 +75,25 @@
   // ── llamadas a la API ──
   async function supaFetch(ruta, opciones) {
     const t = await pedirSesionSiHaceFalta();
-    const r = await fetch(`${SUPA_URL}/rest/v1/${ruta}`, {
-      ...opciones,
-      headers: {
-        apikey: SUPA_KEY,
-        Authorization: `Bearer ${t}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation',
-        ...(opciones && opciones.headers)
+    try {
+      const r = await fetch(`${SUPA_URL}/rest/v1/${ruta}`, {
+        ...opciones,
+        headers: {
+          apikey: SUPA_KEY,
+          Authorization: `Bearer ${t}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+          ...(opciones && opciones.headers)
+        }
+      });
+      if (!r.ok) {
+        const txt = await r.text();
+        throw new Error(`${r.status} · ${txt.slice(0, 200)}`);
       }
-    });
-    if (!r.ok) {
-      const txt = await r.text();
-      throw new Error(`${r.status} · ${txt.slice(0, 200)}`);
+      return r.json();
+    } catch (e) {
+      throw new Error(`[${ruta}] ${e.message}`);
     }
-    return r.json();
   }
 
   // ── mapeo de campos ──
