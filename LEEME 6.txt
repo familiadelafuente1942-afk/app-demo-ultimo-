@@ -1,0 +1,42 @@
+MARKETING · ETAPAS 4 y 5 · Métricas de página + Competencia
+════════════════════════════════════════════════════════════
+
+QUÉ HACE:
+
+ETAPA 4 — MÉTRICAS DE PÁGINA:
+Cada vez que alguien entra a la landing (una vez por pestaña/visita),
+se registra sola una fila en marketing_metricas_pagina con la página
+y de dónde vino (utm_source o referrer). Cuando esa persona entra a
+la demo, se registra además una "conversión". Sin Google Analytics,
+sin cookies de terceros.
+
+Nueva pestaña "Métricas" en Marketing: muestra visitas totales,
+entradas a demo, y un ranking de "de dónde vienen" tus visitantes.
+
+ETAPA 5 — COMPETENCIA:
+Nueva pestaña "Competencia" en Marketing: cargá a mano competidores
+(nombre, web, precio estimado, descripción). Por ahora es carga
+manual — la parte de que un agente de IA lo investigue solo queda
+para más adelante.
+
+REQUISITO:
+Necesita el SQL de la Etapa 1 (marketing_tablas.sql) ya corrido en
+Supabase — si no, las métricas y la competencia van a mostrar el
+cartel de error en vez de datos.
+
+CÓMO SUBIRLO:
+Subí este index.html a GitHub reemplazando al actual. Mismo cuidado
+de siempre con el nombre: tiene que quedar "index.html" exacto.
+
+VERIFICADO ANTES DE ENTREGAR:
+- Sintaxis de JavaScript revisada con Node: encontré y corregí un
+  error de paréntesis en el camino (una rama de "campañas" quedó
+  mal encadenada al agregar las pestañas nuevas) — quedó resuelto
+  y confirmado limpio antes de mandarte esto.
+- Render de prueba con navegador simulado: la app carga sin
+  excepciones.
+- Bloque de Contratista comparado byte a byte contra el original:
+  idéntico, no se tocó.
+- La prueba interactiva completa (entrar a Marketing, ver métricas
+  reales) no se puede simular en el entorno de pruebas porque
+  necesita el cartel nativo de la llave — probalo en el celular.
