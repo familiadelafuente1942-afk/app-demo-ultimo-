@@ -6982,29 +6982,210 @@ function AreaMarketing() {
     })),
     React.createElement(PanelMarketing));
 }
+function PanelOperaciones() {
+  const [tab, setTab] = useState("clientes");
+  const [clientes, setClientes] = useState([]);
+  const [tickets, setTickets] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  const [nuevo, setNuevo] = useState(false);
+
+  async function cargarTodo() {
+    setCargando(true);
+    setError("");
+    try {
+      const [c, t] = await Promise.all([
+        mktFetch("operaciones_clientes?select=*&order=creado.desc&limit=200"),
+        mktFetch("operaciones_tickets?select=*&order=creado.desc&limit=200")
+      ]);
+      setClientes(c || []);
+      setTickets(t || []);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setCargando(false);
+    }
+  }
+  useEffect(() => { cargarTodo(); }, []);
+
+  async function cambiarEstadoCliente(id, estado) {
+    try {
+      await mktFetch(`operaciones_clientes?id=eq.${id}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ estado, actualizado: new Date().toISOString() })
+      });
+      setClientes(prev => prev.map(x => x.id === id ? { ...x, estado } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function toggleOnboarding(id, campo, valorActual) {
+    try {
+      await mktFetch(`operaciones_clientes?id=eq.${id}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ [campo]: !valorActual, actualizado: new Date().toISOString() })
+      });
+      setClientes(prev => prev.map(x => x.id === id ? { ...x, [campo]: !valorActual } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function marcarUsoAhora(id) {
+    const ahora = new Date().toISOString();
+    try {
+      await mktFetch(`operaciones_clientes?id=eq.${id}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ fecha_ultimo_uso: ahora })
+      });
+      setClientes(prev => prev.map(x => x.id === id ? { ...x, fecha_ultimo_uso: ahora } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function borrarCliente(id) {
+    try {
+      await mktFetch(`operaciones_clientes?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      setClientes(prev => prev.filter(x => x.id !== id));
+    } catch (e) { setError(e.message); }
+  }
+  async function cambiarEstadoTicket(id, estado) {
+    try {
+      const body = { estado };
+      if (estado === "resuelto" || estado === "cerrado") body.resuelto_en = new Date().toISOString();
+      await mktFetch(`operaciones_tickets?id=eq.${id}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify(body)
+      });
+      setTickets(prev => prev.map(x => x.id === id ? { ...x, ...body } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function borrarTicket(id) {
+    try {
+      await mktFetch(`operaciones_tickets?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      setTickets(prev => prev.filter(x => x.id !== id));
+    } catch (e) { setError(e.message); }
+  }
+
+  const chipEstilo = { border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
+  const th = { textAlign: "left", fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", padding: "0 10px 8px" };
+  const td = { padding: "10px", fontSize: 12.5, color: "#1A1A1A", borderTop: "1px solid #EEF0F3" };
+
+  function FormNuevoCliente() {
+    const [f, setF] = useState({ nombre_empresa: "", contacto_nombre: "", contacto_email: "", plan: "una_obra" });
+    async function guardar() {
+      if (!f.nombre_empresa.trim()) return;
+      try {
+        const [fila] = await mktFetch("operaciones_clientes", { method: "POST", body: JSON.stringify(f) });
+        setClientes(prev => [fila, ...prev]);
+        setNuevo(false);
+      } catch (e) { setError(e.message); }
+    }
+    return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" } },
+      React.createElement("input", { placeholder: "Empresa cliente", value: f.nombre_empresa, onChange: e => setF({ ...f, nombre_empresa: e.target.value }), style: { flex: "1 1 160px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("input", { placeholder: "Contacto", value: f.contacto_nombre, onChange: e => setF({ ...f, contacto_nombre: e.target.value }), style: { flex: "1 1 140px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("input", { placeholder: "Mail de contacto", value: f.contacto_email, onChange: e => setF({ ...f, contacto_email: e.target.value }), style: { flex: "1 1 160px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("select", { value: f.plan, onChange: e => setF({ ...f, plan: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
+        ["una_obra", "constructora", "a_medida"].map(p => React.createElement("option", { key: p, value: p }, p))),
+      React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar"));
+  }
+  function FormNuevoTicket() {
+    const [f, setF] = useState({ cliente_nombre: "", titulo: "", prioridad: "media" });
+    async function guardar() {
+      if (!f.titulo.trim()) return;
+      try {
+        const [fila] = await mktFetch("operaciones_tickets", { method: "POST", body: JSON.stringify(f) });
+        setTickets(prev => [fila, ...prev]);
+        setNuevo(false);
+      } catch (e) { setError(e.message); }
+    }
+    return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" } },
+      React.createElement("input", { placeholder: "Cliente", value: f.cliente_nombre, onChange: e => setF({ ...f, cliente_nombre: e.target.value }), style: { flex: "1 1 140px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("input", { placeholder: "Título del ticket", value: f.titulo, onChange: e => setF({ ...f, titulo: e.target.value }), style: { flex: "1 1 200px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("select", { value: f.prioridad, onChange: e => setF({ ...f, prioridad: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
+        ["baja", "media", "alta"].map(p => React.createElement("option", { key: p, value: p }, p))),
+      React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar"));
+  }
+
+  const coloresEstadoCliente = { onboarding: "#9A6B1E", activo: "#2F7A4F", en_riesgo: "#B3261E", perdido: "#6C7787" };
+
+  return /*#__PURE__*/React.createElement("div", { style: { background: "#fff", borderRadius: 13, padding: "18px 20px" } },
+    React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" } },
+      ["clientes", "tickets"].map(tb => React.createElement("button", {
+        key: tb,
+        onClick: () => setTab(tb),
+        style: { ...chipEstilo, background: tab === tb ? NAVY : "#F3F5F8", color: tab === tb ? "#fff" : "#4A5565", padding: "8px 16px" }
+      }, tb === "clientes" ? `Clientes · ${clientes.length}` : `Tickets · ${tickets.length}`)),
+      React.createElement("button", { onClick: () => setNuevo(v => !v), style: { ...chipEstilo, background: "#EAF3EC", color: "#2F7A4F", padding: "8px 16px", marginLeft: "auto" } }, nuevo ? "Cancelar" : "+ Nuevo")
+    ),
+    error && React.createElement("div", { style: { background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 12 } }, error),
+    nuevo && (tab === "clientes" ? React.createElement(FormNuevoCliente) : React.createElement(FormNuevoTicket)),
+    cargando ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Cargando…") :
+    tab === "clientes" ? (
+      clientes.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin clientes cargados todavía.") :
+      React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+        React.createElement("thead", null, React.createElement("tr", null,
+          React.createElement("th", { style: th }, "Cliente"), React.createElement("th", { style: th }, "Plan"),
+          React.createElement("th", { style: th }, "Onboarding"), React.createElement("th", { style: th }, "Último uso"),
+          React.createElement("th", { style: th }, "Estado"), React.createElement("th", { style: th }, ""))),
+        React.createElement("tbody", null, clientes.map(c => React.createElement("tr", { key: c.id },
+          React.createElement("td", { style: td }, React.createElement("div", null, c.nombre_empresa), c.contacto_nombre && React.createElement("div", { style: { fontSize: 10.5, color: "#8B95A5" } }, c.contacto_nombre)),
+          React.createElement("td", { style: td }, c.plan || "—"),
+          React.createElement("td", { style: td }, React.createElement("div", { style: { display: "flex", gap: 6 } },
+            [["onboarding_alta_obra", "Obra"], ["onboarding_usuarios", "Usuarios"], ["onboarding_capacitacion", "Capacit."]].map(([campo, etiqueta]) =>
+              React.createElement("button", {
+                key: campo, onClick: () => toggleOnboarding(c.id, campo, c[campo]),
+                style: { ...chipEstilo, padding: "3px 7px", background: c[campo] ? "#EAF3EC" : "#F3F5F8", color: c[campo] ? "#2F7A4F" : "#9AA3AE" }
+              }, (c[campo] ? "✓ " : "") + etiqueta)))),
+          React.createElement("td", { style: td },
+            c.fecha_ultimo_uso ? new Date(c.fecha_ultimo_uso).toLocaleDateString("es-AR") : React.createElement("span", { style: { color: "#B3261E" } }, "nunca"),
+            React.createElement("div", null, React.createElement("button", { onClick: () => marcarUsoAhora(c.id), style: { border: "none", background: "none", color: BRASS, cursor: "pointer", fontSize: 10.5 } }, "marcar uso hoy"))),
+          React.createElement("td", { style: td }, React.createElement("select", {
+            value: c.estado, onChange: e => cambiarEstadoCliente(c.id, e.target.value),
+            style: { fontSize: 11.5, padding: "4px 6px", borderRadius: 6, border: "1px solid #E6E9EE", color: coloresEstadoCliente[c.estado] || "#1A1A1A" }
+          }, ["onboarding", "activo", "en_riesgo", "perdido"].map(s => React.createElement("option", { key: s, value: s }, s)))),
+          React.createElement("td", { style: td }, React.createElement("button", { onClick: () => borrarCliente(c.id), style: { border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 } }, "Borrar")))))))
+    ) : (
+      tickets.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin tickets cargados todavía.") :
+      React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+        React.createElement("thead", null, React.createElement("tr", null,
+          React.createElement("th", { style: th }, "Cliente"), React.createElement("th", { style: th }, "Ticket"),
+          React.createElement("th", { style: th }, "Prioridad"), React.createElement("th", { style: th }, "Estado"), React.createElement("th", { style: th }, ""))),
+        React.createElement("tbody", null, tickets.map(t => React.createElement("tr", { key: t.id },
+          React.createElement("td", { style: td }, t.cliente_nombre || "—"),
+          React.createElement("td", { style: td }, t.titulo),
+          React.createElement("td", { style: td }, t.prioridad),
+          React.createElement("td", { style: td }, React.createElement("select", {
+            value: t.estado, onChange: e => cambiarEstadoTicket(t.id, e.target.value),
+            style: { fontSize: 11.5, padding: "4px 6px", borderRadius: 6, border: "1px solid #E6E9EE" }
+          }, ["abierto", "en_progreso", "resuelto", "cerrado"].map(s => React.createElement("option", { key: s, value: s }, s)))),
+          React.createElement("td", { style: td }, React.createElement("button", { onClick: () => borrarTicket(t.id), style: { border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 } }, "Borrar")))))))
+    )
+  );
+}
+
 function AreaOperaciones() {
-  return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
-    nombre: "Director de Operaciones IA",
-    departamento: "Operaciones",
-    objetivo: "Que cada cliente nuevo llegue a usar el sistema de verdad, y que los que ya están lo sigan usando.",
-    capacidades: [{
-      titulo: "Onboarding",
-      detalle: "Alta y puesta en marcha del cliente"
-    }, {
-      titulo: "Configuración de clientes",
-      detalle: "Obras, usuarios y permisos iniciales"
-    }, {
-      titulo: "Capacitación",
-      detalle: "Material y sesiones por rol"
-    }, {
-      titulo: "Customer Success",
-      detalle: "Seguimiento de cuentas activas"
-    }, {
-      titulo: "Adopción",
-      detalle: "Detección de clientes que dejaron de usar"
-    }],
-    metricas: ["Clientes en onboarding", "Días hasta primer uso", "Adopción", "Cuentas en riesgo"]
-  }));
+  return /*#__PURE__*/React.createElement("div", null,
+    React.createElement(FichaAgente, fichaPendiente({
+      nombre: "Director de Operaciones IA",
+      departamento: "Operaciones",
+      objetivo: "Que cada cliente nuevo llegue a usar el sistema de verdad, y que los que ya están lo sigan usando.",
+      capacidades: [{
+        titulo: "Onboarding",
+        detalle: "Alta y puesta en marcha del cliente"
+      }, {
+        titulo: "Configuración de clientes",
+        detalle: "Obras, usuarios y permisos iniciales"
+      }, {
+        titulo: "Capacitación",
+        detalle: "Material y sesiones por rol"
+      }, {
+        titulo: "Customer Success",
+        detalle: "Seguimiento de cuentas activas"
+      }, {
+        titulo: "Adopción",
+        detalle: "Detección de clientes que dejaron de usar"
+      }],
+      metricas: ["Clientes en onboarding", "Días hasta primer uso", "Adopción", "Cuentas en riesgo"]
+    })),
+    React.createElement(PanelOperaciones));
 }
 function AreaSoporte() {
   return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
@@ -7121,8 +7302,8 @@ function AreaCEO({
   }, {
     id: "operaciones",
     nombre: "Operaciones",
-    estado: "pendiente",
-    nota: "Sin conectar"
+    estado: "activo",
+    nota: "Clientes y tickets"
   }, {
     id: "soporte",
     nombre: "Soporte",
@@ -7210,7 +7391,7 @@ function AreaCEO({
       background: "#E09A3E",
       fontStyle: "normal"
     }
-  }), "2 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
+  }), "3 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 12
     }
@@ -10607,7 +10788,7 @@ const AREAS = [{
   id: "operaciones",
   nombre: "Operaciones",
   corto: "Operaciones",
-  activa: false
+  activa: true
 }, {
   id: "soporte",
   nombre: "Soporte",
@@ -10704,7 +10885,7 @@ function CentroOperaciones() {
       borderRadius: 20,
       padding: "3px 9px"
     }
-  }, "2 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
+  }, "3 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
     className: "co-nav",
     style: {
       marginBottom: 14
@@ -11413,7 +11594,7 @@ window.DICC = {
   "Centro de Operaciones": ["Operations Center", "Centro de Operações"],
   "◈ Centro de Operaciones IA": ["◈ AI Operations Center", "◈ Centro de Operações IA"],
   "Abrir el Centro de Operaciones IA →": ["Open the AI Operations Center →", "Abrir o Centro de Operações IA →"],
-  "2 de 8 áreas conectadas": ["2 of 8 areas connected", "2 de 8 áreas conectadas"],
+  "3 de 8 áreas conectadas": ["3 of 8 areas connected", "3 de 8 áreas conectadas"],
   "CEO / Orquestador": ["CEO / Orchestrator", "CEO / Orquestrador"],
   "CEO / Orquestador IA": ["AI CEO / Orchestrator", "CEO / Orquestrador IA"],
   "Comercial": ["Sales", "Comercial"],
