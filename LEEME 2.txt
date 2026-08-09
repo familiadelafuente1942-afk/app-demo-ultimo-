@@ -1,0 +1,27 @@
+SINCRONIZACIÓN CONSTRUIA <-> SUPABASE
+════════════════════════════════════
+
+Este index.html YA ESTÁ MODIFICADO. No hay que editar nada
+a mano dentro de GitHub: solo subir y reemplazar.
+
+Orden:
+
+1. Ejecutar 013_sincronizacion.sql en el SQL Editor de Supabase.
+
+2. En GitHub, subir supabase-sync.js a la raíz del repo
+   (Add file → Upload files).
+
+3. En GitHub, subir este index.html a la raíz del repo, en el
+   MISMO lugar que el actual. Va a preguntar si querés
+   reemplazar el archivo existente: decí que sí.
+
+4. Confirmar el commit.
+
+Al abrir la app va a pedir correo y contraseña la primera vez.
+Después sincroniza sola.
+
+Cambios exactos hechos al index.html original (verificado con
+git diff, nada más se tocó):
+  + window.bd = bd;
+  + window.avisarBD = avisarBD;
+  + <script src="supabase-sync.js"></script>  (antes de </body>)
