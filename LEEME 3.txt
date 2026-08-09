@@ -1,0 +1,55 @@
+ARREGLO: SINCRONIZACIÓN ENTRE DISPOSITIVOS (NEXO / ConstruIA)
+════════════════════════════════════════════════════════════
+
+QUÉ TIENE ESTE ZIP:
+Un solo archivo: index.html — la versión de HOY (con todos los cambios
+visuales que hicimos: fotos, tema oscuro, tabs, logo, etc.) más el
+arreglo de sincronización que faltaba.
+
+QUÉ SE ARREGLÓ EXACTAMENTE:
+Se agregaron estas 3 líneas (nada más se tocó):
+
+  window.bd = bd;
+  window.avisarBD = avisarBD;
+  <script src="supabase-sync.js"></script>
+
+Sin esto, el script de sincronización con Supabase no podía "ver" la
+base de datos local de la app, así que nunca sincronizaba nada entre
+dispositivos — cada iPhone/iPad quedaba con su propia copia aislada.
+
+QUÉ HACER (en este orden):
+
+1. Andá a tu repositorio en GitHub.
+2. Subí este index.html a la raíz, reemplazando al que está ahora
+   (Add file → Upload files → arrastrá el archivo → confirmá que
+   reemplace el existente).
+3. Confirmá el commit ("Commit changes").
+4. Esperá 1-2 minutos a que Vercel/Netlify termine de redeployar
+   (lo hace solo, no hace falta que hagas nada más ahí).
+
+IMPORTANTE — NO HACE FALTA TOCAR NADA MÁS:
+- NO vuelvas a correr el SQL en Supabase (013_sincronizacion.sql).
+- NO vuelvas a subir supabase-sync.js (ya está en el repo).
+- Solo este index.html.
+
+CÓMO CONFIRMAR QUE FUNCIONÓ:
+Abrí la app en el iPad (NO borres datos del sitio, NO reinstales
+nada). Tiene que pedirte correo y contraseña antes de entrar — esa
+es la señal de que la sincronización está activa. Poné tus datos
+(o creá una cuenta si es la primera vez) y confirmá que las 90
+empresas que tenés ahora sigan estando.
+
+Después abrí la app en el iPhone con el mismo correo y contraseña:
+en unos segundos deberían aparecer esas mismas 90 empresas ahí
+también. Ahí confirmamos que está sincronizando de verdad.
+
+DE ACÁ EN ADELANTE:
+Una vez confirmado esto, cualquier búsqueda nueva que hagas en
+cualquier dispositivo va a viajar sola a los demás. No hace falta
+volver a tocar este tema salvo que aparezca un problema nuevo.
+
+VERIFICADO ANTES DE ENTREGAR:
+- Sintaxis de JavaScript revisada, sin errores.
+- El bloque de la app de Contratista comparado contra el original:
+  idéntico, no se tocó.
+- Solo 3 líneas agregadas en total en todo el archivo.
