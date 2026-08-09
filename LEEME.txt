@@ -1,0 +1,20 @@
+SINCRONIZACIÓN CONSTRUIA <-> SUPABASE
+════════════════════════════════════
+
+Orden de instalación:
+
+1. Ejecutar 013_sincronizacion.sql en el SQL Editor de Supabase.
+
+2. Subir supabase-sync.js al repo de GitHub (app-demo-ultimo-),
+   en la raíz, junto a index.html.
+
+3. Editar index.html en GitHub, buscar la línea:
+     </body>
+   y agregar justo ANTES:
+     <script src="supabase-sync.js"></script>
+
+4. Guardar el commit. Listo.
+
+Al abrir la app va a pedir correo y contraseña la primera vez
+(los mismos que ya se usan para entrar a Supabase). Después
+sincroniza sola cada vez que se guarda o edita un prospecto.
