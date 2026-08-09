@@ -7070,6 +7070,19 @@ function PanelOperaciones() {
 
   function FormNuevoCliente() {
     const [f, setF] = useState({ nombre_empresa: "", contacto_nombre: "", contacto_email: "", plan: "una_obra" });
+    const [empresasComercial, setEmpresasComercial] = useState([]);
+    const [origenId, setOrigenId] = useState("");
+    useEffect(() => {
+      mktFetch("empresas?select=id,nombre,email,tipo&order=nombre.asc&limit=500")
+        .then(l => setEmpresasComercial(l || []))
+        .catch(() => {});
+    }, []);
+    function elegirDeComercial(id) {
+      setOrigenId(id);
+      if (!id) return;
+      const e = empresasComercial.find(x => x.id === id);
+      if (e) setF(prev => ({ ...prev, nombre_empresa: e.nombre || "", contacto_email: e.email || "" }));
+    }
     async function guardar() {
       if (!f.nombre_empresa.trim()) return;
       try {
@@ -7078,16 +7091,27 @@ function PanelOperaciones() {
         setNuevo(false);
       } catch (e) { setError(e.message); }
     }
-    return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" } },
-      React.createElement("input", { placeholder: "Empresa cliente", value: f.nombre_empresa, onChange: e => setF({ ...f, nombre_empresa: e.target.value }), style: { flex: "1 1 160px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
-      React.createElement("input", { placeholder: "Contacto", value: f.contacto_nombre, onChange: e => setF({ ...f, contacto_nombre: e.target.value }), style: { flex: "1 1 140px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
-      React.createElement("input", { placeholder: "Mail de contacto", value: f.contacto_email, onChange: e => setF({ ...f, contacto_email: e.target.value }), style: { flex: "1 1 160px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
-      React.createElement("select", { value: f.plan, onChange: e => setF({ ...f, plan: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
-        ["una_obra", "constructora", "a_medida"].map(p => React.createElement("option", { key: p, value: p }, p))),
-      React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar"));
+    return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12 } },
+      React.createElement("div", { style: { marginBottom: 10 } },
+        React.createElement("select", {
+          value: origenId, onChange: e => elegirDeComercial(e.target.value),
+          style: { width: "100%", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5, background: "#fff" }
+        }, [React.createElement("option", { key: "", value: "" }, empresasComercial.length ? `Elegir de Comercial (${empresasComercial.length}) o escribir abajo…` : "Cargando lista de Comercial…"),
+            ...empresasComercial.map(e => React.createElement("option", { key: e.id, value: e.id }, e.nombre + (e.tipo ? ` · ${e.tipo}` : "")))])),
+      React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+        React.createElement("input", { placeholder: "Empresa cliente", value: f.nombre_empresa, onChange: e => setF({ ...f, nombre_empresa: e.target.value }), style: { flex: "1 1 160px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+        React.createElement("input", { placeholder: "Contacto", value: f.contacto_nombre, onChange: e => setF({ ...f, contacto_nombre: e.target.value }), style: { flex: "1 1 140px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+        React.createElement("input", { placeholder: "Mail de contacto", value: f.contacto_email, onChange: e => setF({ ...f, contacto_email: e.target.value }), style: { flex: "1 1 160px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+        React.createElement("select", { value: f.plan, onChange: e => setF({ ...f, plan: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
+          ["una_obra", "constructora", "a_medida"].map(p => React.createElement("option", { key: p, value: p }, p))),
+        React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar")));
   }
   function FormNuevoTicket() {
-    const [f, setF] = useState({ cliente_nombre: "", titulo: "", prioridad: "media" });
+    const [f, setF] = useState({ cliente_id: "", cliente_nombre: "", titulo: "", prioridad: "media" });
+    function elegirCliente(id) {
+      const c = clientes.find(x => x.id === id);
+      setF(prev => ({ ...prev, cliente_id: id || null, cliente_nombre: c ? c.nombre_empresa : prev.cliente_nombre }));
+    }
     async function guardar() {
       if (!f.titulo.trim()) return;
       try {
@@ -7097,7 +7121,12 @@ function PanelOperaciones() {
       } catch (e) { setError(e.message); }
     }
     return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" } },
-      React.createElement("input", { placeholder: "Cliente", value: f.cliente_nombre, onChange: e => setF({ ...f, cliente_nombre: e.target.value }), style: { flex: "1 1 140px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      clientes.length > 0 && React.createElement("select", {
+        value: f.cliente_id, onChange: e => elegirCliente(e.target.value),
+        style: { flex: "1 1 160px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5, background: "#fff" }
+      }, [React.createElement("option", { key: "", value: "" }, "Elegir cliente…"),
+          ...clientes.map(c => React.createElement("option", { key: c.id, value: c.id }, c.nombre_empresa))]),
+      React.createElement("input", { placeholder: clientes.length ? "O escribí el nombre" : "Cliente", value: f.cliente_nombre, onChange: e => setF({ ...f, cliente_nombre: e.target.value, cliente_id: "" }), style: { flex: "1 1 140px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
       React.createElement("input", { placeholder: "Título del ticket", value: f.titulo, onChange: e => setF({ ...f, titulo: e.target.value }), style: { flex: "1 1 200px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
       React.createElement("select", { value: f.prioridad, onChange: e => setF({ ...f, prioridad: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
         ["baja", "media", "alta"].map(p => React.createElement("option", { key: p, value: p }, p))),
