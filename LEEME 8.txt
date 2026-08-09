@@ -1,0 +1,42 @@
+TRES ARREGLOS
+═══════════════
+
+1. SESIÓN DE SYNC QUE SE BORRABA AL CERRAR LA APP
+Antes, el correo/contraseña de sincronización se guardaba en un
+tipo de memoria que se borra cada vez que cerrás la app del todo
+(deslizar hacia arriba). Como entrás por el ícono y la cerrás así
+seguido, te lo pedía todo el tiempo.
+
+Ahora se guarda en memoria permanente del dispositivo — la vas a
+tener que poner UNA VEZ MÁS después de este cambio, y de ahí en
+adelante no te la vuelve a pedir (salvo que borres datos del sitio
+a propósito).
+
+2. MARKETING NO APARECÍA COMO "CONECTADO"
+Ya tiene funciones reales (Contenido, Campañas, Competencia,
+Métricas), pero el sistema todavía lo marcaba como "pendiente".
+Ahora aparece con el punto verde, y el contador dice
+"2 de 8 áreas conectadas" en vez de "1 de 8".
+
+3. (el cartelito de SYNC abajo a la izquierda sigue como estaba —
+avisame con una foto qué es exactamente lo que te llama la atención
+ahí, para no tocar algo que quizás no hace falta cambiar)
+
+ARCHIVOS A SUBIR — LOS DOS, ESTA VEZ:
+- index.html → reemplaza al actual en GitHub (mismo cuidado con el
+  nombre de siempre: tiene que quedar "index.html" exacto).
+- supabase-sync.js → también reemplaza al actual (mismo proceso:
+  Add file → Upload files → confirmá que reemplace).
+
+VERIFICADO ANTES DE ENTREGAR:
+- Sintaxis de JavaScript revisada con Node en los dos archivos,
+  sin errores.
+- Bloque de Contratista comparado byte a byte: idéntico, no se tocó.
+- Confirmado que "activa: true" y "2 de 8 áreas conectadas" quedaron
+  en las tres apariciones esperadas en el archivo.
+
+QUÉ HACER DESPUÉS DE SUBIR LOS DOS ARCHIVOS:
+Abrí la app — te va a pedir correo/contraseña una vez más (la
+última vez por este motivo). Poné los mismos datos de siempre
+(vvconstrucciones@yahoo.com.ar). De ahí en adelante, aunque cierres
+la app del todo, no te lo debería volver a pedir.
