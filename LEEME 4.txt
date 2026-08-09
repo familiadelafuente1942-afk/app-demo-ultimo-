@@ -1,0 +1,39 @@
+MARKETING · ETAPA 2 · Captura de leads de demo
+════════════════════════════════════════════════
+
+QUÉ HACE:
+Cuando alguien toca "Probar demo" en la web (cualquiera de los
+botones que dicen eso), y es la primera vez en ese navegador,
+aparece un cartel corto pidiendo nombre, mail y empresa (opcional)
+antes de entrar. Tiene un botón para saltarlo sin llenar nada.
+
+Si carga los datos, se guardan solos en la tabla
+marketing_leads_demo de Supabase, con origen "landing_probar_demo".
+
+Solo pregunta UNA VEZ por navegador — la próxima vez que la misma
+persona toque "Probar demo" entra directo, sin volver a pedir nada.
+
+REQUISITO:
+Tenés que haber corrido ya el SQL de la Etapa 1
+(marketing_tablas.sql) en Supabase, si no, el guardado del lead
+falla en silencio (no rompe la demo, simplemente no queda guardado).
+
+CÓMO SUBIRLO:
+Subí este index.html a GitHub reemplazando al actual (Add file →
+Upload files, confirmá que reemplace). Fijate que el nombre quede
+"index.html" exacto, sin duplicar la extensión.
+
+VERIFICADO ANTES DE ENTREGAR:
+- Sintaxis de JavaScript revisada, sin errores.
+- Bloque de Contratista comparado byte a byte: idéntico, no se tocó.
+- Solo se agregó el modal y se modificó abrirDemo(); nada más del
+  archivo fue tocado.
+
+CÓMO PROBAR QUE FUNCIONA:
+En un navegador o pestaña nueva (o modo privado), entrá a la web
+y tocá "Probar demo" — te tiene que aparecer el cartel. Cargá un
+nombre y mail de prueba, entrá, y confirmá en Supabase con:
+
+  select * from marketing_leads_demo order by creado desc limit 5;
+
+Tiene que aparecer la fila que acabás de cargar.
