@@ -1,33 +1,36 @@
-COMERCIAL · Modo autónomo — una orden y se manda solo
+COMERCIAL · Arreglo visual + completar mails faltantes
 ════════════════════════════════════════════════════════
 
-QUÉ HACE:
-En Comercial → ✉ Campaña, arriba de todo hay un cuadro nuevo,
-oscuro, que dice "Modo autónomo". Ahí escribís la orden en una
-sola línea, por ejemplo:
+QUÉ ARREGLÉ:
+1. La tabla de contactos en ✉ Campaña no tenía fondo propio, así
+   que el texto oscuro quedaba casi invisible sobre el fondo
+   oscuro de la página. Ahora tiene su tarjeta blanca, como el
+   resto de la app.
 
-  "Mandales un mail de bienvenida presentando NEXO"
+2. En el camino de este arreglo, encontré y corregí un error mío
+   (había roto por accidente la estructura del componente al
+   insertar código) — quedó verificado con Node antes de mandarte
+   esto, no debería haber quedado nada roto.
 
-Tocás "Hacer campaña ahora" (o Enter) y eso es todo — la IA
-redacta el mail Y lo manda directo a todos los contactos tildados,
-sin pedirte que revises ni que confirmes nada. Pensado para cuando
-no tenés tiempo de mirar la pantalla.
-
-Abajo dejé el otro cuadro (el que ya tenías, "O redactar y revisar
-antes de mandar") para los días que sí quieras ver el mail antes
-de que salga.
-
-IMPORTANTE — a qué contactos les llega:
-El modo autónomo manda a los que estén tildados en la lista de
-abajo en ESE momento. Si querés mandarle a todos, asegurate de que
-el "Seleccionar todos" esté tildado antes de escribir la orden.
+QUÉ AGREGUÉ:
+Ahora la tabla muestra los 24 contactos completos, no solo los 14
+que ya tenían mail. A los que les falta, les aparece un campo de
+texto directo en la fila ("agregar mail…") — escribís el mail ahí,
+tocás afuera del campo, y queda guardado. En cuanto tiene mail
+cargado, aparece el checkbox para poder incluirlo en la próxima
+campaña.
 
 CÓMO SUBIR (siempre el mismo cuidado):
 Solo index.html. Confirmá el nombre exacto antes de subir.
 "Add file → Upload files", nunca el lápiz.
 
+CÓMO PROBAR:
+Comercial → ✉ Campaña → ahora tendrías que ver texto oscuro sobre
+fondo blanco, legible, con 24 filas. Probá completar el mail de
+alguno de los 10 que no tenían.
+
 VERIFICADO ANTES DE ENTREGAR:
-- Sintaxis de JavaScript revisada con Node, sin errores.
-- Revisé que no quedara código viejo duplicado al reordenar las
-  funciones de envío (lo encontré y lo saqué antes de mandarte esto).
+- Sintaxis de JavaScript revisada con Node, sin errores (esta vez
+  con más cuidado, después de encontrar y corregir mi propio error
+  en el camino).
 - Bloque de Contratista comparado byte a byte: idéntico.

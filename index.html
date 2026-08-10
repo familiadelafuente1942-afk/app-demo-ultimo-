@@ -8523,6 +8523,43 @@ function CampaniaComercial({ prospectos, setProspectos }) {
   // pedir revisión ni confirmación. Pensado para cuando no hay
   // tiempo de mirar la pantalla (ej. manejando).
   const [ordenAutonoma, setOrdenAutonoma] = useState("");
+  const [escuchando, setEscuchando] = useState(false);
+  const [errorVoz, setErrorVoz] = useState("");
+  const reconocedorRef = useRef(null);
+  function alternarMicrofono() {
+    setErrorVoz("");
+    if (escuchando) {
+      if (reconocedorRef.current) reconocedorRef.current.stop();
+      setEscuchando(false);
+      return;
+    }
+    const Motor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Motor) {
+      setErrorVoz("Este navegador no tiene reconocimiento de voz. Probá el micrófono del teclado en su lugar.");
+      return;
+    }
+    try {
+      const r = new Motor();
+      reconocedorRef.current = r;
+      r.lang = "es-AR";
+      r.continuous = false;
+      r.interimResults = false;
+      r.onresult = (ev) => {
+        const texto = Array.from(ev.results).map(res => res[0].transcript).join(" ");
+        setOrdenAutonoma(prev => (prev ? prev + " " : "") + texto);
+      };
+      r.onerror = (ev) => {
+        setErrorVoz(ev.error === "not-allowed" ? "No diste permiso para usar el micrófono." : "No se pudo escuchar. Probá el micrófono del teclado en su lugar.");
+        setEscuchando(false);
+      };
+      r.onend = () => setEscuchando(false);
+      r.start();
+      setEscuchando(true);
+    } catch (e) {
+      setErrorVoz("No se pudo iniciar el micrófono. Probá el micrófono del teclado en su lugar.");
+      setEscuchando(false);
+    }
+  }
   const [autoEjecutando, setAutoEjecutando] = useState(false);
   const [autoError, setAutoError] = useState("");
   async function ejecutarOrdenAutonoma() {
@@ -8554,6 +8591,10 @@ function CampaniaComercial({ prospectos, setProspectos }) {
   }
 
 
+  function guardarMail(id, mail) {
+    setProspectos(prev => prev.map(p => p.id === id ? { ...p, mail: mail.trim() } : p));
+  }
+
   return /*#__PURE__*/React.createElement("div", { style: { maxWidth: 900 } },
     React.createElement("div", { style: { background: T.card, border: `1px solid ${T.border}`, borderRadius: 11, padding: 16, marginBottom: 14 } },
       React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 } }, "Campaña · un solo envío a tu base de Comercial"),
@@ -8565,12 +8606,18 @@ function CampaniaComercial({ prospectos, setProspectos }) {
             placeholder: 'Ej: "Mandales un mail de bienvenida presentando NEXO"',
             value: ordenAutonoma, onChange: e => setOrdenAutonoma(e.target.value),
             onKeyDown: e => { if (e.key === "Enter") ejecutarOrdenAutonoma(); },
-            style: { flex: "1 1 260px", padding: "10px 12px", borderRadius: 8, border: "none", fontSize: 12.5 }
+            style: { flex: "1 1 220px", padding: "10px 12px", borderRadius: 8, border: "none", fontSize: 12.5 }
           }),
+          React.createElement("button", {
+            onClick: alternarMicrofono, title: escuchando ? "Detener" : "Hablar",
+            style: { ...chipEstilo, background: escuchando ? "#B3261E" : "rgba(255,255,255,.15)", color: "#fff", padding: "10px 14px", fontSize: 15, minWidth: 44 }
+          }, escuchando ? "⏹" : "🎤"),
           React.createElement("button", {
             onClick: ejecutarOrdenAutonoma, disabled: autoEjecutando || enviando,
             style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "10px 18px", opacity: (autoEjecutando || enviando) ? .6 : 1 }
           }, autoEjecutando ? "Redactando y enviando…" : "Hacer campaña ahora")),
+        escuchando && React.createElement("div", { style: { color: "#D9B57C", fontSize: 11.5, marginTop: 7 } }, "🎙 Escuchando… hablá la orden y tocá ⏹ cuando termines."),
+        errorVoz && React.createElement("div", { style: { color: "#FDBDBD", fontSize: 11.5, marginTop: 7 } }, errorVoz),
         autoError && React.createElement("div", { style: { color: "#FDBDBD", fontSize: 11.5, marginTop: 7 } }, autoError)),
       React.createElement("div", { style: { background: "#FBF6EE", border: "1px solid #EBDCC0", borderRadius: 9, padding: 12, marginBottom: 12 } },
         React.createElement("div", { style: { fontSize: 10.5, fontWeight: 700, color: BRASS, marginBottom: 6 } }, "✦ O redactar y revisar antes de mandar"),
@@ -8600,15 +8647,19 @@ function CampaniaComercial({ prospectos, setProspectos }) {
           `✓ ${resultado.enviados} enviados` + (resultado.fallidos ? `, ${resultado.fallidos} fallaron` : "") + " · marcados como \"contactado\"")
       )
     ),
-    conEmail.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: T.muted } }, "Ninguno de tus contactos tiene mail cargado todavía.") :
-    React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+    prospectos.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: T.muted } }, "Todavía no hay contactos cargados en Comercial.") :
+    React.createElement("div", { style: { background: T.card, border: `1px solid ${T.border}`, borderRadius: 11, padding: 14, overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
       React.createElement("thead", null, React.createElement("tr", null,
         React.createElement("th", { style: th }, React.createElement("input", { type: "checkbox", checked: seleccion.size === conEmail.length && conEmail.length > 0, onChange: toggleTodos })),
         React.createElement("th", { style: th }, "Empresa"), React.createElement("th", { style: th }, "Mail"), React.createElement("th", { style: th }, "Estado"))),
-      React.createElement("tbody", null, conEmail.map(p => React.createElement("tr", { key: p.id },
-        React.createElement("td", { style: td }, React.createElement("input", { type: "checkbox", checked: seleccion.has(p.id), onChange: () => toggle(p.id) })),
+      React.createElement("tbody", null, prospectos.map(p => React.createElement("tr", { key: p.id },
+        React.createElement("td", { style: td }, p.mail ? React.createElement("input", { type: "checkbox", checked: seleccion.has(p.id), onChange: () => toggle(p.id) }) : null),
         React.createElement("td", { style: td }, p.empresa || p.nombre || "—"),
-        React.createElement("td", { style: td }, p.mail),
+        React.createElement("td", { style: td }, p.mail ? p.mail : React.createElement("input", {
+          placeholder: "agregar mail…", defaultValue: "",
+          onBlur: e => { if (e.target.value.trim()) guardarMail(p.id, e.target.value); },
+          style: { padding: "5px 8px", borderRadius: 6, border: "1px solid #E6E9EE", fontSize: 12, width: 170 }
+        })),
         React.createElement("td", { style: td }, p.estado || "nuevo"))))))
   );
 }
