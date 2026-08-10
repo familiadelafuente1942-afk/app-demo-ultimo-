@@ -134,7 +134,12 @@
         }
         throw new Error(`${r.status} · ${txt.slice(0, 200)}`);
       }
-      return r.json();
+      // Algunos pedidos (los que llevan "return=minimal") responden
+      // sin cuerpo. Leer eso como .json() directo rompe en Safari
+      // con un error críptico ("The string did not match the
+      // expected pattern"). Por eso se lee como texto primero.
+      const cuerpo = await r.text();
+      return cuerpo ? JSON.parse(cuerpo) : null;
     } catch (e) {
       throw new Error(`[${ruta}] ${e.message}`);
     }

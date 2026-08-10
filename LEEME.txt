@@ -1,44 +1,34 @@
-ARREGLO: LA SESIÓN SE VENCÍA SOLA CADA HORA
-════════════════════════════════════════════
+ARREGLO DE RAÍZ: "The string did not match the expected pattern"
+════════════════════════════════════════════════════════════════
 
-QUÉ PASABA:
-La sesión de sincronización dura 1 hora por seguridad (algo normal
-y bueno). El problema es que nunca armamos la parte que la renueva
-sola cuando se vence — así que después de 1 hora de tener la app
-abierta, todo empezaba a fallar con "JWT expired", como viste en
-Soporte y en el cartelito de SYNC.
+DESPUÉS DE VARIAS VUELTAS, ENCONTRÉ LA CAUSA REAL:
 
-QUÉ ARREGLÉ:
-Ahora, cuando la sesión se vence, la app la renueva sola en
-segundo plano (usando un "token de renovación" que Supabase ya te
-daba pero no estábamos guardando) — sin pedirte correo ni
-contraseña de nuevo, sin que te des cuenta. Si por algún motivo
-la renovación falla, recién ahí te va a volver a pedir el login.
+Cuando la app le dice a Supabase "guardá esto pero no me contestes
+nada" (para ahorrar datos — se usa en las subidas de Comercial),
+Safari se rompe si el código intenta leer una respuesta como si
+tuviera contenido cuando en realidad vino vacía. Nunca pasaba al
+bajar datos (que sí trae contenido), solo al subir — por eso era
+tan difícil de agarrar.
 
-Esto toca a las 5 áreas por igual (Comercial, Marketing,
-Operaciones, Soporte, Finanzas, Producto), porque todas comparten
-el mismo sistema de sesión.
+Esto SOLO afectaba a supabase-sync.js (el que usa Comercial). El
+resto de las áreas (Marketing, Operaciones, Soporte, Finanzas,
+Producto) ya estaban armadas bien desde el principio, por eso
+nunca dieron este error — solo Comercial.
 
-ARCHIVOS A SUBIR — LOS DOS:
-- index.html → reemplaza al actual
-- supabase-sync.js → reemplaza al actual
+SOLO HAY QUE SUBIR ESTE ARCHIVO:
+supabase-sync.js — reemplaza al actual.
 
-⚠️ CÓMO SUBIR (siempre el mismo cuidado):
-1. Confirmá en Archivos que los nombres queden exactos:
-   "index.html" y "supabase-sync.js", sin números ni duplicados.
-2. GitHub → Add file → Upload files (nunca el lápiz de editar,
-   sobre todo para index.html que es grande).
-3. Confirmá que reemplace a los existentes.
-4. Commit changes.
+⚠️ CÓMO SUBIR:
+"Add file → Upload files", confirmá que reemplace, Commit changes.
+Este archivo es chico, no debería dar problemas de nombre, pero
+igual fijate que quede "supabase-sync.js" exacto.
 
 QUÉ HACER DESPUÉS:
-Como la sesión guardada ahora mismo en tu dispositivo es la vieja
-(sin el "token de renovación" nuevo), te va a pedir el correo y
-contraseña UNA VEZ MÁS después de este cambio — es la última vez
-que debería pasar por este motivo. De ahí en adelante, aunque
-pasen horas o días con la app cerrada, se va a renovar sola.
+Usá la app con normalidad, cargando o modificando algún prospecto
+en Comercial. El cartelito de SYNC debería decir "sin errores"
+después de eso.
 
 VERIFICADO ANTES DE ENTREGAR:
-- Sintaxis de JavaScript revisada con Node en los dos archivos,
-  sin errores.
-- Bloque de Contratista comparado byte a byte: idéntico, no se tocó.
+- Sintaxis de JavaScript revisada con Node, sin errores.
+- Revisé todo el archivo y el index.html buscando el mismo patrón
+  peligroso en otros lugares: no encontré ninguno más.
