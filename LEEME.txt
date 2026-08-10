@@ -1,28 +1,23 @@
-FINANZAS · ETAPA 2 · MRR automático + Ingresos + Gastos
+PRODUCTO · ETAPA 2 · Bugs y pedidos, en una sola lista
 ════════════════════════════════════════════════════════
 
 QUÉ HACE:
-Dentro de Centro de Operaciones → pestaña Finanzas, hay tres
-secciones:
+Dentro de Centro de Operaciones → pestaña Producto, hay una lista
+única con:
 
-- PANEL: arriba, 4 números clave — MRR (calculado solo, sumando
-  el "monto mensual" de tus clientes en estado "activo"), cobrado
-  este mes, pendiente de cobro, y gastos de este mes. Abajo, la
-  lista de tus clientes con un campo para poner cuánto le cobrás
-  por mes a cada uno — apenas lo cargás, el MRR se actualiza solo.
+- Tipo: Bug o Pedido (con color distinto, rojo/azul)
+- Título, cliente que lo pidió/reportó (opcional, con selector de
+  tus clientes de Operaciones)
+- Prioridad: baja / media / alta
+- Estado: abierto / en_desarrollo / entregado / descartado
 
-- INGRESOS: facturas/cobros por cliente, con botón para marcar
-  "Cobrado" / "Pendiente".
+Arriba, 3 contadores: Bugs activos, Pedidos abiertos, En desarrollo.
+Filtros rápidos para ver Todos / Bugs / Pedidos.
 
-- GASTOS: lo que gasta el negocio, por categoría.
-
-"4 de 8" pasa a "5 de 8 áreas conectadas".
+"5 de 8" pasa a "6 de 8 áreas conectadas".
 
 REQUISITO:
-Necesita el SQL de finanzas_tablas.sql ya corrido en Supabase (crea
-las tablas de ingresos y gastos, y agrega el campo "monto_mensual"
-a los clientes que ya tenías en Operaciones — no borra nada de lo
-que ya cargaste ahí).
+Necesita el SQL de producto_tablas.sql ya corrido en Supabase.
 
 ⚠️ CÓMO SUBIR (siempre el mismo cuidado):
 1. Confirmá en Archivos que el nombre sea "index.html" exacto.

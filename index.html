@@ -7565,29 +7565,153 @@ function AreaFinanzas() {
     })),
     React.createElement(PanelFinanzas));
 }
+function PanelProducto() {
+  const [items, setItems] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  const [nuevo, setNuevo] = useState(false);
+  const [filtroTipo, setFiltroTipo] = useState("todos");
+  const [clientes, setClientes] = useState([]);
+
+  async function cargarTodo() {
+    setCargando(true);
+    setError("");
+    try {
+      const [it, cl] = await Promise.all([
+        mktFetch("producto_items?select=*&order=creado.desc&limit=300"),
+        mktFetch("operaciones_clientes?select=id,nombre_empresa&order=nombre_empresa.asc&limit=300")
+      ]);
+      setItems(it || []);
+      setClientes(cl || []);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setCargando(false);
+    }
+  }
+  useEffect(() => { cargarTodo(); }, []);
+
+  async function cambiarEstado(id, estado) {
+    try {
+      const body = { estado };
+      if (estado === "entregado") body.entregado_en = new Date().toISOString();
+      await mktFetch(`producto_items?id=eq.${id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify(body) });
+      setItems(prev => prev.map(x => x.id === id ? { ...x, ...body } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function cambiarPrioridad(id, prioridad) {
+    try {
+      await mktFetch(`producto_items?id=eq.${id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ prioridad }) });
+      setItems(prev => prev.map(x => x.id === id ? { ...x, prioridad } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function borrar(id) {
+    try {
+      await mktFetch(`producto_items?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      setItems(prev => prev.filter(x => x.id !== id));
+    } catch (e) { setError(e.message); }
+  }
+
+  const chipEstilo = { border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
+  const th = { textAlign: "left", fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", padding: "0 10px 8px" };
+  const td = { padding: "10px", fontSize: 12.5, color: "#1A1A1A", borderTop: "1px solid #EEF0F3" };
+  const colorPrioridad = { baja: "#6C7787", media: "#9A6B1E", alta: "#B3261E" };
+
+  const visibles = filtroTipo === "todos" ? items : items.filter(i => i.tipo === filtroTipo);
+  const bugs = items.filter(i => i.tipo === "bug" && i.estado !== "entregado" && i.estado !== "descartado").length;
+  const pedidos = items.filter(i => i.tipo === "pedido" && i.estado === "abierto").length;
+  const enDesarrollo = items.filter(i => i.estado === "en_desarrollo").length;
+
+  function FormNuevo() {
+    const [f, setF] = useState({ tipo: "pedido", titulo: "", cliente_id: "", cliente_nombre: "", prioridad: "media" });
+    function elegirCliente(id) {
+      const c = clientes.find(x => x.id === id);
+      setF(prev => ({ ...prev, cliente_id: id || null, cliente_nombre: c ? c.nombre_empresa : prev.cliente_nombre }));
+    }
+    async function guardar() {
+      if (!f.titulo.trim()) return;
+      try {
+        const [fila] = await mktFetch("producto_items", { method: "POST", body: JSON.stringify(f) });
+        setItems(prev => [fila, ...prev]);
+        setNuevo(false);
+      } catch (e) { setError(e.message); }
+    }
+    return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" } },
+      React.createElement("select", { value: f.tipo, onChange: e => setF({ ...f, tipo: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
+        [["bug", "Bug"], ["pedido", "Pedido"]].map(([v, l]) => React.createElement("option", { key: v, value: v }, l))),
+      React.createElement("input", { placeholder: "Título", value: f.titulo, onChange: e => setF({ ...f, titulo: e.target.value }), style: { flex: "1 1 200px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("select", { value: f.cliente_id, onChange: e => elegirCliente(e.target.value), style: { flex: "1 1 150px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5, background: "#fff" } },
+        [React.createElement("option", { key: "", value: "" }, "Cliente (opcional)…"), ...clientes.map(c => React.createElement("option", { key: c.id, value: c.id }, c.nombre_empresa))]),
+      React.createElement("select", { value: f.prioridad, onChange: e => setF({ ...f, prioridad: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
+        ["baja", "media", "alta"].map(p => React.createElement("option", { key: p, value: p }, p))),
+      React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar"));
+  }
+
+  return /*#__PURE__*/React.createElement("div", { style: { background: "#fff", borderRadius: 13, padding: "18px 20px" } },
+    React.createElement("div", { style: { display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" } },
+      [["Bugs activos", bugs, "#B3261E"], ["Pedidos abiertos", pedidos, BRASS], ["En desarrollo", enDesarrollo, "#3B6CA8"]].map(([lbl, val, color]) =>
+        React.createElement("div", { key: lbl, style: { background: "#F5F6F8", borderRadius: 11, padding: "13px 16px", minWidth: 130, flex: 1 } },
+          React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, color: "#8B95A5", textTransform: "uppercase" } }, lbl),
+          React.createElement("div", { style: { fontSize: 20, fontWeight: 800, color, marginTop: 4 } }, val)))),
+    React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" } },
+      [["todos", "Todos"], ["bug", "Bugs"], ["pedido", "Pedidos"]].map(([v, l]) => React.createElement("button", {
+        key: v, onClick: () => setFiltroTipo(v),
+        style: { ...chipEstilo, background: filtroTipo === v ? NAVY : "#F3F5F8", color: filtroTipo === v ? "#fff" : "#4A5565", padding: "8px 16px" }
+      }, l + (v === "todos" ? ` · ${items.length}` : ` · ${items.filter(i => i.tipo === v).length}`))),
+      React.createElement("button", { onClick: () => setNuevo(v => !v), style: { ...chipEstilo, background: "#EAF3EC", color: "#2F7A4F", padding: "8px 16px", marginLeft: "auto" } }, nuevo ? "Cancelar" : "+ Nuevo")
+    ),
+    error && React.createElement("div", { style: { background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 12 } }, error),
+    nuevo && React.createElement(FormNuevo),
+    cargando ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Cargando…") :
+    visibles.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin nada cargado todavía.") :
+    React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+      React.createElement("thead", null, React.createElement("tr", null,
+        React.createElement("th", { style: th }, "Tipo"), React.createElement("th", { style: th }, "Título"),
+        React.createElement("th", { style: th }, "Cliente"), React.createElement("th", { style: th }, "Prioridad"),
+        React.createElement("th", { style: th }, "Estado"), React.createElement("th", { style: th }, ""))),
+      React.createElement("tbody", null, visibles.map(i => React.createElement("tr", { key: i.id },
+        React.createElement("td", { style: td }, React.createElement("span", {
+          style: { ...chipEstilo, background: i.tipo === "bug" ? "#FDECEA" : "#EAF0FA", color: i.tipo === "bug" ? "#B3261E" : "#3B6CA8", padding: "3px 9px", cursor: "default" }
+        }, i.tipo === "bug" ? "Bug" : "Pedido")),
+        React.createElement("td", { style: td }, i.titulo),
+        React.createElement("td", { style: td }, i.cliente_nombre || "—"),
+        React.createElement("td", { style: td }, React.createElement("select", {
+          value: i.prioridad, onChange: e => cambiarPrioridad(i.id, e.target.value),
+          style: { fontSize: 11.5, padding: "4px 6px", borderRadius: 6, border: "1px solid #E6E9EE", color: colorPrioridad[i.prioridad] }
+        }, ["baja", "media", "alta"].map(p => React.createElement("option", { key: p, value: p }, p)))),
+        React.createElement("td", { style: td }, React.createElement("select", {
+          value: i.estado, onChange: e => cambiarEstado(i.id, e.target.value),
+          style: { fontSize: 11.5, padding: "4px 6px", borderRadius: 6, border: "1px solid #E6E9EE" }
+        }, ["abierto", "en_desarrollo", "entregado", "descartado"].map(s => React.createElement("option", { key: s, value: s }, s)))),
+        React.createElement("td", { style: td }, React.createElement("button", { onClick: () => borrar(i.id), style: { border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 } }, "Borrar")))))))
+  );
+}
+
 function AreaProducto() {
-  return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
-    nombre: "Director de Producto IA",
-    departamento: "Producto",
-    objetivo: "Convertir lo que dicen los clientes en decisiones de desarrollo priorizadas.",
-    capacidades: [{
-      titulo: "Feedback",
-      detalle: "Recolección desde soporte y ventas"
-    }, {
-      titulo: "Bugs",
-      detalle: "Registro y seguimiento"
-    }, {
-      titulo: "Solicitudes",
-      detalle: "Pedidos de funciones nuevas"
-    }, {
-      titulo: "Prioridades",
-      detalle: "Qué construir primero y por qué"
-    }, {
-      titulo: "Hoja de ruta",
-      detalle: "Plan de desarrollo"
-    }],
-    metricas: ["Pedidos abiertos", "Bugs activos", "En desarrollo", "Entregado este mes"]
-  }));
+  return /*#__PURE__*/React.createElement("div", null,
+    React.createElement(FichaAgente, fichaPendiente({
+      nombre: "Director de Producto IA",
+      departamento: "Producto",
+      objetivo: "Convertir lo que dicen los clientes en decisiones de desarrollo priorizadas.",
+      capacidades: [{
+        titulo: "Feedback",
+        detalle: "Recolección desde soporte y ventas"
+      }, {
+        titulo: "Bugs",
+        detalle: "Registro y seguimiento"
+      }, {
+        titulo: "Solicitudes",
+        detalle: "Pedidos de funciones nuevas"
+      }, {
+        titulo: "Prioridades",
+        detalle: "Qué construir primero y por qué"
+      }, {
+        titulo: "Hoja de ruta",
+        detalle: "Plan de desarrollo"
+      }],
+      metricas: ["Pedidos abiertos", "Bugs activos", "En desarrollo", "Entregado este mes"]
+    })),
+    React.createElement(PanelProducto));
 }
 function AreaSeguridad() {
   return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
@@ -7649,8 +7773,8 @@ function AreaCEO({
   }, {
     id: "producto",
     nombre: "Producto",
-    estado: "pendiente",
-    nota: "Sin conectar"
+    estado: "activo",
+    nota: "Bugs y pedidos"
   }, {
     id: "seguridad",
     nombre: "Seguridad",
@@ -7723,7 +7847,7 @@ function AreaCEO({
       background: "#E09A3E",
       fontStyle: "normal"
     }
-  }), "5 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
+  }), "6 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 12
     }
@@ -11135,7 +11259,7 @@ const AREAS = [{
   id: "producto",
   nombre: "Producto",
   corto: "Producto",
-  activa: false
+  activa: true
 }, {
   id: "seguridad",
   nombre: "Seguridad",
@@ -11217,7 +11341,7 @@ function CentroOperaciones() {
       borderRadius: 20,
       padding: "3px 9px"
     }
-  }, "5 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
+  }, "6 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
     className: "co-nav",
     style: {
       marginBottom: 14
@@ -11926,7 +12050,7 @@ window.DICC = {
   "Centro de Operaciones": ["Operations Center", "Centro de Operações"],
   "◈ Centro de Operaciones IA": ["◈ AI Operations Center", "◈ Centro de Operações IA"],
   "Abrir el Centro de Operaciones IA →": ["Open the AI Operations Center →", "Abrir o Centro de Operações IA →"],
-  "5 de 8 áreas conectadas": ["5 of 8 areas connected", "5 de 8 áreas conectadas"],
+  "6 de 8 áreas conectadas": ["6 of 8 areas connected", "6 de 8 áreas conectadas"],
   "CEO / Orquestador": ["CEO / Orchestrator", "CEO / Orquestrador"],
   "CEO / Orquestador IA": ["AI CEO / Orchestrator", "CEO / Orquestrador IA"],
   "Comercial": ["Sales", "Comercial"],
