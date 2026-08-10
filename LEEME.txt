@@ -1,23 +1,25 @@
-PRODUCTO · ETAPA 2 · Bugs y pedidos, en una sola lista
-════════════════════════════════════════════════════════
+SEGURIDAD · ETAPA 2 · Incidentes + Respaldos
+════════════════════════════════════════════════
 
 QUÉ HACE:
-Dentro de Centro de Operaciones → pestaña Producto, hay una lista
-única con:
+Dentro de Centro de Operaciones → pestaña Seguridad, hay dos
+secciones:
 
-- Tipo: Bug o Pedido (con color distinto, rojo/azul)
-- Título, cliente que lo pidió/reportó (opcional, con selector de
-  tus clientes de Operaciones)
-- Prioridad: baja / media / alta
-- Estado: abierto / en_desarrollo / entregado / descartado
+- INCIDENTES: algo raro que pasó (acceso indebido, dato expuesto,
+  etc.), con gravedad (baja/media/alta/crítica) y estado
+  (abierto/investigando/resuelto/cerrado).
 
-Arriba, 3 contadores: Bugs activos, Pedidos abiertos, En desarrollo.
-Filtros rápidos para ver Todos / Bugs / Pedidos.
+- RESPALDOS: registro de cuándo se hizo cada copia de seguridad
+  y si se probó restaurar. Arriba se ve hace cuántos días fue el
+  último (en rojo si pasaron más de 7 días sin registrar uno).
 
-"5 de 8" pasa a "6 de 8 áreas conectadas".
+"6 de 8" pasa a "7 de 8 áreas conectadas" — el octavo cupo queda
+para cuando el propio CEO/Orquestador se conecte al motor de
+agentes que coordina a las demás áreas (eso es aparte, más
+adelante).
 
 REQUISITO:
-Necesita el SQL de producto_tablas.sql ya corrido en Supabase.
+Necesita el SQL de seguridad_tablas.sql ya corrido en Supabase.
 
 ⚠️ CÓMO SUBIR (siempre el mismo cuidado):
 1. Confirmá en Archivos que el nombre sea "index.html" exacto.
@@ -28,3 +30,6 @@ Necesita el SQL de producto_tablas.sql ya corrido en Supabase.
 VERIFICADO ANTES DE ENTREGAR:
 - Sintaxis de JavaScript revisada con Node, sin errores.
 - Bloque de Contratista comparado byte a byte: idéntico.
+- Detecté y corregí yo mismo un error de conteo antes de entregar
+  (había puesto "8 de 8" quedando corregido a "7 de 8", que es lo
+  correcto).
