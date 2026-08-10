@@ -7360,30 +7360,210 @@ function AreaSoporte() {
     React.createElement(PanelSoporte));
 
 }
+function PanelFinanzas() {
+  const [tab, setTab] = useState("panel");
+  const [clientes, setClientes] = useState([]);
+  const [ingresos, setIngresos] = useState([]);
+  const [gastos, setGastos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  const [nuevo, setNuevo] = useState(false);
+
+  async function cargarTodo() {
+    setCargando(true);
+    setError("");
+    try {
+      const [c, i, g] = await Promise.all([
+        mktFetch("operaciones_clientes?select=id,nombre_empresa,estado,plan,monto_mensual&order=nombre_empresa.asc&limit=300"),
+        mktFetch("finanzas_ingresos?select=*&order=fecha_emision.desc&limit=300"),
+        mktFetch("finanzas_gastos?select=*&order=fecha.desc&limit=300")
+      ]);
+      setClientes(c || []);
+      setIngresos(i || []);
+      setGastos(g || []);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setCargando(false);
+    }
+  }
+  useEffect(() => { cargarTodo(); }, []);
+
+  async function guardarMontoCliente(id, monto) {
+    try {
+      await mktFetch(`operaciones_clientes?id=eq.${id}`, {
+        method: "PATCH", headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ monto_mensual: monto === "" ? null : Number(monto) })
+      });
+      setClientes(prev => prev.map(x => x.id === id ? { ...x, monto_mensual: monto === "" ? null : Number(monto) } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function toggleCobrado(item) {
+    try {
+      const body = { cobrado: !item.cobrado, fecha_cobro: !item.cobrado ? new Date().toISOString().slice(0, 10) : null };
+      await mktFetch(`finanzas_ingresos?id=eq.${item.id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify(body) });
+      setIngresos(prev => prev.map(x => x.id === item.id ? { ...x, ...body } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function borrarIngreso(id) {
+    try {
+      await mktFetch(`finanzas_ingresos?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      setIngresos(prev => prev.filter(x => x.id !== id));
+    } catch (e) { setError(e.message); }
+  }
+  async function borrarGasto(id) {
+    try {
+      await mktFetch(`finanzas_gastos?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      setGastos(prev => prev.filter(x => x.id !== id));
+    } catch (e) { setError(e.message); }
+  }
+
+  const chipEstilo = { border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
+  const th = { textAlign: "left", fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", padding: "0 10px 8px" };
+  const td = { padding: "10px", fontSize: 12.5, color: "#1A1A1A", borderTop: "1px solid #EEF0F3" };
+  const fmt = n => "$ " + Number(n || 0).toLocaleString("es-AR", { maximumFractionDigits: 0 });
+
+  const clientesActivos = clientes.filter(c => c.estado === "activo");
+  const mrr = clientesActivos.reduce((a, c) => a + Number(c.monto_mensual || 0), 0);
+  const hoy = new Date();
+  const mesActual = hoy.toISOString().slice(0, 7);
+  const cobradoDelMes = ingresos.filter(i => i.cobrado && (i.fecha_cobro || "").slice(0, 7) === mesActual).reduce((a, i) => a + Number(i.monto || 0), 0);
+  const pendienteCobro = ingresos.filter(i => !i.cobrado).reduce((a, i) => a + Number(i.monto || 0), 0);
+  const gastosDelMes = gastos.filter(g => (g.fecha || "").slice(0, 7) === mesActual).reduce((a, g) => a + Number(g.monto || 0), 0);
+
+  function FormNuevoIngreso() {
+    const [f, setF] = useState({ cliente_id: "", cliente_nombre: "", concepto: "", monto: "", moneda: "ARS" });
+    function elegirCliente(id) {
+      const c = clientes.find(x => x.id === id);
+      setF(prev => ({ ...prev, cliente_id: id || null, cliente_nombre: c ? c.nombre_empresa : prev.cliente_nombre }));
+    }
+    async function guardar() {
+      if (!f.monto) return;
+      try {
+        const [fila] = await mktFetch("finanzas_ingresos", { method: "POST", body: JSON.stringify({ ...f, monto: Number(f.monto) }) });
+        setIngresos(prev => [fila, ...prev]);
+        setNuevo(false);
+      } catch (e) { setError(e.message); }
+    }
+    return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" } },
+      React.createElement("select", { value: f.cliente_id, onChange: e => elegirCliente(e.target.value), style: { flex: "1 1 150px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5, background: "#fff" } },
+        [React.createElement("option", { key: "", value: "" }, "Cliente…"), ...clientes.map(c => React.createElement("option", { key: c.id, value: c.id }, c.nombre_empresa))]),
+      React.createElement("input", { placeholder: "Concepto", value: f.concepto, onChange: e => setF({ ...f, concepto: e.target.value }), style: { flex: "1 1 140px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("input", { placeholder: "Monto", type: "number", value: f.monto, onChange: e => setF({ ...f, monto: e.target.value }), style: { width: 110, padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("select", { value: f.moneda, onChange: e => setF({ ...f, moneda: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
+        ["ARS", "USD"].map(m => React.createElement("option", { key: m, value: m }, m))),
+      React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar"));
+  }
+  function FormNuevoGasto() {
+    const [f, setF] = useState({ concepto: "", categoria: "servicios", monto: "", moneda: "ARS" });
+    async function guardar() {
+      if (!f.concepto.trim() || !f.monto) return;
+      try {
+        const [fila] = await mktFetch("finanzas_gastos", { method: "POST", body: JSON.stringify({ ...f, monto: Number(f.monto) }) });
+        setGastos(prev => [fila, ...prev]);
+        setNuevo(false);
+      } catch (e) { setError(e.message); }
+    }
+    return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" } },
+      React.createElement("input", { placeholder: "Concepto", value: f.concepto, onChange: e => setF({ ...f, concepto: e.target.value }), style: { flex: "1 1 160px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("select", { value: f.categoria, onChange: e => setF({ ...f, categoria: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
+        ["herramientas", "servicios", "impuestos", "otro"].map(c => React.createElement("option", { key: c, value: c }, c))),
+      React.createElement("input", { placeholder: "Monto", type: "number", value: f.monto, onChange: e => setF({ ...f, monto: e.target.value }), style: { width: 110, padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("select", { value: f.moneda, onChange: e => setF({ ...f, moneda: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } },
+        ["ARS", "USD"].map(m => React.createElement("option", { key: m, value: m }, m))),
+      React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar"));
+  }
+
+  return /*#__PURE__*/React.createElement("div", { style: { background: "#fff", borderRadius: 13, padding: "18px 20px" } },
+    React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" } },
+      ["panel", "ingresos", "gastos"].map(tb => React.createElement("button", {
+        key: tb, onClick: () => setTab(tb),
+        style: { ...chipEstilo, background: tab === tb ? NAVY : "#F3F5F8", color: tab === tb ? "#fff" : "#4A5565", padding: "8px 16px" }
+      }, tb === "panel" ? "Panel" : tb === "ingresos" ? `Ingresos · ${ingresos.length}` : `Gastos · ${gastos.length}`)),
+      tab !== "panel" && React.createElement("button", { onClick: () => setNuevo(v => !v), style: { ...chipEstilo, background: "#EAF3EC", color: "#2F7A4F", padding: "8px 16px", marginLeft: "auto" } }, nuevo ? "Cancelar" : "+ Nuevo")
+    ),
+    error && React.createElement("div", { style: { background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 12 } }, error),
+    cargando ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Cargando…") :
+    tab === "panel" ? React.createElement("div", null,
+      React.createElement("div", { style: { display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" } },
+        [["MRR", mrr, BRASS], ["Cobrado este mes", cobradoDelMes, "#2F7A4F"], ["Pendiente de cobro", pendienteCobro, "#9A6B1E"], ["Gastos este mes", gastosDelMes, "#B3261E"]].map(([lbl, val, color]) =>
+          React.createElement("div", { key: lbl, style: { background: "#F5F6F8", borderRadius: 11, padding: "13px 16px", minWidth: 140, flex: 1 } },
+            React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, color: "#8B95A5", textTransform: "uppercase" } }, lbl),
+            React.createElement("div", { style: { fontSize: 20, fontWeight: 800, color, marginTop: 4 } }, fmt(val))))),
+      React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", marginBottom: 8 } }, "Monto mensual por cliente (define el MRR)"),
+      clientes.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Todavía no hay clientes cargados en Operaciones.") :
+      React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+        React.createElement("thead", null, React.createElement("tr", null,
+          React.createElement("th", { style: th }, "Cliente"), React.createElement("th", { style: th }, "Estado"), React.createElement("th", { style: th }, "Monto mensual"))),
+        React.createElement("tbody", null, clientes.map(c => React.createElement("tr", { key: c.id },
+          React.createElement("td", { style: td }, c.nombre_empresa),
+          React.createElement("td", { style: td }, c.estado),
+          React.createElement("td", { style: td }, React.createElement("input", {
+            type: "number", placeholder: "—", defaultValue: c.monto_mensual || "",
+            onBlur: e => guardarMontoCliente(c.id, e.target.value),
+            style: { width: 100, padding: "5px 8px", borderRadius: 6, border: "1px solid #E6E9EE", fontSize: 12.5 }
+          })))))))
+    ) : (
+      React.createElement("div", null,
+        nuevo && (tab === "ingresos" ? React.createElement(FormNuevoIngreso) : React.createElement(FormNuevoGasto)),
+        tab === "ingresos" ? (
+          ingresos.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin ingresos cargados todavía.") :
+          React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+            React.createElement("thead", null, React.createElement("tr", null,
+              React.createElement("th", { style: th }, "Cliente"), React.createElement("th", { style: th }, "Concepto"),
+              React.createElement("th", { style: th }, "Monto"), React.createElement("th", { style: th }, "Cobrado"), React.createElement("th", { style: th }, ""))),
+            React.createElement("tbody", null, ingresos.map(i => React.createElement("tr", { key: i.id },
+              React.createElement("td", { style: td }, i.cliente_nombre || "—"),
+              React.createElement("td", { style: td }, i.concepto || "—"),
+              React.createElement("td", { style: td }, i.moneda + " " + Number(i.monto).toLocaleString("es-AR")),
+              React.createElement("td", { style: td }, React.createElement("button", {
+                onClick: () => toggleCobrado(i),
+                style: { ...chipEstilo, background: i.cobrado ? "#EAF3EC" : "#FBF2E3", color: i.cobrado ? "#2F7A4F" : "#9A6B1E" }
+              }, i.cobrado ? "✓ Cobrado" : "Pendiente")),
+              React.createElement("td", { style: td }, React.createElement("button", { onClick: () => borrarIngreso(i.id), style: { border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 } }, "Borrar")))))))
+        ) : (
+          gastos.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin gastos cargados todavía.") :
+          React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+            React.createElement("thead", null, React.createElement("tr", null,
+              React.createElement("th", { style: th }, "Concepto"), React.createElement("th", { style: th }, "Categoría"),
+              React.createElement("th", { style: th }, "Monto"), React.createElement("th", { style: th }, ""))),
+            React.createElement("tbody", null, gastos.map(g => React.createElement("tr", { key: g.id },
+              React.createElement("td", { style: td }, g.concepto),
+              React.createElement("td", { style: td }, g.categoria || "—"),
+              React.createElement("td", { style: td }, g.moneda + " " + Number(g.monto).toLocaleString("es-AR")),
+              React.createElement("td", { style: td }, React.createElement("button", { onClick: () => borrarGasto(g.id), style: { border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 } }, "Borrar")))))))
+        )
+      )
+    )
+  );
+}
+
 function AreaFinanzas() {
-  return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
-    nombre: "Director Financiero IA",
-    departamento: "Finanzas",
-    objetivo: "Que se facture lo que corresponde, se cobre a tiempo y sepas siempre cómo viene la caja.",
-    capacidades: [{
-      titulo: "Facturación",
-      detalle: "Emisión según plan de cada cliente"
-    }, {
-      titulo: "Cobranzas",
-      detalle: "Seguimiento de vencidos"
-    }, {
-      titulo: "Gastos",
-      detalle: "Registro y clasificación"
-    }, {
-      titulo: "Flujo de caja",
-      detalle: "Proyección de entradas y salidas"
-    }, {
-      titulo: "MRR y ARR",
-      detalle: "Ingreso recurrente mensual y anual"
-    }],
-    metricas: ["MRR", "ARR", "Por cobrar", "Caja proyectada"],
-    nota: "La facturación electrónica requiere integración con AFIP y validación contable. No es un módulo que el agente pueda operar sin supervisión."
-  }));
+  return /*#__PURE__*/React.createElement("div", null,
+    React.createElement(FichaAgente, fichaPendiente({
+      nombre: "Director Financiero IA",
+      departamento: "Finanzas",
+      objetivo: "Que se facture lo que corresponde, se cobre a tiempo y sepas siempre cómo viene la caja.",
+      capacidades: [{
+        titulo: "Facturación",
+        detalle: "Emisión según plan de cada cliente"
+      }, {
+        titulo: "Cobranzas",
+        detalle: "Seguimiento de vencidos"
+      }, {
+        titulo: "Gastos",
+        detalle: "Registro y clasificación"
+      }, {
+        titulo: "Flujo de caja",
+        detalle: "Proyección de entradas y salidas"
+      }, {
+        titulo: "MRR y ARR",
+        detalle: "Ingreso recurrente mensual y anual"
+      }],
+      metricas: ["MRR", "ARR", "Por cobrar", "Caja proyectada"],
+      nota: "La facturación electrónica requiere integración con AFIP y validación contable. No es un módulo que el agente pueda operar sin supervisión."
+    })),
+    React.createElement(PanelFinanzas));
 }
 function AreaProducto() {
   return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
@@ -7464,8 +7644,8 @@ function AreaCEO({
   }, {
     id: "finanzas",
     nombre: "Finanzas",
-    estado: "pendiente",
-    nota: "Sin conectar"
+    estado: "activo",
+    nota: "MRR, ingresos y gastos"
   }, {
     id: "producto",
     nombre: "Producto",
@@ -7543,7 +7723,7 @@ function AreaCEO({
       background: "#E09A3E",
       fontStyle: "normal"
     }
-  }), "4 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
+  }), "5 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 12
     }
@@ -10950,7 +11130,7 @@ const AREAS = [{
   id: "finanzas",
   nombre: "Finanzas",
   corto: "Finanzas",
-  activa: false
+  activa: true
 }, {
   id: "producto",
   nombre: "Producto",
@@ -11037,7 +11217,7 @@ function CentroOperaciones() {
       borderRadius: 20,
       padding: "3px 9px"
     }
-  }, "4 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
+  }, "5 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
     className: "co-nav",
     style: {
       marginBottom: 14
@@ -11746,7 +11926,7 @@ window.DICC = {
   "Centro de Operaciones": ["Operations Center", "Centro de Operações"],
   "◈ Centro de Operaciones IA": ["◈ AI Operations Center", "◈ Centro de Operações IA"],
   "Abrir el Centro de Operaciones IA →": ["Open the AI Operations Center →", "Abrir o Centro de Operações IA →"],
-  "4 de 8 áreas conectadas": ["4 of 8 areas connected", "4 de 8 áreas conectadas"],
+  "5 de 8 áreas conectadas": ["5 of 8 areas connected", "5 de 8 áreas conectadas"],
   "CEO / Orquestador": ["CEO / Orchestrator", "CEO / Orquestrador"],
   "CEO / Orquestador IA": ["AI CEO / Orchestrator", "CEO / Orquestrador IA"],
   "Comercial": ["Sales", "Comercial"],

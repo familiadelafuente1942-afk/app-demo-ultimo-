@@ -1,23 +1,34 @@
-OPERACIONES · Elegir de la base en vez de escribir de nuevo
-═════════════════════════════════════════════════════════════
+FINANZAS · ETAPA 2 · MRR automático + Ingresos + Gastos
+════════════════════════════════════════════════════════
 
-QUÉ CAMBIÉ:
+QUÉ HACE:
+Dentro de Centro de Operaciones → pestaña Finanzas, hay tres
+secciones:
 
-1. AL CARGAR UN CLIENTE NUEVO: aparece un selector arriba del
-   formulario con todas las empresas que ya tenés en Comercial
-   (prospectos/base). Elegís una y se completa solo el nombre y
-   el mail. Si es una empresa nueva que no está en Comercial,
-   simplemente escribís los campos a mano, como antes.
+- PANEL: arriba, 4 números clave — MRR (calculado solo, sumando
+  el "monto mensual" de tus clientes en estado "activo"), cobrado
+  este mes, pendiente de cobro, y gastos de este mes. Abajo, la
+  lista de tus clientes con un campo para poner cuánto le cobrás
+  por mes a cada uno — apenas lo cargás, el MRR se actualiza solo.
 
-2. AL CARGAR UN TICKET: aparece un selector con los clientes que
-   ya cargaste en Operaciones. Elegís uno y se completa el nombre
-   solo. Si preferís, también podés escribirlo a mano en el campo
-   de al lado.
+- INGRESOS: facturas/cobros por cliente, con botón para marcar
+  "Cobrado" / "Pendiente".
 
-CÓMO SUBIRLO (mismo cuidado de siempre):
-Solo un archivo: index.html. ANTES de ir a GitHub, confirmá en
-Archivos que el nombre quede exacto "index.html". Subilo con
-"Add file → Upload files" — nunca con el lápiz de editar.
+- GASTOS: lo que gasta el negocio, por categoría.
+
+"4 de 8" pasa a "5 de 8 áreas conectadas".
+
+REQUISITO:
+Necesita el SQL de finanzas_tablas.sql ya corrido en Supabase (crea
+las tablas de ingresos y gastos, y agrega el campo "monto_mensual"
+a los clientes que ya tenías en Operaciones — no borra nada de lo
+que ya cargaste ahí).
+
+⚠️ CÓMO SUBIR (siempre el mismo cuidado):
+1. Confirmá en Archivos que el nombre sea "index.html" exacto.
+2. GitHub → Add file → Upload files (nunca el lápiz de editar).
+3. Confirmá que reemplace al existente.
+4. Commit changes.
 
 VERIFICADO ANTES DE ENTREGAR:
 - Sintaxis de JavaScript revisada con Node, sin errores.
