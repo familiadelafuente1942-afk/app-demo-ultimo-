@@ -1,36 +1,35 @@
-COMERCIAL · Arreglo visual + completar mails faltantes
-════════════════════════════════════════════════════════
+COMERCIAL · Modo autónomo elige solo a quién escribirle
+════════════════════════════════════════════════════════════
 
-QUÉ ARREGLÉ:
-1. La tabla de contactos en ✉ Campaña no tenía fondo propio, así
-   que el texto oscuro quedaba casi invisible sobre el fondo
-   oscuro de la página. Ahora tiene su tarjeta blanca, como el
-   resto de la app.
+QUÉ CAMBIÉ:
+Antes, el Modo autónomo mandaba a los contactos que estuvieran
+tildados a mano en la lista de abajo. Ahora ya no depende de eso
+— calcula solo a quién le toca, con esta regla:
 
-2. En el camino de este arreglo, encontré y corregí un error mío
-   (había roto por accidente la estructura del componente al
-   insertar código) — quedó verificado con Node antes de mandarte
-   esto, no debería haber quedado nada roto.
+- Los que NUNCA recibieron un mail → les manda.
+- Los que ya recibieron un mail y siguen en estado "contactado"
+  (sin avanzar, sin respuesta) hace 30 DÍAS o más → les manda de
+  nuevo, como recordatorio.
+- Los que avanzaron (reunión, propuesta), cerraron, o se marcaron
+  como perdidos → NUNCA les vuelve a escribir solo. Esos quedan
+  afuera del automático a propósito.
 
-QUÉ AGREGUÉ:
-Ahora la tabla muestra los 24 contactos completos, no solo los 14
-que ya tenían mail. A los que les falta, les aparece un campo de
-texto directo en la fila ("agregar mail…") — escribís el mail ahí,
-tocás afuera del campo, y queda guardado. En cuanto tiene mail
-cargado, aparece el checkbox para poder incluirlo en la próxima
-campaña.
+El número que ves arriba del cuadro ("X contactos") ya refleja
+esta cuenta real, no lo que esté tildado.
+
+⚠️ UN DETALLE PARA LA PRIMERA VEZ:
+Los contactos que ya marcaste como "contactado" en pruebas
+anteriores (antes de este cambio) no tienen guardada la fecha en
+que les escribiste — así que la primera vez que uses el Modo
+autónomo después de este cambio, el sistema los va a tratar como
+"nunca contactados" y les puede volver a escribir. De ahí en
+adelante, con la fecha ya guardada, va a respetar los 30 días
+sin problema.
 
 CÓMO SUBIR (siempre el mismo cuidado):
 Solo index.html. Confirmá el nombre exacto antes de subir.
 "Add file → Upload files", nunca el lápiz.
 
-CÓMO PROBAR:
-Comercial → ✉ Campaña → ahora tendrías que ver texto oscuro sobre
-fondo blanco, legible, con 24 filas. Probá completar el mail de
-alguno de los 10 que no tenían.
-
 VERIFICADO ANTES DE ENTREGAR:
-- Sintaxis de JavaScript revisada con Node, sin errores (esta vez
-  con más cuidado, después de encontrar y corregir mi propio error
-  en el camino).
+- Sintaxis de JavaScript revisada con Node, sin errores.
 - Bloque de Contratista comparado byte a byte: idéntico.
