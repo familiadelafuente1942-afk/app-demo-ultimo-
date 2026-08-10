@@ -7893,6 +7893,43 @@ function AreaCEO({
   irA
 }) {
   const c = datosComercial;
+  const [extra, setExtra] = useState({
+    clientesActivos: null,
+    mrr: null,
+    leadsDelMes: null,
+    ticketsAbiertos: null,
+    productoAbiertos: null,
+    incidentesAbiertos: null
+  });
+  const [cargandoExtra, setCargandoExtra] = useState(true);
+  useEffect(() => {
+    (async () => {
+      try {
+        const mesActual = new Date().toISOString().slice(0, 7);
+        const [clientes, tickets, leads, prodItems, incidentes] = await Promise.all([
+          mktFetch("operaciones_clientes?select=estado,monto_mensual"),
+          mktFetch("operaciones_tickets?select=estado"),
+          mktFetch("marketing_leads_demo?select=creado"),
+          mktFetch("producto_items?select=estado"),
+          mktFetch("seguridad_incidentes?select=estado")
+        ]);
+        const activos = (clientes || []).filter(x => x.estado === "activo");
+        setExtra({
+          clientesActivos: activos.length,
+          mrr: activos.reduce((a, x) => a + Number(x.monto_mensual || 0), 0),
+          leadsDelMes: (leads || []).filter(l => (l.creado || "").slice(0, 7) === mesActual).length,
+          ticketsAbiertos: (tickets || []).filter(t => t.estado !== "resuelto" && t.estado !== "cerrado").length,
+          productoAbiertos: (prodItems || []).filter(p => p.estado === "abierto" || p.estado === "en_desarrollo").length,
+          incidentesAbiertos: (incidentes || []).filter(i => i.estado !== "resuelto" && i.estado !== "cerrado").length
+        });
+      } catch (e) {
+        // si falla, se queda mostrando "métrica no disponible" — no rompe el panel
+      } finally {
+        setCargandoExtra(false);
+      }
+    })();
+  }, []);
+  const fmt = n => "$ " + Number(n || 0).toLocaleString("es-AR", { maximumFractionDigits: 0 });
   const areas = [{
     id: "comercial",
     nombre: "Comercial",
@@ -7902,32 +7939,32 @@ function AreaCEO({
     id: "marketing",
     nombre: "Marketing",
     estado: "activo",
-    nota: "Contenido, campañas y leads"
+    nota: extra.leadsDelMes === null ? "Contenido, campañas y leads" : `${extra.leadsDelMes} lead${extra.leadsDelMes === 1 ? "" : "s"} este mes`
   }, {
     id: "operaciones",
     nombre: "Operaciones",
     estado: "activo",
-    nota: "Clientes y tickets"
+    nota: extra.clientesActivos === null ? "Clientes y tickets" : `${extra.clientesActivos} cliente${extra.clientesActivos === 1 ? "" : "s"} activo${extra.clientesActivos === 1 ? "" : "s"}`
   }, {
     id: "soporte",
     nombre: "Soporte",
     estado: "activo",
-    nota: "Tickets y base de conocimiento"
+    nota: extra.ticketsAbiertos === null ? "Tickets y base de conocimiento" : `${extra.ticketsAbiertos} ticket${extra.ticketsAbiertos === 1 ? "" : "s"} abierto${extra.ticketsAbiertos === 1 ? "" : "s"}`
   }, {
     id: "finanzas",
     nombre: "Finanzas",
     estado: "activo",
-    nota: "MRR, ingresos y gastos"
+    nota: extra.mrr === null ? "MRR, ingresos y gastos" : `MRR ${fmt(extra.mrr)}`
   }, {
     id: "producto",
     nombre: "Producto",
     estado: "activo",
-    nota: "Bugs y pedidos"
+    nota: extra.productoAbiertos === null ? "Bugs y pedidos" : `${extra.productoAbiertos} abierto${extra.productoAbiertos === 1 ? "" : "s"}`
   }, {
     id: "seguridad",
     nombre: "Seguridad",
     estado: "activo",
-    nota: "Incidentes y respaldos"
+    nota: extra.incidentesAbiertos === null ? "Incidentes y respaldos" : (extra.incidentesAbiertos === 0 ? "Sin incidentes abiertos" : `${extra.incidentesAbiertos} incidente${extra.incidentesAbiertos === 1 ? "" : "s"} abierto${extra.incidentesAbiertos === 1 ? "" : "s"}`)
   }];
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -8046,7 +8083,7 @@ function AreaCEO({
       color: "#8B95A5",
       marginBottom: 9
     }
-  }, "Métricas de la compañía · requieren áreas no conectadas"), /*#__PURE__*/React.createElement("div", {
+  }, "Métricas de la compañía · datos reales"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gap: 12,
@@ -8054,16 +8091,24 @@ function AreaCEO({
     }
   }, /*#__PURE__*/React.createElement(Metrica, {
     etiqueta: "Ingreso recurrente",
-    valor: null
+    valor: cargandoExtra ? null : fmt(extra.mrr),
+    color: BRASS,
+    nota: cargandoExtra ? "" : "MRR · clientes activos"
   }), /*#__PURE__*/React.createElement(Metrica, {
     etiqueta: "Clientes activos",
-    valor: null
+    valor: cargandoExtra ? null : extra.clientesActivos,
+    color: "#2F7A4F",
+    nota: cargandoExtra ? "" : "en Operaciones"
   }), /*#__PURE__*/React.createElement(Metrica, {
     etiqueta: "Leads del mes",
-    valor: null
+    valor: cargandoExtra ? null : extra.leadsDelMes,
+    color: "#3B6CA8",
+    nota: cargandoExtra ? "" : "pedidos de demo"
   }), /*#__PURE__*/React.createElement(Metrica, {
     etiqueta: "Tickets abiertos",
-    valor: null
+    valor: cargandoExtra ? null : extra.ticketsAbiertos,
+    color: extra.ticketsAbiertos > 0 ? "#9A6B1E" : "#2F7A4F",
+    nota: cargandoExtra ? "" : "Soporte"
   }))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
@@ -8156,7 +8201,7 @@ function AreaCEO({
       flexDirection: "column",
       gap: 9
     }
-  }, [["Almacenamiento de datos", "Local en este dispositivo", "aviso"], ["Motor de agentes", "No instalado", "pendiente"], ["Envío de correo", "No configurado", "pendiente"], ["Ejecución programada", "No disponible", "pendiente"], ["Registro de auditoría", "No disponible", "pendiente"]].map(([k, v, t]) => /*#__PURE__*/React.createElement("div", {
+  }, [["Almacenamiento de datos", "Supabase · compartido entre dispositivos", "ok"], ["Motor de agentes", "No instalado", "pendiente"], ["Envío de correo", "No configurado", "pendiente"], ["Ejecución programada", "No disponible", "pendiente"], ["Registro de auditoría", "No disponible", "pendiente"]].map(([k, v, t]) => /*#__PURE__*/React.createElement("div", {
     key: k,
     style: {
       display: "flex",
@@ -8170,7 +8215,7 @@ function AreaCEO({
       height: 7,
       borderRadius: "50%",
       flexShrink: 0,
-      background: t === "aviso" ? "#E09A3E" : "#C3CAD3"
+      background: t === "ok" ? "#3E9B62" : t === "aviso" ? "#E09A3E" : "#C3CAD3"
     }
   }), /*#__PURE__*/React.createElement("span", {
     style: {

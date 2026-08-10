@@ -1,27 +1,35 @@
-SEGURIDAD · ETAPA 2 · Incidentes + Respaldos
-════════════════════════════════════════════════
+CEO / ORQUESTADOR · Panel con datos reales de las 7 áreas
+════════════════════════════════════════════════════════════
 
-QUÉ HACE:
-Dentro de Centro de Operaciones → pestaña Seguridad, hay dos
-secciones:
+QUÉ CAMBIÉ:
+La pestaña CEO ahora lee datos reales de todas las áreas, no solo
+de Comercial:
 
-- INCIDENTES: algo raro que pasó (acceso indebido, dato expuesto,
-  etc.), con gravedad (baja/media/alta/crítica) y estado
-  (abierto/investigando/resuelto/cerrado).
+- "Métricas de la compañía" (antes decía "requieren áreas no
+  conectadas" con guiones) ahora muestra:
+  · Ingreso recurrente (MRR real, sumando el monto mensual de tus
+    clientes activos en Operaciones)
+  · Clientes activos (de Operaciones)
+  · Leads del mes (pedidos de demo capturados en Marketing)
+  · Tickets abiertos (de Soporte/Operaciones)
 
-- RESPALDOS: registro de cuándo se hizo cada copia de seguridad
-  y si se probó restaurar. Arriba se ve hace cuántos días fue el
-  último (en rojo si pasaron más de 7 días sin registrar uno).
+- La lista "Estado de las 7 áreas" ahora muestra una nota real en
+  cada una en vez del texto genérico: cuántos leads tiene Marketing
+  este mes, cuántos clientes activos Operaciones, el MRR de
+  Finanzas, cuántos items abiertos tiene Producto, si Seguridad
+  tiene incidentes abiertos o no.
 
-"6 de 8" pasa a "7 de 8 áreas conectadas" — el octavo cupo queda
-para cuando el propio CEO/Orquestador se conecte al motor de
-agentes que coordina a las demás áreas (eso es aparte, más
-adelante).
+- "Almacenamiento de datos" ya no dice "Local en este dispositivo"
+  (quedó desactualizado desde que armamos la sincronización) —
+  ahora dice "Supabase · compartido entre dispositivos", con punto
+  verde.
 
-REQUISITO:
-Necesita el SQL de seguridad_tablas.sql ya corrido en Supabase.
+QUÉ NO CAMBIÉ (a propósito):
+El aviso automático (que el CEO te avise solo cuándo algo necesita
+tu atención) sigue pendiente — eso es un paso aparte, más adelante,
+cuando se conecte al motor de agentes real.
 
-⚠️ CÓMO SUBIR (siempre el mismo cuidado):
+CÓMO SUBIR (siempre el mismo cuidado):
 1. Confirmá en Archivos que el nombre sea "index.html" exacto.
 2. GitHub → Add file → Upload files (nunca el lápiz de editar).
 3. Confirmá que reemplace al existente.
@@ -30,6 +38,3 @@ Necesita el SQL de seguridad_tablas.sql ya corrido en Supabase.
 VERIFICADO ANTES DE ENTREGAR:
 - Sintaxis de JavaScript revisada con Node, sin errores.
 - Bloque de Contratista comparado byte a byte: idéntico.
-- Detecté y corregí yo mismo un error de conteo antes de entregar
-  (había puesto "8 de 8" quedando corregido a "7 de 8", que es lo
-  correcto).
