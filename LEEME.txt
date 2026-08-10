@@ -1,34 +1,33 @@
-ARREGLO DE RAÍZ: "The string did not match the expected pattern"
-════════════════════════════════════════════════════════════════
+COMERCIAL · Modo autónomo — una orden y se manda solo
+════════════════════════════════════════════════════════
 
-DESPUÉS DE VARIAS VUELTAS, ENCONTRÉ LA CAUSA REAL:
+QUÉ HACE:
+En Comercial → ✉ Campaña, arriba de todo hay un cuadro nuevo,
+oscuro, que dice "Modo autónomo". Ahí escribís la orden en una
+sola línea, por ejemplo:
 
-Cuando la app le dice a Supabase "guardá esto pero no me contestes
-nada" (para ahorrar datos — se usa en las subidas de Comercial),
-Safari se rompe si el código intenta leer una respuesta como si
-tuviera contenido cuando en realidad vino vacía. Nunca pasaba al
-bajar datos (que sí trae contenido), solo al subir — por eso era
-tan difícil de agarrar.
+  "Mandales un mail de bienvenida presentando NEXO"
 
-Esto SOLO afectaba a supabase-sync.js (el que usa Comercial). El
-resto de las áreas (Marketing, Operaciones, Soporte, Finanzas,
-Producto) ya estaban armadas bien desde el principio, por eso
-nunca dieron este error — solo Comercial.
+Tocás "Hacer campaña ahora" (o Enter) y eso es todo — la IA
+redacta el mail Y lo manda directo a todos los contactos tildados,
+sin pedirte que revises ni que confirmes nada. Pensado para cuando
+no tenés tiempo de mirar la pantalla.
 
-SOLO HAY QUE SUBIR ESTE ARCHIVO:
-supabase-sync.js — reemplaza al actual.
+Abajo dejé el otro cuadro (el que ya tenías, "O redactar y revisar
+antes de mandar") para los días que sí quieras ver el mail antes
+de que salga.
 
-⚠️ CÓMO SUBIR:
-"Add file → Upload files", confirmá que reemplace, Commit changes.
-Este archivo es chico, no debería dar problemas de nombre, pero
-igual fijate que quede "supabase-sync.js" exacto.
+IMPORTANTE — a qué contactos les llega:
+El modo autónomo manda a los que estén tildados en la lista de
+abajo en ESE momento. Si querés mandarle a todos, asegurate de que
+el "Seleccionar todos" esté tildado antes de escribir la orden.
 
-QUÉ HACER DESPUÉS:
-Usá la app con normalidad, cargando o modificando algún prospecto
-en Comercial. El cartelito de SYNC debería decir "sin errores"
-después de eso.
+CÓMO SUBIR (siempre el mismo cuidado):
+Solo index.html. Confirmá el nombre exacto antes de subir.
+"Add file → Upload files", nunca el lápiz.
 
 VERIFICADO ANTES DE ENTREGAR:
 - Sintaxis de JavaScript revisada con Node, sin errores.
-- Revisé todo el archivo y el index.html buscando el mismo patrón
-  peligroso en otros lugares: no encontré ninguno más.
+- Revisé que no quedara código viejo duplicado al reordenar las
+  funciones de envío (lo encontré y lo saqué antes de mandarte esto).
+- Bloque de Contratista comparado byte a byte: idéntico.

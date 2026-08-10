@@ -6782,6 +6782,7 @@ function PanelMarketing() {
   const [campanias, setCampanias] = useState([]);
   const [competencia, setCompetencia] = useState([]);
   const [metricas, setMetricas] = useState([]);
+  const [leads, setLeads] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [nuevo, setNuevo] = useState(false);
@@ -6790,16 +6791,18 @@ function PanelMarketing() {
     setCargando(true);
     setError("");
     try {
-      const [c, k, comp, met] = await Promise.all([
+      const [c, k, comp, met, lds] = await Promise.all([
         mktFetch("marketing_contenido?select=*&order=creado.desc&limit=200"),
         mktFetch("marketing_campanias?select=*&order=creado.desc&limit=200"),
         mktFetch("marketing_competencia?select=*&order=creado.desc&limit=200"),
-        mktFetch("marketing_metricas_pagina?select=*&order=creado.desc&limit=1000")
+        mktFetch("marketing_metricas_pagina?select=*&order=creado.desc&limit=1000"),
+        mktFetch("marketing_leads_demo?select=*&order=creado.desc&limit=500")
       ]);
       setContenido(c || []);
       setCampanias(k || []);
       setCompetencia(comp || []);
       setMetricas(met || []);
+      setLeads(lds || []);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -6915,18 +6918,102 @@ function PanelMarketing() {
       React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar"));
   }
 
+  function PanelCampaniaLeads() {
+    const [seleccion, setSeleccion] = useState(() => new Set(leads.filter(l => l.email).map(l => l.id)));
+    const [asunto, setAsunto] = useState("");
+    const [cuerpo, setCuerpo] = useState("");
+    const [enviando, setEnviando] = useState(false);
+    const [progreso, setProgreso] = useState(null); // {hecho, total, fallidos}
+    const [resultado, setResultado] = useState(null);
+
+    const conEmail = leads.filter(l => l.email);
+    function toggle(id) {
+      setSeleccion(prev => {
+        const n = new Set(prev);
+        if (n.has(id)) n.delete(id); else n.add(id);
+        return n;
+      });
+    }
+    function toggleTodos() {
+      setSeleccion(prev => prev.size === conEmail.length ? new Set() : new Set(conEmail.map(l => l.id)));
+    }
+
+    async function enviarCampania() {
+      if (!asunto.trim() || !cuerpo.trim()) { setError("Completá el asunto y el mensaje antes de enviar."); return; }
+      const destinatarios = conEmail.filter(l => seleccion.has(l.id));
+      if (destinatarios.length === 0) { setError("Elegí al menos un lead."); return; }
+      if (!window.confirm(`¿Mandar este mail a ${destinatarios.length} lead${destinatarios.length === 1 ? "" : "s"}?`)) return;
+      setEnviando(true);
+      setError("");
+      setResultado(null);
+      let hecho = 0, fallidos = 0;
+      setProgreso({ hecho, total: destinatarios.length, fallidos });
+      const t = await mktPedirSesion().catch(() => null);
+      for (const lead of destinatarios) {
+        try {
+          const html = "<p>" + cuerpo.replace(/\n/g, "<br>") + "</p>";
+          const r = await fetch(`${MKT_SUPA_URL}/functions/v1/enviar-mail`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${t}`, apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({ to: lead.email, subject: asunto, html })
+          });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok || data.error) { fallidos++; }
+          else {
+            mktFetch(`marketing_leads_demo?id=eq.${lead.id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ contactado: true }) }).catch(() => {});
+          }
+        } catch (e) { fallidos++; }
+        hecho++;
+        setProgreso({ hecho, total: destinatarios.length, fallidos });
+      }
+      setEnviando(false);
+      setResultado({ enviados: destinatarios.length - fallidos, fallidos });
+      setLeads(prev => prev.map(l => seleccion.has(l.id) ? { ...l, contactado: true } : l));
+    }
+
+    return /*#__PURE__*/React.createElement("div", null,
+      React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 14 } },
+        React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", marginBottom: 8 } }, "Nueva campaña · un solo envío"),
+        React.createElement("input", { placeholder: "Asunto del mail", value: asunto, onChange: e => setAsunto(e.target.value), style: { width: "100%", boxSizing: "border-box", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5, marginBottom: 8 } }),
+        React.createElement("textarea", { placeholder: "Mensaje…", value: cuerpo, onChange: e => setCuerpo(e.target.value), rows: 4, style: { width: "100%", boxSizing: "border-box", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5, fontFamily: "inherit", resize: "vertical", marginBottom: 10 } }),
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" } },
+          React.createElement("button", {
+            onClick: enviarCampania, disabled: enviando,
+            style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "10px 18px", opacity: enviando ? .6 : 1 }
+          }, enviando ? "Enviando…" : `Enviar a ${seleccion.size} lead${seleccion.size === 1 ? "" : "s"}`),
+          progreso && React.createElement("span", { style: { fontSize: 11.5, color: "#4A5565" } }, `${progreso.hecho} / ${progreso.total} enviados` + (progreso.fallidos ? ` · ${progreso.fallidos} fallaron` : "")),
+          resultado && !enviando && React.createElement("span", { style: { fontSize: 11.5, color: resultado.fallidos ? "#9A6B1E" : "#2F7A4F", fontWeight: 700 } },
+            `✓ ${resultado.enviados} enviados` + (resultado.fallidos ? `, ${resultado.fallidos} fallaron` : ""))
+        )
+      ),
+      leads.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Todavía no hay leads de demo. Se cargan solos cuando alguien prueba la demo desde la web.") :
+      React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+        React.createElement("thead", null, React.createElement("tr", null,
+          React.createElement("th", { style: th }, React.createElement("input", { type: "checkbox", checked: seleccion.size === conEmail.length && conEmail.length > 0, onChange: toggleTodos })),
+          React.createElement("th", { style: th }, "Nombre"), React.createElement("th", { style: th }, "Mail"),
+          React.createElement("th", { style: th }, "Empresa"), React.createElement("th", { style: th }, "Contactado"))),
+        React.createElement("tbody", null, leads.map(l => React.createElement("tr", { key: l.id },
+          React.createElement("td", { style: td }, l.email && React.createElement("input", { type: "checkbox", checked: seleccion.has(l.id), onChange: () => toggle(l.id) })),
+          React.createElement("td", { style: td }, l.nombre || "—"),
+          React.createElement("td", { style: td }, l.email || React.createElement("span", { style: { color: "#B3261E" } }, "sin mail")),
+          React.createElement("td", { style: td }, l.empresa || "—"),
+          React.createElement("td", { style: td }, l.contactado ? React.createElement("span", { style: { color: "#2F7A4F" } }, "✓") : "—"))))))
+    );
+  }
+
   return /*#__PURE__*/React.createElement("div", { style: { background: "#fff", borderRadius: 13, padding: "18px 20px" } },
     React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" } },
-      ["contenido", "campanias", "competencia", "metricas"].map(tb => React.createElement("button", {
+      ["contenido", "campanias", "competencia", "metricas", "leads"].map(tb => React.createElement("button", {
         key: tb,
         onClick: () => setTab(tb),
         style: { ...chipEstilo, background: tab === tb ? NAVY : "#F3F5F8", color: tab === tb ? "#fff" : "#4A5565", padding: "8px 16px" }
-      }, tb === "contenido" ? `Contenido · ${contenido.length}` : tb === "campanias" ? `Campañas · ${campanias.length}` : tb === "competencia" ? `Competencia · ${competencia.length}` : `Métricas · ${metricas.length}`)),
-      tab !== "metricas" && React.createElement("button", { onClick: () => setNuevo(v => !v), style: { ...chipEstilo, background: "#EAF3EC", color: "#2F7A4F", padding: "8px 16px", marginLeft: "auto" } }, nuevo ? "Cancelar" : "+ Nuevo")
+      }, tb === "contenido" ? `Contenido · ${contenido.length}` : tb === "campanias" ? `Campañas · ${campanias.length}` : tb === "competencia" ? `Competencia · ${competencia.length}` : tb === "metricas" ? `Métricas · ${metricas.length}` : `Leads · ${leads.length}`)),
+      (tab !== "metricas" && tab !== "leads") && React.createElement("button", { onClick: () => setNuevo(v => !v), style: { ...chipEstilo, background: "#EAF3EC", color: "#2F7A4F", padding: "8px 16px", marginLeft: "auto" } }, nuevo ? "Cancelar" : "+ Nuevo")
     ),
     error && React.createElement("div", { style: { background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 12 } }, error),
     nuevo && (tab === "contenido" ? React.createElement(FormNuevoContenido) : tab === "campanias" ? React.createElement(FormNuevaCampania) : tab === "competencia" ? React.createElement(FormNuevoCompetidor) : null),
     cargando ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Cargando…") :
+    tab === "leads" ? React.createElement(PanelCampaniaLeads) :
     tab === "contenido" ? (
       contenido.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin contenido cargado todavía.") :
       React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
@@ -8340,6 +8427,192 @@ function diasDesde(fechaIso) {
   const d = Math.floor((Date.now() - new Date(fechaIso).getTime()) / 86400000);
   return isNaN(d) ? null : d;
 }
+function CampaniaComercial({ prospectos, setProspectos }) {
+  const [seleccion, setSeleccion] = useState(() => new Set(prospectos.filter(p => p.mail).map(p => p.id)));
+  const [asunto, setAsunto] = useState("");
+  const [cuerpo, setCuerpo] = useState("");
+  const [orden, setOrden] = useState("");
+  const [redactando, setRedactando] = useState(false);
+  const [errorIA, setErrorIA] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [progreso, setProgreso] = useState(null);
+  const [resultado, setResultado] = useState(null);
+  const [error, setError] = useState("");
+
+  async function redactarConIA() {
+    if (!orden.trim()) { setErrorIA("Decime qué querés que diga el mail."); return; }
+    setRedactando(true);
+    setErrorIA("");
+    try {
+      const clave = claveIaRepository.obtener();
+      const { texto } = await llamarIA({
+        apiKey: clave,
+        system: "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en Argentina. Escribís mails cortos, cálidos y directos, en español rioplatense, sin exagerar ni sonar a venta agresiva. Respondé ÚNICAMENTE con un JSON válido, sin texto alrededor, con este formato exacto: {\"asunto\": \"...\", \"cuerpo\": \"...\"}. El cuerpo puede tener varios párrafos separados por \\n\\n, sin HTML.",
+        prompt: `Escribí el mail según este pedido del usuario: "${orden}"`,
+        max_tokens: 700
+      });
+      const m = texto.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error("La IA no devolvió un formato válido, probá de nuevo.");
+      const obj = JSON.parse(m[0]);
+      if (!obj.asunto || !obj.cuerpo) throw new Error("Faltó el asunto o el cuerpo, probá de nuevo.");
+      setAsunto(obj.asunto);
+      setCuerpo(obj.cuerpo);
+    } catch (e) {
+      setErrorIA(e.message === "sin_clave" ? "Falta configurar la clave de IA en Configuración." : e.message === "error_api" ? "La IA no respondió, probá de nuevo." : e.message);
+    } finally {
+      setRedactando(false);
+    }
+  }
+
+  const conEmail = prospectos.filter(p => p.mail);
+  const chipEstilo = { border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
+  const th = { textAlign: "left", fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", padding: "0 10px 8px" };
+  const td = { padding: "10px", fontSize: 12.5, color: "#1A1A1A", borderTop: "1px solid #EEF0F3" };
+
+  function toggle(id) {
+    setSeleccion(prev => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
+  function toggleTodos() {
+    setSeleccion(prev => prev.size === conEmail.length ? new Set() : new Set(conEmail.map(p => p.id)));
+  }
+
+  async function enviarALista(asuntoFinal, cuerpoFinal, destinatarios) {
+    setEnviando(true);
+    setError("");
+    setResultado(null);
+    let hecho = 0, fallidos = 0;
+    setProgreso({ hecho, total: destinatarios.length, fallidos });
+    const t = await mktPedirSesion().catch(() => null);
+    const idsOk = [];
+    for (const p of destinatarios) {
+      try {
+        const html = "<p>" + cuerpoFinal.replace(/\n/g, "<br>") + "</p>";
+        const r = await fetch(`${MKT_SUPA_URL}/functions/v1/enviar-mail`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${t}`, apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({ to: p.mail, subject: asuntoFinal, html })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.error) fallidos++;
+        else idsOk.push(p.id);
+      } catch (e) { fallidos++; }
+      hecho++;
+      setProgreso({ hecho, total: destinatarios.length, fallidos });
+    }
+    setEnviando(false);
+    setResultado({ enviados: idsOk.length, fallidos });
+    if (idsOk.length) {
+      const idsSet = new Set(idsOk);
+      setProspectos(prev => prev.map(p => idsSet.has(p.id) ? { ...p, estado: p.estado === "nuevo" ? "contactado" : p.estado } : p));
+    }
+  }
+
+  async function enviarCampania() {
+    if (!asunto.trim() || !cuerpo.trim()) { setError("Completá el asunto y el mensaje antes de enviar."); return; }
+    const destinatarios = conEmail.filter(p => seleccion.has(p.id));
+    if (destinatarios.length === 0) { setError("Elegí al menos un contacto."); return; }
+    if (!window.confirm(`¿Mandar este mail a ${destinatarios.length} contacto${destinatarios.length === 1 ? "" : "s"}?`)) return;
+    await enviarALista(asunto, cuerpo, destinatarios);
+  }
+
+  // Modo autónomo: una orden, la IA redacta, y se manda solo — sin
+  // pedir revisión ni confirmación. Pensado para cuando no hay
+  // tiempo de mirar la pantalla (ej. manejando).
+  const [ordenAutonoma, setOrdenAutonoma] = useState("");
+  const [autoEjecutando, setAutoEjecutando] = useState(false);
+  const [autoError, setAutoError] = useState("");
+  async function ejecutarOrdenAutonoma() {
+    if (!ordenAutonoma.trim()) { setAutoError("Decime la orden primero."); return; }
+    const destinatarios = conEmail.filter(p => seleccion.has(p.id));
+    if (destinatarios.length === 0) { setAutoError("No hay contactos con mail seleccionados."); return; }
+    setAutoEjecutando(true);
+    setAutoError("");
+    try {
+      const clave = claveIaRepository.obtener();
+      const { texto } = await llamarIA({
+        apiKey: clave,
+        system: "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en Argentina. Escribís mails cortos, cálidos y directos, en español rioplatense, sin exagerar ni sonar a venta agresiva. Respondé ÚNICAMENTE con un JSON válido, sin texto alrededor, con este formato exacto: {\"asunto\": \"...\", \"cuerpo\": \"...\"}. El cuerpo puede tener varios párrafos separados por \\n\\n, sin HTML.",
+        prompt: `Escribí el mail según este pedido del usuario: "${ordenAutonoma}"`,
+        max_tokens: 700
+      });
+      const m = texto.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error("La IA no devolvió un formato válido, probá de nuevo.");
+      const obj = JSON.parse(m[0]);
+      if (!obj.asunto || !obj.cuerpo) throw new Error("Faltó el asunto o el cuerpo, probá de nuevo.");
+      setAsunto(obj.asunto);
+      setCuerpo(obj.cuerpo);
+      await enviarALista(obj.asunto, obj.cuerpo, destinatarios);
+    } catch (e) {
+      setAutoError(e.message === "sin_clave" ? "Falta configurar la clave de IA en Configuración." : e.message === "error_api" ? "La IA no respondió, probá de nuevo." : e.message);
+    } finally {
+      setAutoEjecutando(false);
+    }
+  }
+
+
+  return /*#__PURE__*/React.createElement("div", { style: { maxWidth: 900 } },
+    React.createElement("div", { style: { background: T.card, border: `1px solid ${T.border}`, borderRadius: 11, padding: 16, marginBottom: 14 } },
+      React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 } }, "Campaña · un solo envío a tu base de Comercial"),
+      React.createElement("div", { style: { background: NAVY, borderRadius: 9, padding: 13, marginBottom: 12 } },
+        React.createElement("div", { style: { fontSize: 10.5, fontWeight: 700, color: "#D9B57C", marginBottom: 6 } }, "⚡ Modo autónomo — una orden y se manda solo"),
+        React.createElement("div", { style: { fontSize: 10.5, color: "rgba(255,255,255,.6)", marginBottom: 8 } }, `Sin revisión previa. Va directo a los ${seleccion.size} contacto${seleccion.size === 1 ? "" : "s"} tildados abajo.`),
+        React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+          React.createElement("input", {
+            placeholder: 'Ej: "Mandales un mail de bienvenida presentando NEXO"',
+            value: ordenAutonoma, onChange: e => setOrdenAutonoma(e.target.value),
+            onKeyDown: e => { if (e.key === "Enter") ejecutarOrdenAutonoma(); },
+            style: { flex: "1 1 260px", padding: "10px 12px", borderRadius: 8, border: "none", fontSize: 12.5 }
+          }),
+          React.createElement("button", {
+            onClick: ejecutarOrdenAutonoma, disabled: autoEjecutando || enviando,
+            style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "10px 18px", opacity: (autoEjecutando || enviando) ? .6 : 1 }
+          }, autoEjecutando ? "Redactando y enviando…" : "Hacer campaña ahora")),
+        autoError && React.createElement("div", { style: { color: "#FDBDBD", fontSize: 11.5, marginTop: 7 } }, autoError)),
+      React.createElement("div", { style: { background: "#FBF6EE", border: "1px solid #EBDCC0", borderRadius: 9, padding: 12, marginBottom: 12 } },
+        React.createElement("div", { style: { fontSize: 10.5, fontWeight: 700, color: BRASS, marginBottom: 6 } }, "✦ O redactar y revisar antes de mandar"),
+        React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+          React.createElement("input", {
+            placeholder: 'Ej: "Mandales un mail de bienvenida presentando NEXO, corto y cordial"',
+            value: orden, onChange: e => setOrden(e.target.value),
+            onKeyDown: e => { if (e.key === "Enter") redactarConIA(); },
+            style: { flex: "1 1 260px", padding: "10px 12px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 }
+          }),
+          React.createElement("button", {
+            onClick: redactarConIA, disabled: redactando,
+            style: { ...chipEstilo, background: NAVY, color: "#fff", padding: "10px 16px", opacity: redactando ? .6 : 1 }
+          }, redactando ? "Redactando…" : "Redactar con IA")),
+        errorIA && React.createElement("div", { style: { color: "#B3261E", fontSize: 11.5, marginTop: 7 } }, errorIA),
+        (asunto || cuerpo) && !redactando && React.createElement("div", { style: { fontSize: 11, color: T.muted, marginTop: 7 } }, "Revisá abajo lo que escribió antes de mandarlo — podés editarlo con la mano.")),
+      React.createElement("input", { placeholder: "Asunto del mail", value: asunto, onChange: e => setAsunto(e.target.value), style: { width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 13, marginBottom: 8 } }),
+      React.createElement("textarea", { placeholder: "Mensaje…", value: cuerpo, onChange: e => setCuerpo(e.target.value), rows: 5, style: { width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 13, fontFamily: "inherit", resize: "vertical", marginBottom: 10 } }),
+      error && React.createElement("div", { style: { background: "#FDECEA", color: "#B3261E", borderRadius: 8, padding: "8px 11px", fontSize: 12, marginBottom: 10 } }, error),
+      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" } },
+        React.createElement("button", {
+          onClick: enviarCampania, disabled: enviando,
+          style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "11px 20px", opacity: enviando ? .6 : 1, minHeight: 40 }
+        }, enviando ? "Enviando…" : `Enviar a ${seleccion.size} contacto${seleccion.size === 1 ? "" : "s"}`),
+        progreso && React.createElement("span", { style: { fontSize: 11.5, color: T.sub } }, `${progreso.hecho} / ${progreso.total} enviados` + (progreso.fallidos ? ` · ${progreso.fallidos} fallaron` : "")),
+        resultado && !enviando && React.createElement("span", { style: { fontSize: 11.5, color: resultado.fallidos ? "#9A6B1E" : "#2F7A4F", fontWeight: 700 } },
+          `✓ ${resultado.enviados} enviados` + (resultado.fallidos ? `, ${resultado.fallidos} fallaron` : "") + " · marcados como \"contactado\"")
+      )
+    ),
+    conEmail.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: T.muted } }, "Ninguno de tus contactos tiene mail cargado todavía.") :
+    React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+      React.createElement("thead", null, React.createElement("tr", null,
+        React.createElement("th", { style: th }, React.createElement("input", { type: "checkbox", checked: seleccion.size === conEmail.length && conEmail.length > 0, onChange: toggleTodos })),
+        React.createElement("th", { style: th }, "Empresa"), React.createElement("th", { style: th }, "Mail"), React.createElement("th", { style: th }, "Estado"))),
+      React.createElement("tbody", null, conEmail.map(p => React.createElement("tr", { key: p.id },
+        React.createElement("td", { style: td }, React.createElement("input", { type: "checkbox", checked: seleccion.has(p.id), onChange: () => toggle(p.id) })),
+        React.createElement("td", { style: td }, p.empresa || p.nombre || "—"),
+        React.createElement("td", { style: td }, p.mail),
+        React.createElement("td", { style: td }, p.estado || "nuevo"))))))
+  );
+}
+
 function AreaComercial() {
   const [prospectos, setProspectos] = useState([]);
   const [plantillas, setPlantillas] = useState([]);
@@ -9183,7 +9456,7 @@ ${hist}`;
       flexWrap: "wrap",
       alignItems: "center"
     }
-  }, [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["base", `Base de datos${prospectos.length ? " · " + prospectos.length : ""}`], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+  }, [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["base", `Base de datos${prospectos.length ? " · " + prospectos.length : ""}`], ["campania", "✉ Campaña"], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
     key: id,
     className: "mvtab" + (vista === id ? " act" : ""),
     onClick: () => {
@@ -11323,7 +11596,7 @@ ${hist}`;
       minHeight: 46,
       fontFamily: "inherit"
     }
-  }, "Cancelar")))), vista === "plantillas" && /*#__PURE__*/React.createElement("div", {
+  }, "Cancelar")))), vista === "campania" && /*#__PURE__*/React.createElement(CampaniaComercial, { prospectos, setProspectos }), vista === "plantillas" && /*#__PURE__*/React.createElement("div", {
     style: {
       maxWidth: 780
     }
