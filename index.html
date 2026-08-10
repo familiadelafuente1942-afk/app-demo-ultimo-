@@ -7216,26 +7216,149 @@ function AreaOperaciones() {
     })),
     React.createElement(PanelOperaciones));
 }
+function PanelSoporte() {
+  const [tab, setTab] = useState("tickets");
+  const [tickets, setTickets] = useState([]);
+  const [faq, setFaq] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  const [nuevo, setNuevo] = useState(false);
+  const [copiado, setCopiado] = useState(null);
+
+  async function cargarTodo() {
+    setCargando(true);
+    setError("");
+    try {
+      const [t, f] = await Promise.all([
+        mktFetch("operaciones_tickets?select=*&order=creado.desc&limit=200"),
+        mktFetch("soporte_faq?select=*&order=creado.desc&limit=200")
+      ]);
+      setTickets(t || []);
+      setFaq(f || []);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setCargando(false);
+    }
+  }
+  useEffect(() => { cargarTodo(); }, []);
+
+  async function cambiarEstadoTicket(id, estado) {
+    try {
+      const body = { estado };
+      if (estado === "resuelto" || estado === "cerrado") body.resuelto_en = new Date().toISOString();
+      await mktFetch(`operaciones_tickets?id=eq.${id}`, {
+        method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify(body)
+      });
+      setTickets(prev => prev.map(x => x.id === id ? { ...x, ...body } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function borrarFaq(id) {
+    try {
+      await mktFetch(`soporte_faq?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      setFaq(prev => prev.filter(x => x.id !== id));
+    } catch (e) { setError(e.message); }
+  }
+  async function copiarRespuesta(item) {
+    try { await navigator.clipboard.writeText(item.respuesta); } catch (e) {}
+    setCopiado(item.id);
+    setTimeout(() => setCopiado(null), 1500);
+    mktFetch(`soporte_faq?id=eq.${item.id}`, {
+      method: "PATCH", headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({ veces_usada: (item.veces_usada || 0) + 1 })
+    }).then(() => setFaq(prev => prev.map(x => x.id === item.id ? { ...x, veces_usada: (x.veces_usada || 0) + 1 } : x))).catch(() => {});
+  }
+
+  const chipEstilo = { border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
+  const th = { textAlign: "left", fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", padding: "0 10px 8px" };
+  const td = { padding: "10px", fontSize: 12.5, color: "#1A1A1A", borderTop: "1px solid #EEF0F3" };
+
+  function FormNuevaFaq() {
+    const [f, setF] = useState({ pregunta: "", respuesta: "", categoria: "" });
+    async function guardar() {
+      if (!f.pregunta.trim() || !f.respuesta.trim()) return;
+      try {
+        const [fila] = await mktFetch("soporte_faq", { method: "POST", body: JSON.stringify(f) });
+        setFaq(prev => [fila, ...prev]);
+        setNuevo(false);
+      } catch (e) { setError(e.message); }
+    }
+    return /*#__PURE__*/React.createElement("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", flexDirection: "column", gap: 8 } },
+      React.createElement("input", { placeholder: "Pregunta frecuente", value: f.pregunta, onChange: e => setF({ ...f, pregunta: e.target.value }), style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+      React.createElement("textarea", { placeholder: "Respuesta lista para copiar y pegar", value: f.respuesta, onChange: e => setF({ ...f, respuesta: e.target.value }), rows: 3, style: { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5, fontFamily: "inherit", resize: "vertical" } }),
+      React.createElement("div", { style: { display: "flex", gap: 8 } },
+        React.createElement("input", { placeholder: "Categoría (opcional)", value: f.categoria, onChange: e => setF({ ...f, categoria: e.target.value }), style: { flex: 1, padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 } }),
+        React.createElement("button", { onClick: guardar, style: { ...chipEstilo, background: BRASS, color: "#fff", padding: "9px 16px" } }, "Agregar")));
+  }
+
+  return /*#__PURE__*/React.createElement("div", { style: { background: "#fff", borderRadius: 13, padding: "18px 20px" } },
+    React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" } },
+      ["tickets", "faq"].map(tb => React.createElement("button", {
+        key: tb, onClick: () => setTab(tb),
+        style: { ...chipEstilo, background: tab === tb ? NAVY : "#F3F5F8", color: tab === tb ? "#fff" : "#4A5565", padding: "8px 16px" }
+      }, tb === "tickets" ? `Tickets · ${tickets.length}` : `Base de conocimiento · ${faq.length}`)),
+      tab === "faq" && React.createElement("button", { onClick: () => setNuevo(v => !v), style: { ...chipEstilo, background: "#EAF3EC", color: "#2F7A4F", padding: "8px 16px", marginLeft: "auto" } }, nuevo ? "Cancelar" : "+ Nueva")
+    ),
+    tab === "tickets" && React.createElement("div", { style: { fontSize: 11.5, color: "#8B95A5", marginBottom: 12 } }, "Estos son los mismos tickets de Operaciones — cambiar el estado acá también lo actualiza allá."),
+    error && React.createElement("div", { style: { background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 12 } }, error),
+    nuevo && tab === "faq" && React.createElement(FormNuevaFaq),
+    cargando ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Cargando…") :
+    tab === "tickets" ? (
+      tickets.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin tickets cargados todavía. Se cargan desde Operaciones.") :
+      React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+        React.createElement("thead", null, React.createElement("tr", null,
+          React.createElement("th", { style: th }, "Cliente"), React.createElement("th", { style: th }, "Ticket"),
+          React.createElement("th", { style: th }, "Prioridad"), React.createElement("th", { style: th }, "Estado"))),
+        React.createElement("tbody", null, tickets.map(t => React.createElement("tr", { key: t.id },
+          React.createElement("td", { style: td }, t.cliente_nombre || "—"),
+          React.createElement("td", { style: td }, t.titulo),
+          React.createElement("td", { style: td }, t.prioridad),
+          React.createElement("td", { style: td }, React.createElement("select", {
+            value: t.estado, onChange: e => cambiarEstadoTicket(t.id, e.target.value),
+            style: { fontSize: 11.5, padding: "4px 6px", borderRadius: 6, border: "1px solid #E6E9EE" }
+          }, ["abierto", "en_progreso", "resuelto", "cerrado"].map(s => React.createElement("option", { key: s, value: s }, s)))))))))
+    ) : (
+      faq.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin preguntas frecuentes cargadas todavía.") :
+      React.createElement("div", null, faq.map(item => React.createElement("div", {
+        key: item.id, style: { border: "1px solid #EEF0F3", borderRadius: 10, padding: "12px 14px", marginBottom: 10 }
+      },
+        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 } },
+          React.createElement("div", { style: { fontWeight: 700, fontSize: 13, color: NAVY } }, item.pregunta),
+          React.createElement("button", {
+            onClick: () => copiarRespuesta(item),
+            style: { ...chipEstilo, background: copiado === item.id ? "#EAF3EC" : "#F3F5F8", color: copiado === item.id ? "#2F7A4F" : "#4A5565", flexShrink: 0 }
+          }, copiado === item.id ? "✓ Copiado" : "Copiar")),
+        React.createElement("div", { style: { fontSize: 12.5, color: "#4A5565", marginTop: 6, whiteSpace: "pre-wrap" } }, item.respuesta),
+        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginTop: 8 } },
+          React.createElement("span", { style: { fontSize: 10.5, color: "#8B95A5" } }, (item.categoria || "sin categoría") + " · usada " + (item.veces_usada || 0) + " veces"),
+          React.createElement("button", { onClick: () => borrarFaq(item.id), style: { border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 10.5 } }, "Borrar")))))
+    )
+  );
+}
+
 function AreaSoporte() {
-  return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
-    nombre: "Director de Soporte IA",
-    departamento: "Soporte",
-    objetivo: "Resolver los problemas del cliente antes de que se conviertan en motivo de baja.",
-    capacidades: [{
-      titulo: "Tickets",
-      detalle: "Recepción, clasificación y respuesta"
-    }, {
-      titulo: "Incidentes",
-      detalle: "Detección y escalamiento"
-    }, {
-      titulo: "Base de conocimiento",
-      detalle: "Respuestas que se reutilizan"
-    }, {
-      titulo: "Servicio técnico",
-      detalle: "Diagnóstico de fallas reportadas"
-    }],
-    metricas: ["Tickets abiertos", "Tiempo de respuesta", "Resueltos sin humano", "Satisfacción"]
-  }));
+  return /*#__PURE__*/React.createElement("div", null,
+    React.createElement(FichaAgente, fichaPendiente({
+      nombre: "Director de Soporte IA",
+      departamento: "Soporte",
+      objetivo: "Resolver los problemas del cliente antes de que se conviertan en motivo de baja.",
+      capacidades: [{
+        titulo: "Tickets",
+        detalle: "Recepción, clasificación y respuesta"
+      }, {
+        titulo: "Incidentes",
+        detalle: "Detección y escalamiento"
+      }, {
+        titulo: "Base de conocimiento",
+        detalle: "Respuestas que se reutilizan"
+      }, {
+        titulo: "Servicio técnico",
+        detalle: "Diagnóstico de fallas reportadas"
+      }],
+      metricas: ["Tickets abiertos", "Tiempo de respuesta", "Resueltos sin humano", "Satisfacción"]
+    })),
+    React.createElement(PanelSoporte));
+
 }
 function AreaFinanzas() {
   return /*#__PURE__*/React.createElement(FichaAgente, fichaPendiente({
@@ -7336,8 +7459,8 @@ function AreaCEO({
   }, {
     id: "soporte",
     nombre: "Soporte",
-    estado: "pendiente",
-    nota: "Sin conectar"
+    estado: "activo",
+    nota: "Tickets y base de conocimiento"
   }, {
     id: "finanzas",
     nombre: "Finanzas",
@@ -7420,7 +7543,7 @@ function AreaCEO({
       background: "#E09A3E",
       fontStyle: "normal"
     }
-  }), "3 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
+  }), "4 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 12
     }
@@ -10822,7 +10945,7 @@ const AREAS = [{
   id: "soporte",
   nombre: "Soporte",
   corto: "Soporte",
-  activa: false
+  activa: true
 }, {
   id: "finanzas",
   nombre: "Finanzas",
@@ -10914,7 +11037,7 @@ function CentroOperaciones() {
       borderRadius: 20,
       padding: "3px 9px"
     }
-  }, "3 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
+  }, "4 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
     className: "co-nav",
     style: {
       marginBottom: 14
@@ -11623,7 +11746,7 @@ window.DICC = {
   "Centro de Operaciones": ["Operations Center", "Centro de Operações"],
   "◈ Centro de Operaciones IA": ["◈ AI Operations Center", "◈ Centro de Operações IA"],
   "Abrir el Centro de Operaciones IA →": ["Open the AI Operations Center →", "Abrir o Centro de Operações IA →"],
-  "3 de 8 áreas conectadas": ["3 of 8 areas connected", "3 de 8 áreas conectadas"],
+  "4 de 8 áreas conectadas": ["4 of 8 areas connected", "4 de 8 áreas conectadas"],
   "CEO / Orquestador": ["CEO / Orchestrator", "CEO / Orquestrador"],
   "CEO / Orquestador IA": ["AI CEO / Orchestrator", "CEO / Orquestrador IA"],
   "Comercial": ["Sales", "Comercial"],
