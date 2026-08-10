@@ -1,29 +1,44 @@
-SOPORTE · Botón "Enviar por mail" en la Base de conocimiento
-════════════════════════════════════════════════════════════
+ARREGLO: LA SESIÓN SE VENCÍA SOLA CADA HORA
+════════════════════════════════════════════
 
-QUÉ HACE:
-En Centro de Operaciones → Soporte → Base de conocimiento, cada
-pregunta frecuente ahora tiene DOS botones en vez de uno:
+QUÉ PASABA:
+La sesión de sincronización dura 1 hora por seguridad (algo normal
+y bueno). El problema es que nunca armamos la parte que la renueva
+sola cuando se vence — así que después de 1 hora de tener la app
+abierta, todo empezaba a fallar con "JWT expired", como viste en
+Soporte y en el cartelito de SYNC.
 
-- "Enviar por mail": te pregunta a qué dirección mandarlo, y lo
-  manda de verdad usando la función enviar-mail que ya armamos en
-  Supabase (que a su vez usa Resend con tu dominio nexorarq.com).
-  El asunto es la pregunta, el cuerpo es la respuesta.
+QUÉ ARREGLÉ:
+Ahora, cuando la sesión se vence, la app la renueva sola en
+segundo plano (usando un "token de renovación" que Supabase ya te
+daba pero no estábamos guardando) — sin pedirte correo ni
+contraseña de nuevo, sin que te des cuenta. Si por algún motivo
+la renovación falla, recién ahí te va a volver a pedir el login.
 
-- "Copiar": sigue igual que antes, para pegar a mano en WhatsApp
-  o donde quieras.
+Esto toca a las 5 áreas por igual (Comercial, Marketing,
+Operaciones, Soporte, Finanzas, Producto), porque todas comparten
+el mismo sistema de sesión.
 
-Los dos suman al contador de "usada X veces" de esa respuesta.
+ARCHIVOS A SUBIR — LOS DOS:
+- index.html → reemplaza al actual
+- supabase-sync.js → reemplaza al actual
 
-CÓMO SUBIR (siempre el mismo cuidado):
-Solo index.html. Confirmá en Archivos que el nombre quede exacto
-antes de subir. "Add file → Upload files", nunca el lápiz.
+⚠️ CÓMO SUBIR (siempre el mismo cuidado):
+1. Confirmá en Archivos que los nombres queden exactos:
+   "index.html" y "supabase-sync.js", sin números ni duplicados.
+2. GitHub → Add file → Upload files (nunca el lápiz de editar,
+   sobre todo para index.html que es grande).
+3. Confirmá que reemplace a los existentes.
+4. Commit changes.
 
-CÓMO PROBAR:
-Entrá a Soporte → Base de conocimiento → cargá una pregunta de
-prueba si no tenés ninguna todavía → tocá "Enviar por mail" →
-poné tu propio mail → confirmá que llegue.
+QUÉ HACER DESPUÉS:
+Como la sesión guardada ahora mismo en tu dispositivo es la vieja
+(sin el "token de renovación" nuevo), te va a pedir el correo y
+contraseña UNA VEZ MÁS después de este cambio — es la última vez
+que debería pasar por este motivo. De ahí en adelante, aunque
+pasen horas o días con la app cerrada, se va a renovar sola.
 
 VERIFICADO ANTES DE ENTREGAR:
-- Sintaxis de JavaScript revisada con Node, sin errores.
-- Bloque de Contratista comparado byte a byte: idéntico.
+- Sintaxis de JavaScript revisada con Node en los dos archivos,
+  sin errores.
+- Bloque de Contratista comparado byte a byte: idéntico, no se tocó.

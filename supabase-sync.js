@@ -46,8 +46,14 @@
   function tokenGuardado() {
     try { return localStorage.getItem('supa_token'); } catch { return null; }
   }
-  function guardarToken(t) {
-    try { localStorage.setItem('supa_token', (t || '').trim()); } catch {}
+  function refreshGuardado() {
+    try { return localStorage.getItem('supa_refresh'); } catch { return null; }
+  }
+  function guardarToken(t, refresh) {
+    try {
+      localStorage.setItem('supa_token', (t || '').trim());
+      if (refresh) localStorage.setItem('supa_refresh', (refresh || '').trim());
+    } catch {}
   }
 
   async function iniciarSesion(email, clave) {
@@ -59,15 +65,40 @@
     const d = await r.json();
     if (!r.ok) throw new Error(d.error_description || d.msg || 'No se pudo iniciar sesión');
     token = d.access_token;
-    guardarToken(token);
+    guardarToken(token, d.refresh_token);
     estadoSync.conectado = true;
     return token;
+  }
+
+  // Renueva la sesión sola, sin volver a pedir correo/contraseña,
+  // usando el refresh_token que Supabase entrega junto al access_token.
+  async function renovarSesion() {
+    const refresh = refreshGuardado();
+    if (!refresh) return null;
+    try {
+      const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { apikey: SUPA_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refresh })
+      });
+      const d = await r.json();
+      if (!r.ok) return null;
+      token = d.access_token;
+      guardarToken(token, d.refresh_token);
+      estadoSync.conectado = true;
+      return token;
+    } catch {
+      return null;
+    }
   }
 
   async function pedirSesionSiHaceFalta() {
     if (token) return token;
     const guardado = tokenGuardado();
     if (guardado) { token = guardado; estadoSync.conectado = true; return token; }
+
+    const renovado = await renovarSesion();
+    if (renovado) return renovado;
 
     // Pide credenciales una sola vez por pestaña. Se puede envolver
     // en una pantalla más prolija más adelante; por ahora usa prompt
@@ -80,7 +111,7 @@
   }
 
   // ── llamadas a la API ──
-  async function supaFetch(ruta, opciones) {
+  async function supaFetch(ruta, opciones, _reintentado) {
     const t = await pedirSesionSiHaceFalta();
     try {
       const r = await fetch(`${SUPA_URL}/rest/v1/${ruta}`, {
@@ -95,6 +126,12 @@
       });
       if (!r.ok) {
         const txt = await r.text();
+        // token vencido: renovar una vez y reintentar el mismo pedido
+        if (r.status === 401 && !_reintentado) {
+          token = null;
+          const renovado = await renovarSesion();
+          if (renovado) return supaFetch(ruta, opciones, true);
+        }
         throw new Error(`${r.status} · ${txt.slice(0, 200)}`);
       }
       return r.json();

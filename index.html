@@ -6675,9 +6675,38 @@ const MKT_SUPA_KEY = "sb_publishable_kGPLp-DPPglnf6Eo3zPu6Q_OvE0MCkZ";
 function mktTokenGuardado() {
   try { return localStorage.getItem("supa_token"); } catch (e) { return null; }
 }
+function mktRefreshGuardado() {
+  try { return localStorage.getItem("supa_refresh"); } catch (e) { return null; }
+}
+function mktGuardarToken(t, refresh) {
+  try {
+    localStorage.setItem("supa_token", (t || "").trim());
+    if (refresh) localStorage.setItem("supa_refresh", (refresh || "").trim());
+  } catch (e) {}
+}
+// Renueva la sesión sola, sin volver a pedir correo/contraseña.
+async function mktRenovarSesion() {
+  const refresh = mktRefreshGuardado();
+  if (!refresh) return null;
+  try {
+    const r = await fetch(`${MKT_SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refresh })
+    });
+    const d = await r.json();
+    if (!r.ok) return null;
+    mktGuardarToken(d.access_token, d.refresh_token);
+    return d.access_token;
+  } catch (e) {
+    return null;
+  }
+}
 async function mktPedirSesion() {
   let t = mktTokenGuardado();
   if (t) return t;
+  const renovado = await mktRenovarSesion();
+  if (renovado) return renovado;
   const email = (window.prompt("Correo para sincronizar (Supabase):") || "").trim();
   if (!email) throw new Error("Sin correo");
   const clave = (window.prompt("Contraseña:") || "").trim();
@@ -6689,10 +6718,10 @@ async function mktPedirSesion() {
   });
   const d = await r.json();
   if (!r.ok) throw new Error(d.error_description || d.msg || "No se pudo iniciar sesión");
-  try { localStorage.setItem("supa_token", (d.access_token || "").trim()); } catch (e) {}
+  mktGuardarToken(d.access_token, d.refresh_token);
   return d.access_token;
 }
-async function mktFetch(ruta, opciones) {
+async function mktFetch(ruta, opciones, _reintentado) {
   const t = await mktPedirSesion();
   try {
     const r = await fetch(`${MKT_SUPA_URL}/rest/v1/${ruta}`, {
@@ -6705,7 +6734,15 @@ async function mktFetch(ruta, opciones) {
         ...(opciones && opciones.headers)
       }
     });
-    if (!r.ok) { const txt = await r.text(); throw new Error(`${r.status} · ${txt.slice(0, 200)}`); }
+    if (!r.ok) {
+      const txt = await r.text();
+      if (r.status === 401 && !_reintentado) {
+        try { localStorage.removeItem("supa_token"); } catch (e) {}
+        const renovado = await mktRenovarSesion();
+        if (renovado) return mktFetch(ruta, opciones, true);
+      }
+      throw new Error(`${r.status} · ${txt.slice(0, 200)}`);
+    }
     const txt2 = await r.text();
     return txt2 ? JSON.parse(txt2) : null;
   } catch (e) {
