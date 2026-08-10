@@ -8516,7 +8516,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
     setResultado({ enviados: idsOk.length, fallidos });
     if (idsOk.length) {
       const idsSet = new Set(idsOk);
-      setProspectos(prev => prev.map(p => idsSet.has(p.id) ? { ...p, estado: p.estado === "nuevo" ? "contactado" : p.estado } : p));
+      setProspectos(prev => prev.map(p => idsSet.has(p.id) ? { ...p, estado: p.estado === "nuevo" ? "contactado" : p.estado, fechaUltimoContacto: new Date().toISOString() } : p));
     }
   }
 
@@ -8571,10 +8571,25 @@ function CampaniaComercial({ prospectos, setProspectos }) {
   }
   const [autoEjecutando, setAutoEjecutando] = useState(false);
   const [autoError, setAutoError] = useState("");
+  // Calcula sola a quién le toca escribirle: los nunca contactados,
+  // más los que ya recibieron un mail hace 30 días o más y siguen
+  // en "contactado" (o sea, sin respuesta ni avance). No vuelve a
+  // tocar a los que avanzaron, se cerraron o se perdieron.
+  function calcularDestinatariosAutomaticos() {
+    const HOY = Date.now();
+    const TREINTA_DIAS = 30 * 24 * 60 * 60 * 1000;
+    return conEmail.filter(p => {
+      if (!p.fechaUltimoContacto) return true;
+      if (p.estado === "contactado" && (HOY - new Date(p.fechaUltimoContacto).getTime()) >= TREINTA_DIAS) return true;
+      return false;
+    });
+  }
+  const destinatariosAuto = calcularDestinatariosAutomaticos();
+
   async function ejecutarOrdenAutonoma() {
     if (!ordenAutonoma.trim()) { setAutoError("Decime la orden primero."); return; }
-    const destinatarios = conEmail.filter(p => seleccion.has(p.id));
-    if (destinatarios.length === 0) { setAutoError("No hay contactos con mail seleccionados."); return; }
+    const destinatarios = calcularDestinatariosAutomaticos();
+    if (destinatarios.length === 0) { setAutoError("No hay nadie pendiente: a todos ya se les escribió y siguen esperando, o ya avanzaron."); return; }
     setAutoEjecutando(true);
     setAutoError("");
     try {
@@ -8609,7 +8624,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
       React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 } }, "Campaña · un solo envío a tu base de Comercial"),
       React.createElement("div", { style: { background: NAVY, borderRadius: 9, padding: 13, marginBottom: 12 } },
         React.createElement("div", { style: { fontSize: 10.5, fontWeight: 700, color: "#D9B57C", marginBottom: 6 } }, "⚡ Modo autónomo — una orden y se manda solo"),
-        React.createElement("div", { style: { fontSize: 10.5, color: "rgba(255,255,255,.6)", marginBottom: 8 } }, `Sin revisión previa. Va directo a los ${seleccion.size} contacto${seleccion.size === 1 ? "" : "s"} tildados abajo.`),
+        React.createElement("div", { style: { fontSize: 10.5, color: "rgba(255,255,255,.6)", marginBottom: 8 } }, `Sin revisión previa. Elige sola a quién escribirle: ${destinatariosAuto.length} contacto${destinatariosAuto.length === 1 ? "" : "s"} (nuevos, o esperando hace 30 días o más sin respuesta). No le vuelve a escribir a quien ya avanzó, cerró o se perdió.`),
         React.createElement("label", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,.75)", marginBottom: 9, cursor: "pointer" } },
           React.createElement("input", { type: "checkbox", checked: adjuntarFolleto, onChange: e => setAdjuntarFolleto(e.target.checked) }),
           "Adjuntar el folleto de NEXO en PDF"),
