@@ -32,6 +32,13 @@
   };
   window.estadoSincronizacion = estadoSync;
 
+  window.addEventListener('unhandledrejection', function (ev) {
+    try {
+      const msg = ev && ev.reason && ev.reason.message ? ev.reason.message : String(ev && ev.reason);
+      estadoSync.ultimoError = `[promesa sin atrapar] ${msg}`;
+    } catch (e) {}
+  });
+
   // ── sesión ──
   // Se guarda en sessionStorage (no localStorage): pide iniciar sesión
   // de nuevo en cada pestaña nueva, pero no dura para siempre en el
@@ -161,16 +168,31 @@
     if (evitarRebote) return;
     try {
       estadoSync.pendientes++;
-      const fila = prospectoASupabase(p);
+
+      let fila;
+      try {
+        fila = prospectoASupabase(p);
+      } catch (e) {
+        throw new Error(`[mapeo de datos] ${e.message}`);
+      }
 
       // pais_id: se asume Argentina. Se resuelve una vez y se cachea.
-      fila.pais_id = await paisArgentinaId();
+      try {
+        fila.pais_id = await paisArgentinaId();
+      } catch (e) {
+        throw new Error(`[buscar país] ${e.message}`);
+      }
 
-      await supaFetch(`empresas?on_conflict=origen_local_id`, {
-        method: 'POST',
-        headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify(fila)
-      });
+      try {
+        await supaFetch(`empresas?on_conflict=origen_local_id`, {
+          method: 'POST',
+          headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify(fila)
+        });
+      } catch (e) {
+        throw new Error(`[guardar en Supabase] ${e.message}`);
+      }
+
       estadoSync.ultimaSubida = new Date().toISOString();
       estadoSync.ultimoError = null;
     } catch (e) {
