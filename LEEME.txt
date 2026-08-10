@@ -1,35 +1,48 @@
-COMERCIAL · Modo autónomo elige solo a quién escribirle
-════════════════════════════════════════════════════════════
+ADJUNTAR EL FOLLETO EN PDF A LOS MAILS DE CAMPAÑA
+════════════════════════════════════════════════════
 
-QUÉ CAMBIÉ:
-Antes, el Modo autónomo mandaba a los contactos que estuvieran
-tildados a mano en la lista de abajo. Ahora ya no depende de eso
-— calcula solo a quién le toca, con esta regla:
+HAY 3 PASOS. LOS 3 SON NECESARIOS, EN ESTE ORDEN:
 
-- Los que NUNCA recibieron un mail → les manda.
-- Los que ya recibieron un mail y siguen en estado "contactado"
-  (sin avanzar, sin respuesta) hace 30 DÍAS o más → les manda de
-  nuevo, como recordatorio.
-- Los que avanzaron (reunión, propuesta), cerraron, o se marcaron
-  como perdidos → NUNCA les vuelve a escribir solo. Esos quedan
-  afuera del automático a propósito.
+PASO 1 — Subir el PDF a Supabase (una sola vez, para siempre):
+1. Andá a supabase.com → tu proyecto (construía)
+2. Menú izquierdo → Storage
+3. Create a new bucket
+   - Nombre: adjuntos (exacto, minúscula)
+   - Marcá la opción "Public bucket" (importante: tiene que ser
+     público, si no, Resend no va a poder leerlo)
+   - Create bucket
+4. Entrá al bucket "adjuntos" → Upload file
+5. Subí el archivo nexo-folleto.pdf (el mismo que ya tenés) — pero
+   ANTES de subirlo, fijate que se llame exactamente
+   "nexo-folleto.pdf", sin números ni espacios. Si tu archivo
+   descargado tiene otro nombre, renombralo primero en Archivos.
 
-El número que ves arriba del cuadro ("X contactos") ya refleja
-esta cuenta real, no lo que esté tildado.
+PASO 2 — Actualizar la función que manda los mails:
+1. Supabase → Edge Functions → enviar-mail
+2. Pestaña "Code" (o el ícono de editar)
+3. Borrá todo el código actual y pegá el contenido completo del
+   archivo enviar-mail.ts que te mando acá
+4. Deploy / Publicar
 
-⚠️ UN DETALLE PARA LA PRIMERA VEZ:
-Los contactos que ya marcaste como "contactado" en pruebas
-anteriores (antes de este cambio) no tienen guardada la fecha en
-que les escribiste — así que la primera vez que uses el Modo
-autónomo después de este cambio, el sistema los va a tratar como
-"nunca contactados" y les puede volver a escribir. De ahí en
-adelante, con la fecha ya guardada, va a respetar los 30 días
-sin problema.
-
-CÓMO SUBIR (siempre el mismo cuidado):
+PASO 3 — Subir el index.html (como siempre):
 Solo index.html. Confirmá el nombre exacto antes de subir.
 "Add file → Upload files", nunca el lápiz.
 
+QUÉ CAMBIA EN LA APP:
+En Comercial → ✉ Campaña → Modo autónomo, ahora hay un checkbox
+"Adjuntar el folleto de NEXO en PDF", tildado por defecto. Cada
+mail que mandes desde ahí (autónomo o con revisión) va a llevar el
+folleto adjunto, salvo que destildes esa casilla.
+
+SI EL NOMBRE DEL ARCHIVO EN STORAGE ES DISTINTO:
+La app espera encontrarlo exactamente en esta dirección:
+https://agcmhrbxqtibrtmhwrrx.supabase.co/storage/v1/object/public/adjuntos/nexo-folleto.pdf
+Si subiste el bucket o el archivo con otro nombre, avisame y te
+doy la línea corregida para volver a subir.
+
 VERIFICADO ANTES DE ENTREGAR:
-- Sintaxis de JavaScript revisada con Node, sin errores.
+- Sintaxis de JavaScript revisada con Node en los dos archivos
+  (index.html y enviar-mail.ts), sin errores.
 - Bloque de Contratista comparado byte a byte: idéntico.
+- Confirmé el formato exacto de URL pública de Supabase Storage
+  antes de escribirla, para no adivinar.
