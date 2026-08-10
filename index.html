@@ -7268,6 +7268,35 @@ function PanelSoporte() {
       body: JSON.stringify({ veces_usada: (item.veces_usada || 0) + 1 })
     }).then(() => setFaq(prev => prev.map(x => x.id === item.id ? { ...x, veces_usada: (x.veces_usada || 0) + 1 } : x))).catch(() => {});
   }
+  const [enviando, setEnviando] = useState(null);
+  const [enviado, setEnviado] = useState(null);
+  async function enviarFaqPorMail(item) {
+    const destino = window.prompt("¿A qué mail se lo mandamos?", "");
+    if (!destino) return;
+    setEnviando(item.id);
+    setError("");
+    try {
+      const t = await mktPedirSesion();
+      const html = "<p>" + String(item.respuesta || "").replace(/\n/g, "<br>") + "</p>";
+      const r = await fetch(`${MKT_SUPA_URL}/functions/v1/enviar-mail`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${t}`, apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ to: destino, subject: item.pregunta || "Respuesta de NEXO", html })
+      });
+      const data = await r.json();
+      if (!r.ok || data.error) throw new Error((data.error && (data.error.message || JSON.stringify(data.error))) || "No se pudo enviar");
+      setEnviado(item.id);
+      setTimeout(() => setEnviado(null), 2500);
+      mktFetch(`soporte_faq?id=eq.${item.id}`, {
+        method: "PATCH", headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ veces_usada: (item.veces_usada || 0) + 1 })
+      }).then(() => setFaq(prev => prev.map(x => x.id === item.id ? { ...x, veces_usada: (x.veces_usada || 0) + 1 } : x))).catch(() => {});
+    } catch (e) {
+      setError("No se pudo enviar el mail: " + e.message);
+    } finally {
+      setEnviando(null);
+    }
+  }
 
   const chipEstilo = { border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
   const th = { textAlign: "left", fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", padding: "0 10px 8px" };
@@ -7324,10 +7353,16 @@ function PanelSoporte() {
       },
         React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 } },
           React.createElement("div", { style: { fontWeight: 700, fontSize: 13, color: NAVY } }, item.pregunta),
-          React.createElement("button", {
-            onClick: () => copiarRespuesta(item),
-            style: { ...chipEstilo, background: copiado === item.id ? "#EAF3EC" : "#F3F5F8", color: copiado === item.id ? "#2F7A4F" : "#4A5565", flexShrink: 0 }
-          }, copiado === item.id ? "✓ Copiado" : "Copiar")),
+          React.createElement("div", { style: { display: "flex", gap: 6, flexShrink: 0 } },
+            React.createElement("button", {
+              onClick: () => enviarFaqPorMail(item),
+              disabled: enviando === item.id,
+              style: { ...chipEstilo, background: enviado === item.id ? "#EAF3EC" : "#EAF0FA", color: enviado === item.id ? "#2F7A4F" : "#3B6CA8" }
+            }, enviando === item.id ? "Enviando…" : enviado === item.id ? "✓ Enviado" : "Enviar por mail"),
+            React.createElement("button", {
+              onClick: () => copiarRespuesta(item),
+              style: { ...chipEstilo, background: copiado === item.id ? "#EAF3EC" : "#F3F5F8", color: copiado === item.id ? "#2F7A4F" : "#4A5565" }
+            }, copiado === item.id ? "✓ Copiado" : "Copiar"))),
         React.createElement("div", { style: { fontSize: 12.5, color: "#4A5565", marginTop: 6, whiteSpace: "pre-wrap" } }, item.respuesta),
         React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginTop: 8 } },
           React.createElement("span", { style: { fontSize: 10.5, color: "#8B95A5" } }, (item.categoria || "sin categoría") + " · usada " + (item.veces_usada || 0) + " veces"),

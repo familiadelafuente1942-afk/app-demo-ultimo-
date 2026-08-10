@@ -1,39 +1,28 @@
-CEO / ORQUESTADOR · Panel con datos reales de las 7 áreas
+SOPORTE · Botón "Enviar por mail" en la Base de conocimiento
 ════════════════════════════════════════════════════════════
 
-QUÉ CAMBIÉ:
-La pestaña CEO ahora lee datos reales de todas las áreas, no solo
-de Comercial:
+QUÉ HACE:
+En Centro de Operaciones → Soporte → Base de conocimiento, cada
+pregunta frecuente ahora tiene DOS botones en vez de uno:
 
-- "Métricas de la compañía" (antes decía "requieren áreas no
-  conectadas" con guiones) ahora muestra:
-  · Ingreso recurrente (MRR real, sumando el monto mensual de tus
-    clientes activos en Operaciones)
-  · Clientes activos (de Operaciones)
-  · Leads del mes (pedidos de demo capturados en Marketing)
-  · Tickets abiertos (de Soporte/Operaciones)
+- "Enviar por mail": te pregunta a qué dirección mandarlo, y lo
+  manda de verdad usando la función enviar-mail que ya armamos en
+  Supabase (que a su vez usa Resend con tu dominio nexorarq.com).
+  El asunto es la pregunta, el cuerpo es la respuesta.
 
-- La lista "Estado de las 7 áreas" ahora muestra una nota real en
-  cada una en vez del texto genérico: cuántos leads tiene Marketing
-  este mes, cuántos clientes activos Operaciones, el MRR de
-  Finanzas, cuántos items abiertos tiene Producto, si Seguridad
-  tiene incidentes abiertos o no.
+- "Copiar": sigue igual que antes, para pegar a mano en WhatsApp
+  o donde quieras.
 
-- "Almacenamiento de datos" ya no dice "Local en este dispositivo"
-  (quedó desactualizado desde que armamos la sincronización) —
-  ahora dice "Supabase · compartido entre dispositivos", con punto
-  verde.
-
-QUÉ NO CAMBIÉ (a propósito):
-El aviso automático (que el CEO te avise solo cuándo algo necesita
-tu atención) sigue pendiente — eso es un paso aparte, más adelante,
-cuando se conecte al motor de agentes real.
+Los dos suman al contador de "usada X veces" de esa respuesta.
 
 CÓMO SUBIR (siempre el mismo cuidado):
-1. Confirmá en Archivos que el nombre sea "index.html" exacto.
-2. GitHub → Add file → Upload files (nunca el lápiz de editar).
-3. Confirmá que reemplace al existente.
-4. Commit changes.
+Solo index.html. Confirmá en Archivos que el nombre quede exacto
+antes de subir. "Add file → Upload files", nunca el lápiz.
+
+CÓMO PROBAR:
+Entrá a Soporte → Base de conocimiento → cargá una pregunta de
+prueba si no tenés ninguna todavía → tocá "Enviar por mail" →
+poné tu propio mail → confirmá que llegue.
 
 VERIFICADO ANTES DE ENTREGAR:
 - Sintaxis de JavaScript revisada con Node, sin errores.
