@@ -6786,6 +6786,7 @@ function PanelMarketing() {
   const [competencia, setCompetencia] = useState([]);
   const [metricas, setMetricas] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [respuestas, setRespuestas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [nuevo, setNuevo] = useState(false);
@@ -6794,18 +6795,20 @@ function PanelMarketing() {
     setCargando(true);
     setError("");
     try {
-      const [c, k, comp, met, lds] = await Promise.all([
+      const [c, k, comp, met, lds, resp] = await Promise.all([
         mktFetch("marketing_contenido?select=*&order=creado.desc&limit=200"),
         mktFetch("marketing_campanias?select=*&order=creado.desc&limit=200"),
         mktFetch("marketing_competencia?select=*&order=creado.desc&limit=200"),
         mktFetch("marketing_metricas_pagina?select=*&order=creado.desc&limit=1000"),
-        mktFetch("marketing_leads_demo?select=*&order=creado.desc&limit=500")
+        mktFetch("marketing_leads_demo?select=*&order=creado.desc&limit=500"),
+        mktFetch("respuestas_email?select=*&order=fecha_recibido.desc&limit=300")
       ]);
       setContenido(c || []);
       setCampanias(k || []);
       setCompetencia(comp || []);
       setMetricas(met || []);
       setLeads(lds || []);
+      setRespuestas(resp || []);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -6850,6 +6853,22 @@ function PanelMarketing() {
     try {
       await mktFetch(`marketing_competencia?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
       setCompetencia(prev => prev.filter(x => x.id !== id));
+    } catch (e) { setError(e.message); }
+  }
+  async function marcarRespuestaLeida(id) {
+    try {
+      await mktFetch(`respuestas_email?id=eq.${id}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ leido: true })
+      });
+      setRespuestas(prev => prev.map(x => x.id === id ? { ...x, leido: true } : x));
+    } catch (e) { setError(e.message); }
+  }
+  async function borrarRespuesta(id) {
+    try {
+      await mktFetch(`respuestas_email?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      setRespuestas(prev => prev.filter(x => x.id !== id));
     } catch (e) { setError(e.message); }
   }
 
@@ -7006,18 +7025,32 @@ function PanelMarketing() {
 
   return /*#__PURE__*/React.createElement("div", { style: { background: "#fff", borderRadius: 13, padding: "18px 20px" } },
     React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" } },
-      ["contenido", "campanias", "competencia", "metricas", "leads"].map(tb => React.createElement("button", {
+      ["contenido", "campanias", "competencia", "metricas", "leads", "respuestas"].map(tb => React.createElement("button", {
         key: tb,
         onClick: () => setTab(tb),
         style: { ...chipEstilo, background: tab === tb ? NAVY : "#F3F5F8", color: tab === tb ? "#fff" : "#4A5565", padding: "8px 16px" }
-      }, tb === "contenido" ? `Contenido · ${contenido.length}` : tb === "campanias" ? `Campañas · ${campanias.length}` : tb === "competencia" ? `Competencia · ${competencia.length}` : tb === "metricas" ? `Métricas · ${metricas.length}` : `Leads · ${leads.length}`)),
+      }, tb === "contenido" ? `Contenido · ${contenido.length}` : tb === "campanias" ? `Campañas · ${campanias.length}` : tb === "competencia" ? `Competencia · ${competencia.length}` : tb === "metricas" ? `Métricas · ${metricas.length}` : tb === "leads" ? `Leads · ${leads.length}` : `Respuestas · ${respuestas.filter(r => !r.leido).length}`)),
       (tab !== "metricas" && tab !== "leads") && React.createElement("button", { onClick: () => setNuevo(v => !v), style: { ...chipEstilo, background: "#EAF3EC", color: "#2F7A4F", padding: "8px 16px", marginLeft: "auto" } }, nuevo ? "Cancelar" : "+ Nuevo")
     ),
     error && React.createElement("div", { style: { background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 12 } }, error),
     nuevo && (tab === "contenido" ? React.createElement(FormNuevoContenido) : tab === "campanias" ? React.createElement(FormNuevaCampania) : tab === "competencia" ? React.createElement(FormNuevoCompetidor) : null),
     cargando ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Cargando…") :
     tab === "leads" ? React.createElement(PanelCampaniaLeads) :
-    tab === "contenido" ? (
+    tab === "respuestas" ? (
+      respuestas.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Todavía no llegó ninguna respuesta.") :
+      React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+        React.createElement("thead", null, React.createElement("tr", null,
+          React.createElement("th", { style: th }, "De"), React.createElement("th", { style: th }, "Asunto"),
+          React.createElement("th", { style: th }, "Mensaje"), React.createElement("th", { style: th }, "Fecha"),
+          React.createElement("th", { style: th }, ""), React.createElement("th", { style: th }, ""))),
+        React.createElement("tbody", null, respuestas.map(r => React.createElement("tr", { key: r.id, style: { background: r.leido ? "transparent" : "#FBF7EF" } },
+          React.createElement("td", { style: td }, r.remitente),
+          React.createElement("td", { style: td }, r.asunto || "—"),
+          React.createElement("td", { style: { ...td, maxWidth: 260, whiteSpace: "pre-wrap" } }, (r.cuerpo || "").slice(0, 220) + ((r.cuerpo || "").length > 220 ? "…" : "")),
+          React.createElement("td", { style: td }, r.fecha_recibido ? new Date(r.fecha_recibido).toLocaleString("es-AR") : "—"),
+          React.createElement("td", { style: td }, !r.leido && React.createElement("button", { onClick: () => marcarRespuestaLeida(r.id), style: { border: "none", background: "none", color: "#2F7A4F", cursor: "pointer", fontSize: 11.5 } }, "Marcar leído")),
+          React.createElement("td", { style: td }, React.createElement("button", { onClick: () => borrarRespuesta(r.id), style: { border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 } }, "Borrar")))))))
+    ) : tab === "contenido" ? (
       contenido.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: "#8B95A5" } }, "Sin contenido cargado todavía.") :
       React.createElement("div", { style: { overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
         React.createElement("thead", null, React.createElement("tr", null,
