@@ -12243,8 +12243,14 @@ function mostrarModalLead(alContinuar) {
   overlay.querySelector("#leadSaltar").onclick = () => cerrar(false);
 }
 
+// En la demo para clientes NO se pide el correo/contraseña de sincronización (eso es solo del Centro de Operaciones propio).
+var _promptOrig = window.prompt;
+function silenciarSync(on) {
+  window.prompt = on ? function (m, d) { if (/sincronizar|Contraseña/i.test(String(m || ""))) return null; return _promptOrig.call(window, m, d); } : _promptOrig;
+}
 function abrirDemo() {
   function seguir() {
+    silenciarSync(true);
     document.body.classList.remove("en-ventas");
     document.body.classList.remove("en-entorno");
     document.body.classList.add("en-demo");
@@ -12256,6 +12262,7 @@ function abrirDemo() {
   mostrarModalLead(() => { seguir(); registrarConversionPropia(); });
 }
 function abrirVentas() {
+  silenciarSync(false);
   if (!revisarMotor()) {
     // Nunca fallar en silencio: si no está activado, lo explico y ofrezco activarlo.
     var k = window.prompt("El Centro de Operaciones IA está protegido.\n\nIngresá la llave para activarlo en este dispositivo:", "");
