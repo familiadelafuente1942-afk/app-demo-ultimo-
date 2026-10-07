@@ -2102,6 +2102,10 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     setTabObra("info");
     setPlanos([]);
     setRenders([]);
+    try {
+      Object.keys(localStorage).filter(k => /^(vv_|cliente_|demo_nube__)/.test(k)).forEach(k => localStorage.removeItem(k));
+      document.querySelectorAll("iframe.app-real").forEach(f => { f.src = f.src; });
+    } catch (e) {}
   }
   useEffect(() => () => fotos.forEach(f => URL.revokeObjectURL(f.url)), []);
 
@@ -2968,7 +2972,7 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
     const nombreCorto = rol === "estudio" ? "Vega" : "Meridian";
     const fondo = (fotos[0] && fotos[0].url) || (renders[0] && renders[0].url) || (rol === "estudio" ? FOTO_CASA_2 : FOTO_CASA_1);
     const nInformes = 34 + fotos.length + certificados.length;
-    const nBitacoras = 248 + bitacora.length;
+    const nBitacoras = 12 + bitacora.length; // bitácoras de la semana (no el total)
     const nCertificados = 15 + certificados.length + (informe ? 1 : 0);
     const nAuditorias = 2;
     const irA = destino => rol === "estudio" ? setTabE(destino) : setTabC(destino);
@@ -3135,7 +3139,12 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
       style: {
         borderTop: `1px solid ${t.border}`
       }
-    }), /*#__PURE__*/React.createElement(Rotulo, null, "Novedades recientes"), /*#__PURE__*/React.createElement("div", null, [["Informes de avance", nInformes, "informes"], ["Bitácoras", nBitacoras, "bitacora"], ["Certificados semanales", nCertificados, "informes"], ["Auditorías", nAuditorias, "auditoria"]].map(([rotulo, n, destino], i) => /*#__PURE__*/React.createElement("button", {
+    }), retrasos.filter(r => !r.hecho).length > 0 && /*#__PURE__*/React.createElement("div", {
+      onClick: () => irA("gestion"),
+      style: { margin: "10px 0 4px", background: "#FBEFEA", border: "1px solid #E7B9AB", borderRadius: 11, padding: "11px 13px", cursor: "pointer" }
+    }, /*#__PURE__*/React.createElement("div", { style: { fontSize: 9.5, fontWeight: 800, letterSpacing: ".08em", color: "#B03A2E", marginBottom: 4 } }, "GESTIÓN DE OBRA · RETRASOS"),
+    retrasos.filter(r => !r.hecho).slice(0, 2).map(r => /*#__PURE__*/React.createElement("div", { key: r.id, style: { fontSize: 11.5, color: "#3A2A26", lineHeight: 1.45, marginTop: 3 } }, "• ", r.titulo, ": va a demorar ", r.dias, " día", r.dias > 1 ? "s" : "", " más.")),
+    /*#__PURE__*/React.createElement("div", { style: { fontSize: 10, color: "#8A5A50", marginTop: 5 } }, "Detalle completo en Gestión y Bitácora ›")), /*#__PURE__*/React.createElement(Rotulo, null, "Novedades recientes"), /*#__PURE__*/React.createElement("div", null, [["Informes de avance", nInformes, "informes"], ["Bitácoras de la semana", nBitacoras, "bitacora"], ["Certificados semanales", nCertificados, "informes"], ["Auditorías", nAuditorias, "auditoria"], ["Gestión: retrasos abiertos", retrasos.filter(r => !r.hecho).length, "gestion"]].map(([rotulo, n, destino], i) => /*#__PURE__*/React.createElement("button", {
       key: rotulo,
       onClick: () => irA(destino),
       style: {
@@ -3486,6 +3495,8 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
         @media (max-width: 820px) {
           .grilla { grid-template-columns:1fr; grid-template-rows:none; height:auto; }
           .grilla > div { min-height:460px; }
+          .grilla > div iframe.app-real { min-height:680px; }
+          body.en-demo > div[style*="bottom:8px"], body.en-demo > div[style*="bottom: 8px"] { display:none !important; }
         }
         button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; font-family:inherit; }
         button:active { opacity:.6; transform:scale(.97); }
@@ -4475,6 +4486,16 @@ function Marco({
     var _m = /^App (\d)/.exec(rotulo || "");
     var _id = _m ? ({ "1": "principal", "2": "estudio", "3": "obra", "4": "propietario" })[_m[1]] : null;
     if (_id && _pl.indexOf(_id) < 0) return null;
+  }
+  if (_m && (_m[1] === "1" || _m[1] === "2")) {
+    // Panel principal y Panel del estudio: son las aplicaciones reales (iframe), con datos ficticios.
+    return /*#__PURE__*/React.createElement("div", {
+      className: flash ? "flash" : "",
+      style: { background: "#fff", borderRadius: 13, overflow: "hidden", display: "flex", flexDirection: "column", border: "1px solid rgba(255,255,255,.1)", minHeight: 0 }
+    }, /*#__PURE__*/React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 7, padding: "7px 12px", background: "#0E1520", borderBottom: "1px solid rgba(255,255,255,.08)" } },
+      /*#__PURE__*/React.createElement("span", { style: { width: 12, height: 2, background: BRASS, flexShrink: 0 } }),
+      /*#__PURE__*/React.createElement("b", { style: { fontSize: 10.5, color: "#C8D0DA" } }, rotulo)),
+      /*#__PURE__*/React.createElement("iframe", { className: "app-real", title: rotulo, src: (_m[1] === "1" ? "demo-principal.html" : "demo-estudio.html") + "?v=1", style: { flex: 1, width: "100%", border: "none", minHeight: 0, background: "#fff" } }));
   }
   return /*#__PURE__*/React.createElement("div", {
     className: flash ? "flash" : "",
