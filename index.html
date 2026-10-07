@@ -384,6 +384,40 @@
     .cambiavista button { padding:7px 9px; font-size:10.5px; }
   }
 
+  /* ── vista Ingresar (licencia + apps del estudio) ── */
+  .navcta{ flex-wrap:wrap; row-gap:8px; }
+  @media (max-width:560px){ .navcta{ width:100%; } }
+  #vista-entorno{ display:none; }
+  body.en-entorno #vista-landing, body.en-entorno #vista-demo, body.en-entorno #vista-ventas, body.en-entorno header{ display:none; }
+  body.en-entorno #vista-entorno{ display:block; }
+  .ent-top{ position:sticky; top:0; z-index:50; background:rgba(245,246,248,.94); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .ent-marca{ font-family:'Fraunces',serif; font-weight:600; font-size:17px; color:var(--navy); } .ent-marca em{ font-style:normal; color:var(--brass); }
+  .ent-wrap{ max-width:880px; margin:0 auto; padding:34px 16px 70px; }
+  .ent-wrap h1{ font-size:32px; line-height:1.12; margin-bottom:10px; color:var(--navy); text-wrap:balance; }
+  .ent-lead{ color:var(--sub); font-size:15px; line-height:1.55; max-width:560px; margin:0 0 24px; }
+  .ent-box{ background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:22px; max-width:460px; }
+  .ent-box label{ display:block; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+  .ent-box input{ width:100%; border:1px solid var(--border); border-radius:var(--rsm); padding:13px 14px; font:500 16px 'IBM Plex Mono',monospace; letter-spacing:.06em; color:var(--text); background:#fff; outline:none; }
+  .ent-box input:focus{ border-color:var(--brass); }
+  .ent-box .btn{ width:100%; justify-content:center; margin-top:12px; }
+  .ent-err{ color:#B3261E; font-size:13px; min-height:18px; margin-top:10px; }
+  .ent-hint{ color:var(--muted); font-size:12.5px; line-height:1.6; margin-top:14px; }
+  .ent-hint code{ font-family:'IBM Plex Mono',monospace; background:#EEF0F4; border-radius:5px; padding:2px 6px; color:var(--text); white-space:nowrap; }
+  .ent-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:14px; flex-wrap:wrap; margin-bottom:6px; }
+  .ent-est{ font-size:12.5px; color:var(--muted); line-height:1.5; } .ent-est b{ display:block; font-family:'Fraunces',serif; font-size:20px; color:var(--navy); font-weight:600; }
+  .ent-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:22px; }
+  @media (max-width:640px){ .ent-grid{ grid-template-columns:1fr; } .ent-wrap h1{ font-size:27px; } }
+  .ent-app{ background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:20px; display:flex; flex-direction:column; gap:10px; min-width:0; }
+  .ent-app.off{ background:#F0F2F5; }
+  .ent-app.off h3, .ent-app.off p{ color:var(--muted); }
+  .ent-app h3{ font-size:18px; color:var(--navy); } .ent-app .who{ font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--brass); }
+  .ent-app p{ font-size:13.5px; line-height:1.55; color:var(--sub); margin:0; flex:1; }
+  .ent-pill{ align-self:flex-start; font-size:10.5px; font-weight:700; letter-spacing:.06em; border-radius:20px; padding:3px 10px; }
+  .ent-pill.on{ background:#E4F2EA; color:var(--ok); } .ent-pill.off{ background:#E3E6EB; color:var(--muted); }
+  .ent-row{ display:flex; gap:8px; flex-wrap:wrap; } .ent-row .btn{ flex:1; justify-content:center; min-width:120px; }
+  .ent-note{ margin-top:26px; background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; font-size:13px; color:var(--sub); line-height:1.6; }
+  .ent-toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--navy); color:#fff; padding:10px 16px; border-radius:30px; font-size:13.5px; font-weight:600; opacity:0; pointer-events:none; transition:opacity .25s; z-index:500; max-width:90vw; text-align:center; }
+  .ent-toast.on{ opacity:1; }
   .reveal{ opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease; }
   /* Sin JavaScript el contenido se ve igual */
   .no-js .reveal{ opacity:1; transform:none; }
@@ -433,6 +467,7 @@
     </nav>
     <div class="navcta">
       <button class="btn btn-ghost btn-motor" onclick="abrirVentas()">Centro de Operaciones</button><span class="idiomas"><button data-idioma="es" onclick="cambiarIdioma('es')">ES</button><button data-idioma="en" onclick="cambiarIdioma('en')">EN</button><button data-idioma="pt" onclick="cambiarIdioma('pt')">PT</button></span><a class="btn btn-ghost" href="#planes">Ver planes</a>
+      <button class="btn btn-ghost" onclick="abrirEntorno()">Ingresar</button>
       <button class="btn btn-brass" onclick="abrirDemo()">Probar demo</button>
     </div>
   </div>
@@ -899,6 +934,34 @@
 
 <div id="vista-demo"><div id="root-demo"></div></div>
 <div id="vista-ventas"><div id="root-ventas"></div></div>
+
+<div id="vista-entorno">
+  <div class="ent-top"><button class="btn btn-ghost" onclick="volverALanding()">‹ Volver al sitio</button><span class="ent-marca">NEXO <em>Entorno</em></span></div>
+  <div class="ent-wrap">
+    <section id="ent-login">
+      <h1>Ingresá con la clave de tu estudio o empresa</h1>
+      <p class="ent-lead">La clave habilita las aplicaciones que tiene contratadas tu plan. Cada integrante del equipo instala la suya en el celular.</p>
+      <div class="ent-box">
+        <label for="ent-clave">Clave de licencia</label>
+        <input id="ent-clave" autocomplete="off" autocapitalize="characters" placeholder="NEXO-XXXX-XXXX">
+        <button class="btn btn-brass" id="ent-entrar" type="button">Entrar</button>
+        <div class="ent-err" id="ent-err"></div>
+        <div class="ent-hint">Para ver cómo funciona, probá con <code>NEXO-DEMO-UNAOBRA</code> (2 apps), <code>NEXO-DEMO-CONSTRUCTORA</code> (las 4) o <code>NEXO-DEMO-AMEDIDA</code> (las 4).</div>
+      </div>
+    </section>
+    <section id="ent-panel" hidden>
+      <div class="ent-head">
+        <div class="ent-est"><span id="ent-plan"></span><b id="ent-estudio"></b><span id="ent-venc"></span></div>
+        <button class="btn btn-ghost" id="ent-salir" type="button">Cambiar clave</button>
+      </div>
+      <h1>Tus aplicaciones</h1>
+      <p class="ent-lead">Se instalan en el celular como cualquier otra app, sin pasar por la tienda. Cada persona ve solo lo que le corresponde.</p>
+      <div class="ent-grid" id="ent-apps"></div>
+      <div class="ent-note">Las aplicaciones que tu plan no incluye aparecen bloqueadas y se pueden sumar en cualquier momento, sin reinstalar nada.</div>
+    </section>
+  </div>
+  <div class="ent-toast" id="ent-toast"></div>
+</div>
 
 <div id="idioma-flotante"><button data-idioma="es" onclick="cambiarIdioma('es')">ES</button><button data-idioma="en" onclick="cambiarIdioma('en')">EN</button><button data-idioma="pt" onclick="cambiarIdioma('pt')">PT</button></div>
 <button id="ir-ventas" onclick="abrirVentas()">◈ Centro de Operaciones IA</button>
@@ -12183,6 +12246,7 @@ function mostrarModalLead(alContinuar) {
 function abrirDemo() {
   function seguir() {
     document.body.classList.remove("en-ventas");
+    document.body.classList.remove("en-entorno");
     document.body.classList.add("en-demo");
     try { window.scrollTo(0, 0); } catch (e) {}
     marcarVista("demo");
@@ -12205,6 +12269,7 @@ function abrirVentas() {
     }
   }
   document.body.classList.remove("en-demo");
+  document.body.classList.remove("en-entorno");
   document.body.classList.add("en-ventas");
   try { window.scrollTo(0, 0); } catch (e) {}
   marcarVista("ventas");
@@ -12225,6 +12290,7 @@ function revisarMotor() {
   return activo;
 }
 function volverALanding() {
+  document.body.classList.remove("en-entorno");
   document.body.classList.remove("en-demo");
   document.body.classList.remove("en-ventas");
   try { window.scrollTo(0, 0); } catch (e) {}
@@ -13115,5 +13181,80 @@ window.DICC = {
   pintar();
 })();
 </script>
+<script>
+// ════════════════════════════════════════════════════════════
+// INGRESAR · licencia por clave + apps del estudio / empresa
+// En producción la clave se valida contra el servidor del proveedor (/api/licencia).
+// Mientras tanto vale la tabla de demostración de abajo.
+// ════════════════════════════════════════════════════════════
+(function () {
+  // ruta: null = todavía se abre la demo del sistema. Cuando cada estudio tenga su copia, va la dirección (ej. "/principal.html").
+  var APPS = [
+    { id: "principal",   nombre: "Panel principal",           quien: "Para vos y tu equipo",                  ruta: null, desc: "Obras, personal, certificados, cronogramas, documentación técnica y auditorías. El centro de comando de la constructora." },
+    { id: "estudio",     nombre: "Panel del estudio",         quien: "Para el estudio que proyecta",          ruta: null, desc: "Ve cada pedido de plano o definición apenas lo carga el contratista y responde sin pasar por vos." },
+    { id: "propietario", nombre: "Portal del propietario",    quien: "Para el dueño final",                   ruta: null, desc: "Vista de solo lectura del avance: fotos, cronograma y novedades, sin acceso a lo operativo." },
+    { id: "obra",        nombre: "App de obra",               quien: "Para capataces y contratistas",         ruta: null, desc: "Pide materiales, planos o definiciones en el momento. Queda cargado a la vez en la constructora y en el estudio." }
+  ];
+  var TODAS = ["principal", "estudio", "propietario", "obra"];
+  var LIC = {
+    "NEXO-DEMO-UNAOBRA":      { estudio: "Estudio Demo", plan: "Una obra",      apps: ["principal", "estudio"], vence: "2026-12-31" },
+    "NEXO-DEMO-CONSTRUCTORA": { estudio: "Constructora Demo S.A.", plan: "Constructora", apps: TODAS, vence: "2026-12-31" },
+    "NEXO-DEMO-AMEDIDA":      { estudio: "Grupo Demo", plan: "A medida",      apps: TODAS, vence: "2026-12-31" }
+  };
+  var $ = function (i) { return document.getElementById(i); };
+  function gu(k) { try { localStorage.setItem("nexo_lic", k); } catch (e) {} }
+  function le() { try { return localStorage.getItem("nexo_lic") || ""; } catch (e) { return ""; } }
+  function bo() { try { localStorage.removeItem("nexo_lic"); } catch (e) {} }
+  function aviso(t) { var el = $("ent-toast"); el.textContent = t; el.className = "ent-toast on"; setTimeout(function () { el.className = "ent-toast"; }, 2200); }
+  function fmt(f) { var p = f.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; }
+  async function validar(k) {
+    try {
+      var r = await fetch("/api/licencia", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clave: k }) });
+      if (r.ok) { var j = await r.json(); if (j && j.apps) return j; }
+      if (r.status === 403) return { error: "Esta licencia está suspendida. Contactá a tu proveedor." };
+    } catch (e) {}
+    return LIC[k] || null;
+  }
+  function pintar(l) {
+    $("ent-login").hidden = true; $("ent-panel").hidden = false;
+    $("ent-estudio").textContent = l.estudio; $("ent-plan").textContent = "Plan " + l.plan + " · "; $("ent-venc").textContent = "Vigente hasta " + fmt(l.vence);
+    var h = "";
+    APPS.forEach(function (a) {
+      var ok = l.apps.indexOf(a.id) >= 0;
+      h += '<div class="ent-app' + (ok ? "" : " off") + '"><div class="who">' + a.quien + '</div><h3>' + a.nombre + '</h3><p>' + a.desc + '</p>' +
+        '<span class="ent-pill ' + (ok ? "on" : "off") + '">' + (ok ? "INCLUIDA EN TU PLAN" : "NO CONTRATADA") + '</span><div class="ent-row">' +
+        (ok ? '<button class="btn btn-brass" data-ent-abrir="' + a.id + '">' + (a.ruta ? "Abrir" : "Ver demo") + '</button>' + (a.ruta ? '<button class="btn btn-ghost" data-ent-link="' + a.id + '">Copiar link</button>' : "")
+            : '<button class="btn btn-ghost" data-ent-sumar="' + a.id + '">Sumar a mi plan</button>') + '</div></div>';
+    });
+    $("ent-apps").innerHTML = h;
+  }
+  document.addEventListener("click", function (e) {
+    var t = e.target; if (!t || !t.dataset) return;
+    var f = function (id) { return APPS.filter(function (x) { return x.id === id; })[0]; };
+    if (t.dataset.entAbrir) { var a = f(t.dataset.entAbrir); if (a.ruta) { location.href = a.ruta; } else { document.body.classList.remove("en-ventas", "en-entorno"); document.body.classList.add("en-demo"); try { window.scrollTo(0, 0); } catch (x) {} marcarVista("demo"); iniciarApps(); } }
+    if (t.dataset.entLink) { var b = f(t.dataset.entLink); var u = location.origin + b.ruta; try { navigator.clipboard.writeText(u); } catch (x) {} aviso("Link copiado"); }
+    if (t.dataset.entSumar) { aviso("Te contactamos para sumarla a tu plan"); }
+  });
+  async function entrar() {
+    var k = $("ent-clave").value.trim().toUpperCase(); $("ent-err").textContent = "";
+    if (!k) { $("ent-err").textContent = "Ingresá tu clave."; return; }
+    $("ent-entrar").textContent = "Validando…";
+    var l = await validar(k); $("ent-entrar").textContent = "Entrar";
+    if (!l) { $("ent-err").textContent = "No reconocemos esa clave."; return; }
+    if (l.error) { $("ent-err").textContent = l.error; return; }
+    gu(k); pintar(l);
+  }
+  window.abrirEntorno = async function () {
+    document.body.classList.remove("en-demo", "en-ventas"); document.body.classList.add("en-entorno");
+    try { window.scrollTo(0, 0); } catch (e) {}
+    var k = le(); if (k) { var l = await validar(k); if (l && !l.error) { pintar(l); return; } }
+    $("ent-login").hidden = false; $("ent-panel").hidden = true;
+  };
+  $("ent-entrar").onclick = entrar;
+  $("ent-clave").addEventListener("keydown", function (e) { if (e.key === "Enter") entrar(); });
+  $("ent-salir").onclick = function () { bo(); $("ent-panel").hidden = true; $("ent-login").hidden = false; $("ent-clave").value = ""; };
+})();
+</script>
+
 </body>
 </html>
