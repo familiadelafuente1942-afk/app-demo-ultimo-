@@ -8994,6 +8994,7 @@ function diasDesde(fechaIso) {
   const d = Math.floor((Date.now() - new Date(fechaIso).getTime()) / 86400000);
   return isNaN(d) ? null : d;
 }
+const LINK_APP = "https://app-demo-ultimo.vercel.app/";
 function CampaniaComercial({ prospectos, setProspectos }) {
   const [seleccion, setSeleccion] = useState(() => new Set(prospectos.filter(p => p.mail).map(p => p.id)));
   const [asunto, setAsunto] = useState("");
@@ -9014,7 +9015,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
       const clave = claveIaRepository.obtener();
       const { texto } = await llamarIA({
         apiKey: clave,
-        system: "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en " + paisMailNombre + ". Escribís mails cortos, cálidos y directos, en " + paisMailIdioma + ", sin exagerar ni sonar a venta agresiva. Respondé ÚNICAMENTE con un JSON válido, sin texto alrededor, con este formato exacto: {\"asunto\": \"...\", \"cuerpo\": \"...\"}. El cuerpo puede tener varios párrafos separados por \\n\\n, sin HTML.",
+        system: "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en " + paisMailNombre + ". Escribís mails cortos, cálidos y directos, en " + paisMailIdioma + ", sin exagerar ni sonar a venta agresiva. Respondé ÚNICAMENTE con un JSON válido, sin texto alrededor, con este formato exacto: {\"asunto\": \"...\", \"cuerpo\": \"...\"}. El cuerpo puede tener varios párrafos separados por \\n\\n, sin HTML. Cuando corresponda invitar a ver la app, escribí exactamente {link_app} (se reemplaza solo por el link real); no inventes otros links.",
         prompt: `Escribí el mail según este pedido del usuario: "${orden}"`,
         max_tokens: 700
       });
@@ -9062,7 +9063,9 @@ function CampaniaComercial({ prospectos, setProspectos }) {
     const idsOk = [];
     for (const p of destinatarios) {
       try {
-        const html = "<p>" + cuerpoFinal.replace(/\n/g, "<br>") + "</p>";
+        const linkP = LINK_APP + "?c=" + encodeURIComponent(p.id);
+        const textoP = cuerpoFinal.replace(/\{link_app\}/g, linkP);
+        const html = "<p>" + textoP.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>').replace(/\n/g, "<br>") + "</p>";
         const cuerpoPedido = { to: p.mail, subject: asuntoFinal, html };
         if (adjuntarFolleto) {
           cuerpoPedido.adjuntoUrl = FOLLETO_URL;
@@ -9164,7 +9167,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
       const clave = claveIaRepository.obtener();
       const { texto } = await llamarIA({
         apiKey: clave,
-        system: "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en " + paisMailNombre + ". Escribís mails cortos, cálidos y directos, en " + paisMailIdioma + ", sin exagerar ni sonar a venta agresiva. Respondé ÚNICAMENTE con un JSON válido, sin texto alrededor, con este formato exacto: {\"asunto\": \"...\", \"cuerpo\": \"...\"}. El cuerpo puede tener varios párrafos separados por \\n\\n, sin HTML.",
+        system: "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en " + paisMailNombre + ". Escribís mails cortos, cálidos y directos, en " + paisMailIdioma + ", sin exagerar ni sonar a venta agresiva. Respondé ÚNICAMENTE con un JSON válido, sin texto alrededor, con este formato exacto: {\"asunto\": \"...\", \"cuerpo\": \"...\"}. El cuerpo puede tener varios párrafos separados por \\n\\n, sin HTML. Cuando corresponda invitar a ver la app, escribí exactamente {link_app} (se reemplaza solo por el link real); no inventes otros links.",
         prompt: `Escribí el mail según este pedido del usuario: "${ordenAutonoma}"`,
         max_tokens: 700
       });
@@ -9243,6 +9246,13 @@ function CampaniaComercial({ prospectos, setProspectos }) {
         (asunto || cuerpo) && !redactando && React.createElement("div", { style: { fontSize: 11, color: T.muted, marginTop: 7 } }, "Revisá abajo lo que escribió antes de mandarlo — podés editarlo con la mano.")),
       React.createElement("input", { placeholder: "Asunto del mail", value: asunto, onChange: e => setAsunto(e.target.value), style: { width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 13, marginBottom: 8 } }),
       React.createElement("textarea", { placeholder: "Mensaje…", value: cuerpo, onChange: e => setCuerpo(e.target.value), rows: 5, style: { width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 13, fontFamily: "inherit", resize: "vertical", marginBottom: 10 } }),
+      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 } },
+        React.createElement("button", {
+          type: "button",
+          onClick: () => setCuerpo(c => (c.trim() ? c.replace(/\s+$/, "") + "\n\n" : "") + "Mirá cómo funciona la app: {link_app}"),
+          style: { ...chipEstilo, background: "#EEF3FA", color: "#2A4F82", padding: "8px 14px" }
+        }, "🔗 Insertar link de la app"),
+        React.createElement("span", { style: { fontSize: 11, color: "#8B95A5" } }, "{link_app} se reemplaza en cada mail por el link a la presentación de NEXO.")),
       error && React.createElement("div", { style: { background: "#FDECEA", color: "#B3261E", borderRadius: 8, padding: "8px 11px", fontSize: 12, marginBottom: 10 } }, error),
       React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" } },
         React.createElement("button", {
