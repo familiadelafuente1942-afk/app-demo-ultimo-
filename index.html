@@ -9059,8 +9059,25 @@ function CampaniaComercial({ prospectos, setProspectos }) {
     setResultado(null);
     let hecho = 0, fallidos = 0;
     setProgreso({ hecho, total: destinatarios.length, fallidos });
-    const t = await mktPedirSesion().catch(() => null);
+    let t = await mktPedirSesion().catch(() => null);
     const idsOk = [];
+    let motivo = "";
+    // Una sola vez por mail: si el servidor dice que la sesión venció (401), la renueva y reintenta.
+    async function mandarUno(cuerpoPedido, reintento) {
+      const r = await fetch(`${MKT_SUPA_URL}/functions/v1/enviar-mail`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${t}`, apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify(cuerpoPedido)
+      });
+      const data = await r.json().catch(() => ({}));
+      if (r.status === 401 && !reintento) {
+        try { localStorage.removeItem("supa_token"); } catch (e) {}
+        let nuevo = await mktRenovarSesion().catch(() => null);
+        if (!nuevo) nuevo = await mktPedirSesion().catch(() => null);
+        if (nuevo) { t = nuevo; return mandarUno(cuerpoPedido, true); }
+      }
+      return { ok: r.ok && !data.error, status: r.status, data };
+    }
     for (const p of destinatarios) {
       try {
         const linkP = LINK_APP + "?c=" + encodeURIComponent(p.id);
@@ -9071,18 +9088,16 @@ function CampaniaComercial({ prospectos, setProspectos }) {
           cuerpoPedido.adjuntoUrl = FOLLETO_URL;
           cuerpoPedido.adjuntoNombre = "nexo-folleto.pdf";
         }
-        const r = await fetch(`${MKT_SUPA_URL}/functions/v1/enviar-mail`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${t}`, apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
-          body: JSON.stringify(cuerpoPedido)
-        });
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok || data.error) fallidos++;
-        else idsOk.push(p.id);
-      } catch (e) { fallidos++; }
+        const res = await mandarUno(cuerpoPedido, false);
+        if (!res.ok) {
+          fallidos++;
+          if (!motivo) motivo = `${res.status} · ${String(res.data && (res.data.error || res.data.message || res.data.msg) || "sin detalle").slice(0, 160)}`;
+        } else idsOk.push(p.id);
+      } catch (e) { fallidos++; if (!motivo) motivo = String(e && e.message ? e.message : e).slice(0, 160); }
       hecho++;
       setProgreso({ hecho, total: destinatarios.length, fallidos });
     }
+    if (fallidos) setError(`No se pudo mandar ${fallidos === 1 ? "1 mail" : fallidos + " mails"}. Motivo: ${motivo}` + (adjuntarFolleto ? " (probá sin adjuntar el folleto)" : ""));
     setEnviando(false);
     setResultado({ enviados: idsOk.length, fallidos });
     if (idsOk.length) {
