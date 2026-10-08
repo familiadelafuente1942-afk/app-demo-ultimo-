@@ -12671,6 +12671,11 @@ function pedirClaveCentro(alAbrir) {
   ov.querySelector("#cc-no").onclick = cerrar;
   $k.addEventListener("keydown", function (e) { if (e.key === "Enter") intentar(); if (e.key === "Escape") cerrar(); });
 }
+// Tocar el logo (portada o encabezado) abre el pedido de clave del Centro de Operaciones.
+document.addEventListener("click", function (e) {
+  var t = e.target && e.target.closest ? e.target.closest("#portada .pt-brand, header .brand") : null;
+  if (t) { e.preventDefault(); abrirVentas(); }
+});
 // Acceso discreto: agregar ?centro al link (o #centro) abre el pedido de clave. No hay botón público.
 window.addEventListener("load", function () {
   var q = ""; try { q = location.search + location.hash; } catch (e) {}
