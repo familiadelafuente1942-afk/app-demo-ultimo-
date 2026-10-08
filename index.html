@@ -8593,7 +8593,7 @@ function AreaCEO({
       background: "#E09A3E",
       fontStyle: "normal"
     }
-  }), "7 de 8 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
+  }), "8 de 9 áreas conectadas"))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 12
     }
@@ -9090,7 +9090,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
   );
 }
 
-function AreaComercial() {
+function AreaComercial({ modo } = {}) {
   const [prospectos, setProspectos] = useState([]);
   const [plantillas, setPlantillas] = useState([]);
   const [bdLista, setBdLista] = useState(false);
@@ -9153,7 +9153,7 @@ function AreaComercial() {
     })();
     return soltar;
   }, []);
-  const [vista, setVista] = useState("panel");
+  const [vista, setVista] = useState(modo === "mails" ? "campania" : "panel");
   const [sel, setSel] = useState(null);
   const [borrador, setBorrador] = useState(null);
   const [generando, setGenerando] = useState(false);
@@ -9933,7 +9933,7 @@ ${hist}`;
       flexWrap: "wrap",
       alignItems: "center"
     }
-  }, [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["base", `Base de datos${prospectos.length ? " · " + prospectos.length : ""}`], ["campania", "✉ Campaña"], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+  }, [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["base", `Base de datos${prospectos.length ? " · " + prospectos.length : ""}`], ["campania", "✉ Campaña"], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].filter(([id]) => modo === "mails" ? (id === "campania" || id === "plantillas") : (id !== "campania" && id !== "plantillas")).map(([id, t]) => /*#__PURE__*/React.createElement("button", {
     key: id,
     className: "mvtab" + (vista === id ? " act" : ""),
     onClick: () => {
@@ -12261,6 +12261,11 @@ const AREAS = [{
   corto: "Operaciones",
   activa: true
 }, {
+  id: "mails",
+  nombre: "Envío de mails",
+  corto: "✉ Envío de mails",
+  activa: true
+}, {
   id: "soporte",
   nombre: "Soporte",
   corto: "Soporte",
@@ -12356,7 +12361,7 @@ function CentroOperaciones() {
       borderRadius: 20,
       padding: "3px 9px"
     }
-  }, "7 de 8 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
+  }, "8 de 9 áreas conectadas")), /*#__PURE__*/React.createElement("div", {
     className: "co-nav",
     style: {
       marginBottom: 14
@@ -12439,7 +12444,7 @@ function CentroOperaciones() {
         lineHeight: 1.55
       }
     }, "Las métricas de correos, respuestas y reuniones necesitan el motor de agentes y el envío de correo. Lo que ves abajo son las herramientas que ya funcionan."), /*#__PURE__*/React.createElement(AreaComercial, null))
-  }), area === "marketing" && /*#__PURE__*/React.createElement(AreaMarketing, null), area === "operaciones" && /*#__PURE__*/React.createElement(AreaOperaciones, null), area === "soporte" && /*#__PURE__*/React.createElement(AreaSoporte, null), area === "finanzas" && /*#__PURE__*/React.createElement(AreaFinanzas, null), area === "producto" && /*#__PURE__*/React.createElement(AreaProducto, null), area === "seguridad" && /*#__PURE__*/React.createElement(AreaSeguridad, null));
+  }), area === "marketing" && /*#__PURE__*/React.createElement(AreaMarketing, null), area === "operaciones" && /*#__PURE__*/React.createElement(AreaOperaciones, null), area === "mails" && /*#__PURE__*/React.createElement(AreaComercial, { modo: "mails", key: "mails" }), area === "soporte" && /*#__PURE__*/React.createElement(AreaSoporte, null), area === "finanzas" && /*#__PURE__*/React.createElement(AreaFinanzas, null), area === "producto" && /*#__PURE__*/React.createElement(AreaProducto, null), area === "seguridad" && /*#__PURE__*/React.createElement(AreaSeguridad, null));
 }
 
 // Alias de transición: el punto de montaje sigue funcionando con el nombre viejo.
@@ -13150,7 +13155,8 @@ window.DICC = {
   "Centro de Operaciones": ["Operations Center", "Centro de Operações"],
   "◈ Centro de Operaciones IA": ["◈ AI Operations Center", "◈ Centro de Operações IA"],
   "Abrir el Centro de Operaciones IA →": ["Open the AI Operations Center →", "Abrir o Centro de Operações IA →"],
-  "7 de 8 áreas conectadas": ["7 of 8 areas connected", "7 de 8 áreas conectadas"],
+  "8 de 9 áreas conectadas": ["8 of 9 areas connected", "8 de 9 áreas conectadas"],
+  "✉ Envío de mails": ["✉ Sending emails", "✉ Envio de e-mails"],
   "CEO / Orquestador": ["CEO / Orchestrator", "CEO / Orquestrador"],
   "CEO / Orquestador IA": ["AI CEO / Orchestrator", "CEO / Orquestrador IA"],
   "Comercial": ["Sales", "Comercial"],
