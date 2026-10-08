@@ -10118,7 +10118,7 @@ ${hist}`;
       flexWrap: "wrap",
       alignItems: "center"
     }
-  }, [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["base", `Base de datos${prospectos.length ? " · " + prospectos.length : ""}`], ["campania", "✉ Campaña"], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].filter(([id]) => modo === "mails" ? (id === "campania" || id === "plantillas") : (id !== "campania" && id !== "plantillas")).map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+  }, [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["base", `Base de datos${prospectos.length ? " · " + prospectos.length : ""}`], ["campania", "✉ Campaña"], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].filter(([id]) => modo === "mails" ? true : (id !== "campania" && id !== "plantillas")).map(([id, t]) => /*#__PURE__*/React.createElement("button", {
     key: id,
     className: "mvtab" + (vista === id ? " act" : ""),
     onClick: () => {
