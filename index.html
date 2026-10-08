@@ -6430,10 +6430,168 @@ const PERFILES_BUSQUEDA = [{
 // Dónde buscar además de la web general.
 const FUENTES_BUSQUEDA = ["sitios propios de las empresas", "cámaras y colegios profesionales del rubro", "revistas y portales de arquitectura y construcción", "directorios de proveedores de la construcción", "notas de prensa sobre obras en curso"];
 
+
+// ════════════════════════════════════════════════════════════
+// PAÍSES: cada bandera trae su geografía, su idioma y sus fuentes locales.
+// Argentina usa GEO_AR / PERFILES_BUSQUEDA / FUENTES_BUSQUEDA (arriba).
+// ════════════════════════════════════════════════════════════
+const _svg = (b) => "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 20" preserveAspectRatio="none">' + b + '</svg>');
+const BANDERAS = {
+  ar: _svg('<rect width="30" height="20" fill="#74ACDF"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><circle cx="15" cy="10" r="2.2" fill="#F6B40E"/>'),
+  br: _svg('<rect width="30" height="20" fill="#009C3B"/><path d="M15 2.2L27.4 10 15 17.8 2.6 10z" fill="#FFDF00"/><circle cx="15" cy="10" r="4.4" fill="#002776"/><path d="M10.8 9.2q4.4-1.2 8.4 1.2" stroke="#fff" stroke-width=".9" fill="none"/>'),
+  py: _svg('<rect width="30" height="6.67" fill="#D52B1E"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><rect y="13.33" width="30" height="6.67" fill="#0038A8"/><circle cx="15" cy="10" r="2.3" fill="none" stroke="#3A7D3A" stroke-width=".7"/>'),
+  mx: _svg('<rect width="10" height="20" fill="#006847"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#CE1126"/><circle cx="15" cy="10" r="2.3" fill="#8C6D3F" opacity=".85"/>'),
+  cl: _svg('<rect width="30" height="10" fill="#fff"/><rect y="10" width="30" height="10" fill="#D52B1E"/><rect width="10" height="10" fill="#0039A6"/><path d="M5 2.2l.9 2.7h2.8l-2.3 1.6.9 2.7L5 7.6 2.7 9.2l.9-2.7L1.3 4.9h2.8z" fill="#fff"/>'),
+  uy: _svg('<rect width="30" height="20" fill="#fff"/><g fill="#0038A8"><rect y="2.2" width="30" height="2.2"/><rect y="6.6" width="30" height="2.2"/><rect y="11" width="30" height="2.2"/><rect y="15.4" width="30" height="2.2"/></g><rect width="11" height="11" fill="#fff"/><circle cx="5.5" cy="5.5" r="2.6" fill="#F6B40E"/>')
+};
+const _G = (prov, corto, zonas) => ({ prov, corto, zonas });
+const GEO_BR = [
+  _G("São Paulo", "SP", ["São Paulo", "Campinas", "Santos", "Ribeirão Preto", "Sorocaba", "São José dos Campos", "Guarulhos", "Osasco"]),
+  _G("Rio de Janeiro", "RJ", ["Rio de Janeiro", "Niterói", "Petrópolis", "Campos dos Goytacazes", "Volta Redonda"]),
+  _G("Minas Gerais", "MG", ["Belo Horizonte", "Uberlândia", "Juiz de Fora", "Contagem", "Betim"]),
+  _G("Paraná", "PR", ["Curitiba", "Londrina", "Maringá", "Cascavel", "Ponta Grossa"]),
+  _G("Santa Catarina", "SC", ["Florianópolis", "Joinville", "Blumenau", "Balneário Camboriú", "Itajaí"]),
+  _G("Rio Grande do Sul", "RS", ["Porto Alegre", "Caxias do Sul", "Canoas", "Pelotas", "Santa Maria"]),
+  _G("Distrito Federal", "DF", ["Brasília", "Taguatinga", "Águas Claras"]),
+  _G("Goiás", "GO", ["Goiânia", "Anápolis", "Aparecida de Goiânia"]),
+  _G("Bahia", "BA", ["Salvador", "Feira de Santana", "Vitória da Conquista"]),
+  _G("Pernambuco", "PE", ["Recife", "Jaboatão dos Guararapes", "Caruaru"]),
+  _G("Ceará", "CE", ["Fortaleza", "Caucaia", "Juazeiro do Norte"]),
+  _G("Espírito Santo", "ES", ["Vitória", "Vila Velha", "Serra"]),
+  _G("Mato Grosso", "MT", ["Cuiabá", "Várzea Grande", "Rondonópolis"]),
+  _G("Mato Grosso do Sul", "MS", ["Campo Grande", "Dourados"]),
+  _G("Pará", "PA", ["Belém", "Ananindeua", "Santarém"]),
+  _G("Amazonas", "AM", ["Manaus"]),
+  _G("Rio Grande do Norte", "RN", ["Natal", "Mossoró"]),
+  _G("Paraíba", "PB", ["João Pessoa", "Campina Grande"]),
+  _G("Alagoas", "AL", ["Maceió"]),
+  _G("Sergipe", "SE", ["Aracaju"]),
+  _G("Maranhão", "MA", ["São Luís", "Imperatriz"]),
+  _G("Piauí", "PI", ["Teresina"]),
+  _G("Tocantins", "TO", ["Palmas"]),
+  _G("Rondônia", "RO", ["Porto Velho"]),
+  _G("Acre", "AC", ["Rio Branco"]),
+  _G("Amapá", "AP", ["Macapá"]),
+  _G("Roraima", "RR", ["Boa Vista"])
+];
+const GEO_MX = [
+  _G("Ciudad de México", "CDMX", ["Polanco", "Roma-Condesa", "Santa Fe", "Coyoacán", "Del Valle", "Narvarte", "Iztapalapa"]),
+  _G("Estado de México", "Edomex", ["Toluca", "Naucalpan", "Huixquilucan", "Tlalnepantla", "Ecatepec", "Atizapán"]),
+  _G("Jalisco", "Jalisco", ["Guadalajara", "Zapopan", "Tlaquepaque", "Puerto Vallarta"]),
+  _G("Nuevo León", "N. León", ["Monterrey", "San Pedro Garza García", "Guadalupe", "Apodaca", "Escobedo"]),
+  _G("Querétaro", "Querétaro", ["Querétaro", "El Marqués", "Corregidora"]),
+  _G("Puebla", "Puebla", ["Puebla", "Cholula", "Tehuacán"]),
+  _G("Guanajuato", "Guanajuato", ["León", "Irapuato", "Celaya", "San Miguel de Allende"]),
+  _G("Quintana Roo", "Q. Roo", ["Cancún", "Playa del Carmen", "Tulum", "Cozumel"]),
+  _G("Yucatán", "Yucatán", ["Mérida", "Progreso"]),
+  _G("Baja California", "B. California", ["Tijuana", "Mexicali", "Ensenada"]),
+  _G("Baja California Sur", "BCS", ["Los Cabos", "La Paz"]),
+  _G("Chihuahua", "Chihuahua", ["Chihuahua", "Ciudad Juárez"]),
+  _G("Sonora", "Sonora", ["Hermosillo", "Ciudad Obregón"]),
+  _G("Coahuila", "Coahuila", ["Saltillo", "Torreón"]),
+  _G("Tamaulipas", "Tamaulipas", ["Reynosa", "Tampico", "Matamoros"]),
+  _G("Veracruz", "Veracruz", ["Veracruz", "Xalapa", "Boca del Río"]),
+  _G("Sinaloa", "Sinaloa", ["Culiacán", "Mazatlán"]),
+  _G("San Luis Potosí", "SLP", ["San Luis Potosí"]),
+  _G("Aguascalientes", "Ags", ["Aguascalientes"]),
+  _G("Michoacán", "Michoacán", ["Morelia", "Uruapan"]),
+  _G("Morelos", "Morelos", ["Cuernavaca"]),
+  _G("Hidalgo", "Hidalgo", ["Pachuca"]),
+  _G("Oaxaca", "Oaxaca", ["Oaxaca de Juárez"]),
+  _G("Chiapas", "Chiapas", ["Tuxtla Gutiérrez"]),
+  _G("Tabasco", "Tabasco", ["Villahermosa"]),
+  _G("Durango", "Durango", ["Durango"]),
+  _G("Zacatecas", "Zacatecas", ["Zacatecas"]),
+  _G("Nayarit", "Nayarit", ["Tepic", "Nuevo Vallarta"]),
+  _G("Colima", "Colima", ["Colima", "Manzanillo"]),
+  _G("Guerrero", "Guerrero", ["Acapulco", "Chilpancingo"]),
+  _G("Campeche", "Campeche", ["Campeche"]),
+  _G("Tlaxcala", "Tlaxcala", ["Tlaxcala"])
+];
+const GEO_CL = [
+  _G("Región Metropolitana", "R.M.", ["Santiago Centro", "Providencia", "Las Condes", "Vitacura", "Lo Barnechea", "Ñuñoa", "La Florida", "Maipú", "Puente Alto"]),
+  _G("Valparaíso", "Valparaíso", ["Valparaíso", "Viña del Mar", "Concón", "Quilpué", "Villa Alemana"]),
+  _G("Biobío", "Biobío", ["Concepción", "Talcahuano", "San Pedro de la Paz", "Los Ángeles"]),
+  _G("O'Higgins", "O'Higgins", ["Rancagua", "San Fernando"]),
+  _G("Maule", "Maule", ["Talca", "Curicó"]),
+  _G("Ñuble", "Ñuble", ["Chillán"]),
+  _G("La Araucanía", "Araucanía", ["Temuco", "Pucón"]),
+  _G("Los Ríos", "Los Ríos", ["Valdivia"]),
+  _G("Los Lagos", "Los Lagos", ["Puerto Montt", "Osorno", "Puerto Varas"]),
+  _G("Coquimbo", "Coquimbo", ["La Serena", "Coquimbo", "Ovalle"]),
+  _G("Antofagasta", "Antofagasta", ["Antofagasta", "Calama"]),
+  _G("Atacama", "Atacama", ["Copiapó"]),
+  _G("Tarapacá", "Tarapacá", ["Iquique"]),
+  _G("Arica y Parinacota", "Arica", ["Arica"]),
+  _G("Aysén", "Aysén", ["Coyhaique"]),
+  _G("Magallanes", "Magallanes", ["Punta Arenas"])
+];
+const GEO_PY = [
+  _G("Asunción", "Asunción", ["Asunción", "Villa Morra", "Recoleta", "Carmelitas", "Mburucuyá"]),
+  _G("Central", "Central", ["Lambaré", "San Lorenzo", "Fernando de la Mora", "Luque", "Capiatá", "Limpio", "Ñemby", "Mariano Roque Alonso"]),
+  _G("Alto Paraná", "Alto Paraná", ["Ciudad del Este", "Hernandarias", "Presidente Franco"]),
+  _G("Itapúa", "Itapúa", ["Encarnación", "Cambyretá"]),
+  _G("Cordillera", "Cordillera", ["Caacupé", "Altos"]),
+  _G("Paraguarí", "Paraguarí", ["Paraguarí", "Yaguarón"]),
+  _G("Caaguazú", "Caaguazú", ["Coronel Oviedo", "Caaguazú"]),
+  _G("San Pedro", "San Pedro", ["San Estanislao"]),
+  _G("Concepción", "Concepción", ["Concepción"]),
+  _G("Amambay", "Amambay", ["Pedro Juan Caballero"]),
+  _G("Canindeyú", "Canindeyú", ["Salto del Guairá"]),
+  _G("Guairá", "Guairá", ["Villarrica"]),
+  _G("Misiones", "Misiones", ["San Juan Bautista"]),
+  _G("Ñeembucú", "Ñeembucú", ["Pilar"]),
+  _G("Presidente Hayes", "Pte. Hayes", ["Villa Hayes"]),
+  _G("Boquerón", "Boquerón", ["Filadelfia"]),
+  _G("Alto Paraguay", "Alto Paraguay", ["Fuerte Olimpo"])
+];
+const GEO_UY = [
+  _G("Montevideo", "Montevideo", ["Pocitos", "Punta Carretas", "Carrasco", "Cordón", "Centro", "Malvín", "Buceo", "Prado"]),
+  _G("Canelones", "Canelones", ["Ciudad de la Costa", "Las Piedras", "Pando", "Atlántida", "Canelones"]),
+  _G("Maldonado", "Maldonado", ["Punta del Este", "Maldonado", "La Barra", "José Ignacio"]),
+  _G("Colonia", "Colonia", ["Colonia del Sacramento", "Carmelo", "Nueva Helvecia"]),
+  _G("San José", "San José", ["San José de Mayo", "Ciudad del Plata"]),
+  _G("Rocha", "Rocha", ["Rocha", "La Paloma"]),
+  _G("Salto", "Salto", ["Salto"]),
+  _G("Paysandú", "Paysandú", ["Paysandú"]),
+  _G("Rivera", "Rivera", ["Rivera"]),
+  _G("Tacuarembó", "Tacuarembó", ["Tacuarembó"]),
+  _G("Soriano", "Soriano", ["Mercedes", "Dolores"]),
+  _G("Florida", "Florida", ["Florida"]),
+  _G("Durazno", "Durazno", ["Durazno"]),
+  _G("Lavalleja", "Lavalleja", ["Minas"]),
+  _G("Treinta y Tres", "Treinta y Tres", ["Treinta y Tres"]),
+  _G("Cerro Largo", "Cerro Largo", ["Melo"]),
+  _G("Río Negro", "Río Negro", ["Fray Bentos"]),
+  _G("Artigas", "Artigas", ["Artigas"]),
+  _G("Flores", "Flores", ["Trinidad"])
+];
+const _perf = (q) => PERFILES_BUSQUEDA.map((p, i) => ({ id: p.id, t: p.t, q: q[i] }));
+const PAISES = [
+  { id: "ar", nombre: "Argentina", bandera: BANDERAS.ar, idioma: "español rioplatense", tld: ".com.ar", geo: GEO_AR, perfiles: PERFILES_BUSQUEDA, fuentes: FUENTES_BUSQUEDA, zonaTxt: "barrio por barrio y ciudad por ciudad" },
+  { id: "br", nombre: "Brasil", bandera: BANDERAS.br, idioma: "portugués de Brasil", tld: ".com.br", geo: GEO_BR,
+    perfiles: _perf(["escritórios de arquitetura", "construtoras", "empreiteiras e empresas de construção civil", "incorporadoras imobiliárias", "empresas de gerenciamento e fiscalização de obras", "indústrias com obras de infraestrutura ou galpões", "empresas de manutenção predial e industrial"]),
+    fuentes: ["sites das próprias empresas (.com.br)", "CAU (Conselho de Arquitetura e Urbanismo), CREA, CBIC e SINDUSCON", "portais e revistas de arquitetura e construção do Brasil (ArchDaily Brasil, Arcoweb, Construção Mercado)", "diretórios de fornecedores da construção civil", "notícias sobre obras em andamento"], zonaTxt: "cidade por cidade" },
+  { id: "py", nombre: "Paraguay", bandera: BANDERAS.py, idioma: "español de Paraguay", tld: ".com.py", geo: GEO_PY,
+    perfiles: _perf(["estudios de arquitectura", "empresas constructoras", "contratistas y empresas de construcción", "desarrolladoras inmobiliarias", "empresas de gerenciamiento y fiscalización de obras", "empresas industriales con obras de infraestructura o galpones", "empresas de mantenimiento edilicio e industrial"]),
+    fuentes: ["sitios propios de las empresas (.com.py)", "Cámara Paraguaya de la Industria de la Construcción (CAPACO), Sociedad Central de Arquitectos del Paraguay y Asociación Paraguaya de Ingenieros", "portales y medios de construcción e inmobiliarios de Paraguay", "directorios de proveedores de la construcción", "notas de prensa sobre obras en curso"], zonaTxt: "barrio por barrio y ciudad por ciudad" },
+  { id: "mx", nombre: "México", bandera: BANDERAS.mx, idioma: "español de México", tld: ".com.mx", geo: GEO_MX,
+    perfiles: _perf(["despachos y estudios de arquitectura", "empresas constructoras", "contratistas y empresas de construcción", "desarrolladoras inmobiliarias", "empresas de supervisión y gerencia de proyectos y obra", "empresas industriales con obras de infraestructura o naves industriales", "empresas de mantenimiento de edificios e instalaciones industriales"]),
+    fuentes: ["sitios propios de las empresas (.com.mx)", "CMIC, CANADEVI, Colegio de Arquitectos y colegios de ingenieros de México", "portales y revistas de arquitectura y construcción de México (ArchDaily México, Obras, Reforma Construcción)", "directorios de proveedores de la construcción", "notas de prensa sobre obras en curso"], zonaTxt: "colonia por colonia y ciudad por ciudad" },
+  { id: "cl", nombre: "Chile", bandera: BANDERAS.cl, idioma: "español de Chile", tld: ".cl", geo: GEO_CL,
+    perfiles: _perf(["oficinas y estudios de arquitectura", "empresas constructoras", "contratistas y empresas de construcción", "inmobiliarias y desarrolladoras", "empresas de inspección técnica y gestión de obras", "empresas industriales con obras de infraestructura o galpones", "empresas de mantención de edificios e instalaciones industriales"]),
+    fuentes: ["sitios propios de las empresas (.cl)", "Cámara Chilena de la Construcción (CChC), Colegio de Arquitectos de Chile y Colegio de Ingenieros", "portales y revistas de construcción de Chile (Revista BiT, ArchDaily Chile, Chile Construye)", "directorios de proveedores de la construcción", "notas de prensa sobre obras en curso"], zonaTxt: "comuna por comuna y ciudad por ciudad" },
+  { id: "uy", nombre: "Uruguay", bandera: BANDERAS.uy, idioma: "español de Uruguay", tld: ".com.uy", geo: GEO_UY,
+    perfiles: _perf(["estudios de arquitectura", "empresas constructoras", "contratistas y empresas de construcción", "desarrolladoras inmobiliarias y fideicomisos de construcción", "empresas de dirección y gerenciamiento de obra", "empresas industriales con obras de infraestructura o galpones", "empresas de mantenimiento edilicio e industrial"]),
+    fuentes: ["sitios propios de las empresas (.com.uy)", "Cámara de la Construcción del Uruguay, Sociedad de Arquitectos del Uruguay (SAU) y Centro de Constructores de Obras", "portales y medios de construcción e inmobiliarios de Uruguay", "directorios de proveedores de la construcción", "notas de prensa sobre obras en curso"], zonaTxt: "barrio por barrio y ciudad por ciudad" }
+];
+function paisPorId(id) { return PAISES.filter(p => p.id === (id || "ar"))[0] || PAISES[0]; }
+
 // Arma todas las combinaciones zona × perfil, para recorrerlas una por una.
-function armarCombinaciones(provinciasElegidas, perfilesElegidos, porZona) {
-  const provs = GEO_AR.filter(g => provinciasElegidas.indexOf(g.prov) >= 0);
-  const perfs = PERFILES_BUSQUEDA.filter(p => perfilesElegidos.indexOf(p.id) >= 0);
+function armarCombinaciones(provinciasElegidas, perfilesElegidos, porZona, paisId) {
+  const pais = paisPorId(paisId);
+  const provs = pais.geo.filter(g => provinciasElegidas.indexOf(g.prov) >= 0);
+  const perfs = pais.perfiles.filter(p => perfilesElegidos.indexOf(p.id) >= 0);
   const combos = [];
   provs.forEach(g => {
     const lugares = porZona ? g.zonas : [g.prov];
@@ -6442,7 +6600,12 @@ function armarCombinaciones(provinciasElegidas, perfilesElegidos, porZona) {
         lugar,
         prov: g.prov,
         perfil: p.t,
-        consulta: p.q
+        consulta: p.q,
+        pais: pais.id,
+        paisNombre: pais.nombre,
+        tld: pais.tld,
+        idioma: pais.idioma,
+        fuentes: pais.fuentes
       }));
     });
   });
@@ -8851,7 +9014,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
       const clave = claveIaRepository.obtener();
       const { texto } = await llamarIA({
         apiKey: clave,
-        system: "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en Argentina. Escribís mails cortos, cálidos y directos, en español rioplatense, sin exagerar ni sonar a venta agresiva. Respondé ÚNICAMENTE con un JSON válido, sin texto alrededor, con este formato exacto: {\"asunto\": \"...\", \"cuerpo\": \"...\"}. El cuerpo puede tener varios párrafos separados por \\n\\n, sin HTML.",
+        system: "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en " + paisMailNombre + ". Escribís mails cortos, cálidos y directos, en " + paisMailIdioma + ", sin exagerar ni sonar a venta agresiva. Respondé ÚNICAMENTE con un JSON válido, sin texto alrededor, con este formato exacto: {\"asunto\": \"...\", \"cuerpo\": \"...\"}. El cuerpo puede tener varios párrafos separados por \\n\\n, sin HTML.",
         prompt: `Escribí el mail según este pedido del usuario: "${orden}"`,
         max_tokens: 700
       });
@@ -8868,7 +9031,11 @@ function CampaniaComercial({ prospectos, setProspectos }) {
     }
   }
 
-  const conEmail = prospectos.filter(p => p.mail);
+  const [paisFiltro, setPaisFiltro] = useState("todos");
+  const paisMailNombre = paisFiltro === "todos" ? "Argentina" : paisPorId(paisFiltro).nombre;
+  const paisMailIdioma = paisFiltro === "todos" ? "español rioplatense" : paisPorId(paisFiltro).idioma;
+  const prospectosVista = paisFiltro === "todos" ? prospectos : prospectos.filter(p => (p.pais || "ar") === paisFiltro);
+  const conEmail = prospectosVista.filter(p => p.mail);
   const chipEstilo = { border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
   const th = { textAlign: "left", fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", padding: "0 10px 8px" };
   const td = { padding: "10px", fontSize: 12.5, color: "#1A1A1A", borderTop: "1px solid #EEF0F3" };
@@ -8997,7 +9164,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
       const clave = claveIaRepository.obtener();
       const { texto } = await llamarIA({
         apiKey: clave,
-        system: "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en Argentina. Escribís mails cortos, cálidos y directos, en español rioplatense, sin exagerar ni sonar a venta agresiva. Respondé ÚNICAMENTE con un JSON válido, sin texto alrededor, con este formato exacto: {\"asunto\": \"...\", \"cuerpo\": \"...\"}. El cuerpo puede tener varios párrafos separados por \\n\\n, sin HTML.",
+        system: "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en " + paisMailNombre + ". Escribís mails cortos, cálidos y directos, en " + paisMailIdioma + ", sin exagerar ni sonar a venta agresiva. Respondé ÚNICAMENTE con un JSON válido, sin texto alrededor, con este formato exacto: {\"asunto\": \"...\", \"cuerpo\": \"...\"}. El cuerpo puede tener varios párrafos separados por \\n\\n, sin HTML.",
         prompt: `Escribí el mail según este pedido del usuario: "${ordenAutonoma}"`,
         max_tokens: 700
       });
@@ -9021,6 +9188,18 @@ function CampaniaComercial({ prospectos, setProspectos }) {
   }
 
   return /*#__PURE__*/React.createElement("div", { style: { maxWidth: 900 } },
+    React.createElement("div", { style: { marginBottom: 14 } },
+      React.createElement("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#8B95A5", marginBottom: 7 } }, "País de la campaña"),
+      React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, [{ id: "todos", nombre: "Todos" }].concat(PAISES).map(pp => {
+        const on = paisFiltro === pp.id;
+        const cant = prospectos.filter(x => x.mail && (pp.id === "todos" || (x.pais || "ar") === pp.id)).length;
+        return React.createElement("button", {
+          key: pp.id,
+          onClick: () => { setPaisFiltro(pp.id); setSeleccion(new Set(prospectos.filter(x => x.mail && (pp.id === "todos" || (x.pais || "ar") === pp.id)).map(x => x.id))); },
+          style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 14px 8px 10px", borderRadius: 10, border: `2px solid ${on ? "#B0894F" : "rgba(255,255,255,.18)"}`, background: on ? "#FBF6EE" : "rgba(255,255,255,.06)", cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700, color: on ? "#8A6A38" : "#C8D0DA", minHeight: 40 }
+        }, pp.bandera ? React.createElement("img", { src: pp.bandera, alt: "", style: { width: 30, height: 20, borderRadius: 3, boxShadow: "0 0 0 1px rgba(0,0,0,.15)", display: "block" } }) : null, pp.nombre, React.createElement("span", { style: { opacity: .6, fontWeight: 600 } }, cant));
+      })),
+      paisFiltro !== "todos" ? React.createElement("div", { style: { fontSize: 11, color: "#8B95A5", marginTop: 7 } }, `Los mails se redactan en ${paisMailIdioma} y solo se manda a contactos de ${paisMailNombre}.`) : null),
     React.createElement("div", { style: { background: T.card, border: `1px solid ${T.border}`, borderRadius: 11, padding: 16, marginBottom: 14 } },
       React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 } }, "Campaña · un solo envío a tu base de Comercial"),
       React.createElement("div", { style: { background: NAVY, borderRadius: 9, padding: 13, marginBottom: 12 } },
@@ -9075,12 +9254,12 @@ function CampaniaComercial({ prospectos, setProspectos }) {
           `✓ ${resultado.enviados} enviados` + (resultado.fallidos ? `, ${resultado.fallidos} fallaron` : "") + " · marcados como \"contactado\"")
       )
     ),
-    prospectos.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: T.muted } }, "Todavía no hay contactos cargados en Comercial.") :
+    prospectosVista.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: T.muted } }, "Todavía no hay contactos cargados en Comercial" + (paisFiltro === "todos" ? "." : " para " + paisMailNombre + ".")) :
     React.createElement("div", { style: { background: T.card, border: `1px solid ${T.border}`, borderRadius: 11, padding: 14, overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
       React.createElement("thead", null, React.createElement("tr", null,
         React.createElement("th", { style: th }, React.createElement("input", { type: "checkbox", checked: seleccion.size === conEmail.length && conEmail.length > 0, onChange: toggleTodos })),
         React.createElement("th", { style: th }, "Empresa"), React.createElement("th", { style: th }, "Mail"), React.createElement("th", { style: th }, "Estado"))),
-      React.createElement("tbody", null, prospectos.map(p => React.createElement("tr", { key: p.id },
+      React.createElement("tbody", null, prospectosVista.map(p => React.createElement("tr", { key: p.id },
         React.createElement("td", { style: td }, p.mail ? React.createElement("input", { type: "checkbox", checked: seleccion.has(p.id), onChange: () => toggle(p.id) }) : null),
         React.createElement("td", { style: td }, p.empresa || p.nombre || "—"),
         React.createElement("td", { style: td }, p.mail ? p.mail : React.createElement("input", {
@@ -9171,6 +9350,8 @@ function AreaComercial({ modo } = {}) {
     dolor: ""
   });
   const [provs, setProvs] = useState(["Ciudad Autónoma de Buenos Aires"]);
+  const [pais, setPais] = useState("ar");
+  const paisAct = paisPorId(pais);
   const [perfs, setPerfs] = useState(["estudios", "constructoras"]);
   const [porZona, setPorZona] = useState(true);
   const [corriendo, setCorriendo] = useState(false);
@@ -9243,7 +9424,8 @@ function AreaComercial({ modo } = {}) {
       estado: "nuevo",
       alta: hoyCorto(),
       altaIso: new Date().toISOString(),
-      historial: []
+      historial: [],
+      pais: pais
     };
     setProspectos(prev => [p, ...prev]);
     setForm({
@@ -9413,7 +9595,7 @@ ${hist}`;
 
   // Una consulta puntual: un lugar y un perfil.
   async function buscarUno(combo) {
-    const prompt = `Buscá en internet ${combo.consulta} que trabajen en ${combo.lugar}, ${combo.prov}, Argentina.\n` + `Revisá: ${FUENTES_BUSQUEDA.join(", ")}.\n` + `Priorizá las que tengan obras en curso o proyectos publicados en el último año.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":""}]\n\n` + `- "senal": por qué es buen candidato (ej: "publicó 3 obras nuevas este año").\n` + `- "contacto": mail o formulario SI figura públicamente; si no, "" vacío. NUNCA lo inventes.\n` + `Máximo 6 resultados. Si no encontrás nada real, devolvé [].`;
+    const prompt = `Buscá en internet ${combo.consulta} que trabajen en ${combo.lugar}, ${combo.prov}, ${combo.paisNombre}.\n` + `Buscá en páginas de internet de ${combo.paisNombre} (sitios con dominio ${combo.tld}, directorios y medios locales, en ${combo.idioma}). Solo empresas con sede u operación real en ${combo.paisNombre}.\n` + `Revisá: ${combo.fuentes.join(", ")}.\n` + `Priorizá las que tengan obras en curso o proyectos publicados en el último año.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":""}]\n\n` + `- "senal": por qué es buen candidato (ej: "publicó 3 obras nuevas este año").\n` + `- "contacto": mail o formulario SI figura públicamente; si no, "" vacío. NUNCA lo inventes.\n` + `Máximo 6 resultados. Si no encontrás nada real, devolvé [].`;
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -9462,7 +9644,7 @@ ${hist}`;
       setAvisoBusq("Elegí al menos un tipo de empresa.");
       return;
     }
-    const combos = armarCombinaciones(provs, perfs, porZona);
+    const combos = armarCombinaciones(provs, perfs, porZona, pais);
     if (!combos.length) {
       setAvisoBusq("No hay combinaciones para buscar.");
       return;
@@ -9514,7 +9696,8 @@ ${hist}`;
             alta: hoyCorto(),
             altaIso: new Date().toISOString(),
             historial: [],
-            zona: `${cand.ciudad || c2.lugar}, ${c2.prov}`,
+            zona: `${cand.ciudad || c2.lugar}, ${c2.prov}` + (c2.pais !== "ar" ? `, ${c2.paisNombre}` : ""),
+            pais: c2.pais,
             fuente: "búsqueda IA"
           });
           agregados++;
@@ -9562,7 +9745,7 @@ ${hist}`;
     setBuscando(true);
     setAvisoBusq("");
     setCandidatos([]);
-    const prompt = `Buscá en internet ${busqueda.perfil} que estén trabajando en ${busqueda.zona}.\n` + `Quiero empresas reales, con presencia web verificable. Priorizá las que se vea que tienen ` + `varias obras en curso o proyectos publicados recientemente.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":""}]\n\n` + `- "senal": por qué son buen candidato (ej: "publicaron 3 obras nuevas este año").\n` + `- "contacto": el mail o formulario SI figura públicamente; si no, "" vacío. NUNCA lo inventes.\n` + `Máximo 8 resultados. Si no encontrás nada real, devolvé [].`;
+    const prompt = `Buscá en internet ${busqueda.perfil} que estén trabajando en ${busqueda.zona}, ${paisAct.nombre}. Buscá en páginas de internet de ${paisAct.nombre} (dominio ${paisAct.tld}, en ${paisAct.idioma}).\n` + `Quiero empresas reales, con presencia web verificable. Priorizá las que se vea que tienen ` + `varias obras en curso o proyectos publicados recientemente.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":""}]\n\n` + `- "senal": por qué son buen candidato (ej: "publicaron 3 obras nuevas este año").\n` + `- "contacto": el mail o formulario SI figura públicamente; si no, "" vacío. NUNCA lo inventes.\n` + `Máximo 8 resultados. Si no encontrás nada real, devolvé [].`;
     try {
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -10801,7 +10984,19 @@ ${hist}`;
       lineHeight: 1.55,
       marginBottom: 16
     }
-  }, "Elegí dónde y a quién buscar. La IA recorre una zona por vez, revisa sitios de empresas, cámaras del rubro, revistas y portales de construcción, y va cargando lo que encuentra. No para hasta terminar o hasta que toques Detener."), /*#__PURE__*/React.createElement("div", {
+  }, "Elegí dónde y a quién buscar. La IA recorre una zona por vez, revisa sitios de empresas, cámaras del rubro, revistas y portales de construcción, y va cargando lo que encuentra. No para hasta terminar o hasta que toques Detener."), /*#__PURE__*/React.createElement("div", { style: { marginBottom: 14 } },
+    React.createElement("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: T.muted, marginBottom: 7 } }, "País donde buscar"),
+    React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, PAISES.map(pp => {
+      const on = pais === pp.id;
+      return React.createElement("button", {
+        key: pp.id,
+        disabled: corriendo,
+        title: pp.nombre,
+        onClick: () => { setPais(pp.id); setProvs([pp.geo[0].prov]); },
+        style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 14px 8px 10px", borderRadius: 10, border: `2px solid ${on ? BRASS : T.border}`, background: on ? "#FBF6EE" : "#fff", cursor: corriendo ? "default" : "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700, color: on ? "#8A6A38" : T.sub, opacity: corriendo && !on ? .5 : 1, minHeight: 40 }
+      }, React.createElement("img", { src: pp.bandera, alt: "", style: { width: 30, height: 20, borderRadius: 3, boxShadow: "0 0 0 1px rgba(0,0,0,.15)", display: "block" } }), pp.nombre);
+    })),
+    React.createElement("div", { style: { fontSize: 11, color: T.muted, marginTop: 7 } }, `Busca en páginas web de ${paisAct.nombre} (${paisAct.tld}), en ${paisAct.idioma}, y en las cámaras y portales de ese país.`)), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -10819,7 +11014,7 @@ ${hist}`;
       flex: 1
     }
   }, "Dónde buscar · ", provs.length, " seleccionada", provs.length === 1 ? "" : "s"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setProvs(GEO_AR.map(g => g.prov)),
+    onClick: () => setProvs(paisAct.geo.map(g => g.prov)),
     style: btnChico
   }, "Todo el país"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setProvs([]),
@@ -10835,7 +11030,7 @@ ${hist}`;
       overflowY: "auto",
       padding: 2
     }
-  }, GEO_AR.map(g => {
+  }, paisAct.geo.map(g => {
     const on = provs.indexOf(g.prov) >= 0;
     return /*#__PURE__*/React.createElement("button", {
       key: g.prov,
@@ -10881,7 +11076,7 @@ ${hist}`;
       color: T.text,
       lineHeight: 1.45
     }
-  }, "Buscar barrio por barrio y ciudad por ciudad", /*#__PURE__*/React.createElement("span", {
+  }, "Buscar " + paisAct.zonaTxt, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.muted
     }
@@ -10901,7 +11096,7 @@ ${hist}`;
       gap: 6,
       marginBottom: 16
     }
-  }, PERFILES_BUSQUEDA.map(p => {
+  }, paisAct.perfiles.map(p => {
     const on = perfs.indexOf(p.id) >= 0;
     return /*#__PURE__*/React.createElement("button", {
       key: p.id,
@@ -10920,7 +11115,7 @@ ${hist}`;
       }
     }, on ? "✓ " : "", p.t);
   })), (() => {
-    const combos = armarCombinaciones(provs, perfs, porZona);
+    const combos = armarCombinaciones(provs, perfs, porZona, pais);
     const min = Math.round(combos.length * 0.5);
     return /*#__PURE__*/React.createElement("div", {
       style: {
