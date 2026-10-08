@@ -566,6 +566,7 @@ body.en-demo #portada,body.en-entorno #portada,body.en-ventas #portada{ display:
 #portada .pt-brand{ position:absolute; left:22%; top:58%; transform:translateY(-50%); }
 #portada .pt-brand img{ height:72px; width:72px; object-fit:cover; border-radius:8px; display:block; box-shadow:0 4px 16px rgba(0,0,0,.45); }
 @media (max-width:900px){ #portada .pt-brand{ position:static; transform:none; } #portada .pt-brand img{ height:56px; width:56px; } }
+body:not(.con-motor) .btn-motor, body:not(.con-motor) #ir-ventas, body:not(.con-motor) #vb-ventas, body:not(.con-motor) [onclick="abrirVentas()"]{ display:none !important; }
 body.con-portada{ overflow:hidden; }
   @media (max-width:820px){ #portada .pt-grid2{ grid-template-columns:1fr; } #portada .pt-links a{ display:none; } #portada .pt-3{ grid-template-columns:1fr; } #portada .pt-3 > div{ border-left:none; padding-left:0; } #portada .pt-hero{ min-height:auto; } #portada .pt-velo2{ background:rgba(8,13,20,.82); } }
 
@@ -12596,18 +12597,7 @@ function abrirDemo() {
 }
 function abrirVentas() {
   silenciarSync(false);
-  if (!revisarMotor()) {
-    // Nunca fallar en silencio: si no está activado, lo explico y ofrezco activarlo.
-    var k = window.prompt("El Centro de Operaciones IA está protegido.\n\nIngresá la llave para activarlo en este dispositivo:", "");
-    if (k === null) return;
-    if (k.trim() === LLAVE_MOTOR) {
-      try { localStorage.setItem("motor_ok", "1"); } catch (e) {}
-      revisarMotor();
-    } else {
-      window.alert("Llave incorrecta. El Centro de Operaciones queda oculto.");
-      return;
-    }
-  }
+  if (!window.__motorOk) { pedirClaveCentro(function () { abrirVentas(); }); return; }
   document.body.classList.remove("en-demo");
   document.body.classList.remove("en-entorno");
   document.body.classList.add("en-ventas");
@@ -12615,20 +12605,72 @@ function abrirVentas() {
   marcarVista("ventas");
   iniciarApps();
 }
-// ── llave del motor de ventas ──
-// Con ?motor=LLAVE queda activado en ese dispositivo. Con ?motor=off se apaga.
-var LLAVE_MOTOR = "vv2026";
-function revisarMotor() {
-  var p = "";
-  try { p = new URLSearchParams(window.location.search).get("motor") || ""; } catch (e) {}
-  if (p === "off") { try { localStorage.removeItem("motor_ok"); } catch (e) {} }
-  else if (p === LLAVE_MOTOR) { try { localStorage.setItem("motor_ok", "1"); } catch (e) {} }
-  var activo = false;
-  try { activo = localStorage.getItem("motor_ok") === "1"; } catch (e) {}
-  if (activo) document.body.classList.add("con-motor");
-  else document.body.classList.remove("con-motor");
-  return activo;
+// ── Centro de Operaciones: acceso solo con clave (uso exclusivo del dueño) ──
+// La clave NO está en el código: solo su huella (PBKDF2-SHA256). Se pide en un cuadro propio;
+// tras 5 intentos fallidos se bloquea 15 minutos en este dispositivo.
+var MOTOR_CFG = {"s1": "41f24d0b27b1fb0a1e5bb8890eaecde0", "h1": "b7a31988b2c5a262e9c67de4954efdba45f0b20d5cdab2cd56e6af8afc139112", "it": 210000, "s2": "c41f94c1c24d819c48d1230ee51503e1", "h2": "587f04396d2f20374e3852fc01068aca6938b319e583c97ffa14dbfcfca20d08"};
+function _bytes(h) { var a = new Uint8Array(h.length / 2); for (var i = 0; i < a.length; i++) a[i] = parseInt(h.substr(i * 2, 2), 16); return a; }
+function _hex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (x) { return ("0" + x.toString(16)).slice(-2); }).join(""); }
+function _pbkdf2(txt, saltHex, it) {
+  var enc = new TextEncoder();
+  return crypto.subtle.importKey("raw", enc.encode(txt), "PBKDF2", false, ["deriveBits"]).then(function (k) {
+    return crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: _bytes(saltHex), iterations: it }, k, 256);
+  }).then(_hex);
 }
+function _sha(txt) { return crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt)).then(_hex); }
+function revisarMotor() {
+  var t = null;
+  try { if (new URLSearchParams(window.location.search).get("motor") === "off") { localStorage.removeItem("motor_ok"); window.__motorOk = false; } } catch (e) {}
+  try { t = localStorage.getItem("motor_ok"); } catch (e) {}
+  if (!t || !(window.crypto && crypto.subtle)) { window.__motorOk = false; document.body.classList.remove("con-motor"); return false; }
+  _sha(t).then(function (h) {
+    window.__motorOk = (h === MOTOR_CFG.h2);
+    document.body.classList.toggle("con-motor", window.__motorOk);
+    if (!window.__motorOk) { try { localStorage.removeItem("motor_ok"); } catch (e) {} }
+  });
+  return !!window.__motorOk;
+}
+function pedirClaveCentro(alAbrir) {
+  var bloqueo = 0; try { bloqueo = parseInt(localStorage.getItem("motor_bloq") || "0", 10); } catch (e) {}
+  var ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;z-index:100000;background:rgba(11,11,12,.82);display:flex;align-items:center;justify-content:center;padding:16px;";
+  ov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:340px;width:100%;padding:26px 24px;font-family:Inter,system-ui,sans-serif;">' +
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B0894F;margin-bottom:8px;">Acceso restringido</div>' +
+    '<div style="font-family:Georgia,serif;font-size:20px;font-weight:600;color:#101C2C;margin-bottom:14px;">Centro de Operaciones</div>' +
+    '<input id="cc-k" type="password" autocomplete="off" placeholder="Clave de acceso" style="width:100%;box-sizing:border-box;padding:12px 13px;border:1.5px solid #E6E9EE;border-radius:9px;font-size:15px;margin-bottom:8px;">' +
+    '<div id="cc-e" style="min-height:18px;font-size:12.5px;color:#C0392B;margin-bottom:8px;"></div>' +
+    '<button id="cc-ok" style="width:100%;padding:13px;border:none;border-radius:9px;background:#B0894F;color:#fff;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:6px;">Entrar</button>' +
+    '<button id="cc-no" style="width:100%;padding:10px;border:none;background:transparent;color:#8B95A5;font-size:12.5px;cursor:pointer;">Cancelar</button></div>';
+  document.body.appendChild(ov);
+  var $k = ov.querySelector("#cc-k"), $e = ov.querySelector("#cc-e"); $k.focus();
+  function cerrar() { ov.remove(); }
+  function falla(m) { $e.textContent = m; }
+  function intentar() {
+    var ahora = Date.now(), b = 0; try { b = parseInt(localStorage.getItem("motor_bloq") || "0", 10); } catch (e) {}
+    if (b > ahora) { falla("Demasiados intentos. Probá de nuevo en " + Math.ceil((b - ahora) / 60000) + " min."); return; }
+    var v = $k.value.trim().toUpperCase(); if (!v) return;
+    if (!(window.crypto && crypto.subtle)) { falla("Este navegador no permite verificar la clave (hace falta https)."); return; }
+    _pbkdf2(v, MOTOR_CFG.s1, MOTOR_CFG.it).then(function (h) {
+      if (h === MOTOR_CFG.h1) {
+        return _pbkdf2(v, MOTOR_CFG.s2, 1000).then(function (tok) {
+          try { localStorage.setItem("motor_ok", tok); localStorage.removeItem("motor_fallos"); localStorage.removeItem("motor_bloq"); } catch (e) {}
+          window.__motorOk = true; document.body.classList.add("con-motor"); cerrar(); if (alAbrir) alAbrir();
+        });
+      }
+      var n = 0; try { n = parseInt(localStorage.getItem("motor_fallos") || "0", 10) + 1; localStorage.setItem("motor_fallos", String(n)); if (n >= 5) { localStorage.setItem("motor_bloq", String(Date.now() + 15 * 60000)); localStorage.setItem("motor_fallos", "0"); } } catch (e) {}
+      falla(n >= 5 ? "Demasiados intentos. Bloqueado 15 minutos." : "Clave incorrecta.");
+      $k.value = ""; $k.focus();
+    });
+  }
+  ov.querySelector("#cc-ok").onclick = intentar;
+  ov.querySelector("#cc-no").onclick = cerrar;
+  $k.addEventListener("keydown", function (e) { if (e.key === "Enter") intentar(); if (e.key === "Escape") cerrar(); });
+}
+// Acceso discreto: agregar ?centro al link (o #centro) abre el pedido de clave. No hay botón público.
+window.addEventListener("load", function () {
+  var q = ""; try { q = location.search + location.hash; } catch (e) {}
+  if (/[?&]centro|#centro/.test(q)) { try { history.replaceState(null, "", location.pathname); } catch (e) {} setTimeout(function () { abrirVentas(); }, 300); }
+});
 function volverALanding() {
   document.body.classList.remove("en-entorno");
   document.body.classList.remove("en-demo");
