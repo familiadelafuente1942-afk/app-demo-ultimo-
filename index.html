@@ -4700,20 +4700,20 @@ function Marco({
   flash
 }) {
   var _pl = window.__appsPlan;
+  var _m = /^App (\d)/.exec(rotulo || "");
   if (_pl) {
-    var _m = /^App (\d)/.exec(rotulo || "");
     var _id = _m ? ({ "1": "principal", "2": "estudio", "3": "obra", "4": "propietario" })[_m[1]] : null;
     if (_id && _pl.indexOf(_id) < 0) return null;
   }
-  if (_m && (_m[1] === "1" || _m[1] === "2")) {
-    // Panel principal y Panel del estudio: son las aplicaciones reales (iframe), con datos ficticios.
+  if (_m && /^[1-4]$/.test(_m[1])) {
+    // Las cuatro apps son las aplicaciones reales (iframe), con datos ficticios.
     return /*#__PURE__*/React.createElement("div", {
       className: flash ? "flash" : "",
       style: { background: "#fff", borderRadius: 13, overflow: "hidden", display: "flex", flexDirection: "column", border: "1px solid rgba(255,255,255,.1)", minHeight: 0 }
     }, /*#__PURE__*/React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 7, padding: "7px 12px", background: "#0E1520", borderBottom: "1px solid rgba(255,255,255,.08)" } },
       /*#__PURE__*/React.createElement("span", { style: { width: 12, height: 2, background: BRASS, flexShrink: 0 } }),
       /*#__PURE__*/React.createElement("b", { style: { fontSize: 10.5, color: "#C8D0DA" } }, rotulo)),
-      /*#__PURE__*/React.createElement("iframe", { className: "app-real", title: rotulo, src: (_m[1] === "1" ? "demo-principal.html" : "demo-estudio.html") + "?v=1", style: { flex: 1, width: "100%", border: "none", minHeight: 0, background: "#fff" } }));
+      /*#__PURE__*/React.createElement("iframe", { className: "app-real", title: rotulo, src: ({ "1": "demo-principal.html", "2": "demo-estudio.html", "3": "demo-contratista.html", "4": "demo-propietario.html" })[_m[1]] + "?v=3", style: { flex: 1, width: "100%", border: "none", minHeight: 0, background: "#fff" } }));
   }
   return /*#__PURE__*/React.createElement("div", {
     className: flash ? "flash" : "",
