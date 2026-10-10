@@ -12468,33 +12468,33 @@ const CRONO_AREAS = ["Seguridad", "Legal", "Producto", "Marketing", "Comercial",
 const CRONO_COLOR = { Seguridad: "#B3261E", Legal: "#6B4FA0", Producto: "#3B6CA8", Marketing: "#C07A1E", Comercial: "#2F7A4F", Lanzamiento: "#B0894F" };
 const CRONO_ESTADOS = ["pendiente", "en curso", "hecho"];
 function cronoSemilla() {
-  const t = (id, area, dias, titulo, nota) => ({ id, area, dias, titulo, nota: nota || "", estado: "pendiente", resp: "" });
+  const t = (id, area, dias, titulo, nota, subs, prio) => ({ id, area, dias, titulo, nota: nota || "", estado: "pendiente", resp: "", prioridad: prio || "media", enlace: "", sub: (subs || []).map((s, i) => ({ id: id + "_" + i, texto: s, hecho: false })), coment: [] });
   return [
-    t("s1", "Seguridad", 60, "Decidir el modelo de datos por cliente", "Un proyecto Supabase por cliente, o una base compartida con empresa_id + reglas RLS. Define todo lo demás de seguridad."),
+    t("s1", "Seguridad", 60, "Decidir el modelo de datos por cliente", "Un proyecto Supabase por cliente, o una base compartida con empresa_id + reglas RLS. Define todo lo demás de seguridad.", ["Listar pros y contras de cada opción (costo, mantenimiento, aislamiento de datos)", "Consultar cuánto cuesta un proyecto Supabase por cliente", "Decidir y dejarlo escrito"], "alta"),
     t("s2", "Seguridad", 55, "Cambiar la contraseña de la cuenta de Supabase", "Que no se repita en ningún otro servicio."),
     t("s3", "Seguridad", 55, "Rotar la clave de Resend", "Generar una nueva y borrar la anterior."),
     t("s4", "Seguridad", 55, "Confirmar que la demo pública ya no tiene claves a la vista", "Verificar que el cambio del paso 1 de seguridad esté publicado."),
-    t("s5", "Seguridad", 50, "Aplicar restringir_acceso.sql (RLS por email)", "Sin esto, cualquiera con la clave pública podría leer datos."),
-    t("s6", "Seguridad", 50, "Desactivar el registro público en Supabase Auth", "Que solo entren usuarios que vos das de alta."),
-    t("s7", "Seguridad", 45, "Agregar chequeo de sesión a la función enviar-mail", "Hoy acepta pedidos de cualquiera."),
-    t("s8", "Seguridad", 40, "Mover las llamadas de IA a un servidor intermedio", "Para que ninguna clave de IA viaje en el navegador."),
+    t("s5", "Seguridad", 50, "Aplicar restringir_acceso.sql (RLS por email)", "Sin esto, cualquiera con la clave pública podría leer datos.", ["Escribir el SQL de reglas por email", "Probarlo primero en una copia de la base", "Aplicarlo en producción", "Verificar que un usuario ajeno no pueda leer datos"], "alta"),
+    t("s6", "Seguridad", 50, "Desactivar el registro público en Supabase Auth", "Que solo entren usuarios que vos das de alta.", [], "alta"),
+    t("s7", "Seguridad", 45, "Agregar chequeo de sesión a la función enviar-mail", "Hoy acepta pedidos de cualquiera.", [], "alta"),
+    t("s8", "Seguridad", 40, "Mover las llamadas de IA a un servidor intermedio", "Para que ninguna clave de IA viaje en el navegador.", ["Elegir dónde correrá el servidor intermedio", "Mover la clave de IA a variables del servidor", "Cambiar la app para llamar al servidor", "Borrar toda clave de IA del navegador"], "alta"),
     t("s9", "Seguridad", 35, "Separar el Centro de Operaciones de la demo pública", "La demo no debe incluir código ni datos internos."),
     t("s10", "Seguridad", 14, "Prueba de restauración de respaldo", "Un respaldo no probado no cuenta."),
     t("l1", "Legal", 60, "Iniciar el registro de la marca NEXO en el INPI", "Consultar con abogado/a las clases correctas."),
-    t("l2", "Legal", 30, "Términos de uso y política de privacidad", "Redactados por abogado/a; los necesita el alta de clientes."),
+    t("l2", "Legal", 30, "Términos de uso y política de privacidad", "Redactados por abogado/a; los necesita el alta de clientes.", ["Enviar borrador al abogado/a", "Revisar y corregir", "Publicar y enlazar desde el registro de clientes"], "alta"),
     t("l3", "Legal", 30, "Inscribir la base de datos ante la AAIP", "Ley 25.326."),
     t("p1", "Producto", 55, "Subir el arreglo de fotos de Avance y probar la demo", "Subir los 4 archivos y apretar Reiniciar en la demo."),
-    t("p2", "Producto", 28, "Probar el alta completa de un cliente nuevo", "Desde que se registra hasta que carga su primera obra."),
+    t("p2", "Producto", 28, "Probar el alta completa de un cliente nuevo", "Desde que se registra hasta que carga su primera obra.", ["Registrarse como cliente nuevo", "Crear la primera obra", "Subir fotos y avance", "Invitar a un segundo usuario"]),
     t("p3", "Producto", 21, "Congelar funciones: solo corregir errores", "Nada nuevo hasta después del lanzamiento."),
-    t("p4", "Producto", 14, "Prueba piloto con 1 o 2 clientes de confianza", "Anotar todo lo que no entiendan sin ayuda."),
-    t("m1", "Marketing", 45, "Configurar SPF, DKIM y DMARC en nexorarq.com", "Para que los mails no caigan en spam."),
-    t("m2", "Marketing", 28, "Preparar el material de venta", "Video corto de la demo, una página de planes y 3 casos de uso."),
+    t("p4", "Producto", 14, "Prueba piloto con 1 o 2 clientes de confianza", "Anotar todo lo que no entiendan sin ayuda.", ["Elegir los 2 clientes piloto", "Darles acceso y una guía corta", "Reunión de devolución a los 7 días"], "alta"),
+    t("m1", "Marketing", 45, "Configurar SPF, DKIM y DMARC en nexorarq.com", "Para que los mails no caigan en spam.", ["Cargar los registros DNS", "Verificar con una herramienta de prueba de mails", "Enviar un mail de prueba a Gmail y Outlook"]),
+    t("m2", "Marketing", 28, "Preparar el material de venta", "Video corto de la demo, una página de planes y 3 casos de uso.", ["Grabar el video de la demo (1-2 minutos)", "Armar la página de planes", "Redactar 3 casos de uso reales (sin nombres de clientes)"]),
     t("m3", "Marketing", 21, "Texto de baja en cada mail promocional", "Obligatorio en todo mensaje promocional (art. 27, Ley 25.326)."),
-    t("c1", "Comercial", 35, "Armar la lista inicial de prospectos", "Constructoras, estudios y gerenciadoras que ya conocés."),
+    t("c1", "Comercial", 35, "Armar la lista inicial de prospectos", "Constructoras, estudios y gerenciadoras que ya conocés.", ["Juntar contactos de constructoras", "Juntar estudios y gerenciadoras", "Cargarlos en la pestaña Comercial"]),
     t("c2", "Comercial", 21, "Escribir los primeros mensajes y los seguimientos", "Revisarlos antes de enviar; nada sale solo."),
     t("c3", "Comercial", 10, "Agendar demos con los primeros interesados", ""),
-    t("x1", "Lanzamiento", 7, "Revisión final: seguridad, demo, textos y precios", ""),
-    t("x2", "Lanzamiento", 0, "Día de lanzamiento: anuncio y primeros envíos", ""),
+    t("x1", "Lanzamiento", 7, "Revisión final: seguridad, demo, textos y precios", "", ["Probar la demo en iPad y celular", "Probar el alta de un cliente", "Revisar precios y textos legales", "Verificar los respaldos"]),
+    t("x2", "Lanzamiento", 0, "Día de lanzamiento: anuncio y primeros envíos", "", [], "alta"),
     t("x3", "Lanzamiento", -7, "Primer seguimiento a todos los contactos", "Responder cada consulta el mismo día."),
     t("x4", "Lanzamiento", -14, "Balance de las dos primeras semanas", "Qué funcionó, qué no, qué se corrige.")
   ];
@@ -12525,7 +12525,7 @@ function AreaCronograma() {
   function borrar(id) { guardar({ ...datos, tareas: datos.tareas.filter(x => x.id !== id) }); setAbierta(null); }
   function agregar() {
     if (!nueva || !nueva.titulo.trim()) return;
-    guardar({ ...datos, tareas: [...datos.tareas, { id: "u" + Date.now(), area: nueva.area, dias: Number(nueva.dias) || 0, titulo: nueva.titulo.trim(), nota: "", estado: "pendiente", resp: "" }] });
+    guardar({ ...datos, tareas: [...datos.tareas, { id: "u" + Date.now(), area: nueva.area, dias: Number(nueva.dias) || 0, titulo: nueva.titulo.trim(), nota: "", estado: "pendiente", resp: "", prioridad: "media", enlace: "", sub: [], coment: [] }] });
     setNueva(null);
   }
   function restablecer() {
@@ -12538,7 +12538,7 @@ function AreaCronograma() {
   const total = datos.tareas.length;
   const hechas = datos.tareas.filter(x => x.estado === "hecho").length;
   const pct = total ? Math.round(hechas / total * 100) : 0;
-  const conFecha = datos.tareas.map(x => ({ ...x, fecha: cronoFecha(datos.lanzamiento, x.dias) }));
+  const conFecha = datos.tareas.map(x => ({ ...x, sub: x.sub || [], coment: x.coment || [], prioridad: x.prioridad || "media", enlace: x.enlace || "", fecha: cronoFecha(datos.lanzamiento, x.dias) }));
   const vencidas = conFecha.filter(x => x.estado !== "hecho" && diasHoy(x.fecha) < 0).length;
   const estaSemana = conFecha.filter(x => x.estado !== "hecho" && diasHoy(x.fecha) >= 0 && diasHoy(x.fecha) <= 7).length;
   const lista = conFecha
@@ -12563,6 +12563,7 @@ function AreaCronograma() {
   const chip = (act, color) => ({ border: "1px solid " + (act ? color : "#E6E9EE"), background: act ? color : "#fff", color: act ? "#fff" : "#4A5565", borderRadius: 20, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 });
   const colEstado = { "pendiente": ["#fff", "#8B95A5", "#8B95A5"], "en curso": ["#FBF2E3", "#9A6B1E", "#C07A1E"], "hecho": ["#E8F4EC", "#2F7A4F", "#2F7A4F"] };
 
+  const campo = (rotulo, hijo) => h("div", { style: { display: "flex", flexDirection: "column", gap: 4, fontSize: 10.5, fontWeight: 700, letterSpacing: ".04em", color: "#6C7787", textTransform: "uppercase" } }, rotulo, hijo);
   const tarjeta = x => {
     const dd = diasHoy(x.fecha);
     const tarde = x.estado !== "hecho" && dd < 0;
@@ -12578,15 +12579,40 @@ function AreaCronograma() {
             h("span", { style: { color: CRONO_COLOR[x.area], fontWeight: 800 } }, x.area),
             h("span", { style: { color: "#6C7787" } }, cronoFmt(x.fecha) + " · " + T),
             h("span", { style: { color: tarde ? "#B3261E" : "#6C7787", fontWeight: tarde ? 800 : 500 } }, rel),
+            x.prioridad === "alta" ? h("span", { style: { color: "#B3261E", fontWeight: 800 } }, "● Alta") : null,
+            x.sub.length ? h("span", { style: { color: "#4A5565" } }, "☑ " + x.sub.filter(s => s.hecho).length + "/" + x.sub.length) : null,
+            x.coment.length ? h("span", { style: { color: "#4A5565" } }, "💬 " + x.coment.length) : null,
             x.resp ? h("span", { style: { color: "#4A5565" } }, "· " + x.resp) : null))),
-      abierta === x.id ? h("div", { style: { background: "#F5F6F8", padding: "11px 12px", borderTop: "1px solid #EEF0F3", display: "flex", flexDirection: "column", gap: 8 } },
-        x.nota ? h("div", { style: { fontSize: 12, color: "#4A5565", lineHeight: 1.5 } }, x.nota) : null,
-        h("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } },
-          h("input", { placeholder: "Responsable", value: x.resp, onChange: e => cambiar(x.id, { resp: e.target.value }), style: { ...inp, flex: "1 1 130px" } }),
-          h("select", { value: x.estado, onChange: e => cambiar(x.id, { estado: e.target.value }), style: inp }, CRONO_ESTADOS.map(s => h("option", { key: s, value: s }, s))),
-          h("label", { style: { fontSize: 11.5, color: "#4A5565", display: "flex", alignItems: "center", gap: 5 } }, "Días antes",
-            h("input", { type: "number", value: x.dias, onChange: e => cambiar(x.id, { dias: Number(e.target.value) || 0 }), style: { ...inp, width: 64 } })),
-          h("button", { onClick: () => borrar(x.id), style: { ...chip(false, "#B3261E"), color: "#B3261E", borderColor: "#F1C9C5" } }, "Borrar"))) : null);
+      abierta === x.id ? h("div", { style: { background: "#F5F6F8", padding: "13px 12px", borderTop: "1px solid #EEF0F3", display: "flex", flexDirection: "column", gap: 12 } },
+        campo("Tarea", h("input", { value: x.titulo, onChange: e => cambiar(x.id, { titulo: e.target.value }), style: { ...inp, width: "100%", boxSizing: "border-box", fontWeight: 700 } })),
+        h("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+          campo("Estado", h("select", { value: x.estado, onChange: e => cambiar(x.id, { estado: e.target.value }), style: inp }, CRONO_ESTADOS.map(s => h("option", { key: s, value: s }, s)))),
+          campo("Prioridad", h("select", { value: x.prioridad, onChange: e => cambiar(x.id, { prioridad: e.target.value }), style: inp }, ["alta", "media", "baja"].map(s => h("option", { key: s, value: s }, s)))),
+          campo("Área", h("select", { value: x.area, onChange: e => cambiar(x.id, { area: e.target.value }), style: inp }, CRONO_AREAS.map(s => h("option", { key: s, value: s }, s)))),
+          campo("Días antes del lanzamiento", h("input", { type: "number", value: x.dias, onChange: e => cambiar(x.id, { dias: Number(e.target.value) || 0 }), style: { ...inp, width: 90 } })),
+          campo("Responsable", h("input", { placeholder: "Quién se encarga", value: x.resp, onChange: e => cambiar(x.id, { resp: e.target.value }), style: { ...inp, width: 150 } }))),
+        campo("Descripción", h("textarea", { rows: 3, placeholder: "Qué hay que lograr, con qué criterio se da por terminada…", value: x.nota, onChange: e => cambiar(x.id, { nota: e.target.value }), style: { ...inp, width: "100%", boxSizing: "border-box", resize: "vertical", lineHeight: 1.45 } })),
+        campo("Enlace útil", h("div", { style: { display: "flex", gap: 8, alignItems: "center" } },
+          h("input", { placeholder: "https://…", value: x.enlace, onChange: e => cambiar(x.id, { enlace: e.target.value }), style: { ...inp, flex: 1, minWidth: 0 } }),
+          /^https?:\/\//.test(x.enlace) ? h("a", { href: x.enlace, target: "_blank", rel: "noopener noreferrer", style: { fontSize: 12, fontWeight: 700, color: BRASS } }, "Abrir ↗") : null)),
+        // Checklist de pasos
+        campo("Pasos" + (x.sub.length ? " (" + x.sub.filter(s => s.hecho).length + " de " + x.sub.length + ")" : ""), h("div", null,
+          x.sub.map(s => h("div", { key: s.id, style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 } },
+            h("input", { type: "checkbox", checked: !!s.hecho, onChange: e => cambiar(x.id, { sub: x.sub.map(y => y.id === s.id ? { ...y, hecho: e.target.checked } : y) }), style: { width: 18, height: 18, flexShrink: 0 } }),
+            h("input", { value: s.texto, onChange: e => cambiar(x.id, { sub: x.sub.map(y => y.id === s.id ? { ...y, texto: e.target.value } : y) }), style: { ...inp, flex: 1, minWidth: 0, textDecoration: s.hecho ? "line-through" : "none", opacity: s.hecho ? .6 : 1 } }),
+            h("button", { onClick: () => cambiar(x.id, { sub: x.sub.filter(y => y.id !== s.id) }), "aria-label": "Quitar paso", style: { background: "none", border: "none", color: "#B3261E", fontSize: 18, cursor: "pointer", padding: "0 4px" } }, "×"))),
+          h("button", { onClick: () => cambiar(x.id, { sub: [...x.sub, { id: "p" + Date.now(), texto: "", hecho: false }] }), style: { ...chip(false, BRASS), color: BRASS, borderColor: BRASS } }, "+ Agregar paso"))),
+        // Notas con fecha
+        campo("Notas y novedades" + (x.coment.length ? " (" + x.coment.length + ")" : ""), h("div", null,
+          x.coment.map(c => h("div", { key: c.id, style: { background: "#fff", border: "1px solid #E6E9EE", borderRadius: 8, padding: "8px 10px", marginBottom: 6 } },
+            h("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 10.5, color: "#8B95A5", marginBottom: 3 } },
+              h("span", null, new Date(c.ts).toLocaleString("es-AR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })),
+              h("button", { onClick: () => cambiar(x.id, { coment: x.coment.filter(y => y.id !== c.id) }), style: { background: "none", border: "none", color: "#B3261E", cursor: "pointer", fontSize: 11 } }, "Borrar")),
+            h("textarea", { rows: 2, value: c.texto, onChange: e => cambiar(x.id, { coment: x.coment.map(y => y.id === c.id ? { ...y, texto: e.target.value } : y) }), style: { ...inp, width: "100%", boxSizing: "border-box", border: "none", padding: 0, resize: "vertical", lineHeight: 1.45 } }))),
+          h("button", { onClick: () => cambiar(x.id, { coment: [...x.coment, { id: "n" + Date.now(), ts: Date.now(), texto: "" }] }), style: { ...chip(false, BRASS), color: BRASS, borderColor: BRASS } }, "+ Agregar nota"))),
+        h("div", { style: { display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" } },
+          h("button", { onClick: () => setAbierta(null), style: { ...chip(true, "#101C2C"), padding: "8px 16px" } }, "Listo"),
+          h("button", { onClick: () => { if (window.confirm("¿Borrar esta tarea?")) borrar(x.id); }, style: { ...chip(false, "#B3261E"), color: "#B3261E", borderColor: "#F1C9C5" } }, "Borrar tarea"))) : null);
   };
 
   return h("div", null,
