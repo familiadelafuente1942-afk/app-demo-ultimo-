@@ -12654,6 +12654,21 @@ function AreaCronograma() {
     h("div", { style: { fontSize: 11, color: "#6C7787", textAlign: "center", marginTop: 8 } }, "Se guarda en este dispositivo. Tocá el cuadrado para pasar de pendiente a en curso y a hecho; tocá el título para ver el detalle."));
 }
 
+// ── Seguimiento técnico: el panel NEXO Control (uso, aperturas, rendimiento, errores,
+// costo de IA y cuentas de clientes) dentro del Centro de Operaciones.
+// Vive en control.html; pide su clave una vez por dispositivo.
+function AreaSeguimiento() {
+  const h = React.createElement;
+  const [ver, setVer] = useState(0);
+  return h("div", null,
+    h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" } },
+      h("div", { style: { color: "#C8D0DA", fontSize: 12 } }, "Aperturas de la app, uso por pantalla, rendimiento, errores, costo de IA y cuentas."),
+      h("div", { style: { display: "flex", gap: 8 } },
+        h("button", { onClick: () => setVer(ver + 1), style: { background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.16)", color: "#C8D0DA", borderRadius: 9, padding: "8px 13px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" } }, "↻ Actualizar"),
+        h("a", { href: "control.html", target: "_blank", rel: "noopener", style: { background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.16)", color: "#C8D0DA", borderRadius: 9, padding: "8px 13px", fontSize: 12, fontWeight: 700, textDecoration: "none" } }, "Abrir aparte ↗"))),
+    h("iframe", { key: ver, src: "control.html", title: "Seguimiento técnico", style: { width: "100%", height: "calc(100vh - 170px)", minHeight: 560, border: "none", borderRadius: 13, background: "#f2f2f7", display: "block" } }));
+}
+
 // ════════════════════════════════════════════════════════════
 // CENTRO DE OPERACIONES IA — contenedor de las ocho áreas
 // Solo el área Comercial tiene funciones reales.
@@ -12709,6 +12724,11 @@ const AREAS = [{
   id: "cronograma",
   nombre: "Cronograma de lanzamiento",
   corto: "📅 Cronograma",
+  activa: true
+}, {
+  id: "seguimiento",
+  nombre: "Seguimiento técnico",
+  corto: "📊 Seguimiento",
   activa: true
 }];
 function CentroOperaciones() {
@@ -12869,7 +12889,7 @@ function CentroOperaciones() {
         lineHeight: 1.55
       }
     }, "Las métricas de correos, respuestas y reuniones necesitan el motor de agentes y el envío de correo. Lo que ves abajo son las herramientas que ya funcionan."), /*#__PURE__*/React.createElement(AreaComercial, null))
-  }), area === "marketing" && /*#__PURE__*/React.createElement(AreaMarketing, null), area === "operaciones" && /*#__PURE__*/React.createElement(AreaOperaciones, null), area === "mails" && /*#__PURE__*/React.createElement(AreaComercial, { modo: "mails", key: "mails" }), area === "soporte" && /*#__PURE__*/React.createElement(AreaSoporte, null), area === "finanzas" && /*#__PURE__*/React.createElement(AreaFinanzas, null), area === "producto" && /*#__PURE__*/React.createElement(AreaProducto, null), area === "seguridad" && /*#__PURE__*/React.createElement(AreaSeguridad, null), area === "cronograma" && /*#__PURE__*/React.createElement(AreaCronograma, null));
+  }), area === "marketing" && /*#__PURE__*/React.createElement(AreaMarketing, null), area === "operaciones" && /*#__PURE__*/React.createElement(AreaOperaciones, null), area === "mails" && /*#__PURE__*/React.createElement(AreaComercial, { modo: "mails", key: "mails" }), area === "soporte" && /*#__PURE__*/React.createElement(AreaSoporte, null), area === "finanzas" && /*#__PURE__*/React.createElement(AreaFinanzas, null), area === "producto" && /*#__PURE__*/React.createElement(AreaProducto, null), area === "seguridad" && /*#__PURE__*/React.createElement(AreaSeguridad, null), area === "cronograma" && /*#__PURE__*/React.createElement(AreaCronograma, null), area === "seguimiento" && /*#__PURE__*/React.createElement(AreaSeguimiento, null));
 }
 
 // Alias de transición: el punto de montaje sigue funcionando con el nombre viejo.
