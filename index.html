@@ -12457,6 +12457,178 @@ function GuiaVentas() {
 }
 
 // ════════════════════════════════════════════════════════════
+// CRONOGRAMA PRE-LANZAMIENTO — tareas con cuenta regresiva
+// Cada tarea se mide en días antes del lanzamiento (T-45 = 45 días antes):
+// si cambiás la fecha de lanzamiento, todas las fechas se corren solas.
+// Se guarda en este dispositivo (localStorage), igual que los prospectos.
+// ════════════════════════════════════════════════════════════
+const CRONO_CLAVE = "nexo_cronograma_v1";
+const CRONO_LANZ_DEFAULT = "2026-12-15";
+const CRONO_AREAS = ["Seguridad", "Legal", "Producto", "Marketing", "Comercial", "Lanzamiento"];
+const CRONO_COLOR = { Seguridad: "#B3261E", Legal: "#6B4FA0", Producto: "#3B6CA8", Marketing: "#C07A1E", Comercial: "#2F7A4F", Lanzamiento: "#B0894F" };
+const CRONO_ESTADOS = ["pendiente", "en curso", "hecho"];
+function cronoSemilla() {
+  const t = (id, area, dias, titulo, nota) => ({ id, area, dias, titulo, nota: nota || "", estado: "pendiente", resp: "" });
+  return [
+    t("s1", "Seguridad", 60, "Decidir el modelo de datos por cliente", "Un proyecto Supabase por cliente, o una base compartida con empresa_id + reglas RLS. Define todo lo demás de seguridad."),
+    t("s2", "Seguridad", 55, "Cambiar la contraseña de la cuenta de Supabase", "Que no se repita en ningún otro servicio."),
+    t("s3", "Seguridad", 55, "Rotar la clave de Resend", "Generar una nueva y borrar la anterior."),
+    t("s4", "Seguridad", 55, "Confirmar que la demo pública ya no tiene claves a la vista", "Verificar que el cambio del paso 1 de seguridad esté publicado."),
+    t("s5", "Seguridad", 50, "Aplicar restringir_acceso.sql (RLS por email)", "Sin esto, cualquiera con la clave pública podría leer datos."),
+    t("s6", "Seguridad", 50, "Desactivar el registro público en Supabase Auth", "Que solo entren usuarios que vos das de alta."),
+    t("s7", "Seguridad", 45, "Agregar chequeo de sesión a la función enviar-mail", "Hoy acepta pedidos de cualquiera."),
+    t("s8", "Seguridad", 40, "Mover las llamadas de IA a un servidor intermedio", "Para que ninguna clave de IA viaje en el navegador."),
+    t("s9", "Seguridad", 35, "Separar el Centro de Operaciones de la demo pública", "La demo no debe incluir código ni datos internos."),
+    t("s10", "Seguridad", 14, "Prueba de restauración de respaldo", "Un respaldo no probado no cuenta."),
+    t("l1", "Legal", 60, "Iniciar el registro de la marca NEXO en el INPI", "Consultar con abogado/a las clases correctas."),
+    t("l2", "Legal", 30, "Términos de uso y política de privacidad", "Redactados por abogado/a; los necesita el alta de clientes."),
+    t("l3", "Legal", 30, "Inscribir la base de datos ante la AAIP", "Ley 25.326."),
+    t("p1", "Producto", 55, "Subir el arreglo de fotos de Avance y probar la demo", "Subir los 4 archivos y apretar Reiniciar en la demo."),
+    t("p2", "Producto", 28, "Probar el alta completa de un cliente nuevo", "Desde que se registra hasta que carga su primera obra."),
+    t("p3", "Producto", 21, "Congelar funciones: solo corregir errores", "Nada nuevo hasta después del lanzamiento."),
+    t("p4", "Producto", 14, "Prueba piloto con 1 o 2 clientes de confianza", "Anotar todo lo que no entiendan sin ayuda."),
+    t("m1", "Marketing", 45, "Configurar SPF, DKIM y DMARC en nexorarq.com", "Para que los mails no caigan en spam."),
+    t("m2", "Marketing", 28, "Preparar el material de venta", "Video corto de la demo, una página de planes y 3 casos de uso."),
+    t("m3", "Marketing", 21, "Texto de baja en cada mail promocional", "Obligatorio en todo mensaje promocional (art. 27, Ley 25.326)."),
+    t("c1", "Comercial", 35, "Armar la lista inicial de prospectos", "Constructoras, estudios y gerenciadoras que ya conocés."),
+    t("c2", "Comercial", 21, "Escribir los primeros mensajes y los seguimientos", "Revisarlos antes de enviar; nada sale solo."),
+    t("c3", "Comercial", 10, "Agendar demos con los primeros interesados", ""),
+    t("x1", "Lanzamiento", 7, "Revisión final: seguridad, demo, textos y precios", ""),
+    t("x2", "Lanzamiento", 0, "Día de lanzamiento: anuncio y primeros envíos", ""),
+    t("x3", "Lanzamiento", -7, "Primer seguimiento a todos los contactos", "Responder cada consulta el mismo día."),
+    t("x4", "Lanzamiento", -14, "Balance de las dos primeras semanas", "Qué funcionó, qué no, qué se corrige.")
+  ];
+}
+function cronoCargar() {
+  const g = leerJSON(CRONO_CLAVE, null);
+  if (g && Array.isArray(g.tareas)) return g;
+  return { lanzamiento: CRONO_LANZ_DEFAULT, tareas: cronoSemilla() };
+}
+function cronoFecha(lanz, dias) {
+  const d = new Date(lanz + "T12:00:00");
+  d.setDate(d.getDate() - Number(dias || 0));
+  return d;
+}
+function cronoFmt(d) {
+  return d.toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" }).replace(".", "");
+}
+function AreaCronograma() {
+  const h = React.createElement;
+  const [datos, setDatos] = useState(() => cronoCargar());
+  const [filtro, setFiltro] = useState("Todas");
+  const [verHechas, setVerHechas] = useState(true);
+  const [nueva, setNueva] = useState(null);
+  const [abierta, setAbierta] = useState(null);
+  function guardar(sig) { setDatos(sig); escribirJSON(CRONO_CLAVE, sig); }
+  function cambiar(id, parche) { guardar({ ...datos, tareas: datos.tareas.map(x => x.id === id ? { ...x, ...parche } : x) }); }
+  function ciclar(x) { cambiar(x.id, { estado: CRONO_ESTADOS[(CRONO_ESTADOS.indexOf(x.estado) + 1) % 3] }); }
+  function borrar(id) { guardar({ ...datos, tareas: datos.tareas.filter(x => x.id !== id) }); setAbierta(null); }
+  function agregar() {
+    if (!nueva || !nueva.titulo.trim()) return;
+    guardar({ ...datos, tareas: [...datos.tareas, { id: "u" + Date.now(), area: nueva.area, dias: Number(nueva.dias) || 0, titulo: nueva.titulo.trim(), nota: "", estado: "pendiente", resp: "" }] });
+    setNueva(null);
+  }
+  function restablecer() {
+    if (window.confirm("¿Volver al cronograma original? Se pierden los cambios y las tareas que agregaste.")) guardar({ lanzamiento: datos.lanzamiento, tareas: cronoSemilla() });
+  }
+  const hoy = new Date(); hoy.setHours(12, 0, 0, 0);
+  const diasHoy = d => Math.round((d - hoy) / 86400000);
+  const lanzD = new Date(datos.lanzamiento + "T12:00:00");
+  const faltan = Math.round((lanzD - hoy) / 86400000);
+  const total = datos.tareas.length;
+  const hechas = datos.tareas.filter(x => x.estado === "hecho").length;
+  const pct = total ? Math.round(hechas / total * 100) : 0;
+  const conFecha = datos.tareas.map(x => ({ ...x, fecha: cronoFecha(datos.lanzamiento, x.dias) }));
+  const vencidas = conFecha.filter(x => x.estado !== "hecho" && diasHoy(x.fecha) < 0).length;
+  const estaSemana = conFecha.filter(x => x.estado !== "hecho" && diasHoy(x.fecha) >= 0 && diasHoy(x.fecha) <= 7).length;
+  const lista = conFecha
+    .filter(x => (filtro === "Todas" || x.area === filtro) && (verHechas || x.estado !== "hecho"))
+    .sort((a, b) => a.fecha - b.fecha);
+  // Agrupar por semana (lunes a domingo)
+  const lunesDe = d => { const x = new Date(d); const w = (x.getDay() + 6) % 7; x.setDate(x.getDate() - w); x.setHours(12, 0, 0, 0); return x; };
+  const grupos = [];
+  lista.forEach(x => {
+    const l = lunesDe(x.fecha); const k = l.getTime();
+    let g = grupos.find(y => y.k === k);
+    if (!g) { g = { k, lunes: l, items: [] }; grupos.push(g); }
+    g.items.push(x);
+  });
+  const etiquetaSemana = l => {
+    const dom = new Date(l); dom.setDate(dom.getDate() + 6);
+    const dif = Math.round((lunesDe(hoy) - l) / 86400000 / 7);
+    const rango = "Semana del " + l.getDate() + "/" + (l.getMonth() + 1) + " al " + dom.getDate() + "/" + (dom.getMonth() + 1);
+    return dif === 0 ? rango + " · ESTA SEMANA" : rango;
+  };
+  const inp = { padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5, fontFamily: "inherit", background: "#fff", color: "#1A1A1A" };
+  const chip = (act, color) => ({ border: "1px solid " + (act ? color : "#E6E9EE"), background: act ? color : "#fff", color: act ? "#fff" : "#4A5565", borderRadius: 20, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 });
+  const colEstado = { "pendiente": ["#fff", "#8B95A5", "#8B95A5"], "en curso": ["#FBF2E3", "#9A6B1E", "#C07A1E"], "hecho": ["#E8F4EC", "#2F7A4F", "#2F7A4F"] };
+
+  const tarjeta = x => {
+    const dd = diasHoy(x.fecha);
+    const tarde = x.estado !== "hecho" && dd < 0;
+    const ce = colEstado[x.estado];
+    const rel = x.estado === "hecho" ? "Hecha" : dd === 0 ? "Hoy" : dd > 0 ? "En " + dd + (dd === 1 ? " día" : " días") : "Venció hace " + (-dd) + (dd === -1 ? " día" : " días");
+    const T = x.dias > 0 ? "T-" + x.dias : x.dias === 0 ? "T 0" : "T+" + (-x.dias);
+    return h("div", { key: x.id, style: { background: "#fff", borderRadius: 11, border: "1px solid " + (tarde ? "#F1C9C5" : "#E6E9EE"), borderLeft: "4px solid " + CRONO_COLOR[x.area], marginBottom: 8, overflow: "hidden" } },
+      h("div", { style: { display: "flex", alignItems: "flex-start", gap: 10, padding: "11px 12px" } },
+        h("button", { onClick: () => ciclar(x), title: "Cambiar estado", "aria-label": "Estado: " + x.estado + ". Tocar para cambiar", style: { width: 26, height: 26, borderRadius: 7, border: "2px solid " + ce[2], background: x.estado === "hecho" ? "#2F7A4F" : x.estado === "en curso" ? "#FBF2E3" : "#fff", color: x.estado === "hecho" ? "#fff" : "#9A6B1E", cursor: "pointer", fontSize: 13, fontWeight: 800, flexShrink: 0, padding: 0, lineHeight: 1 } }, x.estado === "hecho" ? "✓" : x.estado === "en curso" ? "…" : ""),
+        h("div", { style: { flex: 1, minWidth: 0, cursor: "pointer" }, onClick: () => setAbierta(abierta === x.id ? null : x.id) },
+          h("div", { style: { fontSize: 13.5, fontWeight: 700, color: "#1A1A1A", lineHeight: 1.35, textDecoration: x.estado === "hecho" ? "line-through" : "none", opacity: x.estado === "hecho" ? .55 : 1 } }, x.titulo),
+          h("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginTop: 5, fontSize: 11, alignItems: "center" } },
+            h("span", { style: { color: CRONO_COLOR[x.area], fontWeight: 800 } }, x.area),
+            h("span", { style: { color: "#6C7787" } }, cronoFmt(x.fecha) + " · " + T),
+            h("span", { style: { color: tarde ? "#B3261E" : "#6C7787", fontWeight: tarde ? 800 : 500 } }, rel),
+            x.resp ? h("span", { style: { color: "#4A5565" } }, "· " + x.resp) : null))),
+      abierta === x.id ? h("div", { style: { background: "#F5F6F8", padding: "11px 12px", borderTop: "1px solid #EEF0F3", display: "flex", flexDirection: "column", gap: 8 } },
+        x.nota ? h("div", { style: { fontSize: 12, color: "#4A5565", lineHeight: 1.5 } }, x.nota) : null,
+        h("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } },
+          h("input", { placeholder: "Responsable", value: x.resp, onChange: e => cambiar(x.id, { resp: e.target.value }), style: { ...inp, flex: "1 1 130px" } }),
+          h("select", { value: x.estado, onChange: e => cambiar(x.id, { estado: e.target.value }), style: inp }, CRONO_ESTADOS.map(s => h("option", { key: s, value: s }, s))),
+          h("label", { style: { fontSize: 11.5, color: "#4A5565", display: "flex", alignItems: "center", gap: 5 } }, "Días antes",
+            h("input", { type: "number", value: x.dias, onChange: e => cambiar(x.id, { dias: Number(e.target.value) || 0 }), style: { ...inp, width: 64 } })),
+          h("button", { onClick: () => borrar(x.id), style: { ...chip(false, "#B3261E"), color: "#B3261E", borderColor: "#F1C9C5" } }, "Borrar"))) : null);
+  };
+
+  return h("div", null,
+    // Encabezado: cuenta regresiva y avance
+    h("div", { style: { background: "#fff", borderRadius: 13, padding: "16px 16px 14px", marginBottom: 12 } },
+      h("div", { style: { display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between" } },
+        h("div", null,
+          h("div", { style: { fontSize: 10, fontWeight: 800, letterSpacing: ".1em", color: "#8B95A5", textTransform: "uppercase" } }, "Cuenta regresiva"),
+          h("div", { style: { fontFamily: "Georgia,serif", fontSize: 34, fontWeight: 600, color: "#101C2C", lineHeight: 1.1 } }, faltan > 0 ? faltan + (faltan === 1 ? " día" : " días") : faltan === 0 ? "Es hoy" : "Lanzado hace " + (-faltan) + " d"),
+          h("div", { style: { fontSize: 12, color: "#6C7787" } }, "para el lanzamiento")),
+        h("label", { style: { fontSize: 11.5, color: "#4A5565", display: "flex", flexDirection: "column", gap: 4 } }, "Fecha de lanzamiento",
+          h("input", { type: "date", value: datos.lanzamiento, onChange: e => e.target.value && guardar({ ...datos, lanzamiento: e.target.value }), style: inp }))),
+      h("div", { style: { marginTop: 14, height: 8, borderRadius: 8, background: "#EEF0F3", overflow: "hidden" } },
+        h("div", { style: { width: pct + "%", height: "100%", background: "#2F7A4F", transition: "width .3s" } })),
+      h("div", { style: { display: "flex", gap: 16, flexWrap: "wrap", marginTop: 9, fontSize: 12, color: "#4A5565" } },
+        h("span", null, h("b", null, hechas + " de " + total), " tareas hechas (" + pct + "%)"),
+        h("span", { style: { color: vencidas ? "#B3261E" : "#4A5565", fontWeight: vencidas ? 800 : 400 } }, vencidas + (vencidas === 1 ? " vencida" : " vencidas")),
+        h("span", null, estaSemana + " para los próximos 7 días"))),
+    // Filtros
+    h("div", { className: "co-nav", style: { marginBottom: 10 } },
+      ["Todas"].concat(CRONO_AREAS).map(a => h("button", { key: a, onClick: () => setFiltro(a), style: chip(filtro === a, a === "Todas" ? "#101C2C" : CRONO_COLOR[a]) }, a))),
+    h("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12, alignItems: "center" } },
+      h("button", { onClick: () => setNueva(nueva ? null : { titulo: "", area: "Producto", dias: 14 }), style: { ...chip(true, BRASS), padding: "8px 14px" } }, nueva ? "Cancelar" : "+ Agregar tarea"),
+      h("label", { style: { fontSize: 12, color: "#C8D0DA", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" } },
+        h("input", { type: "checkbox", checked: verHechas, onChange: e => setVerHechas(e.target.checked) }), "Mostrar las hechas")),
+    nueva ? h("div", { style: { background: "#F5F6F8", borderRadius: 11, padding: 14, marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } },
+      h("input", { placeholder: "Qué hay que hacer", value: nueva.titulo, onChange: e => setNueva({ ...nueva, titulo: e.target.value }), style: { ...inp, flex: "1 1 220px" } }),
+      h("select", { value: nueva.area, onChange: e => setNueva({ ...nueva, area: e.target.value }), style: inp }, CRONO_AREAS.map(a => h("option", { key: a, value: a }, a))),
+      h("label", { style: { fontSize: 11.5, color: "#4A5565", display: "flex", alignItems: "center", gap: 5 } }, "Días antes",
+        h("input", { type: "number", value: nueva.dias, onChange: e => setNueva({ ...nueva, dias: e.target.value }), style: { ...inp, width: 64 } })),
+      h("button", { onClick: agregar, style: { ...chip(true, BRASS), padding: "9px 16px" } }, "Agregar")) : null,
+    // Lista por semana
+    grupos.length === 0 ? h("div", { style: { textAlign: "center", color: "#8B95A5", fontSize: 13, padding: 30 } }, "No hay tareas con este filtro.") : null,
+    grupos.map(g => h("div", { key: g.k, style: { marginBottom: 14 } },
+      h("div", { style: { fontSize: 10.5, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: lunesDe(hoy).getTime() === g.k ? BRASS : "#8B95A5", margin: "4px 2px 8px" } }, etiquetaSemana(g.lunes)),
+      g.items.map(tarjeta))),
+    h("div", { style: { textAlign: "center", marginTop: 10 } },
+      h("button", { onClick: restablecer, style: { background: "none", border: "none", color: "#8B95A5", fontSize: 11.5, cursor: "pointer", textDecoration: "underline", fontFamily: "inherit" } }, "Volver al cronograma original")),
+    h("div", { style: { fontSize: 11, color: "#6C7787", textAlign: "center", marginTop: 8 } }, "Se guarda en este dispositivo. Tocá el cuadrado para pasar de pendiente a en curso y a hecho; tocá el título para ver el detalle."));
+}
+
+// ════════════════════════════════════════════════════════════
 // CENTRO DE OPERACIONES IA — contenedor de las ocho áreas
 // Solo el área Comercial tiene funciones reales.
 // Las otras siete declaran su estructura, sin datos inventados.
@@ -12506,6 +12678,11 @@ const AREAS = [{
   id: "seguridad",
   nombre: "Seguridad",
   corto: "Seguridad",
+  activa: true
+}, {
+  id: "cronograma",
+  nombre: "Cronograma de lanzamiento",
+  corto: "📅 Cronograma",
   activa: true
 }];
 function CentroOperaciones() {
@@ -12666,7 +12843,7 @@ function CentroOperaciones() {
         lineHeight: 1.55
       }
     }, "Las métricas de correos, respuestas y reuniones necesitan el motor de agentes y el envío de correo. Lo que ves abajo son las herramientas que ya funcionan."), /*#__PURE__*/React.createElement(AreaComercial, null))
-  }), area === "marketing" && /*#__PURE__*/React.createElement(AreaMarketing, null), area === "operaciones" && /*#__PURE__*/React.createElement(AreaOperaciones, null), area === "mails" && /*#__PURE__*/React.createElement(AreaComercial, { modo: "mails", key: "mails" }), area === "soporte" && /*#__PURE__*/React.createElement(AreaSoporte, null), area === "finanzas" && /*#__PURE__*/React.createElement(AreaFinanzas, null), area === "producto" && /*#__PURE__*/React.createElement(AreaProducto, null), area === "seguridad" && /*#__PURE__*/React.createElement(AreaSeguridad, null));
+  }), area === "marketing" && /*#__PURE__*/React.createElement(AreaMarketing, null), area === "operaciones" && /*#__PURE__*/React.createElement(AreaOperaciones, null), area === "mails" && /*#__PURE__*/React.createElement(AreaComercial, { modo: "mails", key: "mails" }), area === "soporte" && /*#__PURE__*/React.createElement(AreaSoporte, null), area === "finanzas" && /*#__PURE__*/React.createElement(AreaFinanzas, null), area === "producto" && /*#__PURE__*/React.createElement(AreaProducto, null), area === "seguridad" && /*#__PURE__*/React.createElement(AreaSeguridad, null), area === "cronograma" && /*#__PURE__*/React.createElement(AreaCronograma, null));
 }
 
 // Alias de transición: el punto de montaje sigue funcionando con el nombre viejo.
