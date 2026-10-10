@@ -1948,6 +1948,15 @@ const FOTO_CASA_2 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgF
 function PanelDemo() {
   const [, _fz] = useState(0);
   window.__refrescarDemo = () => _fz(x => x + 1);
+  // Pantalla completa de una sola app (n = "1".."4") y vuelta a las cuatro (n = null).
+  // Solo cambia clases: los iframes no se recargan, así que cada app conserva lo que estaba haciendo.
+  window.__maximizarApp = function (n) {
+    var b = document.body;
+    [1, 2, 3, 4].forEach(function (i) { b.classList.remove("max-app-" + i); });
+    if (n) b.classList.add("max-app-" + n);
+    try { window.scrollTo(0, 0); } catch (e) {}
+  };
+  if (!window.__maxEscape) { window.__maxEscape = true; document.addEventListener("keydown", function (e) { if (e.key === "Escape") window.__maximizarApp(null); }); }
   // ── estado compartido: la única fuente de verdad de las 4 apps ──
   const [fotos, setFotos] = useState([]);
   const [pedidos, setPedidos] = useState([]);
@@ -3703,6 +3712,14 @@ AVANCE DECLARADO: ${certificados[0]?.avance ?? 45}%
   }, /*#__PURE__*/React.createElement("style", null, `
         .grilla { display:grid; gap:12px; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; height:calc(100vh - 96px); }
         body.en-demo .solo-propio { display:none !important; }
+        .btn-max, .btn-min { margin-left:auto; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#E8D9BC; border-radius:7px; padding:4px 10px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; }
+        .btn-max:hover, .btn-min:hover { background:rgba(176,137,79,.35); }
+        .btn-min { display:none; background:#B0894F; color:#fff; border-color:#B0894F; }
+        body.max-app-1 .marco-app:not(.marco-1), body.max-app-2 .marco-app:not(.marco-2), body.max-app-3 .marco-app:not(.marco-3), body.max-app-4 .marco-app:not(.marco-4) { display:none !important; }
+        body[class*="max-app-"] .marco-app .btn-max { display:none; }
+        body[class*="max-app-"] .marco-app .btn-min { display:block; }
+        body[class*="max-app-"] .grilla { grid-template-columns:1fr; grid-template-rows:1fr; }
+        body[class*="max-app-"] .grilla > div iframe.app-real { min-height:0; }
         body.plan-parcial .grilla { grid-template-rows:1fr; }
         @media (max-width: 820px) {
           .grilla { grid-template-columns:1fr; grid-template-rows:none; height:auto; }
@@ -4708,12 +4725,14 @@ function Marco({
   if (_m && /^[1-4]$/.test(_m[1])) {
     // Las cuatro apps son las aplicaciones reales (iframe), con datos ficticios.
     return /*#__PURE__*/React.createElement("div", {
-      className: flash ? "flash" : "",
+      className: "marco-app marco-" + _m[1] + (flash ? " flash" : ""),
       style: { background: "#fff", borderRadius: 13, overflow: "hidden", display: "flex", flexDirection: "column", border: "1px solid rgba(255,255,255,.1)", minHeight: 0 }
     }, /*#__PURE__*/React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 7, padding: "7px 12px", background: "#0E1520", borderBottom: "1px solid rgba(255,255,255,.08)" } },
       /*#__PURE__*/React.createElement("span", { style: { width: 12, height: 2, background: BRASS, flexShrink: 0 } }),
-      /*#__PURE__*/React.createElement("b", { style: { fontSize: 10.5, color: "#C8D0DA" } }, rotulo)),
-      /*#__PURE__*/React.createElement("iframe", { className: "app-real", title: rotulo, src: ({ "1": "demo-principal.html", "2": "demo-estudio.html", "3": "demo-contratista.html", "4": "demo-propietario.html" })[_m[1]] + "?v=3", style: { flex: 1, width: "100%", border: "none", minHeight: 0, background: "#fff" } }));
+      /*#__PURE__*/React.createElement("b", { style: { fontSize: 10.5, color: "#C8D0DA" } }, rotulo),
+      /*#__PURE__*/React.createElement("button", { className: "btn-max", "aria-label": "Pantalla completa", onClick: function () { window.__maximizarApp(_m[1]); } }, "\u2922 Pantalla completa"),
+      /*#__PURE__*/React.createElement("button", { className: "btn-min", "aria-label": "Volver a las cuatro", onClick: function () { window.__maximizarApp(null); } }, "\u2715 Volver a las 4")),
+      /*#__PURE__*/React.createElement("iframe", { className: "app-real", title: rotulo, src: ({ "1": "demo-principal.html", "2": "demo-estudio.html", "3": "demo-contratista.html", "4": "demo-propietario.html" })[_m[1]] + "?v=4", style: { flex: 1, width: "100%", border: "none", minHeight: 0, background: "#fff" } }));
   }
   return /*#__PURE__*/React.createElement("div", {
     className: flash ? "flash" : "",
