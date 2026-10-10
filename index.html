@@ -9229,7 +9229,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
       React.createElement("div", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#8B95A5", marginBottom: 7 } }, "País de la campaña"),
       React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, [{ id: "todos", nombre: "Todos" }].concat(PAISES).map(pp => {
         const on = paisFiltro === pp.id;
-        const cant = prospectos.filter(x => x.mail && (pp.id === "todos" || (x.pais || "ar") === pp.id)).length;
+        const cant = prospectos.filter(x => x.mail && (pp.id === "todos" || (x.pais || "ar") === pp.id)).length + " con mail / " + prospectos.filter(x => (pp.id === "todos" || (x.pais || "ar") === pp.id)).length;
         return React.createElement("button", {
           key: pp.id,
           onClick: () => { setPaisFiltro(pp.id); setSeleccion(new Set(prospectos.filter(x => x.mail && (pp.id === "todos" || (x.pais || "ar") === pp.id)).map(x => x.id))); },
@@ -9316,7 +9316,9 @@ function CampaniaComercial({ prospectos, setProspectos }) {
 }
 
 function AreaComercial({ modo } = {}) {
-  const [prospectos, setProspectos] = useState([]);
+  const [prospectosAll, setProspectos] = useState([]);
+  const [paisVista, setPaisVista] = useState("todos");
+  const prospectos = paisVista === "todos" ? prospectosAll : prospectosAll.filter(p => (p.pais || "ar") === paisVista);
   const [plantillas, setPlantillas] = useState([]);
   const [bdLista, setBdLista] = useState(false);
   const [estBD, setEstBD] = useState({
@@ -9423,7 +9425,7 @@ function AreaComercial({ modo } = {}) {
   useEffect(() => {
     if (!bdLista) return;
     (async () => {
-      await bd.guardar("prospectos", prospectos);
+      await bd.guardar("prospectos", prospectosAll);
       if (archivoBD.handle) {
         setGuardando(true);
         const r = await archivoBD.guardar();
@@ -9432,7 +9434,7 @@ function AreaComercial({ modo } = {}) {
       }
       medirTamanoBase();
     })();
-  }, [prospectos, bdLista]);
+  }, [prospectosAll, bdLista]);
   useEffect(() => {
     if (!bdLista) return;
     bd.guardar("plantillas", plantillas);
@@ -9630,7 +9632,7 @@ ${hist}`;
   function yaEsta(nombre, web) {
     const n = String(nombre || "").toLowerCase().trim();
     const w = String(web || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
-    return prospectos.some(p => {
+    return prospectosAll.some(p => {
       const pn = String(p.empresa || "").toLowerCase().trim();
       const pw = String(p.web || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
       return n && pn === n || w && pw && pw === w;
@@ -10154,7 +10156,14 @@ ${hist}`;
           font-weight:700; cursor:pointer; min-height:40px; font-family:inherit;
         }
         .mvtab.act { background:#B0894F; border-color:#B0894F; }
-      `), /*#__PURE__*/React.createElement("div", {
+      `), React.createElement("div", { style: { display: "flex", gap: 7, flexWrap: "wrap", alignItems: "center", marginBottom: 10 } },
+    React.createElement("span", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#8B95A5", marginRight: 4 } }, "País"),
+    [{ id: "todos", nombre: "Todos" }].concat(PAISES.filter(pp => pp.id === "ar" || pp.id === "br" || prospectosAll.some(x => (x.pais || "ar") === pp.id))).map(pp => {
+      const on = paisVista === pp.id;
+      const cant = prospectosAll.filter(x => pp.id === "todos" || (x.pais || "ar") === pp.id).length;
+      return React.createElement("button", { key: pp.id, onClick: () => setPaisVista(pp.id), style: { display: "flex", alignItems: "center", gap: 7, padding: "6px 12px", borderRadius: 9, border: `2px solid ${on ? "#B0894F" : "rgba(255,255,255,.18)"}`, background: on ? "#FBF6EE" : "rgba(255,255,255,.06)", cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700, color: on ? "#8A6A38" : "#C8D0DA", minHeight: 36 } },
+        pp.bandera ? React.createElement("img", { src: pp.bandera, alt: "", style: { width: 24, height: 16, borderRadius: 2, display: "block" } }) : null, pp.nombre, React.createElement("span", { style: { opacity: .6, fontWeight: 600 } }, cant));
+    })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 7,
@@ -12314,7 +12323,7 @@ ${hist}`;
       minHeight: 46,
       fontFamily: "inherit"
     }
-  }, "Cancelar")))), vista === "campania" && /*#__PURE__*/React.createElement(CampaniaComercial, { prospectos, setProspectos }), vista === "plantillas" && /*#__PURE__*/React.createElement("div", {
+  }, "Cancelar")))), vista === "campania" && /*#__PURE__*/React.createElement(CampaniaComercial, { prospectos: prospectosAll, setProspectos }), vista === "plantillas" && /*#__PURE__*/React.createElement("div", {
     style: {
       maxWidth: 780
     }
