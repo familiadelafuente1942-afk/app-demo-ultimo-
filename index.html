@@ -12660,12 +12660,14 @@ function AreaCronograma() {
 function AreaSeguimiento() {
   const h = React.createElement;
   const [ver, setVer] = useState(0);
+  // El Centro ya está protegido por su clave: el panel no vuelve a pedirla al abrirse acá adentro.
+  useState(() => { try { sessionStorage.setItem("nexo_control_embed", "1"); } catch (e) {} return 1; });
   return h("div", null,
     h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" } },
       h("div", { style: { color: "#C8D0DA", fontSize: 12 } }, "Aperturas de la app, uso por pantalla, rendimiento, errores, costo de IA y cuentas."),
       h("div", { style: { display: "flex", gap: 8 } },
         h("button", { onClick: () => setVer(ver + 1), style: { background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.16)", color: "#C8D0DA", borderRadius: 9, padding: "8px 13px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" } }, "↻ Actualizar"),
-        h("a", { href: "control.html", target: "_blank", rel: "noopener", style: { background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.16)", color: "#C8D0DA", borderRadius: 9, padding: "8px 13px", fontSize: 12, fontWeight: 700, textDecoration: "none" } }, "Abrir aparte ↗"))),
+        null)),
     h("iframe", { key: ver, src: "control.html", title: "Seguimiento técnico", style: { width: "100%", height: "calc(100vh - 170px)", minHeight: 560, border: "none", borderRadius: 13, background: "#f2f2f7", display: "block" } }));
 }
 

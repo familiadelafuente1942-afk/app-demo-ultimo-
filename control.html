@@ -2018,7 +2018,10 @@ const inputStyle = {
 
 function App() {
   const [unlocked, setUnlocked] = useState(() => {
-    try { return localStorage.getItem("nexo_control_ok") === "1"; } catch (e) { return false; }
+    try { if (localStorage.getItem("nexo_control_ok") === "1") return true; } catch (e) {}
+    // Dentro del Centro de Operaciones (que ya pide su propia clave) no se vuelve a pedir.
+    try { if (window.self !== window.top && sessionStorage.getItem("nexo_control_embed") === "1") return true; } catch (e) {}
+    return false;
   });
   const [pantalla, setPantalla] = useState("resumen"); // "resumen" | "clientes"
   if (!unlocked) return h(Gate, { onUnlock: () => setUnlocked(true) });
