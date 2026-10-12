@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Motor de marketing</title>
+<style>
+:root{--bg:#0e1116;--card:#171c24;--bd:#2a3340;--tx:#e8edf3;--mu:#97a3b3;--br:#c9a35a;--ok:#3ecf8e;--no:#ef5b5b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px system-ui,sans-serif;padding:14px}
+h2{margin:0 0 10px;font-size:16px}.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+button{background:#232b37;color:var(--tx);border:1px solid var(--bd);border-radius:9px;padding:8px 12px;font:inherit;font-weight:700;cursor:pointer}
+button.p{background:var(--br);color:#1a1405;border-color:var(--br)}button.r{background:var(--no);border-color:var(--no);color:#fff}button.v{background:var(--ok);border-color:var(--ok);color:#06140d}
+input,select,textarea{background:#0e1116;color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px;font:inherit}
+textarea{width:100%;min-height:90px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.mu{color:var(--mu);font-size:12px}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.kpi div{background:#0e1116;border-radius:9px;padding:10px}.kpi b{display:block;font-size:20px}
+.it{border-top:1px solid var(--bd);padding:10px 0}.tag{font-size:11px;background:#232b37;border-radius:6px;padding:2px 7px;margin-right:4px}
+#msg{position:sticky;top:0;background:var(--br);color:#1a1405;padding:8px 12px;border-radius:9px;margin-bottom:10px;display:none;font-weight:700}
+.stop{font-size:15px;padding:12px 18px}.on{color:var(--ok)}.off{color:var(--no)}
+</style></head><body>
+<div id="msg"></div>
+<div id="login" class="card" style="max-width:380px;margin:30px auto;display:none">
+  <h2>Motor de marketing</h2><p class="mu">Ingresá con tu cuenta de administrador.</p>
+  <div class="row"><input id="em" type="email" placeholder="Mail" style="flex:1 1 100%"><input id="pw" type="password" placeholder="Contraseña" style="flex:1 1 100%">
+  <button class="p" onclick="entrar()">Entrar</button></div>
+</div>
+<div id="app" style="display:none">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div><h2 style="margin:0">Estado del motor: <span id="est" class="off">FRENADO</span></h2><div class="mu" id="ayuda"></div></div>
+      <button id="btnAct" class="stop" onclick="alternar()">…</button>
+    </div>
+    <div class="kpi" style="margin-top:10px" id="kpi"></div>
+    <div class="mu" id="claves" style="margin-top:8px"></div>
+  </div>
+  <div class="card"><h2>Topes</h2><div class="row">
+    <label>Mails por día (máx.) <input id="tm" type="number" min="0" max="500" style="width:80px"></label>
+    <label>Posteos por día <input id="tp" type="number" min="0" max="50" style="width:70px"></label>
+    <label><input id="rp" type="checkbox"> Subir de a poco (calentamiento)</label>
+    <button onclick="guardarTopes()">Guardar</button></div></div>
+  <div class="card"><h2>1 · Buscar prospectos con IA</h2><div class="row">
+    <select id="pais"><option value="ar">Argentina</option><option value="br">Brasil</option><option value="py">Paraguay</option><option value="cl">Chile</option></select>
+    <input id="zona" placeholder="Zona (opcional)"><button class="p" onclick="cazar()">Buscar</button>
+    <button onclick="genMails()">Redactar mails a prospectos nuevos</button></div></div>
+  <div class="card"><h2>2 · Generar posteos</h2><div class="row">
+    <label><input type="checkbox" class="cn" value="linkedin" checked> LinkedIn</label><label><input type="checkbox" class="cn" value="instagram" checked> Instagram</label><label><input type="checkbox" class="cn" value="facebook" checked> Facebook</label>
+    <label>Días <input id="dias" type="number" value="7" min="1" max="14" style="width:60px"></label>
+    <select id="idi"><option value="es">Español</option><option value="pt">Portugués</option><option value="en">Inglés</option></select>
+    <input id="tema" placeholder="Tema (opcional)" style="flex:1 1 200px"><button class="p" onclick="genPosts()">Generar</button></div></div>
+  <div class="card"><h2>3 · Cola de aprobación</h2>
+    <div class="row"><select id="fe" onchange="cola()"><option value="pendiente">Pendientes</option><option value="aprobado">Aprobados</option><option value="enviado">Enviados</option><option value="error">Con error</option><option value="rechazado">Rechazados</option></select>
+    <select id="ft" onchange="cola()"><option value="">Todo</option><option value="mail">Mails</option><option value="post">Posteos</option></select>
+    <button class="v" onclick="aprobarTodo()">Aprobar todo lo pendiente</button><button onclick="enviarYa()">Enviar ahora lo aprobado</button></div>
+    <div id="lista"></div></div>
+  <div class="card"><h2>Registro de actividad</h2><div id="aud" class="mu"></div></div>
+</div>
+<script>
+var SU="https://agcmhrbxqtibrtmhwrrx.supabase.co",KEY="sb_publishable_kGPLp-DPPglnf6Eo3zPu6Q_OvE0MCkZ",T=null,ST=null;
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function aviso(t,mal){var m=$("msg");m.textContent=t;m.style.display="block";m.style.background=mal?"#ef5b5b":"#c9a35a";m.style.color=mal?"#fff":"#1a1405";clearTimeout(aviso.t);aviso.t=setTimeout(function(){m.style.display="none"},6000)}
+function api(a,b){return fetch("/api/motor?accion="+a,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+T},body:JSON.stringify(b||{})}).then(function(r){return r.json().then(function(j){if(!r.ok){if(r.status==401){salir()}throw new Error(j.error||"Error")}return j})})}
+function salir(){T=null;try{localStorage.removeItem("motor_tk")}catch(e){}$("app").style.display="none";$("login").style.display="block"}
+function entrar(){fetch(SU+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},body:JSON.stringify({email:$("em").value.trim(),password:$("pw").value})}).then(function(r){return r.json()}).then(function(j){if(!j.access_token){aviso("Mail o contraseña incorrectos.",1);return}T=j.access_token;$("pw").value="";try{localStorage.setItem("motor_tk",JSON.stringify({t:T,e:Date.now()+50*60000}))}catch(e){}iniciar()})}
+function iniciar(){$("login").style.display="none";$("app").style.display="block";estado();cola();audit()}
+function estado(){return api("estado").then(function(s){ST=s;var c=s.config;$("est").textContent=c.activo?"ACTIVO":"FRENADO";$("est").className=c.activo?"on":"off";
+$("btnAct").textContent=c.activo?"⏹ FRENAR TODO":"▶ Activar envíos";$("btnAct").className="stop "+(c.activo?"r":"v");
+$("ayuda").textContent=c.activo?"Se envía solo lo APROBADO, dentro de los topes.":"No sale nada mientras esté frenado. Podés preparar y aprobar igual.";
+$("kpi").innerHTML=[["Pendientes",s.pendientes],["Aprobados mail",s.aprobados_mail],["Aprobados posteo",s.aprobados_post],["Enviados hoy",s.enviados_hoy+" / "+s.tope_hoy],["Prospectos",s.prospectos],["Bajas",s.bajas],["Errores",s.errores]].map(function(x){return"<div><b>"+x[1]+"</b><span class=mu>"+x[0]+"</span></div>"}).join("");
+$("tm").value=c.tope_mails_dia;$("tp").value=c.tope_posts_dia;$("rp").checked=!!c.rampa;
+var k=s.claves;$("claves").innerHTML="Conexiones: "+[["IA",k.anthropic],["Gmail",k.gmail],["Base",k.supabase],["Facebook",k.facebook],["LinkedIn",k.linkedin]].map(function(x){return(x[1]?"✅ ":"⚪ ")+x[0]}).join(" · ")+" · Instagram: copiar y publicar a mano"}).catch(function(e){aviso(e.message,1)})}
+function alternar(){if(!ST)return;var n=!ST.config.activo;if(n&&!confirm("¿Activar los envíos? Saldrá solo lo que ya aprobaste, hasta el tope diario."))return;api("config",{activo:n}).then(estado).catch(function(e){aviso(e.message,1)})}
+function guardarTopes(){api("config",{tope_mails_dia:$("tm").value,tope_posts_dia:$("tp").value,rampa:$("rp").checked}).then(function(){aviso("Topes guardados.");estado()}).catch(function(e){aviso(e.message,1)})}
+function ocupado(b,f){aviso("Trabajando… puede tardar hasta un minuto.");return f().then(function(r){return r}).catch(function(e){aviso(e.message,1)})}
+function cazar(){ocupado(0,function(){return api("cazar",{pais:$("pais").value,zona:$("zona").value}).then(function(r){aviso("Encontradas "+r.encontrados+", nuevas "+r.nuevos+".");estado()})})}
+function genMails(){ocupado(0,function(){return api("generar_mails",{cantidad:15}).then(function(r){aviso(r.aviso||("Mails redactados: "+r.creados+". Revisalos en la cola."));estado();cola()})})}
+function genPosts(){var c=[].slice.call(document.querySelectorAll(".cn:checked")).map(function(x){return x.value});ocupado(0,function(){return api("generar_posts",{canales:c,dias:$("dias").value,idiomas:[$("idi").value],tema:$("tema").value}).then(function(r){aviso("Posteos creados: "+r.creados+".");estado();cola()})})}
+function cola(){api("cola",{estado:$("fe").value,tipo:$("ft").value}).then(function(r){var pend=$("fe").value=="pendiente";$("lista").innerHTML=r.items.length?r.items.map(function(i){return'<div class=it data-id="'+i.id+'"><div><span class=tag>'+esc(i.tipo)+'</span><span class=tag>'+esc(i.canal)+'</span><span class=tag>'+esc(i.idioma||"")+'</span>'+(i.destino?'<b>'+esc(i.destino)+'</b>':'')+'</div>'+(i.tipo=="mail"?'<input value="'+esc(i.asunto)+'" id="a'+i.id+'" style="width:100%;margin:6px 0">':'')+'<textarea id="c'+i.id+'">'+esc(i.cuerpo)+'</textarea>'+(i.error?'<div class=off>'+esc(i.error)+'</div>':'')+(i.estado=="pendiente"||i.estado=="aprobado"?'<div class=row style="margin-top:6px"><button onclick="guardar(\''+i.id+'\')">Guardar cambios</button>'+(i.estado=="pendiente"?'<button class=v onclick="cambiar(\'aprobar\',\''+i.id+'\')">Aprobar</button>':'')+'<button class=r onclick="cambiar(\'rechazar\',\''+i.id+'\')">Rechazar</button>'+(i.canal=="instagram"||i.canal=="linkedin"||i.canal=="facebook"?'<button onclick="copiar(\''+i.id+'\')">Copiar texto</button>':'')+'</div>':'')+'</div>'}).join(""):'<p class=mu>No hay nada en esta lista.</p>'}).catch(function(e){aviso(e.message,1)})}
+function guardar(id){var a=$("a"+id);api("editar",{id:id,cuerpo:$("c"+id).value,asunto:a?a.value:undefined}).then(function(){aviso("Guardado.")}).catch(function(e){aviso(e.message,1)})}
+function cambiar(x,id){api(x,{ids:[id]}).then(function(){estado();cola()}).catch(function(e){aviso(e.message,1)})}
+function copiar(id){var t=$("c"+id);t.select();try{document.execCommand("copy");aviso("Texto copiado.")}catch(e){}}
+function aprobarTodo(){if(!confirm("¿Aprobar todo lo pendiente? Igual no sale nada si el motor está frenado."))return;api("aprobar_todo",{tipo:$("ft").value}).then(function(r){aviso("Aprobados: "+r.cambiados);estado();cola()}).catch(function(e){aviso(e.message,1)})}
+function enviarYa(){ocupado(0,function(){return api("enviar_ahora").then(function(r){aviso("Mails enviados: "+r.mails.enviados+(r.mails.motivo?" ("+r.mails.motivo+")":"")+". Posteos: "+r.posts.publicados);estado();cola();audit()})})}
+function audit(){api("auditoria").then(function(r){$("aud").innerHTML=r.items.slice(0,25).map(function(i){return esc(i.creado.slice(0,16).replace("T"," "))+" · "+esc(i.actor)+" · <b>"+esc(i.accion)+"</b>"}).join("<br>")||"Sin actividad todavía."}).catch(function(){})}
+(function(){try{var s=JSON.parse(localStorage.getItem("motor_tk")||"null");if(s&&s.e>Date.now()){T=s.t;iniciar();return}}catch(e){}$("login").style.display="block"})();
+</script></body></html>

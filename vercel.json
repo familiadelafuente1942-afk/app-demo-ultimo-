@@ -1,0 +1,4 @@
+{
+  "functions": { "api/motor.js": { "maxDuration": 60 } },
+  "crons": [ { "path": "/api/motor?accion=cron", "schedule": "0 12 * * *" } ]
+}

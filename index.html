@@ -12802,7 +12802,16 @@ const AREAS = [{
   nombre: "Seguimiento técnico",
   corto: "📊 Seguimiento",
   activa: true
+}, {
+  id: "motor",
+  nombre: "Motor de marketing IA",
+  corto: "🚀 Motor",
+  activa: true
 }];
+function AreaMotor() {
+  const h = React.createElement;
+  return h("iframe", { src: "motor.html", title: "Motor de marketing", style: { width: "100%", height: "calc(100vh - 150px)", minHeight: 560, border: "none", borderRadius: 13, background: "#0e1116", display: "block" } });
+}
 function CentroOperaciones() {
   const [area, setArea] = useState("ceo");
 
@@ -12961,7 +12970,7 @@ function CentroOperaciones() {
         lineHeight: 1.55
       }
     }, "Las métricas de correos, respuestas y reuniones necesitan el motor de agentes y el envío de correo. Lo que ves abajo son las herramientas que ya funcionan."), /*#__PURE__*/React.createElement(AreaComercial, null))
-  }), area === "marketing" && /*#__PURE__*/React.createElement(AreaMarketing, null), area === "operaciones" && /*#__PURE__*/React.createElement(AreaOperaciones, null), area === "mails" && /*#__PURE__*/React.createElement(AreaComercial, { modo: "mails", key: "mails" }), area === "soporte" && /*#__PURE__*/React.createElement(AreaSoporte, null), area === "finanzas" && /*#__PURE__*/React.createElement(AreaFinanzas, null), area === "producto" && /*#__PURE__*/React.createElement(AreaProducto, null), area === "seguridad" && /*#__PURE__*/React.createElement(AreaSeguridad, null), area === "cronograma" && /*#__PURE__*/React.createElement(AreaCronograma, null), area === "seguimiento" && /*#__PURE__*/React.createElement(AreaSeguimiento, null));
+  }), area === "marketing" && /*#__PURE__*/React.createElement(AreaMarketing, null), area === "operaciones" && /*#__PURE__*/React.createElement(AreaOperaciones, null), area === "mails" && /*#__PURE__*/React.createElement(AreaComercial, { modo: "mails", key: "mails" }), area === "soporte" && /*#__PURE__*/React.createElement(AreaSoporte, null), area === "finanzas" && /*#__PURE__*/React.createElement(AreaFinanzas, null), area === "producto" && /*#__PURE__*/React.createElement(AreaProducto, null), area === "seguridad" && /*#__PURE__*/React.createElement(AreaSeguridad, null), area === "cronograma" && /*#__PURE__*/React.createElement(AreaCronograma, null), area === "seguimiento" && /*#__PURE__*/React.createElement(AreaSeguimiento, null), area === "motor" && /*#__PURE__*/React.createElement(AreaMotor, null));
 }
 
 // Alias de transición: el punto de montaje sigue funcionando con el nombre viejo.
