@@ -19,6 +19,8 @@
 //   LINKEDIN_TOKEN, LINKEDIN_ORG_URN     (opcional: publicar en LinkedIn)
 
 const crypto = require("crypto");
+const { AsyncLocalStorage } = require("async_hooks");
+const ctx = new AsyncLocalStorage(); // lleva la sesión del administrador durante cada pedido
 
 const SUPA_URL = "https://agcmhrbxqtibrtmhwrrx.supabase.co";
 const SUPA_ANON = "sb_publishable_kGPLp-DPPglnf6Eo3zPu6Q_OvE0MCkZ"; // clave pública, la misma que usa la app
@@ -97,12 +99,15 @@ function clave() { return (process.env.SUPABASE_SERVICE_ROLE_KEY || "").replace(
 
 async function db(ruta, opts) {
   opts = opts || {};
-  const k = clave();
-  if (!k) throw Object.assign(new Error("Falta SUPABASE_SERVICE_ROLE_KEY en Vercel."), { status: 500 });
+  // Con sesión de administrador se usa su token (la base aplica sus permisos);
+  // sin sesión (cron, baja) hace falta la clave de servicio.
+  const st = ctx.getStore();
+  const k = st && st.token ? st.token : clave();
+  if (!k) throw Object.assign(new Error("Falta SUPABASE_SERVICE_ROLE_KEY en Vercel (solo para envíos automáticos y bajas)."), { status: 500 });
   const r = await fetch(SUPA_URL + "/rest/v1/" + ruta, {
     method: opts.method || "GET",
     headers: Object.assign({
-      apikey: k, Authorization: "Bearer " + k, "Content-Type": "application/json",
+      apikey: st && st.token ? SUPA_ANON : k, Authorization: "Bearer " + k, "Content-Type": "application/json",
       Prefer: opts.prefer || "return=representation"
     }, opts.headers || {}),
     body: opts.body ? JSON.stringify(opts.body) : undefined
@@ -132,9 +137,9 @@ async function exigirAdmin(req) {
   if (!r.ok) throw Object.assign(new Error("Sesión vencida. Volvé a ingresar."), { status: 401 });
   const u = await r.json();
   const mail = String(u.email || "").toLowerCase();
-  const adm = await db("mkt_admins?select=email&email=ilike." + encodeURIComponent(mail));
+  const adm = await ctx.run({ token }, () => db("mkt_admins?select=email&email=ilike." + encodeURIComponent(mail)));
   if (!adm || !adm.length) throw Object.assign(new Error("Este usuario no tiene permiso para el motor."), { status: 403 });
-  return mail;
+  return { mail, token };
 }
 
 async function claude(prompt, opts) {
@@ -195,7 +200,7 @@ async function accionEstado() {
     claves: {
       anthropic: !!process.env.ANTHROPIC_API_KEY,
       gmail: !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD),
-      supabase: !!clave(),
+      supabase: !!clave(), // solo para envíos automáticos
       facebook: !!(process.env.META_PAGE_ID && process.env.META_PAGE_TOKEN),
       linkedin: !!(process.env.LINKEDIN_TOKEN && process.env.LINKEDIN_ORG_URN)
     }
@@ -440,9 +445,11 @@ async function handler(req, res) {
     }
 
     if (req.method === "OPTIONS") return res.status(204).end();
-    const actor = await exigirAdmin(req);
+    const adm = await exigirAdmin(req);
+    const actor = adm.mail;
     const b = Object.assign({}, q, leerBody(req));
     let out;
+    return await ctx.run({ token: adm.token }, async () => {
     switch (accion) {
       case "estado": out = await accionEstado(); break;
       case "config": out = await accionConfig(actor, b); break;
@@ -463,6 +470,7 @@ async function handler(req, res) {
       default: return res.status(400).json({ error: "Acción desconocida" });
     }
     return res.status(200).json(out);
+    });
   } catch (e) {
     return res.status(e.status || 500).json({ error: e.message || "Error inesperado" });
   }
