@@ -588,7 +588,7 @@ body.con-portada{ overflow:hidden; }
   #portada .pt-in{ position:relative; z-index:2; }
   #portada .pt-logo{ width:104px !important; height:104px !important; border-radius:12px !important; object-fit:cover; border:2px solid #B0894F !important; margin-bottom:26px !important; box-shadow:0 10px 40px rgba(0,0,0,.5); }
   @media (max-width:700px){ #portada .pt-collage{ grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(5,1fr); } #portada .pt-collage i:nth-child(n){ grid-column:auto; grid-row:auto; } #portada .pt-collage i:nth-child(1), #portada .pt-collage i:nth-child(8){ grid-column:1 / span 2; } #portada .pt-logo{ width:92px !important; height:92px !important; } }
-html[lang=en] #portada h1 .art{display:none}#portada h1 .art{font-style:inherit}html[lang=en] #portada h1 em{display:inline-block}html[lang=en] #portada h1 em::first-letter{text-transform:uppercase}</style>
+#portada h1 .art{font-style:inherit}#portada h1 .art::before{content:"El"}html[lang=pt] #portada h1 .art::before{content:"O"}html[lang=en] #portada h1 .art{display:none}html[lang=en] #portada h1 em{display:inline-block}html[lang=en] #portada h1 em::first-letter{text-transform:uppercase}</style>
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -617,7 +617,7 @@ html[lang=en] #portada h1 .art{display:none}#portada h1 .art{font-style:inherit}
     </div>
     <div class="pt-wrap pt-grid2">
       <div class="pt-txt">
-        <h1><span><i class="art">El</i> <em>tiempo</em> es el</span> <span>margen de tu obra.</span> <span>Cada atraso cuesta.</span></h1>
+        <h1><span><i class="art"></i> <em>tiempo</em> es el</span> <span>margen de tu obra.</span> <span>Cada atraso cuesta.</span></h1>
         <p class="pt-lead">NEXO ordena los tiempos de tu obra para que terminar en fecha sea la regla, no la excepción. Menos días perdidos, más dinero en tu bolsillo.</p>
         <p class="pt-para">Para constructoras que quieren ser eficientes con el tiempo — y ganar más con cada obra</p>
         <button class="pt-cta" onclick="cerrarPortada('flujo')">Cómo funciona &nbsp;→</button>
