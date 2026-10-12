@@ -14040,6 +14040,8 @@ window.DICC = {
     try { localStorage.setItem("idioma", nuevo); } catch (e) {}
     document.documentElement.lang = nuevo;
     aplicar();
+    // aviso a las apps de la demo (iframes) para que cambien de idioma al instante
+    try { document.querySelectorAll("iframe.app-real").forEach(function (f) { try { f.contentWindow.postMessage({ idioma: nuevo }, "*"); } catch (e) {} }); } catch (e) {}
     // marco el botón activo
     var btns = document.querySelectorAll("[data-idioma]");
     for (var i = 0; i < btns.length; i++) {
