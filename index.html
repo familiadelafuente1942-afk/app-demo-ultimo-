@@ -588,7 +588,7 @@ body.con-portada{ overflow:hidden; }
   #portada .pt-in{ position:relative; z-index:2; }
   #portada .pt-logo{ width:104px !important; height:104px !important; border-radius:12px !important; object-fit:cover; border:2px solid #B0894F !important; margin-bottom:26px !important; box-shadow:0 10px 40px rgba(0,0,0,.5); }
   @media (max-width:700px){ #portada .pt-collage{ grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(5,1fr); } #portada .pt-collage i:nth-child(n){ grid-column:auto; grid-row:auto; } #portada .pt-collage i:nth-child(1), #portada .pt-collage i:nth-child(8){ grid-column:1 / span 2; } #portada .pt-logo{ width:92px !important; height:92px !important; } }
-html[lang=en] #portada h1 em{display:inline-block}html[lang=en] #portada h1 em::first-letter{text-transform:uppercase}</style>
+html[lang=en] #portada h1 .art{display:none}#portada h1 .art{font-style:inherit}html[lang=en] #portada h1 em{display:inline-block}html[lang=en] #portada h1 em::first-letter{text-transform:uppercase}</style>
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -617,7 +617,7 @@ html[lang=en] #portada h1 em{display:inline-block}html[lang=en] #portada h1 em::
     </div>
     <div class="pt-wrap pt-grid2">
       <div class="pt-txt">
-        <h1><span>El <em>tiempo</em> es el</span> <span>margen de tu obra.</span> <span>Cada atraso cuesta.</span></h1>
+        <h1><span><i class="art">El</i> <em>tiempo</em> es el</span> <span>margen de tu obra.</span> <span>Cada atraso cuesta.</span></h1>
         <p class="pt-lead">NEXO ordena los tiempos de tu obra para que terminar en fecha sea la regla, no la excepción. Menos días perdidos, más dinero en tu bolsillo.</p>
         <p class="pt-para">Para constructoras que quieren ser eficientes con el tiempo — y ganar más con cada obra</p>
         <button class="pt-cta" onclick="cerrarPortada('flujo')">Cómo funciona &nbsp;→</button>
@@ -14008,7 +14008,7 @@ window.DICC = {
   NUEVO.D["⤢ Pantalla completa"] = ["⤢ Full screen", "⤢ Tela cheia"]; NUEVO.D["✕ Volver a las 4"] = ["✕ Back to all 4", "✕ Voltar aos 4"];
   [["Los cuatro paneles de NEXO conectados en tiempo real", "The four NEXO panels connected in real time", "Os quatro painéis do NEXO conectados em tempo real"], ["Pantalla completa", "Full screen", "Tela cheia"], ["Volver a las cuatro", "Back to all four", "Voltar aos quatro"], ["App 1 · Constructora", "App 1 · Contractor", "App 1 · Construtora"], ["App 2 · Estudio de arquitectura", "App 2 · Architecture studio", "App 2 · Escritório de arquitetura"], ["App 3 · Capataz", "App 3 · Foreman", "App 3 · Encarregado"], ["App 4 · Propietario", "App 4 · Owner", "App 4 · Proprietário"]].forEach(function (r) { NUEVO.ATTR[r[0]] = [r[1], r[2]]; });
   var HUB = {"Panel Contratista": ["Contractor Panel", "Painel do Empreiteiro"], "Proyectos en ejecución": ["Projects in progress", "Projetos em execução"], "Avance general": ["Overall progress", "Avanço geral"], "Pendientes": ["Pending", "Pendências"], "Avance por especialidad": ["Progress by trade", "Avanço por especialidade"], "Panel Constructora": ["Contractor Company Panel", "Painel da Construtora"], "Visión de portafolio": ["Portfolio view", "Visão de portfólio"], "Proyectos": ["Projects", "Projetos"], "Activos": ["Active", "Ativos"], "Estado de proyectos": ["Project status", "Estado dos projetos"], "Pedidos de materiales": ["Material orders", "Pedidos de materiais"], "En curso": ["In progress", "Em andamento"], "Panel Estudio de Arquitectura": ["Architecture Studio Panel", "Painel do Escritório de Arquitetura"], "Diseño y coordinación": ["Design and coordination", "Projeto e coordenação"], "Documentos": ["Documents", "Documentos"], "Actualizados": ["Up to date", "Atualizados"], "Avance de proyecto": ["Design progress", "Avanço do projeto"], "Revisiones": ["Reviews", "Revisões"], "Panel Cliente": ["Client Panel", "Painel do Cliente"], "Seguimiento en tiempo real": ["Real-time tracking", "Acompanhamento em tempo real"], "Avance de obra": ["Project progress", "Avanço da obra"], "Comunicaciones": ["Communications", "Comunicações"], "Sin leer": ["Unread", "Não lidas"], "Todos conectados, en tiempo real.": ["All connected, in real time.", "Todos conectados, em tempo real."], "Cronograma": ["Schedule", "Cronograma"]}; Object.keys(HUB).forEach(function (k) { NUEVO.D[k] = HUB[k]; });
-  NUEVO.D["El"] = ["\u200b", "O"]; NUEVO.D["es el"] = ["is the", "é a"]; NUEVO.D["tiempo"] = NUEVO.D["tiempo"] || ["time", "tempo"];
+  NUEVO.D["El"] = ["The", "O"]; NUEVO.D["es el"] = ["is the", "é a"]; NUEVO.D["tiempo"] = NUEVO.D["tiempo"] || ["time", "tempo"];
   Object.keys(NUEVO.D).forEach(function (k) { if (!DICC[k]) DICC[k] = NUEVO.D[k]; });
   var NORM = {}; Object.keys(DICC).forEach(function (k) { NORM[k.replace(/\s+/g, " ")] = DICC[k]; });
   var IDX = { es: -1, en: 0, pt: 1 };          // posición en el array del diccionario
