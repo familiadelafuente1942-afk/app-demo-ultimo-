@@ -48,6 +48,7 @@ textarea{width:100%;min-height:90px}.row{display:flex;gap:8px;flex-wrap:wrap;ali
     <select id="ft" onchange="cola()"><option value="">Todo</option><option value="mail">Mails</option><option value="post">Posteos</option></select>
     <button class="v" onclick="aprobarTodo()">Aprobar todo lo pendiente</button><button onclick="enviarYa()">Enviar ahora lo aprobado</button></div>
     <div id="lista"></div></div>
+  <div class="card"><h2>4 · Videos para Reels</h2><div class="mu" style="margin-bottom:8px">Los videos nuevos aparecen acá solos. Tocá “Descargar”, subilo a Instagram como Reel y pegá el texto.</div><div id="reels" class="mu">Cargando…</div></div>
   <div class="card"><h2>Registro de actividad</h2><div id="aud" class="mu"></div></div>
 </div>
 <script>
@@ -58,7 +59,11 @@ function aviso(t,mal){var m=$("msg");m.textContent=t;m.style.display="block";m.s
 function api(a,b){return fetch("/api/motor?accion="+a,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+T},body:JSON.stringify(b||{})}).then(function(r){return r.json().then(function(j){if(!r.ok){if(r.status==401){salir()}throw new Error(j.error||"Error")}return j})})}
 function salir(){T=null;try{localStorage.removeItem("motor_tk")}catch(e){}$("app").style.display="none";$("login").style.display="block"}
 function entrar(){fetch(SU+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},body:JSON.stringify({email:$("em").value.trim(),password:$("pw").value})}).then(function(r){return r.json()}).then(function(j){if(!j.access_token){aviso("Mail o contraseña incorrectos.",1);return}T=j.access_token;$("pw").value="";try{localStorage.setItem("motor_tk",JSON.stringify({t:T,e:Date.now()+50*60000}))}catch(e){}iniciar()})}
-function iniciar(){$("login").style.display="none";$("app").style.display="block";estado();cola();audit()}
+function reels(){fetch("/reels/reels.json?v="+Date.now()).then(function(r){return r.json()}).then(function(l){var pub={};try{pub=JSON.parse(localStorage.getItem("reels_pub")||"{}")}catch(e){}
+$("reels").innerHTML=l.slice().reverse().map(function(v){var t=v.texto+"\n\n"+v.hashtags;return'<div class=it><b>'+esc(v.titulo)+'</b> <span class=mu>· '+esc(v.duracion)+' · '+esc(v.fecha)+'</span><div style="margin:8px 0"><video src="'+esc(v.video)+'" controls playsinline preload="metadata" style="width:100%;max-width:260px;border-radius:10px;background:#000"></video></div><textarea id="rt_'+esc(v.id)+'" readonly>'+esc(t)+'</textarea><div class=row style="margin-top:6px"><a href="'+esc(v.video)+'" download><button class=p type=button>Descargar video</button></a><button type=button onclick="copiarReel(\''+esc(v.id)+'\')">Copiar texto</button><label><input type=checkbox '+(pub[v.id]?"checked":"")+' onchange="marcarReel(\''+esc(v.id)+'\',this.checked)"> Ya lo publiqué</label></div></div>'}).join("")||"Todavía no hay videos."}).catch(function(){$("reels").textContent="No se pudo cargar la lista de videos."})}
+function copiarReel(id){var t=$("rt_"+id);t.select();try{document.execCommand("copy");aviso("Texto copiado.")}catch(e){}}
+function marcarReel(id,v){var p={};try{p=JSON.parse(localStorage.getItem("reels_pub")||"{}")}catch(e){}p[id]=v;try{localStorage.setItem("reels_pub",JSON.stringify(p))}catch(e){}}
+function iniciar(){$("login").style.display="none";$("app").style.display="block";estado();cola();audit();reels()}
 function estado(){return api("estado").then(function(s){ST=s;var c=s.config;$("est").textContent=c.activo?"ACTIVO":"FRENADO";$("est").className=c.activo?"on":"off";
 $("btnAct").textContent=c.activo?"⏹ FRENAR TODO":"▶ Activar envíos";$("btnAct").className="stop "+(c.activo?"r":"v");
 $("ayuda").textContent=c.activo?"Se envía solo lo APROBADO, dentro de los topes.":"No sale nada mientras esté frenado. Podés preparar y aprobar igual.";

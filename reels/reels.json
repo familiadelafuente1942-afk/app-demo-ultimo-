@@ -1,0 +1,38 @@
+[
+ {
+  "id": "reel1-cuatro-apps",
+  "titulo": "Reel 1 · Cuatro apps, un mismo dato",
+  "duracion": "52 s",
+  "fecha": "2026-10-12",
+  "video": "/reels/reel1-cuatro-apps.mp4",
+  "texto": "En una obra, cada día de atraso cuesta dinero. 🏗️\nNEXO ordena los tiempos de tu obra con 4 apps conectadas al mismo dato: constructora, estudio, contratista y propietario.\nProbá la demo con datos de ejemplo — link en la bio.",
+  "hashtags": "#construccion #obra #constructora #arquitectura #gestiondeobra #obras #ingenieriacivil #nexo #argentina #desarrollodeobra"
+ },
+ {
+  "id": "reel2-certificado",
+  "titulo": "Reel 2 · Certificado semanal",
+  "duracion": "28 s",
+  "fecha": "2026-10-12",
+  "video": "/reels/reel2-certificado.mp4",
+  "texto": "Cada semana, armar el certificado a mano en Excel te come horas. 📄\nCon NEXO, la constructora carga el avance, emite el certificado semanal, el estudio lo aprueba y el propietario lo ve en su portal.\nProbá la demo con datos de ejemplo — link en la bio.",
+  "hashtags": "#construccion #obra #constructora #certificadodeobra #gestiondeobra #arquitectura #obras #nexo #argentina"
+ },
+ {
+  "id": "reel3-cronograma",
+  "titulo": "Reel 3 · Cronograma y costo del atraso",
+  "duracion": "34 s",
+  "fecha": "2026-10-12",
+  "video": "/reels/reel3-cronograma.mp4",
+  "texto": "Un pedido llega tarde y nadie sabe cuánto cuesta el atraso. ⏱️\nEn NEXO, el cronograma muestra cuántos días se corre la obra y cuánto dinero cuesta, y avisa cuando una definición crítica se está venciendo.\nProbá la demo con datos de ejemplo — link en la bio.",
+  "hashtags": "#construccion #obra #constructora #cronograma #gestiondeobra #rutacritica #arquitectura #obras #nexo #argentina"
+ },
+ {
+  "id": "reel4-problema",
+  "titulo": "Reel 4 · El problema de hoy",
+  "duracion": "38 s",
+  "fecha": "2026-10-12",
+  "video": "/reels/reel4-problema.mp4",
+  "texto": "El trabajo no se atrasa en la obra. Se atrasa en la gestión. 🏗️\nSegún Microsoft (Work Trend Index 2023), el 57% del tiempo de trabajo se va en reuniones, correos y mensajes. En una obra pasa lo mismo.\nNEXO lo reemplaza por un solo registro de pedidos, definiciones y fechas, con responsable.\nProbá la demo con datos de ejemplo — link en la bio.",
+  "hashtags": "#construccion #obra #constructora #gestiondeobra #arquitectura #obras #productividad #nexo #argentina"
+ }
+]
