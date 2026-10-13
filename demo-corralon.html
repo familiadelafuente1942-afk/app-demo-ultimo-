@@ -2,12 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Demo corralón</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
-/* Sistema visual de las apps NEXO (contratista / propietario / estudio): fondo #0d0d0f, tarjetas #111214, borde #232227, texto #F2F0EB, dorado #B0894F, títulos en Fraunces */
+/* Sistema visual de las apps NEXO (contratista / propietario / estudio): fondo #0d0d0f, tarjetas #111214, borde #232227, texto #F2F0EB, dorado #B0894F, títulos en Fraunces.
+   Celular: barra inferior y una columna. iPad y PC: riel lateral y tarjetas en varias columnas. */
 :root{color-scheme:dark;
   --bg:#0d0d0f; --card:#111214; --card2:#17181b; --line:#232227; --line2:#2e2d33; --ink:#F2F0EB;
   --mut:rgba(242,240,235,.62); --mut2:rgba(242,240,235,.42);
@@ -17,17 +18,20 @@
 html,body{margin:0;padding:0;background:var(--bg)}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;font-size:14px;line-height:1.4}
-#app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative}
+#app{min-height:100vh;background:var(--bg)}
+.shell{min-height:100vh;max-width:560px;margin:0 auto}
+.content{min-width:0}
 .hero{padding:18px 20px 20px;background:radial-gradient(120% 90% at 50% 0%,rgba(176,137,79,.14) 0%,rgba(0,0,0,0) 70%)}
-.mono{width:44px;height:44px;border-radius:12px;background:var(--card);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;font-size:24px;color:var(--gold)}
+.mono{width:44px;height:44px;border-radius:12px;background:var(--card);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;font-size:24px;color:var(--gold);flex:0 0 auto}
 .eyebrow{margin-top:26px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700}
 .hero h1{margin:6px 0 4px;font-family:var(--serif);font-weight:600;font-size:29px;line-height:1.1;letter-spacing:-.005em}
 .hero p{margin:0;color:var(--mut);font-size:13px}
 .demo{display:inline-block;margin-top:12px;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--amb);border:1px solid rgba(224,164,88,.4);padding:3px 8px;border-radius:6px}
+.demo.ok{color:var(--green);border-color:rgba(95,167,127,.45)}
 main{padding:0 20px 120px}
 .sec{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut2);margin:22px 0 10px}
 .sec:first-child{margin-top:4px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;min-width:0}
 .card.alert{border-color:rgba(229,96,79,.55);background:linear-gradient(rgba(229,96,79,.07),rgba(229,96,79,.07)),var(--card)}
 .row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .obra{font-weight:700;font-size:15.5px}
@@ -46,7 +50,7 @@ ul.items .q{font-weight:700;white-space:nowrap}
 .ent.camino,.ent.expedicion{border-left-color:var(--gold)}
 .ent.entregada{border-left-color:var(--green)}
 .ent.late{border-left-color:var(--red)}
-.ent .tt{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ent .tt{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .ent .tt b{font-size:13.5px}
 .pill{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:3px 8px;font-size:12px;margin:6px 6px 0 0;color:var(--mut)}
 .pill b{font-weight:800;color:var(--ink)}
@@ -84,317 +88,461 @@ label{display:block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-tr
 .note{color:var(--mut);font-size:12.5px}
 .how{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;font-size:13px}
 .link{background:none;border:0;color:var(--gold);font-weight:700;font-size:12.5px;padding:6px 0;cursor:pointer;min-height:32px}
-.empty{color:var(--mut2);text-align:center;padding:26px 10px}
+.empty{color:var(--mut2);text-align:center;padding:26px 10px;border:1px dashed var(--line2);border-radius:16px}
 .dots{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .dots span{font-size:11px;font-weight:700;padding:4px 8px;border-radius:8px;background:var(--bg);border:1px solid var(--line);color:var(--mut)}
 .dots span.entregada{color:var(--green);border-color:rgba(95,167,127,.45)}
 .dots span.camino,.dots span.expedicion{color:var(--amb);border-color:rgba(224,164,88,.45)}
 .dots span.bad{color:var(--red);border-color:rgba(229,96,79,.5)}
-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:520px;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);z-index:5;padding-bottom:env(safe-area-inset-bottom,0px)}
+.err{color:var(--red);font-size:12.5px;font-weight:700;margin-top:10px}
+.okk{color:var(--green);font-weight:700}
+.pln{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pln .full{grid-column:1/-1}
+.pln .qrow{display:flex;align-items:center;gap:8px}
+.pln .qrow span{flex:1 1 auto;font-size:13px;min-width:0}
+.pln .qrow input{width:84px;flex:0 0 84px;min-height:40px}
+.pln .qrow em{font-style:normal;color:var(--mut2);font-size:11px;width:44px;flex:0 0 44px}
+.grid,.two{display:block}
+nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:560px;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);z-index:5;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav .brand{display:none}
 nav button{background:none;border:0;padding:9px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--mut);cursor:pointer;position:relative;min-height:56px}
 nav button.on{color:var(--gold);font-weight:800}
 nav button.on:before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:var(--gold)}
 nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .badge{position:absolute;top:4px;left:calc(50% + 8px);background:var(--red);color:#fff;font-size:10px;font-weight:800;min-width:17px;height:17px;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 5px}
 .shade{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:10;display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:var(--card);border:1px solid var(--line);border-bottom:0;width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px 20px 24px;max-height:90vh;overflow:auto}
+.sheet{background:var(--card);border:1px solid var(--line);border-bottom:0;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px 20px 24px;max-height:92vh;overflow:auto}
 .sheet h2{margin:0 0 4px;font-family:var(--serif);font-weight:600;font-size:22px}
 .foot{color:var(--mut2);font-size:12px;text-align:center;margin:18px 6px 0}
+
+/* iPad y PC */
+@media (min-width:768px){
+  .shell{max-width:none;margin:0;display:grid;grid-template-columns:236px minmax(0,1fr)}
+  nav{position:sticky;top:0;left:auto;bottom:auto;transform:none;width:auto;max-width:none;height:100vh;border-top:0;border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:flex-start;gap:6px;padding:24px 14px;align-self:start}
+  nav .brand{display:flex;align-items:center;gap:12px;padding:2px 8px 24px}
+  nav .brand b{font-family:var(--serif);font-size:17px;font-weight:600;display:block;line-height:1.15}
+  nav .brand small{color:var(--mut2);font-size:11px}
+  nav button{flex-direction:row;justify-content:flex-start;gap:12px;font-size:14px;padding:12px 14px;border-radius:12px;min-height:46px;border:1px solid transparent}
+  nav button.on{background:var(--card2);border-color:var(--line)}
+  nav button.on:before{top:11px;bottom:11px;left:-1px;right:auto;width:3px;height:auto;border-radius:3px}
+  nav svg{width:20px;height:20px}
+  .badge{position:static;margin-left:auto}
+  .hero{padding:32px 40px 22px}
+  .hero .mono{display:none}
+  .eyebrow{margin-top:0}
+  .hero h1{font-size:36px}
+  .hero p{font-size:14px}
+  main{padding:0 40px 64px;max-width:1320px}
+  .sec{margin:26px 0 12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:16px;align-items:start}
+  .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;align-items:start}
+  .grid>.card,.two>.card{margin-bottom:0}
+  .kpis{gap:14px;margin-bottom:16px}
+  .kpi{padding:18px 10px}
+  .kpi b{font-size:34px}
+  .kpi span{font-size:11px}
+  .shade{align-items:center;padding:24px}
+  .sheet{border-radius:20px;border-bottom:1px solid var(--line);max-width:620px}
+  .foot{text-align:left;margin:22px 0 0}
+  .pln{grid-template-columns:repeat(2,1fr)}
+}
+@media (min-width:1280px){
+  .shell{grid-template-columns:260px minmax(0,1fr)}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(430px,1fr))}
+}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
 (function(){
-var HOY='2026-10-12';
-var JORNAL_INI=70000;
-var IMP={corralon:'Corralón',jefe:'Jefe de obra'};
-var IMPLONG={corralon:'Corralón (stock, preparación o despacho)',jefe:'Jefe de obra (cómo se armó el pedido)'};
-var EST={pendiente:'Por confirmar',preparando:'En preparación',expedicion:'En expedición',camino:'En camino',entregada:'Entregada'};
-var EIDX={pendiente:0,preparando:0,expedicion:1,camino:2,entregada:3};
-var ESTEP=['Preparación','Expedición','En camino','Entregada'];
-var DIAS=['dom','lun','mar','mié','jue','vie','sáb'];
-var clk=10*60+20;
-function stamp(){clk+=7;return '12/10 '+('0'+Math.floor(clk/60)).slice(-2)+':'+('0'+(clk%60)).slice(-2)}
-function dnum(s){var a=s.split('-');return Date.UTC(+a[0],+a[1]-1,+a[2])}
-function bizDiff(from,to){var n=0,t=dnum(from),end=dnum(to);while(t<end){t+=864e5;var w=new Date(t).getUTCDay();if(w!==0&&w!==6)n++}return n}
-function fmt(s){var a=s.split('-');return a[2]+'/'+a[1]}
+'use strict';
+// true: lee las obras, pedidos y costos de las otras apps (mismo navegador).
+// false: modo demo, con datos de ejemplo.
+const USAR_APPS=true;
+const KEY='vv_corralon';
+
+/* ───────── datos de ejemplo (los mismos que traen las otras apps) ───────── */
+function hoyISO(){const d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+const HOY=hoyISO();
+const SEED={
+  obras:[{id:'o1',nombre:'Los Álamos 100'},{id:'o2',nombre:'Av. del Sol 2450'},{id:'o3',nombre:'Lote 14 · Los Cedros'}],
+  mat:[{id:'m1',tipo:'material',obra_id:'o1',items:[{nombre:'Hierro del 12',cantidad:'40',unidad:'barras',detalle:''},{nombre:'Cemento',cantidad:'30',unidad:'bolsas',detalle:''}],nota:'Para losa PB+1',solicitante:'Martín Sosa',fecha:HOY}],
+  personal:[{id:'p1',nombre:'Martín Sosa',rol:'Capataz',empresa:'Constructora Meridian',obra_id:'o1'}],
+  cfg:{empresa:'Constructora Meridian',clienteNombre:'Estudio Vega'},
+  gestion:{costoPersona:60000,dotacion:7,fijosVV:45000,ggBelfast:30000,manual:[{id:'r1',tipo:'Retraso',obra_id:'o1',descripcion:'Falta de hormigón para la losa de PB+1',demoraDias:3,personas:7,productividad:70,causa:'Materiales',causas:['Materiales'],imputables:['Proveedor'],fechaSolic:'2026-10-07'}]}
+};
+
+/* ───────── lectura de las otras apps ───────── */
+function ls(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function leer(k){let v=ls(k);if(v==null)v=ls('demo_nube__'+k);if(v==null)return null;try{return JSON.parse(v)}catch(e){return null}}
+const CLAVES=['vv_obras','vv_matpedidos','vv_personal','vv_cfg','vv_gestion'];
+let D=null,ST={ps:{}},snap='';
+function huella(){return CLAVES.map(k=>(ls(k)||'')+'|'+(ls('demo_nube__'+k)||'')).join('~')+'~'+(ls(KEY)||'')}
+function cargar(){
+  const o=USAR_APPS?leer('vv_obras'):null;
+  const real=!!(o&&o.length);
+  const g=USAR_APPS?leer('vv_gestion'):null;
+  D={
+    real:real,
+    obras:real?o:SEED.obras,
+    mat:real?(leer('vv_matpedidos')||[]):SEED.mat,
+    personal:real?(leer('vv_personal')||[]):SEED.personal,
+    cfg:real?(leer('vv_cfg')||SEED.cfg):SEED.cfg,
+    gestion:real?Object.assign({},SEED.gestion,g||{},{manual:(g&&g.manual)||[]}):SEED.gestion,
+    gestionReal:!!(real&&g&&Array.isArray(g.manual))
+  };
+  if(USAR_APPS){try{const s=JSON.parse(ls(KEY)||'null');if(s&&s.ps)ST=s}catch(e){}}
+  snap=huella();
+}
+function guardar(){if(USAR_APPS)lsSet(KEY,JSON.stringify(ST))}
+
+/* ───────── fechas y dinero ───────── */
+const DIAS=['dom','lun','mar','mié','jue','vie','sáb'];
+function dnum(s){const a=s.split('-');return Date.UTC(+a[0],+a[1]-1,+a[2])}
+function iso(t){const d=new Date(t);return d.getUTCFullYear()+'-'+('0'+(d.getUTCMonth()+1)).slice(-2)+'-'+('0'+d.getUTCDate()).slice(-2)}
+function bizDiff(from,to){let n=0,t=dnum(from);const end=dnum(to);while(t<end){t+=864e5;const w=new Date(t).getUTCDay();if(w!==0&&w!==6)n++}return n}
+function esHabil(s){const w=new Date(dnum(s)).getUTCDay();return w!==0&&w!==6}
+function proxHabil(s){let t=dnum(s);do{t+=864e5}while(!esHabil(iso(t)));return iso(t)}
+function fmt(s){const a=s.split('-');return a[2]+'/'+a[1]}
 function fdia(s){return DIAS[new Date(dnum(s)).getUTCDay()]+' '+fmt(s)}
 function money(n){return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')+' $'}
-function E(k,fecha,q,estado,x){var o={k:k,fecha:fecha,q:q,estado:estado};for(var i in (x||{}))o[i]=x[i];return o}
+function stamp(){const d=new Date();return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+function opcionesFecha(sel){
+  let h='',t=dnum(HOY),n=0;
+  while(n<16){const s=iso(t);if(esHabil(s)){h+='<option value="'+s+'"'+(s===sel?' selected':'')+'>'+fdia(s)+(s===HOY?' (hoy)':'')+'</option>';n++}t+=864e5}
+  return h;
+}
 
-var S={tab:'corralon',jornal:JORNAL_INI,open:{},how:{},sheet:null,sel:{},pedidos:[
- {id:'P-018',obra:'Av. del Sol 2450',nota:'Mampostería planta alta',confirmado:false,
-  items:[{n:'Ladrillo hueco',u:'pallets',t:8},{n:'Cemento',u:'pallets',t:4},{n:'Arena',u:'pallets',t:4}],
-  jefe:{n:'Diego Paz',t:'12/10 10:10'},personas:4,prod:50,incidentes:[],
-  entregas:[E(1,'2026-10-14',[4,2,2],'pendiente'),E(2,'2026-10-16',[4,2,2],'pendiente')],
-  log:[['12/10 10:10','Diego Paz (jefe de obra)','Hizo el pedido con entrega en 2 partes iguales: 4 de ladrillo, 2 de cemento y 2 de arena en cada una']]},
- {id:'P-014',obra:'Los Álamos 100',nota:'Mampostería y contrapiso, planta baja',confirmado:true,
-  items:[{n:'Cemento',u:'pallets',t:10},{n:'Ladrillo hueco',u:'pallets',t:10},{n:'Arena',u:'pallets',t:10}],
-  jefe:{n:'Diego Paz',t:'11/10 17:05'},personas:7,prod:30,incidentes:[],
-  entregas:[E(1,'2026-10-12',[2,2,2],'camino',{camion:'Camión 2 · Omar'}),E(2,'2026-10-13',[3,3,3],'preparando'),E(3,'2026-10-14',[3,3,3],'preparando'),E(4,'2026-10-15',[2,2,2],'preparando')],
-  log:[['11/10 17:05','Diego Paz (jefe de obra)','Hizo el pedido con entrega en 4 partes, cada una con cemento, ladrillo y arena juntos'],['11/10 17:40','Corralón','Confirmó el plan de entrega'],['12/10 08:40','Expedición','Entrega 1 salió con Camión 2 · Omar']]},
- {id:'P-017',obra:'Los Álamos 100',nota:'Desagües de planta baja',confirmado:true,
-  items:[{n:'Caño PVC 110',u:'tiras',t:30},{n:'Codos y uniones',u:'caja',t:1}],
-  jefe:{n:'Diego Paz',t:'06/10 14:45'},personas:3,prod:0,incidentes:[],
-  entregas:[E(1,'2026-10-08',[30,1],'expedicion')],
-  log:[['06/10 14:45','Diego Paz (jefe de obra)','Hizo el pedido con una sola entrega'],['06/10 15:30','Corralón','Confirmó entrega para el 08/10'],['08/10 08:00','Sistema','Pasó la fecha comprometida y todavía no salió'],['09/10 17:00','Corralón','Pasó a expedición, falta camión disponible']]},
- {id:'P-013',obra:'Los Álamos 100',nota:'Losa PB+1',confirmado:true,
-  items:[{n:'Hormigón H21',u:'m³',t:6}],
-  jefe:{n:'Diego Paz',t:'05/10 15:40'},personas:7,prod:30,
-  incidentes:[{k:1,tipo:'Entrega tarde',imp:'corralon',dias:2,det:'No salió de planta en la fecha comprometida'}],
-  entregas:[E(1,'2026-10-07',[6],'entregada',{entregadaEl:'2026-10-09'})],
-  log:[['05/10 15:40','Diego Paz (jefe de obra)','Hizo el pedido con una sola entrega'],['05/10 16:05','Corralón','Confirmó entrega para el 07/10'],['07/10 08:00','Sistema','Pasó la fecha comprometida y no llegó'],['09/10 11:20','Diego Paz (jefe de obra)','Recibió en obra con 2 días de demora · remito con foto']]},
- {id:'P-012',obra:'Av. del Sol 2450',nota:'Mampostería planta baja',confirmado:true,
-  items:[{n:'Ladrillo hueco de 12',u:'unidades',t:600}],
-  jefe:{n:'Diego Paz',t:'06/10 09:15'},personas:4,prod:0,
-  incidentes:[{k:1,tipo:'Pedido errado',imp:'jefe',dias:1,det:'Se pidió ladrillo de 12 y el plano pedía de 18'}],
-  entregas:[E(1,'2026-10-08',[600],'entregada',{entregadaEl:'2026-10-09'})],
-  log:[['06/10 09:15','Diego Paz (jefe de obra)','Hizo el pedido: ladrillo hueco de 12'],['08/10 10:30','Obra','Rechazó la entrega: el plano pedía ladrillo de 18'],['09/10 09:40','Diego Paz (jefe de obra)','Recibió el ladrillo correcto · remito con foto']]},
- {id:'P-011',obra:'Lote 14 · Los Cedros',nota:'Mampostería de cierre',confirmado:true,
-  items:[{n:'Ladrillo hueco',u:'pallets',t:4},{n:'Cemento',u:'pallets',t:2},{n:'Arena',u:'pallets',t:2}],
-  jefe:{n:'Diego Paz',t:'05/10 12:00'},personas:5,prod:0,
-  incidentes:[{k:1,tipo:'Entrega incompleta',imp:'corralon',dias:1,det:'Llegó con ladrillo y cemento, pero sin arena: la obra no pudo avanzar'}],
-  entregas:[E(1,'2026-10-06',[2,1,1],'entregada',{entregadaEl:'2026-10-06',faltante:'Arena'}),E(2,'2026-10-08',[2,1,1],'entregada',{entregadaEl:'2026-10-08'})],
-  log:[['05/10 12:00','Diego Paz (jefe de obra)','Hizo el pedido con entrega en 2 partes iguales'],['06/10 10:00','Diego Paz (jefe de obra)','Recibió la entrega 1 sin arena: no se pudo avanzar con el muro'],['08/10 09:30','Diego Paz (jefe de obra)','Recibió la entrega 2 completa · remito con foto']]}
-]};
+/* ───────── costo del atraso: la misma cuenta que Gestión de obra ───────── */
+function nombres(){return{emp:String(D.cfg.empresa||'Constructora').replace(/^Constructora\s+/i,''),cli:D.cfg.clienteNombre||'Cliente'}}
+function costo(d,P,prod){const g=D.gestion;const a=P*(g.costoPersona||0)*d*(1-(prod||0)/100)+(g.fijosVV||0)*d;const b=(g.ggBelfast||0)*d;return{a:a,b:b,t:a+b}}
+function dotacion(){return D.gestion.dotacion||5}
 
+/* ───────── pedidos ───────── */
+function obraDe(id){return D.obras.find(o=>o.id===id)}
+function rolDe(n){const p=D.personal.find(x=>x.nombre===n);return p&&p.rol?p.rol:''}
+function pedidos(){
+  return D.mat.filter(m=>(!m.tipo||m.tipo==='material')&&m.items&&m.items.length).map(m=>{
+    const id='M-'+m.id,ob=obraDe(m.obra_id);
+    const items=m.items.map(it=>{const t=parseFloat(String(it.cantidad).replace(',','.'));return{n:it.nombre,u:it.unidad||'',t:isFinite(t)&&t>0?t:1}});
+    const st=ST.ps[id]||null;
+    return{id:id,obra:ob?ob.nombre:'Obra',obraId:m.obra_id,nota:m.nota||'',jefe:m.solicitante||'Jefe de obra',rol:rolDe(m.solicitante),fecha:m.fecha||'',items:items,st:st,plan:st?st.plan:[],ts:m.ts||0};
+  }).sort((a,b)=>b.ts-a.ts);
+}
 function late(e){return e.estado==='entregada'?0:Math.max(0,bizDiff(e.fecha,HOY))}
-function costoDia(p){return S.jornal*p.personas*(1-p.prod/100)}
-function allInc(){
-  var out=[];
-  S.pedidos.forEach(function(p){
-    p.incidentes.forEach(function(i){out.push({p:p,k:i.k,tipo:i.tipo,imp:i.imp,dias:i.dias,det:i.det,costo:costoDia(p)*i.dias,corriendo:false})});
-    p.entregas.forEach(function(e){var l=late(e);
-      if(l>0)out.push({p:p,k:e.k,tipo:'Entrega '+e.k+' atrasada (sigue corriendo)',imp:'corralon',dias:l,det:'Pasó la fecha comprometida ('+fmt(e.fecha)+') y no llegó',costo:costoDia(p)*l,corriendo:true});
-    });
+const EST={pendiente:'Por confirmar',preparando:'En preparación',expedicion:'En expedición',camino:'En camino',entregada:'Entregada'};
+const ECLS={pendiente:'amber',preparando:'blue',expedicion:'gold',camino:'gold',entregada:'green'};
+const EIDX={pendiente:0,preparando:0,expedicion:1,camino:2,entregada:3};
+const ESTEP=['Preparación','Expedición','En camino','Entregada'];
+const IMPL={corralon:'Proveedor',jefe:'Constructora'};
+const IMPLONG={corralon:'Corralón (stock, preparación o despacho)',jefe:'Jefe de obra (cómo se armó el pedido)'};
+
+function aGestion(p,inc){
+  if(!D.gestionReal)return null;
+  try{
+    const g=leer('vv_gestion');if(!g||!Array.isArray(g.manual))return null;
+    const id='cor_'+Date.now();
+    g.manual.push({id:id,tipo:'Retraso',obra_id:p.obraId,etapa:'',descripcion:inc.tipo+' · '+p.id+(inc.k?' · entrega '+inc.k:'')+': '+inc.det,demoraDias:inc.dias,personas:inc.P,productividad:inc.prod,debiaDias:0,demoroDias:inc.dias,fechaSolic:HOY,plazo:0,fechaReal:'',causas:['Materiales'],causa:'Materiales',causaDetalle:'',categoriaDesvio:'Provisión',imputables:[IMPL[inc.imp]],afectadas:[],afectadasDetalle:'',diasClima:0,nota:'',fotosInicio:[],videos:[],fotosFin:[],portada:false,ts:Date.now(),origen:'corralon',pedidoId:p.id,entrega:inc.k||0});
+    const s=JSON.stringify(g),t=String(Date.now());
+    lsSet('vv_gestion',s);lsSet('demo_nube__vv_gestion',s);lsSet('vv_gestion__ts',t);lsSet('demo_nube__vv_gestion__ts',t);
+    return id;
+  }catch(e){return null}
+}
+function nuevoInc(p,inc){inc.gid=aGestion(p,inc);p.st.inc.push(inc);guardar()}
+function log(p,who,txt){p.st.log.push([stamp(),who,txt]);guardar()}
+
+/* ───────── casos de atraso (Gestión + los de esta app) ───────── */
+function casos(){
+  const out=[],g=D.gestion;
+  (g.manual||[]).forEach(r=>{
+    if(!((r.causas||[]).indexOf('Materiales')>-1||r.causa==='Materiales'))return;
+    const ob=obraDe(r.obra_id),d=+r.demoraDias||0,P=+r.personas||0,pr=+r.productividad||0;
+    out.push({src:'Gestión de obra',titulo:r.descripcion||'Retraso por materiales',obra:ob?ob.nombre:'',imp:(r.imputables&&r.imputables[0])||'Sin asignar',dias:d,P:P,prod:pr,c:costo(d,P,pr),run:false,pid:r.pedidoId||null});
+  });
+  pedidos().forEach(p=>{
+    if(!p.st)return;
+    p.st.inc.forEach(i=>{if(i.gid&&D.gestionReal)return;out.push({src:'Esta app',titulo:i.tipo+' · '+p.id+(i.k?' · entrega '+i.k:''),obra:p.obra,imp:IMPL[i.imp],dias:i.dias,P:i.P,prod:i.prod,c:costo(i.dias,i.P,i.prod),run:false,pid:p.id,det:i.det})});
+    p.plan.forEach(e=>{const l=late(e);if(l>0)out.push({src:'Esta app',titulo:'Entrega '+e.k+' atrasada · '+p.id+' (sigue corriendo)',obra:p.obra,imp:'Proveedor',dias:l,P:dotacion(),prod:0,c:costo(l,dotacion(),0),run:true,pid:p.id,det:'Pasó la fecha comprometida ('+fmt(e.fecha)+') y no llegó'})});
   });
   return out;
 }
-function enCorralon(){return S.pedidos.filter(function(p){return !p.confirmado||p.entregas.some(function(e){return e.estado==='preparando'})})}
-function enExp(){var o=[];S.pedidos.forEach(function(p){p.entregas.forEach(function(e){if(e.estado==='expedicion'||e.estado==='camino')o.push({p:p,e:e})})});return o}
+
+/* ───────── estado de la pantalla ───────── */
+const S={tab:'corralon',open:{},how:{},sheet:null,sel:{}};
 
 function ico(n){
-  var paths={
-    corralon:'<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
-    exp:'<path d="M1 6h13v10H1z"/><path d="M14 9h4l4 4v3h-8z"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',
-    gen:'<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>'};
-  return '<svg viewBox="0 0 24 24">'+paths[n]+'</svg>';
+  const p={corralon:'<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',exp:'<path d="M1 6h13v10H1z"/><path d="M14 9h4l4 4v3h-8z"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',gen:'<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>'};
+  return '<svg viewBox="0 0 24 24">'+p[n]+'</svg>';
 }
 function stepper(e){
-  var idx=EIDX[e.estado],h='<div class="steps">';
-  for(var i=0;i<ESTEP.length;i++){
-    var cls=(e.estado==='entregada'||i<idx)?'done':(i===idx?'now':'');
+  const idx=EIDX[e.estado];let h='<div class="steps">';
+  for(let i=0;i<ESTEP.length;i++){
+    const done=e.estado==='entregada'||i<idx,cls=done?'done':(i===idx?'now':'');
     h+='<div class="step '+cls+'"><i></i><em>'+ESTEP[i]+'</em></div>';
-    if(i<ESTEP.length-1)h+='<div class="bar'+((e.estado==='entregada'||i<idx)?' done':'')+'"></div>';
+    if(i<ESTEP.length-1)h+='<div class="bar'+(done?' done':'')+'"></div>';
   }
   return h+'</div>';
 }
-function pills(p,e){
-  return p.items.map(function(it,i){return '<span class="pill">'+it.n+' <b>'+e.q[i]+' '+it.u+'</b></span>'}).join('');
-}
-var ECLS={pendiente:'amber',preparando:'blue',expedicion:'gold',camino:'gold',entregada:'green'};
-function entChips(e){
-  var l=late(e),h='<span class="tag '+ECLS[e.estado]+'">'+EST[e.estado]+'</span>';
-  if(e.estado!=='entregada'){
-    if(l>0)h+=' <span class="tag red">Atrasada '+l+' d</span>';
-    else if(e.fecha===HOY)h+=' <span class="tag amber">Hoy</span>';
-  }
+function pills(p,e){return p.items.map((it,i)=>'<span class="pill">'+it.n+' <b>'+e.q[i]+' '+it.u+'</b></span>').join('')}
+function entTags(e){
+  const l=late(e);let h='<span class="tag '+ECLS[e.estado]+'">'+EST[e.estado]+'</span>';
+  if(e.estado!=='entregada'){if(l>0)h+=' <span class="tag red">Atrasada '+l+' d</span>';else if(e.fecha===HOY)h+=' <span class="tag amber">Hoy</span>'}
   return h;
 }
-function histHTML(p){
-  var open=S.open[p.id],h='<button class="link" data-act="hist" data-id="'+p.id+'">'+(open?'Ocultar historial':'Ver historial del pedido')+'</button>';
-  if(open)h+='<div class="trace">'+p.log.map(function(l){return '<div><span class="t">'+l[0]+'</span> · <b>'+l[1]+'</b><br>'+l[2]+'</div>'}).join('')+'</div>';
+function hist(p){
+  if(!p.st)return '';
+  const open=S.open[p.id];
+  let h='<button class="link" data-act="hist" data-id="'+p.id+'">'+(open?'Ocultar historial':'Ver historial del pedido')+'</button>';
+  if(open)h+='<div class="trace">'+p.st.log.map(l=>'<div><span class="t">'+l[0]+'</span> · <b>'+l[1]+'</b><br>'+l[2]+'</div>').join('')+'</div>';
   return h;
 }
+function quien(p){return '<div class="chips" style="margin-top:6px"><span class="chip">Pidió: '+p.jefe+(p.rol?' · '+p.rol:'')+'</span>'+(p.fecha?'<span class="chip">'+fmt(p.fecha)+'</span>':'')+'</div>'+(p.nota?'<div class="note" style="margin-top:6px">Para: '+p.nota+'</div>':'')}
 
+/* ───────── pantallas ───────── */
+function cardNuevo(p){
+  let h='<div class="card"><div class="row"><div class="obra">'+p.obra+'</div><div class="id">'+p.id+'</div></div>';
+  h+='<div class="chips"><span class="tag amber">Falta definir la entrega</span></div>'+quien(p);
+  h+='<div class="mini">Pedido completo</div><ul class="items">'+p.items.map(it=>'<li><span>'+it.n+'</span><span class="q">'+it.t+' '+it.u+'</span></li>').join('')+'</ul>';
+  h+='<div class="note" style="margin-top:10px">El jefe de obra define cómo tiene que salir cada entrega, para que la obra pueda avanzar con lo que llega.</div>';
+  h+='<div class="btns"><button class="btn" data-act="plan" data-id="'+p.id+'">Definir la entrega</button></div></div>';
+  return h;
+}
 function cardCorralon(p){
-  var n=p.entregas.length;
-  var h='<div class="card"><div class="row"><div class="obra">'+p.obra+'</div><div class="id">'+p.id+'</div></div>';
-  h+='<div class="chips"><span class="tag '+(p.confirmado?'blue':'amber')+'">'+(p.confirmado?'Plan confirmado':'Plan por confirmar')+'</span><span class="chip">'+n+(n===1?' entrega':' entregas')+'</span></div>';
-  h+='<div class="chips" style="margin-top:6px"><span class="chip">Pidió: '+p.jefe.n+' · Jefe de obra</span><span class="chip">'+p.jefe.t+'</span></div><div class="note" style="margin-top:6px">Para: '+p.nota+'</div>';
-  h+='<div class="mini">Pedido completo</div><ul class="items">'+p.items.map(function(it){return '<li><span>'+it.n+'</span><span class="q">'+it.t+' '+it.u+'</span></li>'}).join('')+'</ul>';
+  const n=p.plan.length;
+  let h='<div class="card"><div class="row"><div class="obra">'+p.obra+'</div><div class="id">'+p.id+'</div></div>';
+  h+='<div class="chips"><span class="tag '+(p.st.confirmado?'blue':'amber')+'">'+(p.st.confirmado?'Plan confirmado':'Plan por confirmar')+'</span><span class="chip">'+n+(n===1?' entrega':' entregas')+'</span></div>'+quien(p);
+  h+='<div class="mini">Pedido completo</div><ul class="items">'+p.items.map(it=>'<li><span>'+it.n+'</span><span class="q">'+it.t+' '+it.u+'</span></li>').join('')+'</ul>';
   h+='<div class="mini">Cómo tiene que salir la entrega</div>';
   if(n>1)h+='<div class="note">Cada entrega sale armada con lo que la obra usa junto. Si falta un producto, esa parte no sirve para avanzar.</div>';
-  p.entregas.forEach(function(e){
-    h+='<div class="ent '+e.estado+(late(e)>0?' late':'')+'"><div class="tt"><b>Entrega '+e.k+' de '+n+' · '+fdia(e.fecha)+'</b><span>'+entChips(e)+'</span></div>'+pills(p,e);
-    if(p.confirmado&&e.estado==='preparando')h+='<div><button class="btn small gold" data-act="exp" data-id="'+p.id+'" data-k="'+e.k+'">Pasar a expedición</button></div>';
+  p.plan.forEach(e=>{
+    h+='<div class="ent '+e.estado+(late(e)>0?' late':'')+'"><div class="tt"><b>Entrega '+e.k+' de '+n+' · '+fdia(e.fecha)+'</b><span>'+entTags(e)+'</span></div>'+pills(p,e);
+    if(p.st.confirmado&&e.estado==='preparando')h+='<div><button class="btn small" data-act="exp" data-id="'+p.id+'" data-k="'+e.k+'">Pasar a expedición</button></div>';
     h+='</div>';
   });
-  h+=histHTML(p);
-  h+='<div class="btns">';
-  if(!p.confirmado)h+='<button class="btn gold" data-act="confirmar" data-id="'+p.id+'">Confirmar plan de entrega</button>';
-  h+='<button class="btn warn" data-act="problema" data-id="'+p.id+'">Avisar problema</button></div></div>';
-  return h;
+  h+=hist(p)+'<div class="btns">';
+  if(!p.st.confirmado)h+='<button class="btn" data-act="confirmar" data-id="'+p.id+'">Confirmar plan de entrega</button>';
+  return h+'<button class="btn warn" data-act="problema" data-id="'+p.id+'">Avisar problema</button></div></div>';
 }
-function cardExp(x){
-  var p=x.p,e=x.e,n=p.entregas.length;
-  var h='<div class="card'+(late(e)>0?' alert':'')+'"><div class="row"><div class="obra">'+p.obra+'</div><div class="id">'+p.id+'</div></div>';
-  h+='<div class="chips"><span class="chip">Entrega '+e.k+' de '+n+'</span><span class="chip">Programada '+fdia(e.fecha)+'</span>'+entChips(e)+'</div>';
+function cardExp(p,e){
+  const n=p.plan.length;
+  let h='<div class="card'+(late(e)>0?' alert':'')+'"><div class="row"><div class="obra">'+p.obra+'</div><div class="id">'+p.id+'</div></div>';
+  h+='<div class="chips"><span class="chip">Entrega '+e.k+' de '+n+'</span><span class="chip">Programada '+fdia(e.fecha)+'</span>'+entTags(e)+'</div>';
   h+='<div>'+pills(p,e)+'</div>'+stepper(e);
-  if(late(e)>0)h+='<div class="note" style="margin-top:6px">El atraso ya cuesta <span class="cost">'+money(costoDia(p)*late(e))+'</span> a la obra ('+p.personas+' personas afectadas).</div>';
-  h+=histHTML(p);
-  h+='<div class="btns">';
+  if(late(e)>0){const c=costo(late(e),dotacion(),0),nm=nombres();h+='<div class="note" style="margin-top:6px">El atraso ya cuesta <span class="cost">'+money(c.t)+'</span> ('+nm.emp+' '+money(c.a)+' · '+nm.cli+' '+money(c.b)+').</div>'}
+  h+=hist(p)+'<div class="btns">';
   if(e.estado==='expedicion'){
-    var c=S.sel['c'+p.id+e.k]||'Camión 1 · Raúl';
-    h+='<div style="flex:1 1 100%"><label>Camión y chofer</label><select data-sel="c'+p.id+e.k+'">'+['Camión 1 · Raúl','Camión 2 · Omar','Camioneta · Lucas'].map(function(o){return '<option'+(o===c?' selected':'')+'>'+o+'</option>'}).join('')+'</select></div>';
-    h+='<button class="btn gold" data-act="despachar" data-id="'+p.id+'" data-k="'+e.k+'">Despachar</button>';
+    const c=S.sel['c'+p.id+e.k]||'Camión 1 · Raúl';
+    h+='<div style="flex:1 1 100%"><label>Camión y chofer</label><select data-sel="c'+p.id+e.k+'">'+['Camión 1 · Raúl','Camión 2 · Omar','Camioneta · Lucas'].map(o=>'<option'+(o===c?' selected':'')+'>'+o+'</option>').join('')+'</select></div>';
+    h+='<button class="btn" data-act="despachar" data-id="'+p.id+'" data-k="'+e.k+'">Despachar</button>';
   }else{
     h+='<div class="note" style="flex:1 1 100%">'+(e.camion||'')+' · la obra confirma cómo llegó</div>';
-    h+='<button class="btn gold" data-act="completa" data-id="'+p.id+'" data-k="'+e.k+'">Llegó completa</button><button class="btn warn" data-act="incompleta" data-id="'+p.id+'" data-k="'+e.k+'">Llegó incompleta</button>';
+    h+='<button class="btn" data-act="completa" data-id="'+p.id+'" data-k="'+e.k+'">Llegó completa</button><button class="btn warn" data-act="incompleta" data-id="'+p.id+'" data-k="'+e.k+'">Llegó incompleta</button>';
   }
   return h+'</div></div>';
 }
+function enCorralon(){return pedidos().filter(p=>p.st&&(!p.st.confirmado||p.plan.some(e=>e.estado==='preparando')))}
+function sinPlan(){return pedidos().filter(p=>!p.st)}
+function enExp(){const o=[];pedidos().forEach(p=>p.plan.forEach(e=>{if(e.estado==='expedicion'||e.estado==='camino')o.push([p,e])}));return o}
 
 function viewCorralon(){
-  var l=enCorralon(),h='<div class="sec">Para preparar</div>';
-  if(!l.length)h+='<div class="empty">No hay pedidos para preparar.</div>';
-  l.forEach(function(p){h+=cardCorralon(p)});
+  const nu=sinPlan(),pr=enCorralon();let h='';
+  if(nu.length){h+='<div class="sec">Pedidos nuevos de la obra</div><div class="grid">'+nu.map(cardNuevo).join('')+'</div>'}
+  h+='<div class="sec">Para preparar</div>';
+  if(pr.length)h+='<div class="grid">'+pr.map(cardCorralon).join('')+'</div>';
+  else h+='<div class="empty">'+(nu.length?'Todavía no hay entregas definidas para preparar.':'No hay pedidos de materiales. Cuando se pida material en la app del contratista o del jefe de obra, aparece acá.')+'</div>';
   h+='<div class="foot">El pedido lo hace el jefe de obra, después de hablarlo con el contratista. Al corralón le llega ya cerrado, con el plan de entrega. No se guardan precios ni pagos.</div>';
   return h;
 }
 function viewExp(){
-  var l=enExp(),h='<div class="sec">Entregas para despachar y en camino</div>';
-  if(!l.length)h+='<div class="empty">No hay entregas en expedición.</div>';
-  l.forEach(function(x){h+=cardExp(x)});
+  const l=enExp();let h='<div class="sec">Entregas para despachar y en camino</div>';
+  if(l.length)h+='<div class="grid">'+l.map(x=>cardExp(x[0],x[1])).join('')+'</div>';
+  else h+='<div class="empty">No hay entregas en expedición. Aparecen cuando el corralón pasa una entrega a expedición.</div>';
   h+='<div class="foot">Al recibir, el jefe de obra confirma si la entrega llegó completa. Si faltó un producto, queda como atraso con su costo.</div>';
   return h;
 }
-
 function viewGeneral(){
-  var inc=allInc(),total=inc.reduce(function(a,i){return a+i.costo},0);
-  var run=inc.filter(function(i){return i.corriendo}).length;
-  var curso=0,ok=0;
-  S.pedidos.forEach(function(p){p.entregas.forEach(function(e){
-    if(e.estado!=='entregada')curso++;
-    else if(!p.incidentes.some(function(i){return i.k===e.k}))ok++;
-  })});
-  var prob={};inc.forEach(function(i){prob[i.p.id+':'+i.k]=1});
-  var h='<div class="kpis"><div class="kpi"><b>'+curso+'</b><span>Entregas en curso</span></div><div class="kpi"><b>'+ok+'</b><span>Llegaron bien</span></div><div class="kpi"><b style="color:var(--amb)">'+Object.keys(prob).length+'</b><span>Con problema</span></div></div>';
-  h+='<div class="card alert"><div class="sec" style="margin:0">Lo que cuestan los atrasos de materiales</div><div class="big">'+money(total)+'</div><div class="note">'+inc.length+' casos'+(run?' · '+run+' con el costo todavía corriendo':'')+'. Cada uno entra solo a Gestión de obra con la causa “Materiales · Provisión”.</div></div>';
-
-  h+='<div class="sec">Quién generó el costo</div><div class="card">';
-  ['corralon','jefe'].forEach(function(k){
-    var sub=inc.filter(function(i){return i.imp===k}),sum=sub.reduce(function(a,i){return a+i.costo},0);
-    h+='<div style="margin-bottom:10px"><div class="line2"><b>'+IMP[k]+'</b><span class="cost">'+money(sum)+'</span></div><div class="rbar"><i style="width:'+(total?Math.round(sum/total*100):0)+'%"></i></div><div class="note">'+sub.length+(sub.length===1?' caso':' casos')+(k==='jefe'?' · pedidos mal armados':' · entregas tarde, faltantes o incompletas')+'</div></div>';
-  });
-  h+='</div>';
+  const cs=casos(),nm=nombres(),tot=cs.reduce((a,c)=>a+c.c.t,0),totA=cs.reduce((a,c)=>a+c.c.a,0),totB=cs.reduce((a,c)=>a+c.c.b,0),run=cs.filter(c=>c.run).length;
+  const ps=pedidos();let curso=0,ok=0;
+  ps.forEach(p=>p.plan.forEach(e=>{if(e.estado!=='entregada')curso++;else if(!p.st.inc.some(i=>i.k===e.k))ok++}));
+  let h='<div class="kpis"><div class="kpi"><b>'+curso+'</b><span>Entregas en curso</span></div><div class="kpi"><b>'+ok+'</b><span>Llegaron bien</span></div><div class="kpi"><b style="color:var(--amb)">'+cs.length+'</b><span>Casos de atraso</span></div></div>';
+  h+='<div class="two"><div class="card alert"><div class="sec" style="margin:0">Lo que cuestan los atrasos de materiales</div><div class="big">'+money(tot)+'</div>';
+  h+='<div class="line2" style="margin-top:6px"><span class="note">'+nm.emp+'</span><b class="cost">'+money(totA)+'</b></div><div class="line2"><span class="note">'+nm.cli+'</span><b class="cost">'+money(totB)+'</b></div>';
+  h+='<div class="note" style="margin-top:8px">'+cs.length+(cs.length===1?' caso':' casos')+(run?' · '+run+' con el costo todavía corriendo':'')+'. '+(D.gestionReal?'Cada atraso que se registra acá entra solo a Gestión de obra con la causa “Materiales · Provisión”.':'Abrí la app general una vez para que los atrasos se conecten con Gestión de obra.')+'</div></div>';
+  const gr={};cs.forEach(c=>{const k=c.imp==='Proveedor'?'Proveedor (corralón)':c.imp==='Constructora'?'Constructora (jefe de obra)':c.imp;gr[k]=gr[k]||{n:0,t:0};gr[k].n++;gr[k].t+=c.c.t});
+  h+='<div class="card"><div class="sec" style="margin:0 0 6px">Quién generó el costo</div>';
+  const ks=Object.keys(gr);
+  if(!ks.length)h+='<div class="note">Todavía no hay atrasos.</div>';
+  ks.forEach(k=>{h+='<div style="margin-bottom:10px"><div class="line2"><b>'+k+'</b><span class="cost">'+money(gr[k].t)+'</span></div><div class="rbar"><i style="width:'+(tot?Math.round(gr[k].t/tot*100):0)+'%"></i></div><div class="note">'+gr[k].n+(gr[k].n===1?' caso':' casos')+'</div></div>'});
+  h+='</div></div>';
 
   h+='<div class="sec">Avance de cada pedido</div>';
-  S.pedidos.forEach(function(p){
-    var d=p.entregas.filter(function(e){return e.estado==='entregada'}).length,n=p.entregas.length;
-    h+='<div class="card"><div class="row"><div class="obra" style="font-size:16px">'+p.obra+'</div><div class="id">'+p.id+'</div></div><div class="note">'+p.items.map(function(it){return it.n}).join(' · ')+'</div>';
-    h+='<div class="rbar g"><i style="width:'+Math.round(d/n*100)+'%"></i></div><div class="note">'+d+' de '+n+(n===1?' entrega recibida':' entregas recibidas')+'</div><div class="dots">';
-    p.entregas.forEach(function(e){
-      var bad=late(e)>0||p.incidentes.some(function(i){return i.k===e.k});
-      h+='<span class="'+(bad?'bad':e.estado)+'">E'+e.k+' · '+fdia(e.fecha)+'</span>';
-    });
-    h+='</div></div>';
-  });
-
-  h+='<div class="sec">Por obra</div><div class="card">';
-  var obras={};inc.forEach(function(i){obras[i.p.obra]=(obras[i.p.obra]||0)+i.costo});
-  S.pedidos.forEach(function(p){if(!(p.obra in obras))obras[p.obra]=0});
-  Object.keys(obras).forEach(function(o,ix,arr){
-    h+='<div class="line2" style="padding:7px 0;'+(ix<arr.length-1?'border-bottom:1px dashed var(--line)':'')+'"><b>'+o+'</b><span class="'+(obras[o]?'cost':'note')+'">'+(obras[o]?money(obras[o]):'sin atrasos')+'</span></div>';
-  });
-  h+='</div>';
+  if(!ps.length)h+='<div class="empty">Todavía no hay pedidos de materiales.</div>';
+  else{h+='<div class="grid">';ps.forEach(p=>{
+    const n=p.plan.length,d=p.plan.filter(e=>e.estado==='entregada').length;
+    h+='<div class="card"><div class="row"><div class="obra" style="font-size:15px">'+p.obra+'</div><div class="id">'+p.id+'</div></div><div class="note">'+p.items.map(i=>i.n).join(' · ')+'</div>';
+    if(!n)h+='<div class="chips"><span class="tag amber">Falta definir la entrega</span></div>';
+    else{h+='<div class="rbar g"><i style="width:'+Math.round(d/n*100)+'%"></i></div><div class="note">'+d+' de '+n+(n===1?' entrega recibida':' entregas recibidas')+'</div><div class="dots">';
+      p.plan.forEach(e=>{const bad=late(e)>0||p.st.inc.some(i=>i.k===e.k);h+='<span class="'+(bad?'bad':e.estado)+'">E'+e.k+' · '+fdia(e.fecha)+'</span>'});h+='</div>'}
+    h+='</div>'});h+='</div>'}
 
   h+='<div class="sec">Casos de atraso</div>';
-  inc.forEach(function(i,ix){
-    var k='h'+ix,p=i.p;
-    h+='<div class="card"><div class="row"><div><div class="obra" style="font-size:16px">'+i.tipo+'</div><div class="note">'+p.obra+' · '+p.id+(i.k?' · entrega '+i.k:'')+' · imputable a <b>'+IMP[i.imp]+'</b></div></div><div class="cost" style="white-space:nowrap">'+money(i.costo)+'</div></div>';
-    h+='<div class="note" style="margin-top:6px">'+i.det+' · '+i.dias+' d hábiles</div>';
+  if(!cs.length)h+='<div class="empty">Todavía no hay atrasos por materiales.</div>';
+  else{h+='<div class="grid">';cs.forEach((c,ix)=>{
+    const k='h'+ix,g=D.gestion;
+    h+='<div class="card'+(c.run?' alert':'')+'"><div class="row"><div><div class="obra" style="font-size:15px">'+c.titulo+'</div><div class="note">'+(c.obra?c.obra+' · ':'')+'imputable a <b>'+c.imp+'</b> · '+c.src+'</div></div></div>';
+    h+='<div class="line2" style="margin-top:8px"><span class="note">Perjuicio '+nm.emp+'</span><b class="cost">'+money(c.c.a)+'</b></div><div class="line2"><span class="note">Perjuicio '+nm.cli+'</span><b class="cost">'+money(c.c.b)+'</b></div>';
+    if(c.det)h+='<div class="note" style="margin-top:6px">'+c.det+' · '+c.dias+' d hábiles</div>';
     h+='<button class="link" data-act="how" data-k="'+k+'">'+(S.how[k]?'Ocultar el cálculo':'Ver cómo se calcula')+'</button>';
-    if(S.how[k])h+='<div class="how">'+p.personas+' personas afectadas × '+i.dias+(i.dias===1?' día':' días')+' × '+money(S.jornal)+' por persona por día'+(p.prod?' × '+(100-p.prod)+'% (trabajaron al '+p.prod+'% de productividad)':'')+' = <b class="cost">'+money(i.costo)+'</b></div>';
-    h+='<div>'+histHTML(p)+'</div></div>';
-  });
-  if(!inc.length)h+='<div class="empty">Todavía no hay atrasos.</div>';
+    if(S.how[k])h+='<div class="how">'+nm.emp+': '+c.P+' personas × '+c.dias+(c.dias===1?' día':' días')+' × '+money(g.costoPersona||0)+(c.prod?' × '+(100-c.prod)+'% que se pierde (rinden al '+c.prod+'%)':'')+' + costos fijos '+money(g.fijosVV||0)+' × '+c.dias+' = <b class="cost">'+money(c.c.a)+'</b><br>'+nm.cli+': '+money(g.ggBelfast||0)+' × '+c.dias+' = <b class="cost">'+money(c.c.b)+'</b></div>';
+    const p=c.pid?ps.find(x=>x.id===c.pid):null;if(p&&p.st)h+='<div>'+hist(p)+'</div>';
+    h+='</div>'});h+='</div>'}
 
-  h+='<div class="sec">Ajustes del cálculo</div><div class="card"><label style="margin-top:0">Costo de una persona por día (ejemplo)</label><input type="number" inputmode="numeric" min="0" step="1000" value="'+S.jornal+'" data-act="jornal"><div class="note" style="margin-top:6px">Es el mismo parámetro que usa Gestión de obra. Se ajusta una vez y vale para todo.</div></div>';
+  const g=D.gestion;
+  h+='<div class="sec">Cómo se calcula el costo</div><div class="card"><div class="note">Los valores salen de Gestión de obra, así el costo es el mismo en todas las apps: <b>'+money(g.costoPersona||0)+'</b> por persona por día, <b>'+(g.dotacion||0)+'</b> personas de dotación, <b>'+money(g.fijosVV||0)+'</b> de costos fijos de '+nm.emp+' por día y <b>'+money(g.ggBelfast||0)+'</b> de '+nm.cli+' por día. Se cambian allá una sola vez.</div></div>';
   h+='<div class="foot">NEXO no guarda precios de materiales ni pagos. Solo mide cuánto cuesta que un pedido llegue tarde, incompleto o mal armado.</div>';
   return h;
 }
 
+/* ───────── hojas (formularios) ───────── */
+function partir(t,n){
+  const q=[];
+  if(Number.isInteger(t)){const b=Math.floor(t/n),r=t-b*n;for(let i=0;i<n;i++)q.push(b+(i<r?1:0))}
+  else{let s=0;for(let i=0;i<n-1;i++){const v=Math.round(t/n*10)/10;q.push(v);s+=v}q.push(Math.round((t-s)*100)/100)}
+  return q;
+}
+function iniciarPlan(p,n){
+  const cols=p.items.map(it=>partir(it.t,n));
+  const q=[];for(let e=0;e<n;e++)q.push(p.items.map((it,i)=>cols[i][e]));
+  const f=[];let d=esHabil(HOY)?HOY:proxHabil(HOY);if(d===HOY)d=proxHabil(HOY);
+  for(let e=0;e<n;e++){f.push(d);d=proxHabil(d)}
+  S.sheet={type:'plan',id:p.id,n:n,q:q,f:f,err:''};
+}
+function sumas(p,sh){return p.items.map((it,i)=>Math.round(sh.q.reduce((a,r)=>a+(+r[i]||0),0)*100)/100)}
 function sheetHTML(){
-  var sh=S.sheet,p=sh.p,h='<div class="shade" data-act="cerrar"><div class="sheet">';
-  if(sh.type==='prob'){
-    var t=S.sel.tp||'Falta de stock',imp=S.sel.imp||'corralon',d=S.sel.dias||'1';
-    h+='<h2>Avisar un problema</h2><div class="note">'+p.obra+' · '+p.id+'. Queda en el historial y entra a Gestión de obra.</div>';
-    h+='<label>Qué pasó</label><select data-sel="tp">'+['Falta de stock','No puedo cumplir el plan de entrega','Pedido incompleto o errado'].map(function(x){return '<option'+(x===t?' selected':'')+'>'+x+'</option>'}).join('')+'</select>';
-    h+='<label>Quién lo generó</label><select data-sel="imp">'+Object.keys(IMPLONG).map(function(k){return '<option value="'+k+'"'+(k===imp?' selected':'')+'>'+IMPLONG[k]+'</option>'}).join('')+'</select>';
-    h+='<label>Días hábiles de atraso</label><select data-sel="dias">'+[1,2,3,4,5].map(function(n){return '<option'+(String(n)===d?' selected':'')+'>'+n+'</option>'}).join('')+'</select>';
-    h+='<div class="note" style="margin-top:10px">Costo estimado: <b class="cost">'+money(costoDia(p)*(+d))+'</b> ('+p.personas+' personas afectadas).</div>';
+  const sh=S.sheet,all=pedidos(),p=all.find(x=>x.id===sh.id);if(!p){S.sheet=null;return ''}
+  const nm=nombres();let h='<div class="shade" data-act="cerrar"><div class="sheet">';
+  if(sh.type==='plan'){
+    const sm=sumas(p,sh);
+    h+='<h2>Definir la entrega</h2><div class="note">'+p.obra+' · '+p.id+'. Repartí el pedido en partes que lleguen juntas y sirvan para avanzar, por ejemplo cemento, ladrillo y arena en cada entrega.</div>';
+    h+='<div class="pln"><div><label>Cantidad de entregas</label><select data-sel="pn">'+[1,2,3,4,5,6].map(n=>'<option'+(n===sh.n?' selected':'')+'>'+n+'</option>').join('')+'</select></div><div style="display:flex;align-items:flex-end"><button class="btn ghost" style="width:100%" data-act="repartir" data-id="'+p.id+'">Repartir en partes iguales</button></div></div>';
+    for(let e=0;e<sh.n;e++){
+      h+='<div class="ent" style="margin-top:12px"><div class="tt"><b>Entrega '+(e+1)+' de '+sh.n+'</b></div><label style="margin-top:8px">Fecha</label><select data-fd="'+e+'">'+opcionesFecha(sh.f[e])+'</select><div style="margin-top:8px">';
+      p.items.forEach((it,i)=>{h+='<div class="qrow" style="margin-top:8px"><span>'+it.n+'</span><input type="number" min="0" step="any" inputmode="decimal" value="'+sh.q[e][i]+'" data-q="'+e+':'+i+'"><em>'+it.u+'</em></div>'});
+      h+='</div></div>';
+    }
+    h+='<div class="mini">Control del reparto</div>';
+    p.items.forEach((it,i)=>{const ok=Math.abs(sm[i]-it.t)<0.001;h+='<div class="line2" style="padding:3px 0"><span>'+it.n+'</span><span class="'+(ok?'okk':'cost')+'">'+sm[i]+' de '+it.t+' '+it.u+(ok?'':' · falta ajustar')+'</span></div>'});
+    if(sh.err)h+='<div class="err">'+sh.err+'</div>';
+    h+='<div class="btns"><button class="btn ghost" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarplan" data-id="'+p.id+'">Pasar al corralón</button></div>';
+  }else if(sh.type==='prob'){
+    const t=S.sel.tp||'Falta de stock',imp=S.sel.imp||'corralon',d=+S.sel.dias||1,P=S.sel.P!=null?+S.sel.P:dotacion(),pr=S.sel.prod!=null?+S.sel.prod:0,c=costo(d,P,pr);
+    h+='<h2>Avisar un problema</h2><div class="note">'+p.obra+' · '+p.id+'. Queda en el historial'+(D.gestionReal?' y entra a Gestión de obra':'')+'.</div>';
+    h+='<label>Qué pasó</label><select data-sel="tp">'+['Falta de stock','No puedo cumplir el plan de entrega','Pedido incompleto o errado'].map(x=>'<option'+(x===t?' selected':'')+'>'+x+'</option>').join('')+'</select>';
+    h+='<label>Quién lo generó</label><select data-sel="imp">'+Object.keys(IMPLONG).map(k=>'<option value="'+k+'"'+(k===imp?' selected':'')+'>'+IMPLONG[k]+'</option>').join('')+'</select>';
+    h+='<div class="pln"><div><label>Días hábiles de atraso</label><select data-sel="dias">'+[1,2,3,4,5].map(n=>'<option'+(n===d?' selected':'')+'>'+n+'</option>').join('')+'</select></div><div><label>Personas afectadas</label><input type="number" min="0" data-sel="P" value="'+P+'"></div><div class="full"><label>Productividad mientras tanto (%)</label><input type="number" min="0" max="100" data-sel="prod" value="'+pr+'"></div></div>';
+    h+='<div class="note" style="margin-top:10px">Costo estimado: <b class="cost">'+money(c.t)+'</b> ('+nm.emp+' '+money(c.a)+' · '+nm.cli+' '+money(c.b)+').</div>';
     h+='<div class="btns"><button class="btn ghost" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarprob" data-id="'+p.id+'">Guardar aviso</button></div>';
   }else{
-    var f=S.sel.fal||p.items[0].n,dd=S.sel.dfal||'1';
+    const e=p.plan.find(x=>x.k===sh.k),f=S.sel.fal||p.items[0].n,d=+S.sel.dfal||1,P=S.sel.P!=null?+S.sel.P:dotacion(),pr=S.sel.prod!=null?+S.sel.prod:0,c=costo(d,P,pr);
     h+='<h2>Llegó incompleta</h2><div class="note">'+p.obra+' · '+p.id+' · entrega '+sh.k+'. Si falta un producto, la obra no puede avanzar con esa parte.</div>';
-    h+='<label>Qué faltó</label><select data-sel="fal">'+p.items.map(function(it){return '<option'+(it.n===f?' selected':'')+'>'+it.n+'</option>'}).join('')+'</select>';
-    h+='<label>Días hábiles sin poder avanzar</label><select data-sel="dfal">'+[1,2,3].map(function(n){return '<option'+(String(n)===dd?' selected':'')+'>'+n+'</option>'}).join('')+'</select>';
-    h+='<div class="note" style="margin-top:10px">Costo estimado: <b class="cost">'+money(costoDia(p)*(+dd))+'</b> ('+p.personas+' personas afectadas).</div>';
+    h+='<label>Qué faltó</label><select data-sel="fal">'+p.items.map(it=>'<option'+(it.n===f?' selected':'')+'>'+it.n+'</option>').join('')+'</select>';
+    h+='<div class="pln"><div><label>Días hábiles sin avanzar</label><select data-sel="dfal">'+[1,2,3].map(n=>'<option'+(n===d?' selected':'')+'>'+n+'</option>').join('')+'</select></div><div><label>Personas afectadas</label><input type="number" min="0" data-sel="P" value="'+P+'"></div><div class="full"><label>Productividad mientras tanto (%)</label><input type="number" min="0" max="100" data-sel="prod" value="'+pr+'"></div></div>';
+    h+='<div class="note" style="margin-top:10px">Costo estimado: <b class="cost">'+money(c.t)+'</b> ('+nm.emp+' '+money(c.a)+' · '+nm.cli+' '+money(c.b)+').</div>';
     h+='<div class="btns"><button class="btn ghost" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarfalt" data-id="'+p.id+'" data-k="'+sh.k+'">Guardar</button></div>';
   }
   return h+'</div></div>';
 }
 
-var TITLES={corralon:['Pedidos del jefe de obra','Constructora Meridian · cada pedido llega con su plan de entrega'],exp:['Expedición','Despacho y entrega en obra · Constructora Meridian'],gen:['General','Seguimiento y costo de los atrasos · Constructora Meridian']};
+/* ───────── dibujo ───────── */
+const TITLES={corralon:['Pedidos de la obra','Cada pedido llega con su plan de entrega'],exp:['Expedición','Despacho y entrega en obra'],gen:['General','Seguimiento y costo de los atrasos']};
 function render(){
-  var t=TITLES[S.tab],body=S.tab==='corralon'?viewCorralon():S.tab==='exp'?viewExp():viewGeneral();
-  var nc=enCorralon().length,ne=enExp().length;
-  var h='<div class="hero"><div class="mono">C</div><div class="eyebrow">Corralón Norte</div><h1>'+t[0]+'</h1><p>'+t[1]+'</p><span class="demo">Demo · datos de ejemplo</span></div><main>'+body+'</main>';
-  h+='<nav>'+[['corralon','Corralón','corralon',nc],['exp','Expedición','exp',ne],['gen','General','gen',0]].map(function(x){
-    return '<button class="'+(S.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+ico(x[2])+x[1]+(x[3]?'<span class="badge">'+x[3]+'</span>':'')+'</button>';
-  }).join('')+'</nav>';
+  const t=TITLES[S.tab],nm=nombres(),body=S.tab==='corralon'?viewCorralon():S.tab==='exp'?viewExp():viewGeneral();
+  const nc=sinPlan().length+enCorralon().length,ne=enExp().length;
+  const sub=t[1]+' · '+(D.cfg.empresa||'Constructora');
+  let h='<div class="shell"><nav><div class="brand"><div class="mono">C</div><div><b>Corralón Norte</b><small>NEXO · Proveedores</small></div></div>';
+  h+=[['corralon','Corralón','corralon',nc],['exp','Expedición','exp',ne],['gen','General','gen',0]].map(x=>'<button class="'+(S.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+ico(x[2])+'<span>'+x[1]+'</span>'+(x[3]?'<span class="badge">'+x[3]+'</span>':'')+'</button>').join('')+'</nav>';
+  h+='<div class="content"><div class="hero"><div class="mono">C</div><div class="eyebrow">Corralón Norte</div><h1>'+t[0]+'</h1><p>'+sub+'</p>'+(D.real?'<span class="demo ok">Datos de las apps</span>':'<span class="demo">Demo · datos de ejemplo</span>')+'</div><main>'+body+'</main></div></div>';
   if(S.sheet)h+=sheetHTML();
-  var y=window.scrollY;
+  const y=window.scrollY;
   document.getElementById('app').innerHTML=h;
   window.scrollTo(0,y);
 }
-function find(id){return S.pedidos.filter(function(p){return p.id===id})[0]}
-function ent(p,k){return p.entregas.filter(function(e){return e.k===k})[0]}
-function log(p,who,txt){p.log.push([stamp(),who,txt])}
+function find(id){return pedidos().find(p=>p.id===id)}
 
-document.addEventListener('click',function(e){
-  var el=e.target.closest('[data-act]');
+document.addEventListener('click',function(ev){
+  const el=ev.target.closest('[data-act]');
   if(!el)return;
-  var a=el.dataset.act,p=el.dataset.id?find(el.dataset.id):null,k=el.dataset.k?+el.dataset.k:0,en=p&&k?ent(p,k):null;
-  if(a==='jornal')return;
-  if(a==='cerrar'&&el.classList.contains('shade')&&e.target.closest('.sheet'))return;
+  const a=el.dataset.act,p=el.dataset.id?find(el.dataset.id):null,k=el.dataset.k?+el.dataset.k:0,en=p&&k?p.plan.find(x=>x.k===k):null;
+  if(a==='cerrar'&&el.classList.contains('shade')&&ev.target.closest('.sheet'))return;
   if(a==='tab'){S.tab=el.dataset.t;window.scrollTo(0,0)}
-  else if(a==='hist'){S.open[p.id]=!S.open[p.id]}
+  else if(a==='hist'){S.open[el.dataset.id]=!S.open[el.dataset.id]}
   else if(a==='how'){S.how[el.dataset.k]=!S.how[el.dataset.k]}
-  else if(a==='confirmar'){p.confirmado=true;p.entregas.forEach(function(x){if(x.estado==='pendiente')x.estado='preparando'});log(p,'Corralón','Confirmó el plan de entrega: '+p.entregas.length+(p.entregas.length===1?' entrega':' entregas'))}
+  else if(a==='plan'){iniciarPlan(p,2)}
+  else if(a==='repartir'){iniciarPlan(p,S.sheet.n);}
+  else if(a==='guardarplan'){
+    const sh=S.sheet,sm=sumas(p,sh);
+    const mal=p.items.filter((it,i)=>Math.abs(sm[i]-it.t)>=0.001);
+    if(mal.length){sh.err='El reparto no coincide con el pedido: revisá '+mal.map(i=>i.n).join(', ')+'.'}
+    else{
+      const plan=sh.q.map((r,e)=>({k:e+1,fecha:sh.f[e],q:r.map(Number),estado:'pendiente'}));
+      ST.ps[p.id]={plan:plan,confirmado:false,log:[],inc:[]};
+      const np=find(p.id);
+      log(np,p.jefe+(p.rol?' ('+p.rol+')':' (jefe de obra)'),'Pasó el pedido al corralón con entrega en '+plan.length+(plan.length===1?' parte':' partes')+': '+plan.map(e=>'E'+e.k+' '+fmt(e.fecha)).join(', '));
+      S.sheet=null;S.open[p.id]=false;
+    }
+  }
+  else if(a==='confirmar'){p.plan.forEach(x=>{if(x.estado==='pendiente')x.estado='preparando'});p.st.confirmado=true;log(p,'Corralón','Confirmó el plan de entrega: '+p.plan.length+(p.plan.length===1?' entrega':' entregas'))}
   else if(a==='exp'){en.estado='expedicion';log(p,'Corralón','Entrega '+k+' preparada y pasada a expedición')}
-  else if(a==='despachar'){var c=S.sel['c'+p.id+k]||'Camión 1 · Raúl';en.camion=c;en.estado='camino';log(p,'Expedición','Entrega '+k+' salió con '+c)}
+  else if(a==='despachar'){const c=S.sel['c'+p.id+k]||'Camión 1 · Raúl';en.camion=c;en.estado='camino';log(p,'Expedición','Entrega '+k+' salió con '+c)}
   else if(a==='completa'){
-    var l=late(en);en.estado='entregada';en.entregadaEl=HOY;
-    if(l>0)p.incidentes.push({k:k,tipo:'Entrega tarde',imp:'corralon',dias:l,det:'La entrega '+k+' llegó '+l+(l===1?' día hábil':' días hábiles')+' después de lo comprometido'});
-    log(p,p.jefe.n+' (jefe de obra)','Recibió la entrega '+k+' completa'+(l>0?' con '+l+' d de demora':' a tiempo')+' · remito con foto');
+    const l=late(en);en.estado='entregada';en.entregadaEl=HOY;
+    if(l>0)nuevoInc(p,{k:k,tipo:'Entrega tarde',imp:'corralon',dias:l,P:dotacion(),prod:0,det:'La entrega '+k+' llegó '+l+(l===1?' día hábil':' días hábiles')+' después de lo comprometido'});
+    log(p,p.jefe+' ('+(p.rol||'jefe de obra')+')','Recibió la entrega '+k+' completa'+(l>0?' con '+l+' d de demora':' a tiempo')+' · remito con foto');
   }
-  else if(a==='incompleta'){S.sheet={type:'falt',p:p,k:k};S.sel.fal=p.items[0].n;S.sel.dfal='1'}
+  else if(a==='incompleta'){S.sheet={type:'falt',id:p.id,k:k};S.sel.fal=p.items[0].n;S.sel.dfal='1';delete S.sel.P;delete S.sel.prod}
   else if(a==='guardarfalt'){
-    var l2=late(en),f=S.sel.fal||p.items[0].n,d2=+S.sel.dfal||1;
-    if(l2>0)p.incidentes.push({k:k,tipo:'Entrega tarde',imp:'corralon',dias:l2,det:'La entrega '+k+' llegó '+l2+(l2===1?' día hábil':' días hábiles')+' después de lo comprometido'});
-    p.incidentes.push({k:k,tipo:'Entrega incompleta',imp:'corralon',dias:d2,det:'Llegó sin '+f.toLowerCase()+': la obra no pudo avanzar con esa parte'});
+    const l=late(en),f=S.sel.fal||p.items[0].n,d=+S.sel.dfal||1,P=S.sel.P!=null?+S.sel.P:dotacion(),pr=S.sel.prod!=null?+S.sel.prod:0;
+    if(l>0)nuevoInc(p,{k:k,tipo:'Entrega tarde',imp:'corralon',dias:l,P:dotacion(),prod:0,det:'La entrega '+k+' llegó '+l+(l===1?' día hábil':' días hábiles')+' después de lo comprometido'});
+    nuevoInc(p,{k:k,tipo:'Entrega incompleta',imp:'corralon',dias:d,P:P,prod:pr,det:'Llegó sin '+f.toLowerCase()+': la obra no pudo avanzar con esa parte'});
     en.estado='entregada';en.entregadaEl=HOY;en.faltante=f;
-    log(p,p.jefe.n+' (jefe de obra)','Recibió la entrega '+k+' sin '+f.toLowerCase()+' · +'+d2+' d hábiles sin avanzar');
+    log(p,p.jefe+' ('+(p.rol||'jefe de obra')+')','Recibió la entrega '+k+' sin '+f.toLowerCase()+' · +'+d+' d hábiles sin avanzar');
     S.sheet=null;
   }
-  else if(a==='problema'){S.sheet={type:'prob',p:p};S.sel.tp='Falta de stock';S.sel.imp='corralon';S.sel.dias='1'}
-  else if(a==='cerrar'){S.sheet=null}
+  else if(a==='problema'){S.sheet={type:'prob',id:p.id};S.sel.tp='Falta de stock';S.sel.imp='corralon';S.sel.dias='1';delete S.sel.P;delete S.sel.prod}
   else if(a==='guardarprob'){
-    var d=+S.sel.dias||1,imp=S.sel.imp||'corralon';
-    p.incidentes.push({k:0,tipo:S.sel.tp||'Falta de stock',imp:imp,dias:d,det:'Avisado desde el corralón'});
-    log(p,'Corralón','Avisó: '+(S.sel.tp||'Falta de stock')+' · imputable a '+IMP[imp]+' · +'+d+' d hábiles');
+    const d=+S.sel.dias||1,imp=S.sel.imp||'corralon',P=S.sel.P!=null?+S.sel.P:dotacion(),pr=S.sel.prod!=null?+S.sel.prod:0,tp=S.sel.tp||'Falta de stock';
+    nuevoInc(p,{k:0,tipo:tp,imp:imp,dias:d,P:P,prod:pr,det:'Avisado desde el corralón'});
+    log(p,'Corralón','Avisó: '+tp+' · imputable a '+IMPL[imp]+' · +'+d+' d hábiles');
     S.sheet=null;
   }
+  else if(a==='cerrar'){S.sheet=null}
+  guardar();
   render();
 });
-document.addEventListener('change',function(e){
-  var t=e.target;
-  if(t.dataset&&t.dataset.sel){S.sel[t.dataset.sel]=t.value;if(S.sheet&&['tp','imp','dias','fal','dfal'].indexOf(t.dataset.sel)>-1)render()}
-  else if(t.dataset&&t.dataset.act==='jornal'){var v=parseInt(t.value,10);if(v>=0)S.jornal=v;render()}
+document.addEventListener('change',function(ev){
+  const t=ev.target;if(!t.dataset)return;
+  if(t.dataset.sel){
+    S.sel[t.dataset.sel]=t.value;
+    if(t.dataset.sel==='pn'){const p=find(S.sheet.id);iniciarPlan(p,+t.value);render()}
+    else if(S.sheet)render();
+  }else if(t.dataset.q){const a=t.dataset.q.split(':');S.sheet.q[+a[0]][+a[1]]=parseFloat(t.value)||0;S.sheet.err='';render()}
+  else if(t.dataset.fd!=null&&t.dataset.fd!==''){S.sheet.f[+t.dataset.fd]=t.value}
 });
+
+/* ───────── se actualiza sola cuando cambian las otras apps ───────── */
+function refrescar(){
+  if(huella()===snap)return;
+  if(S.sheet)return;
+  cargar();render();
+}
+window.addEventListener('storage',refrescar);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refrescar()});
+window.addEventListener('focus',refrescar);
+setInterval(refrescar,4000);
+
+cargar();
 render();
 })();
 </script>
