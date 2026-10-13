@@ -544,6 +544,16 @@ setInterval(refrescar,4000);
 
 cargar();
 render();
+// Si las otras apps todavía no cargaron sus datos en este navegador, las abre en segundo plano para traerlos.
+if(USAR_APPS&&!D.real){
+  let n=0;
+  ['demo-principal.html','demo-contratista.html'].forEach(function(u){
+    const f=document.createElement('iframe');
+    f.src=u;f.style.cssText='position:absolute;width:1px;height:1px;border:0;opacity:0;pointer-events:none';f.setAttribute('aria-hidden','true');
+    document.body.appendChild(f);
+  });
+  const t=setInterval(function(){n++;cargar();if(D.real&&D.mat.length||n>20){clearInterval(t);cargar();render();document.querySelectorAll('iframe').forEach(function(f){f.remove()})}else if(D.real){render()}},1000);
+}
 })();
 </script>
 </body>
