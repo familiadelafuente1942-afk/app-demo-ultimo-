@@ -29,13 +29,21 @@ main{padding:14px 16px 110px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
 .chip{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:#eef1f5;color:var(--mut)}
 .chip.red{background:var(--redbg);color:var(--red)} .chip.amb{background:var(--ambbg);color:var(--amb)} .chip.green{background:var(--greenbg);color:var(--green)} .chip.blue{background:var(--bluebg);color:var(--blue)}
-ul.items{margin:8px 0 4px;padding:0;list-style:none}
+ul.items{margin:6px 0 2px;padding:0;list-style:none}
 ul.items li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
 ul.items li:last-child{border-bottom:0}
 ul.items .q{font-weight:700;white-space:nowrap}
-.adj{color:var(--amb);font-size:12px;font-weight:700}
-.steps{display:flex;align-items:center;margin:12px 0 4px}
-.step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto;width:56px;text-align:center}
+.mini{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:14px 0 2px}
+.ent{border:1px solid #e3e8ef;border-left:4px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;background:#f7f8fa}
+.ent.camino,.ent.expedicion{border-left-color:var(--gold)}
+.ent.entregada{border-left-color:var(--green)}
+.ent.late{border-left-color:#ef4444}
+.ent .tt{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ent .tt b{font-size:14.5px}
+.pill{display:inline-block;background:#eef1f5;border-radius:8px;padding:3px 8px;font-size:13px;margin:6px 6px 0 0}
+.pill b{font-weight:800}
+.steps{display:flex;align-items:center;margin:10px 0 2px}
+.step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto;width:64px;text-align:center}
 .step i{width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--line);display:block}
 .step.done i{background:var(--green);border-color:var(--green)}
 .step.now i{background:var(--gold);border-color:var(--gold);box-shadow:0 0 0 4px rgba(176,137,79,.22)}
@@ -53,7 +61,7 @@ button,select{font:inherit}
 .btn.gold{background:var(--gold)}
 .btn.ghost{background:#eef1f5;color:var(--navy)}
 .btn.warn{background:var(--redbg);color:var(--red)}
-.btn.small{min-height:36px;font-size:13px;flex:0 0 auto}
+.btn.small{min-height:38px;font-size:13.5px;flex:0 0 auto;margin-top:8px}
 select,input[type=number]{width:100%;min-height:44px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:0 10px;color:var(--navy)}
 label{display:block;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:12px 0 4px}
 .cost{color:var(--red);font-weight:800}
@@ -65,11 +73,17 @@ label{display:block;font-size:12px;font-weight:800;letter-spacing:.06em;text-tra
 .kpi span{font-size:11px;color:var(--mut);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
 .rbar{height:10px;border-radius:99px;background:#eef1f5;overflow:hidden;margin:6px 0 2px}
 .rbar i{display:block;height:100%;background:var(--red);border-radius:99px}
+.rbar.g i{background:var(--green)}
 .line2{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .note{color:var(--mut);font-size:13px}
 .how{background:#f7f8fa;border:1px solid #e3e8ef;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:13.5px}
 .link{background:none;border:0;color:var(--blue);font-weight:800;padding:6px 0;cursor:pointer;min-height:32px}
 .empty{color:var(--mut);text-align:center;padding:26px 10px}
+.dots{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.dots span{font-size:11.5px;font-weight:800;padding:4px 8px;border-radius:8px;background:#eef1f5;color:var(--mut)}
+.dots span.entregada{background:var(--greenbg);color:var(--green)}
+.dots span.camino,.dots span.expedicion{background:var(--ambbg);color:var(--amb)}
+.dots span.bad{background:var(--redbg);color:var(--red)}
 nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:520px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);z-index:5}
 nav button{background:none;border:0;border-top:3px solid transparent;padding:8px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12.5px;font-weight:700;color:var(--mut);cursor:pointer;position:relative;min-height:58px}
 nav button.on{color:var(--navy);border-top-color:var(--gold)}
@@ -87,69 +101,71 @@ nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stro
 (function(){
 var HOY='2026-10-12';
 var JORNAL_INI=70000;
-var IMP={corralon:'Corralón',contratista:'Contratista',jefe:'Jefe de obra'};
-var IMPLONG={corralon:'Corralón (stock, preparación o despacho)',contratista:'Contratista · Martín Sosa',jefe:'Jefe de obra · Diego Paz'};
-var ESTADOS={nuevo:'Recién llegado',preparando:'En preparación',expedicion:'En expedición',camino:'En camino',entregado:'Entregado'};
-var STEPIDX={nuevo:1,preparando:1,expedicion:2,camino:3,entregado:4};
-var STEPNAMES=['Pedido','Corralón','Expedición','En camino','Entregado'];
+var IMP={corralon:'Corralón',jefe:'Jefe de obra'};
+var IMPLONG={corralon:'Corralón (stock, preparación o despacho)',jefe:'Jefe de obra (cómo se armó el pedido)'};
+var EST={pendiente:'Por confirmar',preparando:'En preparación',expedicion:'En expedición',camino:'En camino',entregada:'Entregada'};
+var EIDX={pendiente:0,preparando:0,expedicion:1,camino:2,entregada:3};
+var ESTEP=['Preparación','Expedición','En camino','Entregada'];
+var DIAS=['dom','lun','mar','mié','jue','vie','sáb'];
 var clk=10*60+20;
 function stamp(){clk+=7;return '12/10 '+('0'+Math.floor(clk/60)).slice(-2)+':'+('0'+(clk%60)).slice(-2)}
 function dnum(s){var a=s.split('-');return Date.UTC(+a[0],+a[1]-1,+a[2])}
 function bizDiff(from,to){var n=0,t=dnum(from),end=dnum(to);while(t<end){t+=864e5;var w=new Date(t).getUTCDay();if(w!==0&&w!==6)n++}return n}
 function fmt(s){var a=s.split('-');return a[2]+'/'+a[1]}
+function fdia(s){return DIAS[new Date(dnum(s)).getUTCDay()]+' '+fmt(s)}
 function money(n){return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.')+' $'}
+function E(k,fecha,q,estado,x){var o={k:k,fecha:fecha,q:q,estado:estado};for(var i in (x||{}))o[i]=x[i];return o}
 
 var S={tab:'corralon',jornal:JORNAL_INI,open:{},how:{},sheet:null,sel:{},pedidos:[
- {id:'P-014',obra:'Los Álamos 100',nota:'losa PB+1',
-  items:[{n:'Hierro del 12',q:'40 barras'},{n:'Cemento',q:'40 bolsas',orig:'30 bolsas'}],
-  pidio:{n:'Martín Sosa',r:'Contratista',t:'11/10 16:40'},paso:{n:'Diego Paz',r:'Jefe de obra',t:'11/10 17:05'},
-  pedida:'2026-10-12',comprometida:'2026-10-12',estado:'preparando',personas:7,prod:30,incidentes:[],
-  log:[['11/10 16:40','Martín Sosa (contratista)','Hizo el pedido'],['11/10 17:05','Diego Paz (jefe de obra)','Ajustó el cemento de 30 a 40 bolsas y lo pasó al corralón'],['12/10 07:50','Corralón','Confirmó entrega para hoy 12/10']]},
- {id:'P-016',obra:'Av. del Sol 2450',nota:'Colocación de revestimientos, planta alta',
-  items:[{n:'Adhesivo cementicio',q:'40 bolsas'},{n:'Cal hidratada',q:'20 bolsas'}],
-  pidio:{n:'Hugo Ríos',r:'Contratista',t:'12/10 09:55'},paso:{n:'Diego Paz',r:'Jefe de obra',t:'12/10 10:10'},
-  pedida:'2026-10-14',comprometida:'2026-10-14',estado:'nuevo',personas:4,prod:50,incidentes:[],
-  log:[['12/10 09:55','Hugo Ríos (contratista)','Hizo el pedido'],['12/10 10:10','Diego Paz (jefe de obra)','Lo revisó y lo pasó tal cual al corralón']]},
- {id:'P-017',obra:'Los Álamos 100',nota:'Desagües de planta baja',
-  items:[{n:'Caño PVC 110',q:'30 tiras'},{n:'Codos y uniones',q:'1 caja'}],
-  pidio:{n:'Martín Sosa',r:'Contratista',t:'06/10 14:20'},paso:{n:'Diego Paz',r:'Jefe de obra',t:'06/10 14:45'},
-  pedida:'2026-10-08',comprometida:'2026-10-08',estado:'expedicion',personas:3,prod:0,incidentes:[],
-  log:[['06/10 14:20','Martín Sosa (contratista)','Hizo el pedido'],['06/10 14:45','Diego Paz (jefe de obra)','Lo pasó al corralón'],['06/10 15:30','Corralón','Confirmó entrega para el 08/10'],['08/10 08:00','Sistema','Pasó la fecha comprometida y todavía no salió'],['09/10 17:00','Corralón','Pasó a expedición, falta camión disponible']]},
- {id:'P-015',obra:'Lote 14 · Los Cedros',nota:'Contrapiso y carpeta',
-  items:[{n:'Arena gruesa',q:'6 m³'},{n:'Piedra partida',q:'4 m³'}],
-  pidio:{n:'Martín Sosa',r:'Contratista',t:'09/10 11:00'},paso:{n:'Diego Paz',r:'Jefe de obra',t:'09/10 11:20'},
-  pedida:'2026-10-12',comprometida:'2026-10-12',estado:'camino',camion:'Camión 2 · Omar',personas:5,prod:0,incidentes:[],
-  log:[['09/10 11:00','Martín Sosa (contratista)','Hizo el pedido'],['09/10 11:20','Diego Paz (jefe de obra)','Lo pasó al corralón'],['09/10 12:00','Corralón','Confirmó entrega para hoy 12/10'],['12/10 08:40','Expedición','Salió con Camión 2 · Omar']]},
- {id:'P-013',obra:'Los Álamos 100',nota:'Losa PB+1',
-  items:[{n:'Hormigón H21',q:'6 m³'}],
-  pidio:{n:'Martín Sosa',r:'Contratista',t:'05/10 15:10'},paso:{n:'Diego Paz',r:'Jefe de obra',t:'05/10 15:40'},
-  pedida:'2026-10-07',comprometida:'2026-10-07',estado:'entregado',entregada:'2026-10-09',personas:7,prod:30,
-  incidentes:[{tipo:'Entrega tarde',imp:'corralon',dias:2,det:'No salió de planta en la fecha comprometida'}],
-  log:[['05/10 15:10','Martín Sosa (contratista)','Hizo el pedido'],['05/10 15:40','Diego Paz (jefe de obra)','Lo pasó al corralón'],['05/10 16:05','Corralón','Confirmó entrega para el 07/10'],['07/10 08:00','Sistema','Pasó la fecha comprometida y no llegó'],['09/10 11:20','Martín Sosa (contratista)','Recibió en obra con 2 días de demora · remito con foto']]},
- {id:'P-012',obra:'Av. del Sol 2450',nota:'Mampostería planta baja',
-  items:[{n:'Ladrillo hueco 12',q:'600 u'}],
-  pidio:{n:'Hugo Ríos',r:'Contratista',t:'06/10 09:00'},paso:{n:'Diego Paz',r:'Jefe de obra',t:'06/10 09:15'},
-  pedida:'2026-10-08',comprometida:'2026-10-08',estado:'entregado',entregada:'2026-10-09',personas:4,prod:0,
-  incidentes:[{tipo:'Pedido errado',imp:'contratista',dias:1,det:'Se pidió ladrillo de 12 y el plano pedía de 18'}],
-  log:[['06/10 09:00','Hugo Ríos (contratista)','Hizo el pedido: ladrillo hueco de 12'],['06/10 09:15','Diego Paz (jefe de obra)','Lo pasó tal cual al corralón'],['08/10 10:30','Obra','Rechazó la entrega: el plano pedía ladrillo de 18'],['09/10 09:40','Hugo Ríos (contratista)','Recibió el ladrillo correcto · remito con foto']]}
+ {id:'P-018',obra:'Av. del Sol 2450',nota:'Mampostería planta alta',confirmado:false,
+  items:[{n:'Ladrillo hueco',u:'pallets',t:8},{n:'Cemento',u:'pallets',t:4},{n:'Arena',u:'pallets',t:4}],
+  jefe:{n:'Diego Paz',t:'12/10 10:10'},personas:4,prod:50,incidentes:[],
+  entregas:[E(1,'2026-10-14',[4,2,2],'pendiente'),E(2,'2026-10-16',[4,2,2],'pendiente')],
+  log:[['12/10 10:10','Diego Paz (jefe de obra)','Hizo el pedido con entrega en 2 partes iguales: 4 de ladrillo, 2 de cemento y 2 de arena en cada una']]},
+ {id:'P-014',obra:'Los Álamos 100',nota:'Mampostería y contrapiso, planta baja',confirmado:true,
+  items:[{n:'Cemento',u:'pallets',t:10},{n:'Ladrillo hueco',u:'pallets',t:10},{n:'Arena',u:'pallets',t:10}],
+  jefe:{n:'Diego Paz',t:'11/10 17:05'},personas:7,prod:30,incidentes:[],
+  entregas:[E(1,'2026-10-12',[2,2,2],'camino',{camion:'Camión 2 · Omar'}),E(2,'2026-10-13',[3,3,3],'preparando'),E(3,'2026-10-14',[3,3,3],'preparando'),E(4,'2026-10-15',[2,2,2],'preparando')],
+  log:[['11/10 17:05','Diego Paz (jefe de obra)','Hizo el pedido con entrega en 4 partes, cada una con cemento, ladrillo y arena juntos'],['11/10 17:40','Corralón','Confirmó el plan de entrega'],['12/10 08:40','Expedición','Entrega 1 salió con Camión 2 · Omar']]},
+ {id:'P-017',obra:'Los Álamos 100',nota:'Desagües de planta baja',confirmado:true,
+  items:[{n:'Caño PVC 110',u:'tiras',t:30},{n:'Codos y uniones',u:'caja',t:1}],
+  jefe:{n:'Diego Paz',t:'06/10 14:45'},personas:3,prod:0,incidentes:[],
+  entregas:[E(1,'2026-10-08',[30,1],'expedicion')],
+  log:[['06/10 14:45','Diego Paz (jefe de obra)','Hizo el pedido con una sola entrega'],['06/10 15:30','Corralón','Confirmó entrega para el 08/10'],['08/10 08:00','Sistema','Pasó la fecha comprometida y todavía no salió'],['09/10 17:00','Corralón','Pasó a expedición, falta camión disponible']]},
+ {id:'P-013',obra:'Los Álamos 100',nota:'Losa PB+1',confirmado:true,
+  items:[{n:'Hormigón H21',u:'m³',t:6}],
+  jefe:{n:'Diego Paz',t:'05/10 15:40'},personas:7,prod:30,
+  incidentes:[{k:1,tipo:'Entrega tarde',imp:'corralon',dias:2,det:'No salió de planta en la fecha comprometida'}],
+  entregas:[E(1,'2026-10-07',[6],'entregada',{entregadaEl:'2026-10-09'})],
+  log:[['05/10 15:40','Diego Paz (jefe de obra)','Hizo el pedido con una sola entrega'],['05/10 16:05','Corralón','Confirmó entrega para el 07/10'],['07/10 08:00','Sistema','Pasó la fecha comprometida y no llegó'],['09/10 11:20','Diego Paz (jefe de obra)','Recibió en obra con 2 días de demora · remito con foto']]},
+ {id:'P-012',obra:'Av. del Sol 2450',nota:'Mampostería planta baja',confirmado:true,
+  items:[{n:'Ladrillo hueco de 12',u:'unidades',t:600}],
+  jefe:{n:'Diego Paz',t:'06/10 09:15'},personas:4,prod:0,
+  incidentes:[{k:1,tipo:'Pedido errado',imp:'jefe',dias:1,det:'Se pidió ladrillo de 12 y el plano pedía de 18'}],
+  entregas:[E(1,'2026-10-08',[600],'entregada',{entregadaEl:'2026-10-09'})],
+  log:[['06/10 09:15','Diego Paz (jefe de obra)','Hizo el pedido: ladrillo hueco de 12'],['08/10 10:30','Obra','Rechazó la entrega: el plano pedía ladrillo de 18'],['09/10 09:40','Diego Paz (jefe de obra)','Recibió el ladrillo correcto · remito con foto']]},
+ {id:'P-011',obra:'Lote 14 · Los Cedros',nota:'Mampostería de cierre',confirmado:true,
+  items:[{n:'Ladrillo hueco',u:'pallets',t:4},{n:'Cemento',u:'pallets',t:2},{n:'Arena',u:'pallets',t:2}],
+  jefe:{n:'Diego Paz',t:'05/10 12:00'},personas:5,prod:0,
+  incidentes:[{k:1,tipo:'Entrega incompleta',imp:'corralon',dias:1,det:'Llegó con ladrillo y cemento, pero sin arena: la obra no pudo avanzar'}],
+  entregas:[E(1,'2026-10-06',[2,1,1],'entregada',{entregadaEl:'2026-10-06',faltante:'Arena'}),E(2,'2026-10-08',[2,1,1],'entregada',{entregadaEl:'2026-10-08'})],
+  log:[['05/10 12:00','Diego Paz (jefe de obra)','Hizo el pedido con entrega en 2 partes iguales'],['06/10 10:00','Diego Paz (jefe de obra)','Recibió la entrega 1 sin arena: no se pudo avanzar con el muro'],['08/10 09:30','Diego Paz (jefe de obra)','Recibió la entrega 2 completa · remito con foto']]}
 ]};
 
-function late(p){ // días hábiles de atraso corriendo, solo si no está entregado
-  if(p.estado==='entregado')return 0;
-  return Math.max(0,bizDiff(p.comprometida,HOY));
-}
+function late(e){return e.estado==='entregada'?0:Math.max(0,bizDiff(e.fecha,HOY))}
 function costoDia(p){return S.jornal*p.personas*(1-p.prod/100)}
-function costoInc(p,i){return costoDia(p)*i.dias}
-function allInc(){ // incidentes confirmados + atrasos corriendo
+function allInc(){
   var out=[];
   S.pedidos.forEach(function(p){
-    p.incidentes.forEach(function(i){out.push({p:p,tipo:i.tipo,imp:i.imp,dias:i.dias,det:i.det,costo:costoInc(p,i),corriendo:false})});
-    var l=late(p);
-    if(l>0)out.push({p:p,tipo:'Entrega atrasada (sigue corriendo)',imp:'corralon',dias:l,det:'Pasó la fecha comprometida ('+fmt(p.comprometida)+') y no llegó',costo:costoDia(p)*l,corriendo:true});
+    p.incidentes.forEach(function(i){out.push({p:p,k:i.k,tipo:i.tipo,imp:i.imp,dias:i.dias,det:i.det,costo:costoDia(p)*i.dias,corriendo:false})});
+    p.entregas.forEach(function(e){var l=late(e);
+      if(l>0)out.push({p:p,k:e.k,tipo:'Entrega '+e.k+' atrasada (sigue corriendo)',imp:'corralon',dias:l,det:'Pasó la fecha comprometida ('+fmt(e.fecha)+') y no llegó',costo:costoDia(p)*l,corriendo:true});
+    });
   });
   return out;
 }
-function cnt(est){return S.pedidos.filter(function(p){return est.indexOf(p.estado)>-1}).length}
+function enCorralon(){return S.pedidos.filter(function(p){return !p.confirmado||p.entregas.some(function(e){return e.estado==='preparando'})})}
+function enExp(){var o=[];S.pedidos.forEach(function(p){p.entregas.forEach(function(e){if(e.estado==='expedicion'||e.estado==='camino')o.push({p:p,e:e})})});return o}
 
 function ico(n){
   var paths={
@@ -158,109 +174,115 @@ function ico(n){
     gen:'<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>'};
   return '<svg viewBox="0 0 24 24">'+paths[n]+'</svg>';
 }
-
-function stepper(p){
-  var idx=STEPIDX[p.estado],h='<div class="steps">';
-  for(var i=0;i<STEPNAMES.length;i++){
-    var cls=i<idx?'done':(i===idx&&p.estado!=='entregado'?'now':(p.estado==='entregado'&&i===idx?'done':''));
-    h+='<div class="step '+cls+'"><i></i><em>'+STEPNAMES[i]+'</em></div>';
-    if(i<STEPNAMES.length-1)h+='<div class="bar'+(i<idx?' done':'')+'"></div>';
+function stepper(e){
+  var idx=EIDX[e.estado],h='<div class="steps">';
+  for(var i=0;i<ESTEP.length;i++){
+    var cls=(e.estado==='entregada'||i<idx)?'done':(i===idx?'now':'');
+    h+='<div class="step '+cls+'"><i></i><em>'+ESTEP[i]+'</em></div>';
+    if(i<ESTEP.length-1)h+='<div class="bar'+((e.estado==='entregada'||i<idx)?' done':'')+'"></div>';
   }
   return h+'</div>';
 }
-
-function itemsHTML(p){
-  return '<ul class="items">'+p.items.map(function(it){
-    return '<li><span>'+it.n+(it.orig?'<br><span class="adj">El contratista pidió '+it.orig+'; el jefe de obra lo ajustó</span>':'')+'</span><span class="q">'+it.q+'</span></li>';
-  }).join('')+'</ul>';
+function pills(p,e){
+  return p.items.map(function(it,i){return '<span class="pill">'+it.n+' <b>'+e.q[i]+' '+it.u+'</b></span>'}).join('');
 }
-
-function traceHTML(p){
-  var h='<div class="trace"><div><b>Cómo se hizo el pedido</b></div>';
-  h+='<div>Pidió <b>'+p.pidio.n+'</b> · '+p.pidio.r+' <span class="t">· '+p.pidio.t+'</span></div>';
-  h+='<div>Lo pasó <b>'+p.paso.n+'</b> · '+p.paso.r+' <span class="t">· '+p.paso.t+'</span></div>';
-  if(p.nota)h+='<div class="t">Para: '+p.nota+'</div>';
-  h+='</div>';
-  var open=S.open[p.id];
-  h+='<button class="link" data-act="hist" data-id="'+p.id+'">'+(open?'Ocultar historial':'Ver historial completo')+'</button>';
-  if(open){
-    h+='<div class="trace">'+p.log.map(function(l){return '<div><span class="t">'+l[0]+'</span> · <b>'+l[1]+'</b><br>'+l[2]+'</div>'}).join('')+'</div>';
+function entChips(e){
+  var l=late(e),h='<span class="chip '+(e.estado==='entregada'?'green':(e.estado==='pendiente'?'':'blue'))+'">'+EST[e.estado]+'</span>';
+  if(e.estado!=='entregada'){
+    if(l>0)h+=' <span class="chip red">Atrasada '+l+' d hábiles</span>';
+    else if(e.fecha===HOY)h+=' <span class="chip amb">Hoy</span>';
   }
   return h;
 }
-
-function badges(p){
-  var l=late(p),h='<div class="chips"><span class="chip '+(p.estado==='entregado'?'green':'blue')+'">'+ESTADOS[p.estado]+'</span>';
-  if(p.estado!=='entregado'){
-    if(l>0)h+='<span class="chip red">Atrasado '+l+' d hábiles</span>';
-    else if(p.comprometida===HOY)h+='<span class="chip amb">Entrega hoy</span>';
-    else h+='<span class="chip">Entrega '+fmt(p.comprometida)+'</span>';
-  }
-  return h+'</div>';
-}
-
-function dateOptions(sel){
-  var days=['2026-10-12','2026-10-13','2026-10-14','2026-10-15','2026-10-16'],h='';
-  days.forEach(function(d){h+='<option value="'+d+'"'+(d===sel?' selected':'')+'>'+fmt(d)+(d===HOY?' (hoy)':'')+'</option>'});
+function histHTML(p){
+  var open=S.open[p.id],h='<button class="link" data-act="hist" data-id="'+p.id+'">'+(open?'Ocultar historial':'Ver historial del pedido')+'</button>';
+  if(open)h+='<div class="trace">'+p.log.map(function(l){return '<div><span class="t">'+l[0]+'</span> · <b>'+l[1]+'</b><br>'+l[2]+'</div>'}).join('')+'</div>';
   return h;
 }
 
-function card(p,mode){
-  var h='<div class="card'+(late(p)>0?' alert':'')+'"><div class="row"><div class="obra">'+p.obra+'</div><div class="id">'+p.id+'</div></div>';
-  h+=badges(p)+itemsHTML(p)+stepper(p);
-  if(late(p)>0)h+='<div class="note" style="margin-top:6px">El atraso ya cuesta <span class="cost">'+money(costoDia(p)*late(p))+'</span> a la obra ('+p.personas+' personas afectadas).</div>';
-  h+=traceHTML(p);
+function cardCorralon(p){
+  var n=p.entregas.length;
+  var h='<div class="card"><div class="row"><div class="obra">'+p.obra+'</div><div class="id">'+p.id+'</div></div>';
+  h+='<div class="chips"><span class="chip '+(p.confirmado?'blue':'amb')+'">'+(p.confirmado?'Plan confirmado':'Plan por confirmar')+'</span><span class="chip">'+n+(n===1?' entrega':' entregas')+'</span></div>';
+  h+='<div class="note">Pidió <b>'+p.jefe.n+'</b> · Jefe de obra · '+p.jefe.t+'<br>Para: '+p.nota+'</div>';
+  h+='<div class="mini">Pedido completo</div><ul class="items">'+p.items.map(function(it){return '<li><span>'+it.n+'</span><span class="q">'+it.t+' '+it.u+'</span></li>'}).join('')+'</ul>';
+  h+='<div class="mini">Cómo tiene que salir la entrega</div>';
+  if(n>1)h+='<div class="note">Cada entrega sale armada con lo que la obra usa junto. Si falta un producto, esa parte no sirve para avanzar.</div>';
+  p.entregas.forEach(function(e){
+    h+='<div class="ent '+e.estado+(late(e)>0?' late':'')+'"><div class="tt"><b>Entrega '+e.k+' de '+n+' · '+fdia(e.fecha)+'</b><span>'+entChips(e)+'</span></div>'+pills(p,e);
+    if(p.confirmado&&e.estado==='preparando')h+='<div><button class="btn small gold" data-act="exp" data-id="'+p.id+'" data-k="'+e.k+'">Pasar a expedición</button></div>';
+    h+='</div>';
+  });
+  h+=histHTML(p);
   h+='<div class="btns">';
-  if(p.estado==='nuevo'){
-    var v=S.sel['f'+p.id]||p.pedida;
-    h+='<div style="flex:1 1 100%"><label>Entrega comprometida (pedida: '+fmt(p.pedida)+')</label><select data-sel="f'+p.id+'">'+dateOptions(v)+'</select></div>';
-    h+='<button class="btn gold" data-act="confirmar" data-id="'+p.id+'">Confirmar pedido</button>';
-  }else if(p.estado==='preparando'){
-    h+='<button class="btn gold" data-act="expedicion" data-id="'+p.id+'">Pasar a expedición</button>';
-  }else if(p.estado==='expedicion'){
-    var c=S.sel['c'+p.id]||'Camión 1 · Raúl';
-    h+='<div style="flex:1 1 100%"><label>Camión y chofer</label><select data-sel="c'+p.id+'">'+['Camión 1 · Raúl','Camión 2 · Omar','Camioneta · Lucas'].map(function(x){return '<option'+(x===c?' selected':'')+'>'+x+'</option>'}).join('')+'</select></div>';
-    h+='<button class="btn gold" data-act="despachar" data-id="'+p.id+'">Despachar</button>';
-  }else if(p.estado==='camino'){
-    h+='<div class="note" style="flex:1 1 100%">'+(p.camion||'')+' · salió de expedición</div>';
-    h+='<button class="btn gold" data-act="entregar" data-id="'+p.id+'">Entregado en obra</button>';
+  if(!p.confirmado)h+='<button class="btn gold" data-act="confirmar" data-id="'+p.id+'">Confirmar plan de entrega</button>';
+  h+='<button class="btn warn" data-act="problema" data-id="'+p.id+'">Avisar problema</button></div></div>';
+  return h;
+}
+function cardExp(x){
+  var p=x.p,e=x.e,n=p.entregas.length;
+  var h='<div class="card'+(late(e)>0?' alert':'')+'"><div class="row"><div class="obra">'+p.obra+'</div><div class="id">'+p.id+'</div></div>';
+  h+='<div class="chips"><span class="chip">Entrega '+e.k+' de '+n+'</span><span class="chip">Programada '+fdia(e.fecha)+'</span>'+entChips(e)+'</div>';
+  h+='<div>'+pills(p,e)+'</div>'+stepper(e);
+  if(late(e)>0)h+='<div class="note" style="margin-top:6px">El atraso ya cuesta <span class="cost">'+money(costoDia(p)*late(e))+'</span> a la obra ('+p.personas+' personas afectadas).</div>';
+  h+=histHTML(p);
+  h+='<div class="btns">';
+  if(e.estado==='expedicion'){
+    var c=S.sel['c'+p.id+e.k]||'Camión 1 · Raúl';
+    h+='<div style="flex:1 1 100%"><label>Camión y chofer</label><select data-sel="c'+p.id+e.k+'">'+['Camión 1 · Raúl','Camión 2 · Omar','Camioneta · Lucas'].map(function(o){return '<option'+(o===c?' selected':'')+'>'+o+'</option>'}).join('')+'</select></div>';
+    h+='<button class="btn gold" data-act="despachar" data-id="'+p.id+'" data-k="'+e.k+'">Despachar</button>';
+  }else{
+    h+='<div class="note" style="flex:1 1 100%">'+(e.camion||'')+' · la obra confirma cómo llegó</div>';
+    h+='<button class="btn gold" data-act="completa" data-id="'+p.id+'" data-k="'+e.k+'">Llegó completa</button><button class="btn warn" data-act="incompleta" data-id="'+p.id+'" data-k="'+e.k+'">Llegó incompleta</button>';
   }
-  if(p.estado!=='entregado')h+='<button class="btn warn" data-act="problema" data-id="'+p.id+'">Avisar problema</button>';
   return h+'</div></div>';
 }
 
 function viewCorralon(){
-  var l=S.pedidos.filter(function(p){return p.estado==='nuevo'||p.estado==='preparando'});
-  var h='<div class="sec">Pedidos que llegan desde la obra</div>';
+  var l=enCorralon(),h='<div class="sec">Pedidos del jefe de obra</div>';
   if(!l.length)h+='<div class="empty">No hay pedidos para preparar.</div>';
-  l.forEach(function(p){h+=card(p)});
-  h+='<div class="foot">Cada pedido llega con quién lo hizo y quién lo pasó. No se guardan precios ni pagos.</div>';
+  l.forEach(function(p){h+=cardCorralon(p)});
+  h+='<div class="foot">El pedido lo hace el jefe de obra, después de hablarlo con el contratista. Al corralón le llega ya cerrado, con el plan de entrega. No se guardan precios ni pagos.</div>';
   return h;
 }
 function viewExp(){
-  var l=S.pedidos.filter(function(p){return p.estado==='expedicion'||p.estado==='camino'});
-  var h='<div class="sec">Para despachar y en camino</div>';
-  if(!l.length)h+='<div class="empty">No hay pedidos en expedición.</div>';
-  l.forEach(function(p){h+=card(p)});
-  h+='<div class="foot">Al marcar “Entregado en obra” queda el remito con foto y quién lo recibió.</div>';
+  var l=enExp(),h='<div class="sec">Entregas para despachar y en camino</div>';
+  if(!l.length)h+='<div class="empty">No hay entregas en expedición.</div>';
+  l.forEach(function(x){h+=cardExp(x)});
+  h+='<div class="foot">Al recibir, el jefe de obra confirma si la entrega llegó completa. Si faltó un producto, queda como atraso con su costo.</div>';
   return h;
 }
 
 function viewGeneral(){
   var inc=allInc(),total=inc.reduce(function(a,i){return a+i.costo},0);
   var run=inc.filter(function(i){return i.corriendo}).length;
-  var enCurso=S.pedidos.filter(function(p){return p.estado!=='entregado'}).length;
-  var aTiempo=S.pedidos.filter(function(p){return p.estado==='entregado'&&!p.incidentes.length}).length;
-  var conAtraso=new Set(inc.map(function(i){return i.p.id})).size;
-  var h='<div class="kpis"><div class="kpi"><b>'+enCurso+'</b><span>En curso</span></div><div class="kpi"><b>'+aTiempo+'</b><span>A tiempo</span></div><div class="kpi"><b style="color:var(--red)">'+conAtraso+'</b><span>Con atraso</span></div></div>';
+  var curso=0,ok=0;
+  S.pedidos.forEach(function(p){p.entregas.forEach(function(e){
+    if(e.estado!=='entregada')curso++;
+    else if(!p.incidentes.some(function(i){return i.k===e.k}))ok++;
+  })});
+  var prob={};inc.forEach(function(i){prob[i.p.id+':'+i.k]=1});
+  var h='<div class="kpis"><div class="kpi"><b>'+curso+'</b><span>Entregas en curso</span></div><div class="kpi"><b>'+ok+'</b><span>Llegaron bien</span></div><div class="kpi"><b style="color:var(--red)">'+Object.keys(prob).length+'</b><span>Con problema</span></div></div>';
   h+='<div class="card alert"><div class="sec" style="margin:0">Lo que cuestan los atrasos de materiales</div><div class="big">'+money(total)+'</div><div class="note">'+inc.length+' casos'+(run?' · '+run+' con el costo todavía corriendo':'')+'. Cada uno entra solo a Gestión de obra con la causa “Materiales · Provisión”.</div></div>';
 
   h+='<div class="sec">Quién generó el costo</div><div class="card">';
-  ['corralon','contratista','jefe'].forEach(function(k){
+  ['corralon','jefe'].forEach(function(k){
     var sub=inc.filter(function(i){return i.imp===k}),sum=sub.reduce(function(a,i){return a+i.costo},0);
-    h+='<div style="margin-bottom:10px"><div class="line2"><b>'+IMP[k]+'</b><span class="cost">'+money(sum)+'</span></div><div class="rbar"><i style="width:'+(total?Math.round(sum/total*100):0)+'%"></i></div><div class="note">'+sub.length+(sub.length===1?' caso':' casos')+(k==='contratista'?' · pedidos mal hechos':'')+'</div></div>';
+    h+='<div style="margin-bottom:10px"><div class="line2"><b>'+IMP[k]+'</b><span class="cost">'+money(sum)+'</span></div><div class="rbar"><i style="width:'+(total?Math.round(sum/total*100):0)+'%"></i></div><div class="note">'+sub.length+(sub.length===1?' caso':' casos')+(k==='jefe'?' · pedidos mal armados':' · entregas tarde, faltantes o incompletas')+'</div></div>';
   });
   h+='</div>';
+
+  h+='<div class="sec">Avance de cada pedido</div>';
+  S.pedidos.forEach(function(p){
+    var d=p.entregas.filter(function(e){return e.estado==='entregada'}).length,n=p.entregas.length;
+    h+='<div class="card"><div class="row"><div class="obra" style="font-size:16px">'+p.obra+'</div><div class="id">'+p.id+'</div></div><div class="note">'+p.items.map(function(it){return it.n}).join(' · ')+'</div>';
+    h+='<div class="rbar g"><i style="width:'+Math.round(d/n*100)+'%"></i></div><div class="note">'+d+' de '+n+(n===1?' entrega recibida':' entregas recibidas')+'</div><div class="dots">';
+    p.entregas.forEach(function(e){
+      var bad=late(e)>0||p.incidentes.some(function(i){return i.k===e.k});
+      h+='<span class="'+(bad?'bad':e.estado)+'">E'+e.k+' · '+fdia(e.fecha)+'</span>';
+    });
+    h+='</div></div>';
+  });
 
   h+='<div class="sec">Por obra</div><div class="card">';
   var obras={};inc.forEach(function(i){obras[i.p.obra]=(obras[i.p.obra]||0)+i.costo});
@@ -273,72 +295,89 @@ function viewGeneral(){
   h+='<div class="sec">Casos de atraso</div>';
   inc.forEach(function(i,ix){
     var k='h'+ix,p=i.p;
-    h+='<div class="card"><div class="row"><div><div class="obra" style="font-size:16px">'+i.tipo+'</div><div class="note">'+p.obra+' · '+p.id+' · imputable a <b>'+IMP[i.imp]+'</b></div></div><div class="cost" style="white-space:nowrap">'+money(i.costo)+'</div></div>';
+    h+='<div class="card"><div class="row"><div><div class="obra" style="font-size:16px">'+i.tipo+'</div><div class="note">'+p.obra+' · '+p.id+(i.k?' · entrega '+i.k:'')+' · imputable a <b>'+IMP[i.imp]+'</b></div></div><div class="cost" style="white-space:nowrap">'+money(i.costo)+'</div></div>';
     h+='<div class="note" style="margin-top:6px">'+i.det+' · '+i.dias+' d hábiles</div>';
     h+='<button class="link" data-act="how" data-k="'+k+'">'+(S.how[k]?'Ocultar el cálculo':'Ver cómo se calcula')+'</button>';
     if(S.how[k])h+='<div class="how">'+p.personas+' personas afectadas × '+i.dias+(i.dias===1?' día':' días')+' × '+money(S.jornal)+' por persona por día'+(p.prod?' × '+(100-p.prod)+'% (trabajaron al '+p.prod+'% de productividad)':'')+' = <b class="cost">'+money(i.costo)+'</b></div>';
-    h+='<div style="margin-top:2px"><button class="link" data-act="hist" data-id="'+p.id+'">'+(S.open[p.id]?'Ocultar historial del pedido':'Ver historial del pedido')+'</button></div>';
-    if(S.open[p.id])h+='<div class="trace">'+p.log.map(function(l){return '<div><span class="t">'+l[0]+'</span> · <b>'+l[1]+'</b><br>'+l[2]+'</div>'}).join('')+'</div>';
-    h+='</div>';
+    h+='<div>'+histHTML(p)+'</div></div>';
   });
   if(!inc.length)h+='<div class="empty">Todavía no hay atrasos.</div>';
 
   h+='<div class="sec">Ajustes del cálculo</div><div class="card"><label style="margin-top:0">Costo de una persona por día (ejemplo)</label><input type="number" inputmode="numeric" min="0" step="1000" value="'+S.jornal+'" data-act="jornal"><div class="note" style="margin-top:6px">Es el mismo parámetro que usa Gestión de obra. Se ajusta una vez y vale para todo.</div></div>';
-  h+='<div class="foot">NEXO no guarda precios de materiales ni pagos. Solo mide cuánto cuesta que un pedido llegue tarde o mal hecho.</div>';
+  h+='<div class="foot">NEXO no guarda precios de materiales ni pagos. Solo mide cuánto cuesta que un pedido llegue tarde, incompleto o mal armado.</div>';
   return h;
 }
 
-function sheetHTML(p){
-  var t=S.sel.tp||'Falta de stock',imp=S.sel.imp||'corralon',d=S.sel.dias||'1';
-  var tipos=['Falta de stock','Pedido incompleto','Pedido errado'];
-  var h='<div class="shade" data-act="cerrar"><div class="sheet" data-stop="1"><h2>Avisar un problema</h2><div class="note">'+p.obra+' · '+p.id+'. Queda en el historial y entra a Gestión de obra.</div>';
-  h+='<label>Qué pasó</label><select data-sel="tp">'+tipos.map(function(x){return '<option'+(x===t?' selected':'')+'>'+x+'</option>'}).join('')+'</select>';
-  h+='<label>Quién lo generó</label><select data-sel="imp">'+Object.keys(IMPLONG).map(function(k){return '<option value="'+k+'"'+(k===imp?' selected':'')+'>'+IMPLONG[k]+'</option>'}).join('')+'</select>';
-  h+='<label>Días hábiles de atraso</label><select data-sel="dias">'+[1,2,3,4,5].map(function(n){return '<option'+(String(n)===d?' selected':'')+'>'+n+'</option>'}).join('')+'</select>';
-  h+='<div class="note" style="margin-top:10px">Costo estimado: <b class="cost">'+money(costoDia(p)*(+d))+'</b> ('+p.personas+' personas afectadas).</div>';
-  h+='<div class="btns"><button class="btn ghost" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarprob" data-id="'+p.id+'">Guardar aviso</button></div></div></div>';
-  return h;
+function sheetHTML(){
+  var sh=S.sheet,p=sh.p,h='<div class="shade" data-act="cerrar"><div class="sheet">';
+  if(sh.type==='prob'){
+    var t=S.sel.tp||'Falta de stock',imp=S.sel.imp||'corralon',d=S.sel.dias||'1';
+    h+='<h2>Avisar un problema</h2><div class="note">'+p.obra+' · '+p.id+'. Queda en el historial y entra a Gestión de obra.</div>';
+    h+='<label>Qué pasó</label><select data-sel="tp">'+['Falta de stock','No puedo cumplir el plan de entrega','Pedido incompleto o errado'].map(function(x){return '<option'+(x===t?' selected':'')+'>'+x+'</option>'}).join('')+'</select>';
+    h+='<label>Quién lo generó</label><select data-sel="imp">'+Object.keys(IMPLONG).map(function(k){return '<option value="'+k+'"'+(k===imp?' selected':'')+'>'+IMPLONG[k]+'</option>'}).join('')+'</select>';
+    h+='<label>Días hábiles de atraso</label><select data-sel="dias">'+[1,2,3,4,5].map(function(n){return '<option'+(String(n)===d?' selected':'')+'>'+n+'</option>'}).join('')+'</select>';
+    h+='<div class="note" style="margin-top:10px">Costo estimado: <b class="cost">'+money(costoDia(p)*(+d))+'</b> ('+p.personas+' personas afectadas).</div>';
+    h+='<div class="btns"><button class="btn ghost" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarprob" data-id="'+p.id+'">Guardar aviso</button></div>';
+  }else{
+    var f=S.sel.fal||p.items[0].n,dd=S.sel.dfal||'1';
+    h+='<h2>Llegó incompleta</h2><div class="note">'+p.obra+' · '+p.id+' · entrega '+sh.k+'. Si falta un producto, la obra no puede avanzar con esa parte.</div>';
+    h+='<label>Qué faltó</label><select data-sel="fal">'+p.items.map(function(it){return '<option'+(it.n===f?' selected':'')+'>'+it.n+'</option>'}).join('')+'</select>';
+    h+='<label>Días hábiles sin poder avanzar</label><select data-sel="dfal">'+[1,2,3].map(function(n){return '<option'+(String(n)===dd?' selected':'')+'>'+n+'</option>'}).join('')+'</select>';
+    h+='<div class="note" style="margin-top:10px">Costo estimado: <b class="cost">'+money(costoDia(p)*(+dd))+'</b> ('+p.personas+' personas afectadas).</div>';
+    h+='<div class="btns"><button class="btn ghost" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarfalt" data-id="'+p.id+'" data-k="'+sh.k+'">Guardar</button></div>';
+  }
+  return h+'</div></div>';
 }
 
-var TITLES={corralon:['Corralón','Pedidos que llegan desde la obra'],exp:['Expedición','Despacho y entrega en obra'],gen:['General','Seguimiento y costo de los atrasos']};
+var TITLES={corralon:['Corralón','Pedidos que llegan del jefe de obra'],exp:['Expedición','Despacho y entrega en obra'],gen:['General','Seguimiento y costo de los atrasos']};
 function render(){
   var t=TITLES[S.tab],body=S.tab==='corralon'?viewCorralon():S.tab==='exp'?viewExp():viewGeneral();
-  var nc=cnt(['nuevo','preparando']),ne=cnt(['expedicion','camino']);
+  var nc=enCorralon().length,ne=enExp().length;
   var h='<div class="band"><span>NEXO · Proveedores</span><span>Corralón Norte · Buenos Aires</span></div>';
   h+='<div class="head"><h1>'+t[0]+'</h1><p>'+t[1]+'</p><span class="demo">Demo · datos de ejemplo</span></div><main>'+body+'</main>';
   h+='<nav>'+[['corralon','Corralón','corralon',nc],['exp','Expedición','exp',ne],['gen','General','gen',0]].map(function(x){
     return '<button class="'+(S.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+ico(x[2])+x[1]+(x[3]?'<span class="badge">'+x[3]+'</span>':'')+'</button>';
   }).join('')+'</nav>';
-  if(S.sheet)h+=sheetHTML(S.sheet);
+  if(S.sheet)h+=sheetHTML();
   var y=window.scrollY;
   document.getElementById('app').innerHTML=h;
   window.scrollTo(0,y);
 }
 function find(id){return S.pedidos.filter(function(p){return p.id===id})[0]}
+function ent(p,k){return p.entregas.filter(function(e){return e.k===k})[0]}
 function log(p,who,txt){p.log.push([stamp(),who,txt])}
 
 document.addEventListener('click',function(e){
   var el=e.target.closest('[data-act]');
   if(!el)return;
-  if(e.target.closest('[data-stop]')&&el.dataset.act==='cerrar'&&el.classList.contains('shade'))return;
-  var a=el.dataset.act,p=el.dataset.id?find(el.dataset.id):null;
+  var a=el.dataset.act,p=el.dataset.id?find(el.dataset.id):null,k=el.dataset.k?+el.dataset.k:0,en=p&&k?ent(p,k):null;
   if(a==='jornal')return;
+  if(a==='cerrar'&&el.classList.contains('shade')&&e.target.closest('.sheet'))return;
   if(a==='tab'){S.tab=el.dataset.t;window.scrollTo(0,0)}
   else if(a==='hist'){S.open[p.id]=!S.open[p.id]}
   else if(a==='how'){S.how[el.dataset.k]=!S.how[el.dataset.k]}
-  else if(a==='confirmar'){var f=S.sel['f'+p.id]||p.pedida;p.comprometida=f;p.estado='preparando';log(p,'Corralón','Confirmó entrega para el '+fmt(f))}
-  else if(a==='expedicion'){p.estado='expedicion';log(p,'Corralón','Preparado y pasado a expedición')}
-  else if(a==='despachar'){var c=S.sel['c'+p.id]||'Camión 1 · Raúl';p.camion=c;p.estado='camino';log(p,'Expedición','Salió con '+c)}
-  else if(a==='entregar'){
-    var l=late(p);p.estado='entregado';p.entregada=HOY;
-    if(l>0)p.incidentes.push({tipo:'Entrega tarde',imp:'corralon',dias:l,det:'Llegó '+l+(l===1?' día hábil':' días hábiles')+' después de lo comprometido'});
-    log(p,p.pidio.n+' (contratista)','Recibió en obra'+(l>0?' con '+l+' d de demora':' a tiempo')+' · remito con foto');
+  else if(a==='confirmar'){p.confirmado=true;p.entregas.forEach(function(x){if(x.estado==='pendiente')x.estado='preparando'});log(p,'Corralón','Confirmó el plan de entrega: '+p.entregas.length+(p.entregas.length===1?' entrega':' entregas'))}
+  else if(a==='exp'){en.estado='expedicion';log(p,'Corralón','Entrega '+k+' preparada y pasada a expedición')}
+  else if(a==='despachar'){var c=S.sel['c'+p.id+k]||'Camión 1 · Raúl';en.camion=c;en.estado='camino';log(p,'Expedición','Entrega '+k+' salió con '+c)}
+  else if(a==='completa'){
+    var l=late(en);en.estado='entregada';en.entregadaEl=HOY;
+    if(l>0)p.incidentes.push({k:k,tipo:'Entrega tarde',imp:'corralon',dias:l,det:'La entrega '+k+' llegó '+l+(l===1?' día hábil':' días hábiles')+' después de lo comprometido'});
+    log(p,p.jefe.n+' (jefe de obra)','Recibió la entrega '+k+' completa'+(l>0?' con '+l+' d de demora':' a tiempo')+' · remito con foto');
   }
-  else if(a==='problema'){S.sheet=p;S.sel.tp='Falta de stock';S.sel.imp='corralon';S.sel.dias='1'}
-  else if(a==='cerrar'){if(e.target.closest('.sheet')&&!el.classList.contains('btn'))return;S.sheet=null}
+  else if(a==='incompleta'){S.sheet={type:'falt',p:p,k:k};S.sel.fal=p.items[0].n;S.sel.dfal='1'}
+  else if(a==='guardarfalt'){
+    var l2=late(en),f=S.sel.fal||p.items[0].n,d2=+S.sel.dfal||1;
+    if(l2>0)p.incidentes.push({k:k,tipo:'Entrega tarde',imp:'corralon',dias:l2,det:'La entrega '+k+' llegó '+l2+(l2===1?' día hábil':' días hábiles')+' después de lo comprometido'});
+    p.incidentes.push({k:k,tipo:'Entrega incompleta',imp:'corralon',dias:d2,det:'Llegó sin '+f.toLowerCase()+': la obra no pudo avanzar con esa parte'});
+    en.estado='entregada';en.entregadaEl=HOY;en.faltante=f;
+    log(p,p.jefe.n+' (jefe de obra)','Recibió la entrega '+k+' sin '+f.toLowerCase()+' · +'+d2+' d hábiles sin avanzar');
+    S.sheet=null;
+  }
+  else if(a==='problema'){S.sheet={type:'prob',p:p};S.sel.tp='Falta de stock';S.sel.imp='corralon';S.sel.dias='1'}
+  else if(a==='cerrar'){S.sheet=null}
   else if(a==='guardarprob'){
     var d=+S.sel.dias||1,imp=S.sel.imp||'corralon';
-    p.incidentes.push({tipo:S.sel.tp||'Falta de stock',imp:imp,dias:d,det:'Avisado desde el corralón'});
+    p.incidentes.push({k:0,tipo:S.sel.tp||'Falta de stock',imp:imp,dias:d,det:'Avisado desde el corralón'});
     log(p,'Corralón','Avisó: '+(S.sel.tp||'Falta de stock')+' · imputable a '+IMP[imp]+' · +'+d+' d hábiles');
     S.sheet=null;
   }
@@ -346,7 +385,7 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('change',function(e){
   var t=e.target;
-  if(t.dataset&&t.dataset.sel){S.sel[t.dataset.sel]=t.value;if(S.sheet&&['tp','imp','dias'].indexOf(t.dataset.sel)>-1)render()}
+  if(t.dataset&&t.dataset.sel){S.sel[t.dataset.sel]=t.value;if(S.sheet&&['tp','imp','dias','fal','dfal'].indexOf(t.dataset.sel)>-1)render()}
   else if(t.dataset&&t.dataset.act==='jornal'){var v=parseInt(t.value,10);if(v>=0)S.jornal=v;render()}
 });
 render();
