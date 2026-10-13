@@ -617,6 +617,16 @@ function contarHoy(raw, agrupado) {
   }
 }
 
+// Obras EN CURSO (no todas las que hay guardadas): estado "curso" o sin estado cargado.
+function contarObrasActivas(raw) {
+  if (!raw) return 0;
+  try {
+    const v = JSON.parse(raw);
+    if (Array.isArray(v)) return v.filter(o => o && !o.privada && (o.estado === "curso" || !o.estado)).length;
+    return 0;
+  } catch (e) { return 0; }
+}
+
 function contarValor(raw) {
   if (!raw) return 0;
   try {
@@ -981,7 +991,7 @@ function Dashboard({ tabs }) {
       (filas || []).forEach(f => { mapa[f.key] = f.value; });
 
       setActividad({
-        obras: contarValor(mapa["vv_obras"]),
+        obras: contarObrasActivas(mapa["vv_obras"]),
         personal: contarValor(mapa["vv_personal"]),
         matpedidos: contarValor(mapa["vv_matpedidos"]),
         pedidos: contarValor(mapa["vv_pedidos"]),
