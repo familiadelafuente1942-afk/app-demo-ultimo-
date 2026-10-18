@@ -9568,7 +9568,27 @@ ${hist}`;
   }
 
   // Evita volver a traer empresas que ya están en la base.
-  function yaEsta(nombre, web) {
+  function normTelNx(raw, pais, wa) {
+    let d = String(raw || "").replace(/\D+/g, "");
+    if (!d) return "";
+    if (d.startsWith("00")) d = d.slice(2);
+    const cod = {ar: "54", br: "55", py: "595", cl: "56", uy: "598", mx: "52"}[pais] || "54";
+    if (!d.startsWith(cod)) {
+      d = d.replace(/^0+/, "");
+      if (cod === "54") d = d.replace(/^(\d{2,4})15(\d{6,8})$/, "$1$2");
+      d = cod + d;
+    }
+    if (cod === "54" && wa && !d.startsWith("549")) d = "549" + d.slice(2);
+    return d.length >= 10 && d.length <= 15 ? d : "";
+  }
+  function normLinkedinNx(u) {
+    const m = String(u || "").match(/linkedin\.com\/(company|school)\/[A-Za-z0-9._%-]+/i);
+    return m ? "https://www." + m[0].toLowerCase() : "";
+  }
+  function yaEsta(nombre, web, tels) {
+    const ult = x => { const d = String(x || "").replace(/\D+/g, ""); return d.length >= 8 ? d.slice(-8) : ""; };
+    const mios = (tels || []).map(ult).filter(Boolean);
+    if (mios.length && prospectosAll.some(p => [p.whatsapp, p.tel].map(ult).some(t => t && mios.indexOf(t) >= 0))) return true;
     const n = String(nombre || "").toLowerCase().trim();
     const w = String(web || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
     return prospectosAll.some(p => {
@@ -9580,7 +9600,7 @@ ${hist}`;
 
   // Una consulta puntual: un lugar y un perfil.
   async function buscarUno(combo) {
-    const prompt = `Buscá en internet ${combo.consulta} que trabajen en ${combo.lugar}, ${combo.prov}, ${combo.paisNombre}.\n` + `Buscá en páginas de internet de ${combo.paisNombre} (sitios con dominio ${combo.tld}, directorios y medios locales, en ${combo.idioma}). Solo empresas con sede u operación real en ${combo.paisNombre}.\n` + `Revisá: ${combo.fuentes.join(", ")}.\n` + `Priorizá las que tengan obras en curso o proyectos publicados en el último año.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":""}]\n\n` + `- "senal": por qué es buen candidato (ej: "publicó 3 obras nuevas este año").\n` + `- "contacto": mail o formulario SI figura públicamente; si no, "" vacío. NUNCA lo inventes.\n` + `Máximo 6 resultados. Si no encontrás nada real, devolvé [].`;
+    const prompt = `Buscá en internet ${combo.consulta} que trabajen en ${combo.lugar}, ${combo.prov}, ${combo.paisNombre}.\n` + `Buscá en páginas de internet de ${combo.paisNombre} (sitios con dominio ${combo.tld}, directorios y medios locales, en ${combo.idioma}). Solo empresas con sede u operación real en ${combo.paisNombre}.\n` + `Revisá: ${combo.fuentes.join(", ")}.\n` + `Priorizá las que tengan obras en curso o proyectos publicados en el último año.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":"","telefono":"","whatsapp":"","linkedin":"","instagram":""}]\n\n` + `- "senal": por qué es buen candidato (ej: "publicó 3 obras nuevas este año").\n` + `- "contacto": mail o formulario SI figura públicamente; si no, "" vacío. NUNCA lo inventes.\n` + `- "telefono" y "whatsapp": número de la empresa con código de país, solo si figura en su web, su ficha de Google o su Instagram. "linkedin": URL de la página de empresa. "instagram": usuario de la empresa. Si no lo viste, vacío; nunca lo inventes.\n` + `Máximo 6 resultados. Si no encontrás nada real, devolvé [].`;
     const r = await iaFetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -9665,7 +9685,7 @@ ${hist}`;
         const aSumar = [];
         lista.forEach(cand => {
           if (!cand || !cand.empresa) return;
-          if (yaEsta(cand.empresa, cand.web)) return;
+          if (yaEsta(cand.empresa, cand.web, [cand.whatsapp, cand.telefono])) return;
           if (aSumar.some(x => String(x.empresa).toLowerCase() === String(cand.empresa).toLowerCase())) return;
           aSumar.push({
             id: Date.now() + Math.random(),
@@ -9674,7 +9694,10 @@ ${hist}`;
             rol: c2.perfil.toLowerCase().indexOf("arquitect") >= 0 ? "estudio" : c2.perfil.toLowerCase().indexOf("desarroll") >= 0 ? "desarrollador" : "constructora",
             obras: "",
             mail: cand.contacto || "",
-            tel: "",
+            tel: normTelNx(cand.telefono, c2.pais, false),
+            whatsapp: normTelNx(cand.whatsapp, c2.pais, true),
+            linkedin: normLinkedinNx(cand.linkedin),
+            instagram: String(cand.instagram || "").trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/^@/, "").split(/[\/?#]/)[0].toLowerCase().replace(/[^a-z0-9._]/g, ""),
             web: cand.web || "",
             dolor: cand.senal || "",
             estado: "nuevo",
@@ -10055,6 +10078,15 @@ ${hist}`;
         estado: "contactado"
       });
     }
+  }
+  function abrirWhatsApp(txt) {
+    if (!abierto) return;
+    const num = abierto.whatsapp || normTelNx(abierto.tel, abierto.pais || "ar", true);
+    if (!num) { setAviso("Esta empresa no tiene un número de WhatsApp cargado."); return; }
+    const cuerpo = String(txt || "").replace(/^Asunto:.*\n+/i, "").trim();
+    try { window.open("https://wa.me/" + num + "?text=" + encodeURIComponent(cuerpo), "_blank", "noopener"); } catch {}
+    registrarContacto(abierto.id, "whatsapp", cuerpo.slice(0, 80));
+    if (abierto.estado === "nuevo") actualizar(abierto.id, { estado: "contactado" });
   }
   function guardarPlantilla(txt, accion) {
     setPlantillas(prev => [{
@@ -10623,7 +10655,28 @@ ${hist}`;
     style: {
       color: T.sub
     }
-  }, "☏ ", abierto.tel), abierto.web && /*#__PURE__*/React.createElement("a", {
+  }, "☏ ", abierto.tel), abierto.whatsapp && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#1FA855",
+      fontWeight: 700
+    }
+  }, "WhatsApp +", abierto.whatsapp), abierto.linkedin && /*#__PURE__*/React.createElement("a", {
+    href: abierto.linkedin,
+    target: "_blank",
+    rel: "noreferrer",
+    style: {
+      color: "#3B6CA8",
+      fontWeight: 700
+    }
+  }, "LinkedIn ↗"), abierto.instagram && /*#__PURE__*/React.createElement("a", {
+    href: "https://instagram.com/" + abierto.instagram,
+    target: "_blank",
+    rel: "noreferrer",
+    style: {
+      color: "#3B6CA8",
+      fontWeight: 700
+    }
+  }, "Instagram ↗"), abierto.web && /*#__PURE__*/React.createElement("a", {
     href: abierto.web,
     target: "_blank",
     rel: "noreferrer",
@@ -10842,7 +10895,21 @@ ${hist}`;
       minHeight: 42,
       fontFamily: "inherit"
     }
-  }, "Abrir en Mail"), /*#__PURE__*/React.createElement("button", {
+  }, "Abrir en Mail"), (abierto.whatsapp || abierto.tel) && ["presentacion", "seguimiento", "propuesta"].indexOf(borrador.accion) >= 0 && /*#__PURE__*/React.createElement("button", {
+    onClick: () => abrirWhatsApp(borrador.texto),
+    style: {
+      background: "#1FA855",
+      color: "#fff",
+      border: "none",
+      borderRadius: 8,
+      padding: "11px 17px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      cursor: "pointer",
+      minHeight: 42,
+      fontFamily: "inherit"
+    }
+  }, "Enviar por WhatsApp"), /*#__PURE__*/React.createElement("button", {
     onClick: () => guardarPlantilla(borrador.texto, borrador.accion),
     style: {
       background: "#fff",
