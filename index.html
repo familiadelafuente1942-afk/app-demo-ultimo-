@@ -12994,6 +12994,8 @@ function _pbkdf2(txt, saltHex, it) {
 }
 function _sha(txt) { return crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt)).then(_hex); }
 function revisarMotor() {
+  // Acceso libre: sin clave (decisión del dueño). Se entra tocando el logo.
+  window.__motorOk = true; try { document.body.classList.add('con-motor'); } catch (e) {} return true;
   var t = null;
   try { if (new URLSearchParams(window.location.search).get("motor") === "off") { localStorage.removeItem("motor_ok"); window.__motorOk = false; } } catch (e) {}
   try { t = localStorage.getItem("motor_ok"); } catch (e) {}
@@ -13006,6 +13008,7 @@ function revisarMotor() {
   return !!window.__motorOk;
 }
 function pedirClaveCentro(alAbrir) {
+  window.__motorOk = true; document.body.classList.add('con-motor'); if (alAbrir) alAbrir(); return;
   var bloqueo = 0; try { bloqueo = parseInt(localStorage.getItem("motor_bloq") || "0", 10); } catch (e) {}
   var ov = document.createElement("div");
   ov.style.cssText = "position:fixed;inset:0;z-index:100000;background:rgba(11,11,12,.82);display:flex;align-items:center;justify-content:center;padding:16px;";
