@@ -3363,8 +3363,8 @@ Object.assign(A,{
 const _drawCfg=draw;draw=function(...a){const r=_drawCfg.apply(this,a);cfgGuardar();return r};
 /* ================= sesión recordada: una vez que entraste, la app queda abierta en este aparato hasta que toques Salir ================= */
 const SES_LS='nexo2_sesion';
-function sesGuardar(){try{const u=S.u;if(!u)return;const d={r:u.id};if(u.id==='cli')d.cobra=S.cobra;if(u.id==='est')d.cons=S.cons;localStorage.setItem(SES_LS,JSON.stringify(d))}catch(e){}}
-function sesBorrar(){try{localStorage.removeItem(SES_LS)}catch(e){}}
+function sesGuardar(){try{const u=S.u;if(!u)return;const d={r:u.id};if(u.id==='cli')d.cobra=S.cobra;if(u.id==='est')d.cons=S.cons;localStorage.setItem(SES_LS,JSON.stringify(d));codApi({op:'sesion_set',last:d}).catch(()=>{})}catch(e){}}
+function sesBorrar(){try{localStorage.removeItem(SES_LS)}catch(e){}try{codApi({op:'sesion_borrar'}).catch(()=>{})}catch(e){}}
 const _loginSes=login;
 login=function(id){_loginSes(id);sesGuardar();if(id==='dir')codCargar()};
 function sesRestaurar(){
@@ -3382,6 +3382,23 @@ try{if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))Promise.
 $('#brand-icon').src=ICONO;
 try{if(!localStorage.getItem('nexo2_reset_v2')){['nexo2_obras_prop','nexo2_obras_jefe','nexo2_obras_aud','nexo2_sesion'].forEach(k=>localStorage.removeItem(k));localStorage.setItem('nexo2_reset_v2','1')}}catch(e){}
 {let ok=!LOCK;try{const d=JSON.parse(localStorage.getItem(SES_LS)||'null');if(LOCK&&d)ok=LOCK==='cliente'?d.r==='cli':LOCK==='estudio'?d.r==='est':['dir','jefe','aud'].includes(d.r)}catch(e){}if(ok)sesRestaurar()}
+/* Si el navegador borró su memoria local (pasa en iPhone), el servidor recuerda este aparato con una cookie firmada de 400 días y devuelve los códigos que ya se habían ingresado. */
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
+(async function sesRecuperar(){
+  try{
+    if(S.u||localStorage.getItem(SES_LS))return;
+    const d=await codApi({op:'sesion'});if(!d||!d.ok||S.u)return;
+    if(d.dir){S.dirAuth=d.dir;try{localStorage.setItem('nexo2_dirauth',d.dir)}catch(e){}}
+    ['prop','jefe','aud'].forEach(r=>(d[r]||[]).forEach(x=>{if(OBRAS.some(o=>o.id===x.id)){guardarCod(r,x.id);credGuardar(r,x.id,x.codigo)}}));
+    const l=d.last||{};let r=l.r;
+    if(!r)r=d.dir?'dir':d.jefe&&d.jefe.length?'jefe':d.aud&&d.aud.length?'aud':d.prop&&d.prop.length?'cli':'';
+    if(!r)return;
+    const ses={r};if(r==='cli')ses.cobra=l.cobra||(d.prop[0]&&d.prop[0].id);if(r==='est')ses.cons=l.cons||ORG;
+    if(LOCK&&!(LOCK==='cliente'?r==='cli':LOCK==='estudio'?r==='est':['dir','jefe','aud'].includes(r)))return;
+    localStorage.setItem(SES_LS,JSON.stringify(ses));
+    if(sesRestaurar()){toast('Sesión recuperada')}
+  }catch(e){}
+})();
 /* ================= avances de obra con fotos: se guardan en la nube y los ve cada rol en su obra ================= */
 const AVS={};const AVPEND=new Set();
 const fAR=t=>fmt(t-108e5);
