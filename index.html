@@ -653,6 +653,27 @@ header{ background:rgba(244,245,250,.68)!important; -webkit-backdrop-filter:blur
 .eyebrow span{ border-radius:2px; }
 .chip,.pill{ border-radius:999px; }
 </style>
+<script>
+/* IA directa desde el navegador: prueba otro modelo si el primero ya no existe, reintenta si hay límite y devuelve el motivo real del error */
+window.iaFetch=async function(url,init){
+  var modelos=[window.__iaModelo,"claude-sonnet-4-6","claude-sonnet-5-5","claude-haiku-4-5-20251001"].filter(function(x,i,a){return x&&a.indexOf(x)===i});
+  var base=JSON.parse(init.body),r;
+  for(var k=0;k<modelos.length;k++){
+    for(var t=0;t<2;t++){
+      var b=Object.assign({},base,{model:modelos[k]});
+      r=await fetch(url,Object.assign({},init,{body:JSON.stringify(b)}));
+      if(r.ok){window.__iaModelo=modelos[k];return r}
+      if(r.status===429||r.status===529||r.status===503){await new Promise(function(s){setTimeout(s,6000*(t+1))});continue}
+      break;
+    }
+    if(r.status!==404)return r;
+  }
+  return r;
+};
+window.iaErrTxt=async function(r){var m="";try{var j=await r.clone().json();m=(j.error&&j.error.message)||""}catch(e){}
+  var hint=r.status===401?" (la clave no es válida)":r.status===404?" (el modelo no está disponible)":r.status===429?" (límite de uso, esperá un momento)":r.status===400&&/credit/i.test(m)?" (sin crédito en la cuenta de Anthropic)":"";
+  return "error "+r.status+hint+(m?": "+m.slice(0,140):"")};
+</script>
 <script src="landing-i18n.js"></script>
 </head>
 <body class="no-js">
@@ -1794,7 +1815,7 @@ async function llamarIA({
     type: "text",
     text: prompt
   }];
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
+  const r = await iaFetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -9560,7 +9581,7 @@ ${hist}`;
   // Una consulta puntual: un lugar y un perfil.
   async function buscarUno(combo) {
     const prompt = `Buscá en internet ${combo.consulta} que trabajen en ${combo.lugar}, ${combo.prov}, ${combo.paisNombre}.\n` + `Buscá en páginas de internet de ${combo.paisNombre} (sitios con dominio ${combo.tld}, directorios y medios locales, en ${combo.idioma}). Solo empresas con sede u operación real en ${combo.paisNombre}.\n` + `Revisá: ${combo.fuentes.join(", ")}.\n` + `Priorizá las que tengan obras en curso o proyectos publicados en el último año.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":""}]\n\n` + `- "senal": por qué es buen candidato (ej: "publicó 3 obras nuevas este año").\n` + `- "contacto": mail o formulario SI figura públicamente; si no, "" vacío. NUNCA lo inventes.\n` + `Máximo 6 resultados. Si no encontrás nada real, devolvé [].`;
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
+    const r = await iaFetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -9585,7 +9606,7 @@ ${hist}`;
         }]
       })
     });
-    if (!r.ok) throw new Error("api");
+    if (!r.ok) throw new Error(await iaErrTxt(r));
     const data = await r.json();
     const texto = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
     const m = texto.match(/\[[\s\S]*\]/);
@@ -9672,7 +9693,7 @@ ${hist}`;
         fallos = 0;
       } catch (e) {
         fallos++;
-        anotarBusq(`${c2.lugar} · ${c2.perfil} → error de conexión`, "error");
+        anotarBusq(`${c2.lugar} · ${c2.perfil} → ${String(e && e.message || "error de conexión").slice(0, 160)}`, "error");
         if (fallos >= 3) {
           anotarBusq("Tres errores seguidos. Campaña detenida para no gastar de más.", "stop");
           break;
@@ -9711,7 +9732,7 @@ ${hist}`;
     setCandidatos([]);
     const prompt = `Buscá en internet ${busqueda.perfil} que estén trabajando en ${busqueda.zona}, ${paisAct.nombre}. Buscá en páginas de internet de ${paisAct.nombre} (dominio ${paisAct.tld}, en ${paisAct.idioma}).\n` + `Quiero empresas reales, con presencia web verificable. Priorizá las que se vea que tienen ` + `varias obras en curso o proyectos publicados recientemente.\n\n` + `Devolvé SOLO un array JSON, sin texto antes ni después, sin markdown:\n` + `[{"empresa":"","ciudad":"","que_hace":"","senal":"","web":"","contacto":""}]\n\n` + `- "senal": por qué son buen candidato (ej: "publicaron 3 obras nuevas este año").\n` + `- "contacto": el mail o formulario SI figura públicamente; si no, "" vacío. NUNCA lo inventes.\n` + `Máximo 8 resultados. Si no encontrás nada real, devolvé [].`;
     try {
-      const r = await fetch("https://api.anthropic.com/v1/messages", {
+      const r = await iaFetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -9736,15 +9757,15 @@ ${hist}`;
           }]
         })
       });
-      if (!r.ok) throw new Error("api");
+      if (!r.ok) throw new Error(await iaErrTxt(r));
       const data = await r.json();
       const texto = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
       const m = texto.match(/\[[\s\S]*\]/);
       if (!m) throw new Error("sin json");
       const lista = JSON.parse(m[0]);
       if (!Array.isArray(lista) || lista.length === 0) setAvisoBusq("No encontró resultados con esos términos. Probá con otra zona o perfil.");else setCandidatos(lista);
-    } catch {
-      setAvisoBusq("No se pudo completar la búsqueda. Revisá la conexión o probá de nuevo.");
+    } catch (e) {
+      setAvisoBusq("No se pudo completar la búsqueda. " + (e && e.message && /^error \d/.test(e.message) ? e.message : "Revisá la conexión o probá de nuevo."));
     }
     setBuscando(false);
   }
