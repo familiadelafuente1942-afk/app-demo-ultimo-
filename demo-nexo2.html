@@ -7,7 +7,15 @@ input,select,textarea{font-size:16px!important;max-width:100%}
 .ia-form input{min-width:0;flex:1 1 0}
 .msg{overflow-wrap:anywhere;word-break:break-word}
 img,svg,video,canvas{max-width:100%}
-</style><script src="demo-dict.js"></script><script src="demo-i18n.js"></script></head><body>
+</style><script>/* tema claro/oscuro: se aplica antes de dibujar para que no parpadee */
+(function(){var K='nexo2_tema',mq=window.matchMedia?matchMedia('(prefers-color-scheme: light)'):null;
+function pref(){try{return localStorage.getItem(K)||'auto'}catch(e){return'auto'}}
+function res(p){return p==='claro'||p==='oscuro'?p:(mq&&mq.matches?'claro':'oscuro')}
+function ap(p){var t=res(p||pref());document.documentElement.setAttribute('data-tema',t);
+ var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='claro'?'#eceef3':'#0d0e10')}
+window.__tema=function(p){try{if(p)localStorage.setItem(K,p)}catch(e){}ap(p||pref())};window.__temaPref=pref;
+if(mq){var f=function(){if(pref()==='auto')ap('auto')};mq.addEventListener?mq.addEventListener('change',f):mq.addListener&&mq.addListener(f)}
+ap();})();</script><script src="demo-dict.js"></script><script src="demo-i18n.js"></script></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -956,6 +964,73 @@ main:has(.login) .note{font-size:11.5px;padding:6px 10px}
 .avph img{width:100%;height:100%;object-fit:cover;display:block}
 .avc .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .avres{background:var(--panel2,rgba(255,255,255,.05));border-left:3px solid var(--gold,#c9a24b);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:.92em;line-height:1.45}.avres .eyebrow{display:block;margin-bottom:3px}
+
+/* ===== v12 · vidrio líquido (estilo iOS 26) + tema claro/oscuro ===== */
+:root{
+  --gl:rgba(255,255,255,.07); --gl-hi:rgba(255,255,255,.30); --gl-line:rgba(255,255,255,.08); --gl-sh:rgba(0,0,0,.5); --gl-bar:rgba(18,19,23,.66);
+  --amb1:rgba(184,145,90,.16); --amb2:rgba(70,110,190,.12);
+}
+:root[data-tema="claro"]{
+  color-scheme:light;
+  --bg:#eceef3; --surface:#ffffff; --raise:#f3f4f8; --line:#d8dbe3; --fg:#17181c; --muted:#6a6e77;
+  --gold:#97692a; --gold-soft:rgba(151,105,42,.14);
+  --verde:#1f8a4c; --amarillo:#a87d00; --naranja:#c8620f; --rojo:#d03a2f; --ok:#7b8a83; --futuro:#c5c9d1; --azul:#2f6fd0; --rosa:#7a5bd6;
+  --gl:rgba(255,255,255,.66); --gl-hi:rgba(255,255,255,.95); --gl-line:rgba(0,0,0,.08); --gl-sh:rgba(40,40,70,.18); --gl-bar:rgba(244,245,250,.72);
+  --amb1:rgba(184,145,90,.22); --amb2:rgba(110,150,225,.2);
+}
+body{background:radial-gradient(120% 46% at 92% -4%,var(--amb1),transparent 62%),radial-gradient(90% 40% at 0% 38%,var(--amb2),transparent 70%),var(--bg);background-attachment:fixed}
+.app{background:transparent;border-inline-color:var(--gl-line)}
+header.top{background:var(--gl-bar);-webkit-backdrop-filter:blur(22px) saturate(1.8);backdrop-filter:blur(22px) saturate(1.8);border-bottom:.5px solid var(--gl-line);box-shadow:inset 0 -1px 0 var(--gl-line)}
+/* superficies de vidrio */
+.card,.kpi,.ucard,.entry,.situ,.aviso,.ia,.nov,.rcard,.selobra,.casa-wrap{background:var(--gl);border:0;box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 .5px var(--gl-line),0 10px 22px -14px var(--gl-sh)}
+.situ,.ia,.aviso,.kpi{-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}
+.card,.kpi,.ucard,.entry,.situ,.ia,.aviso{border-radius:18px}
+.entry.cambio{box-shadow:inset 4px 0 0 var(--rojo),inset 0 0 0 .5px var(--gl-line)}
+.card.pend,.entry.dec{box-shadow:inset 0 0 0 1px var(--gold-soft),inset 0 1px 0 var(--gl-hi)}
+.aviso.nuevo{background:linear-gradient(90deg,var(--gold-soft),var(--gl) 70%);box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 1px var(--gold)}
+.kpi.k-gold,.invite,.respbox,.cd,.modelbox,.rcard.top1,.selobra[aria-pressed=true]{background:linear-gradient(160deg,var(--gold-soft),var(--gl))}
+.ia{background:linear-gradient(160deg,var(--gold-soft),var(--gl))}
+.pcard{border:0;border-radius:24px;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 18px 30px -18px var(--gl-sh)}
+.pcard:hover{border:0}
+.avatar{background:var(--gl);border:0;box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 .5px var(--gl-line)}
+/* botones */
+.btn{background:var(--gl);border:0;border-radius:999px;box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 .5px var(--gl-line)}
+.btn.gold{background:linear-gradient(180deg,#e8c585,#c79c55);color:#2a1c05;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 14px -8px rgba(199,156,85,.9)}
+:root[data-tema="claro"] .btn.gold{background:linear-gradient(180deg,#e2b96f,#b98a41);color:#2a1c05}
+.btn.ghost{background:none;box-shadow:inset 0 0 0 .5px var(--gl-line)}
+.btn.red{box-shadow:inset 0 0 0 1px var(--rojo)}
+.chip,.filters button,.seg button,.ia-sug button{background:var(--gl);border:0;box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 .5px var(--gl-line)}
+.filters button[aria-pressed=true],.seg button[aria-pressed=true]{background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--gold),inset 0 1px 0 var(--gl-hi)}
+input,select,textarea{background:var(--gl);border:0;border-radius:14px;box-shadow:inset 0 0 0 .5px var(--gl-line),inset 0 1px 3px rgba(0,0,0,.14)}
+/* íconos de gema */
+.av-ico{border-radius:14px;color:#fff;background:linear-gradient(160deg,#e0b870,#b0864a);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -7px 11px rgba(120,80,20,.35),0 9px 16px -7px rgba(176,134,74,.7);overflow:hidden}
+.av-ico::before{content:"";position:absolute;left:3px;right:3px;top:2px;height:46%;border-radius:12px 12px 22px 22px;background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0));pointer-events:none}
+.ia-ico{border-radius:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 8px 14px -8px var(--gl-sh)}
+.iafab{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+/* barra inferior flotante */
+main{padding-bottom:112px}
+nav.bottom{background:none;border:0;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px));pointer-events:none}
+nav.bottom .in{pointer-events:auto;padding:6px;gap:2px;border-radius:999px;background:var(--gl-bar);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 .5px var(--gl-line),0 16px 30px -10px var(--gl-sh)}
+nav.bottom button{padding:7px 2px 6px;border-radius:999px;font-size:10.5px;font-weight:600;gap:2px}
+nav.bottom button svg{width:22px;height:22px}
+nav.bottom button[aria-current=page]{background:var(--gl);box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 0 0 .5px var(--gl-line)}
+/* tema claro: textos que estaban fijos para fondo oscuro */
+:root[data-tema="claro"] .frase{color:var(--fg)}
+:root[data-tema="claro"] .lg-word{background:linear-gradient(180deg,#2a2b31 0%,#5b5d66 100%);-webkit-background-clip:text;background-clip:text}
+:root[data-tema="claro"] .situ p,:root[data-tema="claro"] .kpi .kl,:root[data-tema="claro"] .soft,:root[data-tema="claro"] .abody span,:root[data-tema="claro"] .rtag.w-f{color:var(--muted)}
+:root[data-tema="claro"] .chip.gold,:root[data-tema="claro"] .infobox,:root[data-tema="claro"] .drop,:root[data-tema="claro"] .av-e{color:var(--gold)}
+:root[data-tema="claro"] .car-pct{color:#f0d29a}
+:root[data-tema="claro"] .car-bar i{background:#e6c283}
+:root[data-tema="claro"] .car-top .eyebrow{color:#e6cfa5}
+:root[data-tema="claro"] .btn.red,:root[data-tema="claro"] .tipos button.tc[aria-pressed=true],:root[data-tema="claro"] .infobox.alert,:root[data-tema="claro"] .is[aria-pressed=true].is-falta{color:#a8281f}
+:root[data-tema="claro"] .s-crit .pill,:root[data-tema="claro"] .edel,:root[data-tema="claro"] .tipos button.tc,:root[data-tema="claro"] .red-t{color:#b8291f}
+:root[data-tema="claro"] .typeseg button[aria-pressed=true],:root[data-tema="claro"] .capas button[aria-pressed=true],:root[data-tema="claro"] .is[aria-pressed=true].is-recibido{color:var(--gold)}
+:root[data-tema="claro"] .infobox,:root[data-tema="claro"] .drop,:root[data-tema="claro"] .chip.gold,:root[data-tema="claro"] .avatar,:root[data-tema="claro"] .rolbtn{border-color:rgba(151,105,42,.45)}
+:root[data-tema="claro"] .bar{background:rgba(0,0,0,.1)}
+/* configuración: selector de aspecto */
+.tema-seg{display:flex;gap:6px}
+.tema-seg button{flex:1;padding:10px 8px;border-radius:14px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:6px}
+.tema-seg svg{width:22px;height:22px}
 </style>
 <div class="app">
   <header class="top">
@@ -1952,13 +2027,17 @@ function vClaves(){
 }
 function vConfig(){
   const sel=leerFuentes();
-  return `<button class="back" data-act="tab" data-t="mas">← Volver a Más</button><section class="sec"><h1>Configuración de la app</h1><p class="muted">Elegí el tipo de letra de cada parte. Se aplica enseguida y queda guardado en este aparato.</p>
+  return `<button class="back" data-act="tab" data-t="mas">← Volver a Más</button><section class="sec"><h1>Configuración de la app</h1>
+  <div class="card" style="gap:10px"><span class="eyebrow">Aspecto</span><span class="muted small">Elegí cómo se ve la app. Automático sigue el modo de tu iPhone. Queda guardado en este aparato.</span>
+  <div class="tema-seg" role="group" aria-label="Aspecto">${[['auto','Automático','<circle cx="12" cy="12" r="8"/><path d="M12 4v16" /><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>'],['claro','Claro','<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>'],['oscuro','Oscuro','<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>']].map(([k,n,ic])=>`<button class="btn" data-tema="${k}" aria-pressed="${(window.__temaPref?window.__temaPref():'auto')===k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic}</svg>${n}</button>`).join('')}</div></div>
+  <p class="muted">Elegí el tipo de letra de cada parte. Se aplica enseguida y queda guardado en este aparato.</p>
   <div class="list">${FONT_ROLES.map(r=>{const v=sel[r.k]||r.def;return `<div class="entry"><b>${r.n}</b><span class="muted small">${r.d}</span><select data-fontrole="${r.k}" style="font-family:'${v}'">${r.opts.map(o=>`<option value="${o}"${o===v?' selected':''}>${o}${o===r.def?' (la de la 2.0)':''}</option>`).join('')}</select><span class="fprev" style="font-size:19px;font-family:'${v}',sans-serif">La obra que se anticipa 0123456789</span></div>`}).join('')}</div>
   <button class="btn ghost full" data-act="fontReset">Volver a las letras de la 2.0</button></section>`;
 }
+document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-tema]');if(!b)return;window.__tema(b.dataset.tema);b.parentNode.querySelectorAll('[data-tema]').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'))});
 document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.fontrole){const n=leerFuentes();n[t.dataset.fontrole]=t.value;try{localStorage.setItem(FONT_LS,JSON.stringify(n))}catch(x){}aplicarFuentes(n);t.style.fontFamily="'"+t.value+"'";const p=t.parentNode.querySelector('.fprev');if(p)p.style.fontFamily="'"+t.value+"',sans-serif"}});
 function vMas(){
-  const r=ROLE();const items=r==='direccion'?[['matriz','Usuarios y accesos','Quién ve y quién carga qué, por obra y por rol'],['invites','Invitaciones','Estudios y propietarios invitados a cada obra'],['modelos','Modelos de obra','Duraciones base por rubro, anticipación y tarjetas de cada rubro. Editable.'],['claves','Códigos de acceso','Un código por obra para cada jefe de obra, auditor y propietario'],['config','Configuración de la app','Tipos de letra de cada parte de la app']]:[['modelos','Modelos de obra','Cómo se arma el cronograma base (lo define la Dirección)'],['cambiarObras','Obras a cargo','Cambiar las obras que tenés a cargo'],['config','Configuración de la app','Tipos de letra de cada parte de la app']];
+  const r=ROLE();const items=r==='direccion'?[['matriz','Usuarios y accesos','Quién ve y quién carga qué, por obra y por rol'],['invites','Invitaciones','Estudios y propietarios invitados a cada obra'],['modelos','Modelos de obra','Duraciones base por rubro, anticipación y tarjetas de cada rubro. Editable.'],['claves','Códigos de acceso','Un código por obra para cada jefe de obra, auditor y propietario'],['config','Configuración de la app','Aspecto claro u oscuro y tipos de letra']]:[['modelos','Modelos de obra','Cómo se arma el cronograma base (lo define la Dirección)'],['cambiarObras','Obras a cargo','Cambiar las obras que tenés a cargo'],['config','Configuración de la app','Aspecto claro u oscuro y tipos de letra']];
   return `<section class="sec"><h1>Más</h1><div class="list">${items.map(([a,t,dd])=>`<button class="entry" style="text-align:left" data-act="${a}"><b>${t}</b><span class="muted small">${dd}</span></button>`).join('')}</div></section>`;
 }
 
