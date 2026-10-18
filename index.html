@@ -958,6 +958,11 @@ body.en-demo #idioma-flotante{display:none}
     <h2>Armamos el plan según tus obras.</h2>
     <p class="sub">Contanos cuántas obras tenés y qué paneles necesitás. Te respondemos con una propuesta a tu medida.</p>
 
+    <div class="reveal" style="margin:26px 0 8px;padding:22px 24px;border:1.5px solid var(--brass);border-radius:var(--r);background:var(--card);display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+      <div style="flex:1;min-width:240px;"><h3 style="font-size:17px;margin:0 0 6px;">Empezá hoy, sin riesgo</h3><p style="margin:0;font-size:13.5px;color:var(--sub);line-height:1.5;">Te activamos NEXO el mismo día: código de constructora listo y tu primera obra cargada por nosotros, sin costo. Si en 30 días no te sirve, salís sin penalidad.</p></div>
+      <button class="btn btn-brass" onclick="empezarHoy()">Empezar hoy</button>
+    </div>
+
     <div class="plans">
       <div class="plan reveal">
         <h3>Una obra</h3>
@@ -12867,6 +12872,7 @@ function marcarLeadCapturado() {
   try { localStorage.setItem("lead_demo_capturado", "1"); } catch (e) {}
 }
 
+function empezarHoy() { window.__hoy = true; try { abrirCotizacion(document.body); } finally { window.__hoy = false; } }
 function abrirCotizacion(btn) {
   var plan = "";
   try { var c = btn.closest(".plan"); plan = c ? (c.querySelector("h3").textContent || "").trim() : ""; } catch (e) {}
@@ -12874,21 +12880,21 @@ function abrirCotizacion(btn) {
   ov.style.cssText = "position:fixed;inset:0;z-index:99998;background:rgba(11,11,12,.7);display:flex;align-items:center;justify-content:center;padding:16px;";
   var inp = "width:100%;box-sizing:border-box;padding:11px 13px;border:1.5px solid #E6E9EE;border-radius:9px;font-size:14px;margin-bottom:9px;font-family:inherit;";
   ov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:380px;width:100%;padding:26px 24px;font-family:inherit;">' +
-    '<div style="font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B0894F;margin-bottom:8px;">Cotización' + (plan ? " · Plan " + plan : "") + '</div>' +
-    '<div style="font-family:\'Fraunces\',serif;font-size:19px;font-weight:600;color:#101C2C;margin-bottom:6px;">Contanos cómo trabajan y te armamos la propuesta</div>' +
-    '<div style="font-size:12.5px;color:#4A5565;line-height:1.5;margin-bottom:14px;">Te escribimos dentro del día hábil. Sin compromiso.</div>' +
+    '<div style="font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#B0894F;margin-bottom:8px;">' + (window.__hoy ? 'Empezar hoy' : 'Cotización' + (plan ? " · Plan " + plan : "")) + '</div>' +
+    '<div style="font-family:\'Fraunces\',serif;font-size:19px;font-weight:600;color:#101C2C;margin-bottom:6px;">' + (window.__hoy ? 'Activamos NEXO hoy con tu primera obra cargada' : 'Contanos cómo trabajan y te armamos la propuesta') + '</div>' +
+    '<div style="font-size:12.5px;color:#4A5565;line-height:1.5;margin-bottom:14px;">' + (window.__hoy ? 'Te escribimos en minutos, armamos tu código de constructora y te cargamos la primera obra sin costo. Si en 30 días no te sirve, salís sin penalidad.' : 'Te escribimos dentro del día hábil. Sin compromiso.') + '</div>' +
     '<input id="cotNombre" placeholder="Nombre" style="' + inp + '">' +
     '<input id="cotEmail" type="email" placeholder="Mail" style="' + inp + '">' +
     '<input id="cotTel" type="tel" placeholder="Teléfono / WhatsApp" style="' + inp + '">' +
     '<input id="cotEmpresa" placeholder="Empresa o estudio" style="' + inp + '">' +
     '<div id="cotErr" style="color:#C0392B;font-size:12px;min-height:16px;margin-bottom:6px;"></div>' +
-    '<button id="cotEnviar" style="width:100%;padding:13px;border:none;border-radius:9px;background:#B0894F;color:#fff;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:8px;">Pedir cotización</button>' +
+    '<button id="cotEnviar" style="width:100%;padding:13px;border:none;border-radius:9px;background:#B0894F;color:#fff;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:8px;">' + (window.__hoy ? 'Quiero empezar hoy' : 'Pedir cotización') + '</button>' +
     '<button id="cotCerrar" style="width:100%;padding:11px;border:none;background:transparent;color:#8B95A5;font-size:12.5px;cursor:pointer;">Cancelar</button></div>';
   document.body.appendChild(ov);
   var g = function (i) { return ov.querySelector("#" + i); };
   g("cotCerrar").onclick = function () { ov.remove(); };
   g("cotEnviar").onclick = function () {
-    var d = { nombre: g("cotNombre").value.trim(), email: g("cotEmail").value.trim(), empresa: (g("cotEmpresa").value.trim() + (g("cotTel").value.trim() ? " · Tel: " + g("cotTel").value.trim() : "")).trim(), origen: "cotizacion_" + (plan || "plan").toLowerCase().replace(/\s+/g, "_") };
+    var d = { nombre: g("cotNombre").value.trim(), email: g("cotEmail").value.trim(), empresa: (g("cotEmpresa").value.trim() + (g("cotTel").value.trim() ? " · Tel: " + g("cotTel").value.trim() : "")).trim(), origen: (window.__hoy ? "empezar_hoy_" : "cotizacion_") + (plan || "plan").toLowerCase().replace(/\s+/g, "_") };
     if (!d.nombre || (!d.email && !g("cotTel").value.trim())) { g("cotErr").textContent = "Dejanos tu nombre y un mail o teléfono."; return; }
     enviarLeadDemo(d);
     ov.querySelector("div").innerHTML = '<div style="text-align:center;padding:14px 4px;"><div style="font-size:34px;color:#2F7A4F;">✓</div><div style="font-family:\'Fraunces\',serif;font-size:19px;font-weight:600;color:#101C2C;margin:8px 0;">¡Recibimos tu pedido!</div><div style="font-size:13px;color:#4A5565;line-height:1.5;">Te escribimos a la brevedad con la propuesta del plan ' + (plan || "elegido") + '.</div><button id="cotOk" style="margin-top:16px;padding:11px 22px;border:none;border-radius:9px;background:#101C2C;color:#fff;font-weight:700;cursor:pointer;">Cerrar</button></div>';
