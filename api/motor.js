@@ -246,32 +246,133 @@ async function accionGenerarPosts(actor, b) {
   return { creados: filas.length };
 }
 
+// ───────────── contactos: normalizar y evitar duplicados ─────────────
+
+const COD_PAIS = { Argentina: "54", Brasil: "55", Paraguay: "595", Chile: "56" };
+
+function soloDigitos(x) { return String(x || "").replace(/\D+/g, ""); }
+
+// Deja el teléfono en formato internacional sin "+" (ej. 5491124747362). Devuelve "" si no parece un teléfono.
+function normTel(raw, pais, esWhatsapp) {
+  let d = soloDigitos(raw);
+  if (!d) return "";
+  if (d.startsWith("00")) d = d.slice(2);
+  const cod = COD_PAIS[pais] || "";
+  if (cod && !d.startsWith(cod)) {
+    d = d.replace(/^0+/, "");
+    if (pais === "Argentina") d = d.replace(/^(\d{2,4})15(\d{6,8})$/, "$1$2");
+    d = cod + d;
+  }
+  if (pais === "Argentina" && esWhatsapp && d.startsWith("54") && !d.startsWith("549")) d = "549" + d.slice(2);
+  return d.length >= 10 && d.length <= 15 ? d : "";
+}
+
+function dominioDe(web) {
+  const w = String(web || "").toLowerCase().trim().replace(/^https?:\/\//, "").replace(/^www\./, "").split(/[\/?#]/)[0];
+  return /^[a-z0-9.-]+\.[a-z]{2,}$/.test(w) ? w : "";
+}
+
+function normLinkedin(u) {
+  const m = String(u || "").toLowerCase().match(/linkedin\.com\/(company|school)\/([a-z0-9._%-]+)/);
+  return m ? "https://www.linkedin.com/company/" + m[2] : "";
+}
+
+function normInstagram(u) {
+  const m = String(u || "").trim().toLowerCase().replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^@/, "").split(/[\/?#]/)[0];
+  return /^[a-z0-9._]{2,30}$/.test(m) && !["p", "reel", "explore", "accounts"].includes(m) ? m : "";
+}
+
+function normNombre(n) {
+  return String(n || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/\b(s\.?a\.?|s\.?r\.?l\.?|s\.?a\.?s\.?|ltda\.?|ltd|inc|sociedad anonima|srl)\b/g, " ")
+    .replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function claves(p) {
+  const k = [];
+  const dom = dominioDe(p.web); if (dom) k.push("d:" + dom);
+  if (p.email) k.push("e:" + String(p.email).toLowerCase());
+  [p.whatsapp, p.telefono].forEach(t => { const d = soloDigitos(t); if (d.length >= 8) k.push("t:" + d.slice(-8)); });
+  const li = normLinkedin(p.linkedin); if (li) k.push("l:" + li);
+  const ig = normInstagram(p.instagram); if (ig) k.push("i:" + ig);
+  const nn = normNombre(p.empresa); if (nn) k.push("n:" + nn + "|" + normNombre(p.ciudad));
+  return k;
+}
+
+const CAMPOS_EXTRA = ["telefono", "whatsapp", "linkedin", "instagram", "direccion", "web", "email", "ciudad"];
+
 async function accionCazar(actor, b) {
   const pais = ({ ar: "Argentina", br: "Brasil", py: "Paraguay", cl: "Chile" })[String(b.pais || "").toLowerCase()] || b.pais;
   if (!pais || !["Argentina", "Brasil", "Paraguay", "Chile"].includes(pais)) throw Object.assign(new Error("País no válido."), { status: 400 });
   const rubro = (b.rubro || "constructoras, desarrolladoras inmobiliarias y estudios de arquitectura").slice(0, 200);
   const zona = (b.zona || "").slice(0, 120);
   const idioma = idiomaPorPais(pais);
-  const prompt = `Buscá en la web ${Math.min(parseInt(b.cantidad, 10) || 8, 12)} empresas reales de ${pais}${zona ? " (zona: " + zona + ")" : ""} del rubro: ${rubro}, medianas o chicas, que dirijan obras activas y podrían usar un sistema de gestión de obra.\nPara cada una necesito: nombre, sitio web, ciudad, y el correo GENÉRICO de empresa que figure públicamente en su sitio (info@, contacto@, ventas@, comercial@). No uses correos personales ni inventes ninguno: si no hay un correo genérico público, dejá email vacío. Puntuá de 1 a 10 qué tan buen cliente parece (tamaño, obras en curso, necesidad de gestión).\nRespondé SOLO con un JSON: [{"empresa":"","web":"","ciudad":"","email":"","rubro":"","puntaje":0,"fuente":"url donde lo viste"}]`;
-  const txt = await claude(prompt, { max: 4000, buscar: 6 });
+  const cant = Math.min(parseInt(b.cantidad, 10) || 8, 12);
+  const prompt = `Buscá en la web ${cant} empresas reales de ${pais}${zona ? " (zona: " + zona + ")" : ""} del rubro: ${rubro}, medianas o chicas, que dirijan obras activas y podrían usar un sistema de gestión de obra.
+Para cada una necesito, solo si figura públicamente en su sitio, en Google Maps, en su página de LinkedIn o en su perfil de Instagram de empresa:
+- nombre, sitio web, ciudad y dirección
+- correo GENÉRICO de empresa (info@, contacto@, ventas@, comercial@); nunca correos personales
+- teléfono fijo o principal de la empresa
+- número de WhatsApp de la empresa (el que muestra el sitio, el botón de WhatsApp o su ficha), con código de país
+- URL de la página de empresa en LinkedIn (linkedin.com/company/...)
+- usuario de Instagram de la empresa
+Nunca inventes ni deduzcas un dato: si no lo viste, dejalo vacío. Puntuá de 1 a 10 qué tan buen cliente parece (tamaño, obras en curso, necesidad de gestión).
+Respondé SOLO con un JSON: [{"empresa":"","web":"","ciudad":"","direccion":"","email":"","telefono":"","whatsapp":"","linkedin":"","instagram":"","rubro":"","puntaje":0,"fuente":"url donde lo viste"}]`;
+  const txt = await claude(prompt, { max: 6000, buscar: 10 });
   const lista = limpiarJSON(txt);
-  const filas = [];
+
+  const cand = [];
   (Array.isArray(lista) ? lista : []).forEach(p => {
     if (!p || !p.empresa) return;
     const email = (p.email || "").trim().toLowerCase();
-    filas.push({
+    cand.push({
       empresa: String(p.empresa).slice(0, 160), web: p.web ? String(p.web).toLowerCase().replace(/\/+$/, "").slice(0, 200) : null,
-      ciudad: (p.ciudad || "").slice(0, 100), email: emailValido(email) && esCorreoEmpresa(email) ? email : null,
+      ciudad: (p.ciudad || "").slice(0, 100), direccion: (p.direccion || "").slice(0, 200) || null,
+      email: emailValido(email) && esCorreoEmpresa(email) ? email : null,
+      telefono: normTel(p.telefono, pais, false) || null, whatsapp: normTel(p.whatsapp, pais, true) || null,
+      linkedin: normLinkedin(p.linkedin) || null, instagram: normInstagram(p.instagram) || null,
       pais, idioma, rubro: (p.rubro || rubro).slice(0, 120), puntaje: Math.max(0, Math.min(10, parseInt(p.puntaje, 10) || 0)),
       fuente: (p.fuente || "").slice(0, 300), estado: "nuevo"
     });
   });
-  let nuevos = 0;
-  for (const f of filas) {
-    try { await db("mkt_prospectos", { method: "POST", body: f, prefer: "return=minimal" }); nuevos++; } catch (e) { /* ya existía */ }
+
+  // Lo que ya está en la base, para no duplicar por web, mail, teléfono, LinkedIn, Instagram o nombre.
+  let existentes = [], columnasNuevas = true;
+  try { existentes = (await db("mkt_prospectos?select=id,empresa,web,email,telefono,whatsapp,linkedin,instagram,direccion,ciudad&limit=10000")) || []; }
+  catch (e) { columnasNuevas = false; existentes = (await db("mkt_prospectos?select=id,empresa,web,email,ciudad&limit=10000")) || []; }
+  const indice = new Map();
+  existentes.forEach(x => claves(x).forEach(k => { if (!indice.has(k)) indice.set(k, x); }));
+
+  let nuevos = 0, completados = 0, repetidos = 0;
+  for (const f of cand) {
+    const previo = claves(f).map(k => indice.get(k)).find(Boolean);
+    if (previo) {
+      // Ya existe: solo se le completan los datos de contacto que le faltaban.
+      const cambios = {};
+      CAMPOS_EXTRA.forEach(c => { if (f[c] && !previo[c] && (columnasNuevas || ["web", "email", "ciudad"].includes(c))) cambios[c] = f[c]; });
+      if (Object.keys(cambios).length) {
+        try { await db("mkt_prospectos?id=eq." + previo.id, { method: "PATCH", body: cambios, prefer: "return=minimal" }); completados++; Object.assign(previo, cambios); claves(previo).forEach(k => { if (!indice.has(k)) indice.set(k, previo); }); }
+        catch (e) { repetidos++; }
+      } else repetidos++;
+      continue;
+    }
+    try {
+      await db("mkt_prospectos", { method: "POST", body: columnasNuevas ? f : Object.fromEntries(Object.entries(f).filter(([k]) => !["telefono", "whatsapp", "linkedin", "instagram", "direccion"].includes(k))), prefer: "return=minimal" });
+      nuevos++; claves(f).forEach(k => indice.set(k, f));
+    } catch (e) {
+      if (columnasNuevas) {
+        // Si la base todavía no tiene las columnas nuevas, se guarda lo básico para no perder la empresa.
+        columnasNuevas = false;
+        try { await db("mkt_prospectos", { method: "POST", body: Object.fromEntries(Object.entries(f).filter(([k]) => !["telefono", "whatsapp", "linkedin", "instagram", "direccion"].includes(k))), prefer: "return=minimal" }); nuevos++; claves(f).forEach(k => indice.set(k, f)); }
+        catch (e2) { repetidos++; }
+      } else repetidos++;
+    }
   }
-  await auditar(actor, "cazar", { pais, encontrados: filas.length, nuevos });
-  return { encontrados: filas.length, nuevos };
+  const conWa = cand.filter(x => x.whatsapp).length, conLi = cand.filter(x => x.linkedin).length, conTel = cand.filter(x => x.telefono).length;
+  await auditar(actor, "cazar", { pais, encontrados: cand.length, nuevos, completados, repetidos, con_whatsapp: conWa, con_linkedin: conLi, con_telefono: conTel });
+  const out = { encontrados: cand.length, nuevos, completados, repetidos, con_whatsapp: conWa, con_linkedin: conLi, con_telefono: conTel };
+  if (!columnasNuevas) out.aviso = "Falta ejecutar 015_prospeccion_contactos.sql en Supabase: se guardó solo lo básico (sin teléfono, WhatsApp, LinkedIn ni Instagram).";
+  return out;
 }
 
 async function accionGenerarMails(actor, b) {
