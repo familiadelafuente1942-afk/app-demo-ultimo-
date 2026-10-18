@@ -3529,4 +3529,23 @@ draw();
 
 </script>
 
+<script>
+/* Seguimiento: avisa a NEXO Control cuántas veces se abre cada panel y si algo se rompe. */
+(function(){
+  var U="https://bxhjgxzvayszfqwlwinq.supabase.co",K="sb_publishable_13lg1fm-zw7UHvCkVPdFFQ_07TSH4i5",TAG="nexo2demo",ROLES=false;
+  function post(t,b){try{fetch(U+"/rest/v1/"+t,{method:"POST",headers:{"Content-Type":"application/json",apikey:K,Authorization:"Bearer "+K,Prefer:"return=minimal"},body:JSON.stringify(b),keepalive:true}).catch(function(){})}catch(e){}}
+  window.nexoApertura=function(rol){
+    var tag=ROLES?TAG+"_"+rol:TAG;
+    try{var k="apertura_ts_"+tag,u=Number(localStorage.getItem(k)||0);if(Date.now()-u<30*60*1000)return;localStorage.setItem(k,String(Date.now()))}catch(e){}
+    post("aperturas",{app:tag});
+  };
+  function err(m,d){post("app_errores",{app:TAG,mensaje:String(m||"").slice(0,500),detalle:String(d||"").slice(0,2000),url:location.href,dispositivo:navigator.userAgent})}
+  window.addEventListener("error",function(e){err(e.message,e.error&&e.error.stack)});
+  window.addEventListener("unhandledrejection",function(e){err("Promise rechazada: "+((e.reason&&e.reason.message)||e.reason),e.reason&&e.reason.stack)});
+  window.addEventListener("load",function(){
+    try{var _l=window.login;if(typeof _l==="function"){window.login=function(r){try{nexoApertura(ROLES?r:"")}catch(e){}return _l.apply(this,arguments)}}}catch(e){}
+    setTimeout(function(){try{if(typeof S!=="undefined"&&S.u&&S.u.rol)nexoApertura(S.u.rol);else if(!ROLES)nexoApertura("")}catch(e){}},900);
+  });
+})();
+</script>
 </body></html>
