@@ -9568,6 +9568,15 @@ ${hist}`;
   }
 
   // Evita volver a traer empresas que ya están en la base.
+  function fmtTelNx(x) {
+    const d = String(x || "");
+    if (!/^\d{10,15}$/.test(d)) return d;
+    let m = d.match(/^549(11)(\d{4})(\d{4})$/); if (m) return `+54 9 ${m[1]} ${m[2]}-${m[3]}`;
+    m = d.match(/^54(11)(\d{4})(\d{4})$/); if (m) return `+54 ${m[1]} ${m[2]}-${m[3]}`;
+    m = d.match(/^549(\d{3,4})(\d{6,7})$/); if (m) return `+54 9 ${m[1]} ${m[2]}`;
+    m = d.match(/^54(\d{3,4})(\d{6,7})$/); if (m) return `+54 ${m[1]} ${m[2]}`;
+    return "+" + d;
+  }
   function normTelNx(raw, pais, wa) {
     let d = String(raw || "").replace(/\D+/g, "");
     if (!d) return "";
@@ -10655,12 +10664,12 @@ ${hist}`;
     style: {
       color: T.sub
     }
-  }, "☏ ", abierto.tel), abierto.whatsapp && /*#__PURE__*/React.createElement("span", {
+  }, "☏ ", fmtTelNx(abierto.tel)), abierto.whatsapp && /*#__PURE__*/React.createElement("span", {
     style: {
       color: "#1FA855",
       fontWeight: 700
     }
-  }, "WhatsApp +", abierto.whatsapp), abierto.linkedin && /*#__PURE__*/React.createElement("a", {
+  }, "WhatsApp ", fmtTelNx(abierto.whatsapp)), abierto.linkedin && /*#__PURE__*/React.createElement("a", {
     href: abierto.linkedin,
     target: "_blank",
     rel: "noreferrer",
