@@ -2441,14 +2441,16 @@ const A={
   cambiarCons:()=>{S.u=null;S.step='cons';draw();scrollTo(0,0)},
   login:ds=>{if(esAdmin()&&ds.u==='dir'){login('dir');return}
     if(ds.u==='dir'){S.codRol='dir';S.step='clave';draw();scrollTo(0,0);return}
-    const au=ds.u==='aud';S.codRol=au?'aud':'jefe';S.pend=null;S.sel=guardadas(au?'aud':'jefe').slice();S.step=au?'obrasAud':'obras';draw();scrollTo(0,0)},
+    const au=ds.u==='aud',r=au?'aud':'jefe',g=guardadas(r);S.codRol=r;S.pend=null;
+    if(g.length){if(au){S.audObras=g;login('aud')}else{S.mias=g;login('jefe')}return}
+    S.step='clave';draw();scrollTo(0,0)},
   selObra:ds=>{S.sel=S.sel.includes(ds.id)?S.sel.filter(x=>x!==ds.id):[...S.sel,ds.id];draw()},
   entrarConCodigos:()=>{if(!S.sel.length)return;const au=S.step==='obrasAud';S.codRol=au?'aud':'jefe';S.pend=S.sel.slice();S.step='clave';draw();scrollTo(0,0)},
   entrarObras:()=>{if(!S.sel.length)return;const au=S.step==='obrasAud',r=au?'aud':'jefe';
     const g=guardadas(r);S.pend=S.sel.filter(id=>!g.includes(id));
     if(!S.pend.length){if(au){S.audObras=S.sel.slice();login('aud')}else{S.mias=S.sel.slice();login('jefe')}return}
     S.codRol=r;S.step='clave';draw();scrollTo(0,0)},
-  cambiarObras:()=>{const au=ROLE()==='auditor';S.codRol=au?'aud':'jefe';if(OBRAS.length){S.pend=null;S.sel=guardadas(au?'aud':'jefe').slice();S.u=null;S.step=au?'obrasAud':'obras';draw();scrollTo(0,0);return}S.u=null;S.step='clave';draw();scrollTo(0,0)},
+  cambiarObras:()=>{S.codRol=ROLE()==='auditor'?'aud':'jefe';S.pend=null;S.u=null;S.step='clave';draw();scrollTo(0,0)},
   volver:()=>{S.step='panels';draw()},
   entrarProp:ds=>{S.cobra=ds.o;S.chat=[];login('cli')},
   otraObra:()=>{S.codRol='prop';S.u=null;S.step='clave';draw();scrollTo(0,0)},
@@ -2471,7 +2473,8 @@ const A={
   salir:()=>{sesBorrar();S.u=null;S.step=LOCK==='constructora'?'roles':'panels';closeSheet();draw();scrollTo(0,0)},
   tab:ds=>{S.tab=ds.t;if(S.tab!=='docs')S.obraF='todas';S.filtro='activos';draw();scrollTo(0,0)},
   obra:ds=>{S.obra=ds.id;S.tab='obra';S.otab=ROLE()==='auditor'?'asup':'crono';draw();scrollTo(0,0)},
-  locked:()=>toast(ROLE()==='auditor'?'Esta obra la audita otro auditor':'Esta obra está a cargo de otro jefe de obra'),
+  locked:ds=>{const o=findO(ds.id);if(!o)return;const au=ROLE()==='auditor';
+    openSheet(`<span class="eyebrow">${esc(o.nombre)}</span><h2>${au?'Esta obra la audita otro auditor':'Esta obra está a cargo de otro jefe de obra'}</h2><p class="muted">Si te la asignaron a vos, poné el código de esta obra para tomarla.</p><form class="frm" data-submit="tomarObra" data-o="${o.id}"><label class="f">Código de ${esc(o.nombre)}<input id="to-cod" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${au?'Ej.: A-LP132-0000':'Ej.: J-LP132-0000'}" style="letter-spacing:.08em;text-transform:uppercase"></label><button class="btn gold" type="submit">Tomar la obra</button><button class="btn" type="button" data-act="close">Cancelar</button></form>`,'Obra bloqueada')},
   otab:ds=>{S.otab=ds.t;draw()},
   ver:ds=>{S.ver=ds.m;draw()},
   capa:ds=>{S.capas[ds.k]=!S.capas[ds.k];draw()},
@@ -2576,6 +2579,10 @@ const SUBMIT={
     notify('jefe',o,`${AUD_TIPO[a.tipo].corto} ${a.num}: ${a.resultado.toLowerCase()}`,{t:'aud',id:a.id});
     AF=null;toast(`${a.num} guardado: le llega a la jefatura de obra`);draw();sheetAudVer(a.id)},
   modelo:f=>{readMO();const o=findO(f.dataset.o);cambiarModelo(o,MO);MO=null;closeSheet();notify('jefe',o,`La Dirección actualizó el modelo de ${o.nombre}: ${modeloTxt(o)}`,null);toast(`Modelo aplicado: ${modeloTxt(o)}`);draw()},
+  tomarObra:async f=>{const id=f.dataset.o,au=ROLE()==='auditor',r=au?'aud':'jefe',txt=val('to-cod'),o=findO(id);if(!normClave(txt)){toast('Escribí el código');return}
+    let d;try{d=await codApi({op:'login',rol:r,codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
+    if(!d.ok||d.obra!==id){toast(d.ok?`Ese código es de otra obra, no de ${o.nombre}.`:'Ese código no es válido. Pedíselo a la Dirección.');return}
+    guardarCod(r,id);credGuardar(r,id,txt);if(au)S.audObras=guardadas('aud');else S.mias=guardadas('jefe');closeSheet();toast(`Ahora tenés a cargo ${o.nombre}`);draw()},
   clavesMulti:async f=>{const r=S.codRol||'jefe';const falla=[];let ok=0;
     for(const id of S.pend.slice()){const o=OBRAS.find(x=>x.id===id),txt=val('cl-m-'+id);if(!normClave(txt)){falla.push(o.nombre);continue}
       let d;try{d=await codApi({op:'login',rol:r,codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
