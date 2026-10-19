@@ -1075,6 +1075,13 @@ header.top{background:linear-gradient(180deg,var(--g-a),var(--g-b))!important}
 .kp-d .kp-x{font-size:20px}
 .kp-t{display:block;margin:6px auto 0;background:none;border:0;color:var(--muted,#9a9a9a);font-size:12px;text-decoration:underline;cursor:pointer}
 .kp-in{text-align:center;font-size:22px!important;letter-spacing:.18em!important;border-radius:999px!important;background:var(--gl)!important;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:.5px solid var(--gl-hi)!important}
+:root[data-tema="claro"] .kp button{color:#1c1d22;text-shadow:0 1px 0 rgba(255,255,255,.7);
+ background:linear-gradient(160deg,rgba(255,255,255,.85) 0%,rgba(255,255,255,.18) 45%,rgba(255,255,255,.38) 100%);
+ -webkit-backdrop-filter:blur(10px) saturate(1.6) brightness(1.04);backdrop-filter:blur(10px) saturate(1.6) brightness(1.04);
+ border:1px solid rgba(255,255,255,.95);
+ box-shadow:inset 0 1.5px 1px #fff,inset 0 -8px 14px rgba(90,100,150,.16),0 8px 22px rgba(60,70,120,.20)}
+:root[data-tema="claro"] .kp button::after{background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,0))}
+:root[data-tema="claro"] .kp::before{opacity:.55}
 @media (max-width:520px){.kp-d{grid-template-columns:repeat(3,68px);gap:12px}.kp-l{grid-template-columns:repeat(9,32px);gap:6px}.kp-l button{font-size:13px}}
 </style>
 <div class="app">
