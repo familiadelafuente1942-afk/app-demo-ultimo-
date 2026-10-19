@@ -9644,7 +9644,7 @@ ${hist}`;
           method: "POST",
           headers: { "Content-Type": "application/json", "x-api-key": claveIaRepository.obtener(), "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
           body: JSON.stringify({
-            model: "claude-sonnet-4-6", max_tokens: 3000,
+            model: "claude-haiku-4-5-20251001", max_tokens: 3000,
             system: "Sos un asistente de prospección comercial. Solo reportás datos que viste de verdad en la búsqueda web. Nunca inventás números ni perfiles.",
             messages: [{ role: "user", content: [{ type: "text", text: prompt }] }],
             tools: [{ type: "web_search_20250305", name: "web_search" }]
@@ -9769,7 +9769,7 @@ ${hist}`;
       style: { marginTop: 14, background: "#F7F2E8", border: "1px solid #EBDCC0", borderRadius: 11, padding: "14px 16px" }
     }, /*#__PURE__*/React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: T.text } }, "Completar las empresas que ya tenés"),
     /*#__PURE__*/React.createElement("div", { style: { fontSize: 12, color: T.sub, marginTop: 4, lineHeight: 1.55 } },
-      falta ? `${falta} empresas no tienen WhatsApp, LinkedIn ni Instagram. La IA las revisa de a 4 · unos ${Math.max(1, Math.round(lotes * 40 / 60))} min · costo estimado USD ${(lotes * 0.07).toFixed(2)}. Dejá esta pantalla abierta; podés detener y retomar.` : "Todas las empresas ya fueron revisadas."),
+      falta ? `${falta} empresas no tienen WhatsApp, LinkedIn ni Instagram. La IA las revisa de a 4 · unos ${Math.max(1, Math.round(lotes * 40 / 60))} min · costo estimado USD ${(lotes * 0.03).toFixed(2)}. Dejá esta pantalla abierta; podés detener y retomar.` : "Todas las empresas ya fueron revisadas."),
     enr.activo && /*#__PURE__*/React.createElement("div", { style: { marginTop: 9 } },
       /*#__PURE__*/React.createElement("div", { style: { height: 6, background: "#E8DFC9", borderRadius: 4, overflow: "hidden" } },
         /*#__PURE__*/React.createElement("div", { style: { height: "100%", width: Math.round(100 * enr.hechas / Math.max(1, enr.total)) + "%", background: BRASS } })),
