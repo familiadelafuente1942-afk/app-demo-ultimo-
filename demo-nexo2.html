@@ -1082,6 +1082,24 @@ header.top{background:linear-gradient(180deg,var(--g-a),var(--g-b))!important}
  box-shadow:inset 0 1.5px 1px #fff,inset 0 -8px 14px rgba(90,100,150,.16),0 8px 22px rgba(60,70,120,.20)}
 :root[data-tema="claro"] .kp button::after{background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,0))}
 :root[data-tema="claro"] .kp::before{opacity:.55}
+/* ===== v14 · vidrio que brilla ===== */
+:root{--glint:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.17) 41%,rgba(255,255,255,.04) 50%,transparent 58%)}
+:root[data-tema="claro"]{--glint:linear-gradient(115deg,transparent 28%,rgba(255,255,255,.95) 41%,rgba(255,255,255,.25) 50%,transparent 60%)}
+.card,.kpi,.ucard,.entry,.situ,.aviso,.nov,.rcard,.selobra,.casa-wrap,.btn:not(.gold):not(.ghost),.chip,.filters button,.seg button,.ia-sug button,.avatar,.tema-seg button,nav.bottom button[aria-current=page]{
+ background:var(--glint),linear-gradient(158deg,var(--g-a) 0%,var(--g-b) 42%,var(--g-c) 100%)!important;
+ box-shadow:inset 0 2px 1px var(--g-rim),inset 0 0 0 1px var(--g-edge),inset 0 -12px 22px var(--g-low),0 0 18px -6px rgba(255,255,255,.25),0 14px 28px -12px var(--gl-sh)!important}
+.ia,.kpi.k-gold,.invite,.respbox,.cd,.modelbox,.rcard.top1,.selobra[aria-pressed=true],.aviso.nuevo{background:var(--glint),linear-gradient(158deg,rgba(232,197,133,.40) 0%,rgba(232,197,133,.07) 45%,var(--g-c) 100%)!important}
+.btn.gold{background:var(--glint),linear-gradient(180deg,rgba(244,218,160,.95),rgba(199,156,85,.75))!important}
+.av-ico{background:var(--glint),linear-gradient(158deg,rgba(255,226,160,.66) 0%,rgba(200,150,70,.18) 55%,rgba(255,226,160,.2) 100%)!important}
+/* teclado: más transparente y con destello */
+.kp button{background:var(--glint),linear-gradient(160deg,rgba(255,255,255,.26) 0%,rgba(255,255,255,.03) 40%,rgba(10,12,18,.14) 100%);
+ border:1px solid rgba(255,255,255,.55);
+ box-shadow:inset 0 2px 1px rgba(255,255,255,.85),inset 0 0 14px rgba(255,255,255,.14),inset 0 -8px 14px rgba(0,0,0,.16),0 0 16px rgba(255,255,255,.18),0 8px 22px rgba(0,0,0,.22)}
+.kp button::after{background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,0))}
+:root[data-tema="claro"] .kp button{background:var(--glint),linear-gradient(160deg,rgba(255,255,255,.75) 0%,rgba(255,255,255,.08) 45%,rgba(255,255,255,.28) 100%);box-shadow:inset 0 2px 1px #fff,inset 0 0 16px rgba(255,255,255,.7),inset 0 -8px 14px rgba(90,100,150,.14),0 0 18px rgba(255,255,255,.9),0 8px 22px rgba(60,70,120,.18)}
+@keyframes kpShine{0%{background-position:-160% 0,0 0}100%{background-position:260% 0,0 0}}
+.kp button{background-size:220% 100%,100% 100%;background-repeat:no-repeat}
+.kp button:active{animation:kpShine .5s ease-out;background:var(--glint),linear-gradient(160deg,rgba(255,255,255,.5),rgba(255,255,255,.12))}
 @media (max-width:520px){.kp-d{grid-template-columns:repeat(3,68px);gap:12px}.kp-l{grid-template-columns:repeat(9,32px);gap:6px}.kp-l button{font-size:13px}}
 </style>
 <div class="app">
