@@ -9350,6 +9350,8 @@ function AreaComercial({ modo } = {}) {
   const pararRef = useRef(false);
   const pararEnrRef = useRef(false);
   const [enr, setEnr] = useState({ activo: false, hechas: 0, total: 0, completadas: 0, msg: "" });
+  const [verLista, setVerLista] = useState(false);
+  const [filtroLista, setFiltroLista] = useState("alguno");
   const [candidatos, setCandidatos] = useState([]);
   const [buscando, setBuscando] = useState(false);
   const [avisoBusq, setAvisoBusq] = useState("");
@@ -9672,6 +9674,47 @@ ${hist}`;
     }
     setEnr(v => ({ ...v, activo: false }));
     setAviso(`Contactos completados en ${completadas} empresa${completadas === 1 ? "" : "s"}`);
+  }
+  function bloqueListado() {
+    const tiene = {
+      mail: p => !!(p.mail && /@/.test(p.mail)),
+      wa: p => !!p.whatsapp,
+      ig: p => !!p.instagram,
+      li: p => !!p.linkedin
+    };
+    const n = k => prospectosAll.filter(tiene[k]).length;
+    const completas = prospectosAll.filter(p => tiene.mail(p) && tiene.wa(p) && tiene.ig(p) && tiene.li(p));
+    const alguno = prospectosAll.filter(p => tiene.wa(p) || tiene.ig(p) || tiene.li(p));
+    const lista = filtroLista === "completas" ? completas : filtroLista === "alguno" ? alguno : prospectosAll;
+    const marca = (ok, txt, href) => ok ? (href ? /*#__PURE__*/React.createElement("a", { href, target: "_blank", rel: "noreferrer", style: { color: "#1B7F46", fontWeight: 700 } }, txt) : /*#__PURE__*/React.createElement("span", { style: { color: "#1B7F46", fontWeight: 700 } }, txt)) : /*#__PURE__*/React.createElement("span", { style: { color: "#B8B2A4" } }, "—");
+    const chip = (id, txt) => /*#__PURE__*/React.createElement("button", {
+      onClick: () => setFiltroLista(id),
+      style: { border: "1px solid " + (filtroLista === id ? T.text : "#D9D0BD"), background: filtroLista === id ? T.text : "#fff", color: filtroLista === id ? "#fff" : T.text, borderRadius: 18, padding: "6px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }
+    }, txt);
+    return /*#__PURE__*/React.createElement("div", {
+      style: { marginTop: 14, background: "#F7F2E8", border: "1px solid #EBDCC0", borderRadius: 11, padding: "14px 16px" }
+    }, /*#__PURE__*/React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: T.text } }, "Listado de contactos"),
+    /*#__PURE__*/React.createElement("div", { style: { fontSize: 12, color: T.sub, marginTop: 4, lineHeight: 1.55 } },
+      `${prospectosAll.length} empresas · con mail ${n("mail")} · con WhatsApp ${n("wa")} · con Instagram ${n("ig")} · con LinkedIn ${n("li")} · con los 4 datos ${completas.length}`),
+    /*#__PURE__*/React.createElement("button", {
+      onClick: () => setVerLista(v => !v),
+      style: { marginTop: 10, width: "100%", background: "#fff", color: T.text, border: "1px solid #D9D0BD", borderRadius: 9, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", minHeight: 44, fontFamily: "inherit" }
+    }, verLista ? "Ocultar listado" : "Ver listado"),
+    verLista && /*#__PURE__*/React.createElement("div", { style: { marginTop: 10 } },
+      /*#__PURE__*/React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 } },
+        chip("alguno", `Con algún dato (${alguno.length})`), chip("completas", `Con los 4 (${completas.length})`), chip("todas", `Todas (${prospectosAll.length})`)),
+      !lista.length ? /*#__PURE__*/React.createElement("div", { style: { fontSize: 12, color: T.sub } }, "Todavía no hay empresas en esta lista.") :
+      /*#__PURE__*/React.createElement("div", { style: { maxHeight: 420, overflow: "auto", background: "#fff", borderRadius: 9, border: "1px solid #EBDCC0" } },
+        /*#__PURE__*/React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: 12 } },
+          /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", { style: { textAlign: "left", position: "sticky", top: 0, background: "#fff" } },
+            ["Empresa", "Mail", "WhatsApp", "Instagram", "LinkedIn"].map(h => /*#__PURE__*/React.createElement("th", { key: h, style: { padding: "8px 10px", borderBottom: "1px solid #EBDCC0", color: T.sub, fontSize: 11 } }, h)))),
+          /*#__PURE__*/React.createElement("tbody", null, lista.slice(0, 300).map(p => /*#__PURE__*/React.createElement("tr", { key: p.id, style: { borderBottom: "1px solid #F1EBDD" } },
+            /*#__PURE__*/React.createElement("td", { style: { padding: "7px 10px", fontWeight: 600, color: T.text } }, p.empresa),
+            /*#__PURE__*/React.createElement("td", { style: { padding: "7px 10px" } }, marca(tiene.mail(p), p.mail)),
+            /*#__PURE__*/React.createElement("td", { style: { padding: "7px 10px" } }, marca(tiene.wa(p), fmtTelNx(p.whatsapp), "https://wa.me/" + p.whatsapp)),
+            /*#__PURE__*/React.createElement("td", { style: { padding: "7px 10px" } }, marca(tiene.ig(p), "@" + p.instagram, "https://instagram.com/" + p.instagram)),
+            /*#__PURE__*/React.createElement("td", { style: { padding: "7px 10px" } }, marca(tiene.li(p), "Ver página", p.linkedin))))))),
+      lista.length > 300 && /*#__PURE__*/React.createElement("div", { style: { fontSize: 11, color: T.muted, marginTop: 6 } }, "Se muestran las primeras 300.")));
   }
   function bloqueEnriquecer() {
     const falta = faltanContactos().length;
@@ -11333,7 +11376,7 @@ ${hist}`;
       color: "#9A6B1E",
       lineHeight: 1.5
     }
-  }, avisoBusq), bloqueEnriquecer()), (corriendo || bitacoraBusq.length > 0) && /*#__PURE__*/React.createElement("div", {
+  }, avisoBusq), bloqueEnriquecer(), bloqueListado()), (corriendo || bitacoraBusq.length > 0) && /*#__PURE__*/React.createElement("div", {
     style: {
       background: "#fff",
       borderRadius: 13,
