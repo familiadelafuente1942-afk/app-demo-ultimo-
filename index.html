@@ -9687,6 +9687,36 @@ ${hist}`;
     setEnr(v => ({ ...v, activo: false }));
     setAviso(`Contactos completados en ${completadas} empresa${completadas === 1 ? "" : "s"}`);
   }
+  function nombreClave(n) {
+    return String(n || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\([^)]*\)/g, " ").replace(/\b(s\.?a\.?|s\.?r\.?l\.?|srl|sas|ltda|s\.?h\.?)\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
+  }
+  async function cargarEncontrados() {
+    try {
+      const r = await fetch("contactos-encontrados.json?v=" + Date.now());
+      const lista = await r.json();
+      const idx = {};
+      lista.forEach(x => { idx[nombreClave(x.empresa)] = x; });
+      let n = 0;
+      setProspectos(prev => prev.map(p => {
+        const x = idx[nombreClave(p.empresa)];
+        if (!x) return p;
+        const c = {};
+        const pais = p.pais || "ar";
+        const wa = normTelNx(x.whatsapp, pais, true), tel = normTelNx(x.telefono, pais, false), li = normLinkedinNx(x.linkedin);
+        const ig = String(x.instagram || "").replace(/^@/, "").toLowerCase();
+        if (wa && !p.whatsapp) c.whatsapp = wa;
+        if (tel && !p.tel) c.tel = tel;
+        if (li && !p.linkedin) c.linkedin = li;
+        if (ig && !p.instagram) c.instagram = ig;
+        if (x.email && !p.mail) c.mail = x.email;
+        if (x.web && !p.web) c.web = x.web;
+        if (!Object.keys(c).length) return p;
+        n++;
+        return { ...p, ...c };
+      }));
+      setTimeout(() => setAviso(`Contactos cargados en ${n} empresa${n === 1 ? "" : "s"}`), 50);
+    } catch { setAviso("No pude leer el archivo de contactos encontrados."); }
+  }
   function bloqueListado() {
     const tiene = {
       mail: p => !!(p.mail && /@/.test(p.mail)),
@@ -9712,6 +9742,10 @@ ${hist}`;
       onClick: () => setVerLista(v => !v),
       style: { marginTop: 10, width: "100%", background: "#fff", color: T.text, border: "1px solid #D9D0BD", borderRadius: 9, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", minHeight: 44, fontFamily: "inherit" }
     }, verLista ? "Ocultar listado" : "Ver listado"),
+    /*#__PURE__*/React.createElement("button", {
+      onClick: cargarEncontrados,
+      style: { marginTop: 8, width: "100%", background: "#fff", color: T.text, border: "1px solid #D9D0BD", borderRadius: 9, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", minHeight: 44, fontFamily: "inherit" }
+    }, "Cargar contactos encontrados por Claude"),
     verLista && /*#__PURE__*/React.createElement("div", { style: { marginTop: 10 } },
       /*#__PURE__*/React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 } },
         chip("alguno", `Con algún dato (${alguno.length})`), chip("completas", `Con los 4 (${completas.length})`), chip("todas", `Todas (${prospectosAll.length})`)),
