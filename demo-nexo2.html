@@ -759,6 +759,12 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.9;
 .car-sl{flex:0 0 100%;scroll-snap-align:start;border:0;padding:0;background:none;text-align:left;color:var(--fg);display:flex;flex-direction:column}
 .car-img{position:relative;aspect-ratio:16/8;background-size:cover;background-position:center;display:block}
 @media (prefers-reduced-motion:no-preference){.car-sl .car-img{animation:kb 9s ease-in-out infinite alternate}@keyframes kb{from{background-size:100%}to{background-size:110%}}}
+.car-img.mos{display:grid;background:none;animation:none!important;overflow:hidden}
+.car-img.mos>i{display:block;background-size:cover;background-position:center;min-height:0}
+.car-img.mos2{grid-template-columns:repeat(2,1fr)}
+.car-img.mos3{grid-template-columns:repeat(3,1fr)}
+.car-img.mos4,.car-img.mos5,.car-img.mos6{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr)}
+.car-img.mos5,.car-img.mos6{grid-template-columns:repeat(3,1fr)}
 .car-sh{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.78))}
 .car-top{position:absolute;left:14px;bottom:24px;display:flex;flex-direction:column;gap:2px}
 .car-top .eyebrow{color:#e6cfa5}
@@ -2997,9 +3003,15 @@ function carFacts(o){const r=ROLE(),dv=desvioSem(o),ro=o.cards.filter(c=>color(c
     return[['Etapa',esc(etapaDe(o))],['Para entregar',`<span class="${rr?'t-rojo':pend.length?'t-naranja':'t-verde'}">${pend.length?plural(pend.length,'tarjeta','tarjetas'):'al día'}</span>`],['Planos por subir',String(fl)],['Entrega contractual',fmt(finContractual(o))]]}
   const s=o.sup.find(x=>x.estado==='programada');
   return[['Ahora',esc(actual(o).name)],['Próxima tarea',n?`${esc(n.name)} · ${fmt(n.start)}`:'Entrega'],['Tarjetas',`<span class="${ro?'t-rojo':'t-verde'}">${ro?plural(ro,'vencida','vencidas'):'al día'}</span>${na?` · ${na} por vencer`:''}`],['Próxima supervisión',s?fmt(s.fecha):'—']]}
+/* primera diapositiva: todas las obras juntas, con los totales */
+function carTodas(obras){const n=obras.length,av=Math.round(obras.reduce((a,o)=>a+avance(o),0)/n),ro=obras.reduce((a,o)=>a+o.cards.filter(c=>color(c)==='rojo').length,0),na=obras.reduce((a,o)=>a+o.cards.filter(c=>['naranja','amarillo'].includes(color(c))).length,0);
+  let f=[['Obras',String(n)],['Avance promedio',av+'%'],['Tarjetas',`<span class="${ro?'t-rojo':'t-verde'}">${ro?plural(ro,'vencida','vencidas'):'al día'}</span>${na?` · ${na} por vencer`:''}`]];
+  if(ROLE()==='direccion'){const E=econ(obras),A=E.reduce((a,x)=>a+x.ahorro,0),P=E.reduce((a,x)=>a+x.perdida,0);f.push(['Ahorro / pérdida',`<span class="t-verde">+${moneyK(A)}</span> <span class="t-rojo">−${moneyK(P)}</span>`])}
+  const sh=obras.slice(0,6);
+  return `<button class="car-sl" data-act="tab" data-t="obras" aria-label="Todas las obras juntas: ${n} obras, ${av}% de avance promedio"><span class="car-img mos mos${Math.min(sh.length,4)}">${sh.map(o=>`<i style="background-image:url('${img(o)}')"></i>`).join('')}<span class="car-sh"></span><span class="car-top"><span class="eyebrow">Resumen</span><span class="car-n">Todas las obras</span></span><span class="car-pct">${av}%</span><span class="car-bar"><i style="width:${av}%"></i></span></span><span class="car-info">${f.map(([l,v])=>`<span class="cf"><span>${l}</span><b>${v}</b></span>`).join('')}</span></button>`}
 function carrusel(obras){if(!obras.length)return'';
-  return `<section class="car" aria-label="Obras" aria-roledescription="carrusel"><div class="car-track" id="cartrack">${obras.map((o,i)=>`<button class="car-sl" data-act="obra" data-id="${o.id}" aria-label="${esc(o.nombre)}, ${avance(o)}% de avance"><span class="car-img" style="background-image:url('${img(o)}')"><span class="car-sh"></span><span class="car-top"><span class="eyebrow">${esc(o.ubic)}</span><span class="car-n">${esc(o.nombre)}</span></span><span class="car-pct">${avance(o)}%</span><span class="car-bar"><i style="width:${avance(o)}%"></i><s style="left:${ROLE()==='estudio'?avancePlanDe(contractual(o)):avancePlan(o)}%"></s></span></span><span class="car-info">${carFacts(o).map(([l,v])=>`<span class="cf"><span>${l}</span><b>${v}</b></span>`).join('')}</span>${dotsDef(o)}</button>`).join('')}</div>
-  ${obras.length>1?`<div class="car-dots">${obras.map((o,i)=>`<button data-act="carGo" data-i="${i}" aria-label="Ver ${esc(o.nombre)}" aria-current="${i===0}"></button>`).join('')}</div>`:''}</section>`}
+  return `<section class="car" aria-label="Obras" aria-roledescription="carrusel"><div class="car-track" id="cartrack">${obras.length>1?carTodas(obras):''}${obras.map((o,i)=>`<button class="car-sl" data-act="obra" data-id="${o.id}" aria-label="${esc(o.nombre)}, ${avance(o)}% de avance"><span class="car-img" style="background-image:url('${img(o)}')"><span class="car-sh"></span><span class="car-top"><span class="eyebrow">${esc(o.ubic)}</span><span class="car-n">${esc(o.nombre)}</span></span><span class="car-pct">${avance(o)}%</span><span class="car-bar"><i style="width:${avance(o)}%"></i><s style="left:${ROLE()==='estudio'?avancePlanDe(contractual(o)):avancePlan(o)}%"></s></span></span><span class="car-info">${carFacts(o).map(([l,v])=>`<span class="cf"><span>${l}</span><b>${v}</b></span>`).join('')}</span>${dotsDef(o)}</button>`).join('')}</div>
+  ${obras.length>1?`<div class="car-dots"><button data-act="carGo" data-i="0" aria-label="Ver todas las obras juntas" aria-current="true"></button>${obras.map((o,i)=>`<button data-act="carGo" data-i="${i+1}" aria-label="Ver ${esc(o.nombre)}" aria-current="false"></button>`).join('')}</div>`:''}</section>`}
 let CAR_T=null,CAR_I=0;
 function carStart(){clearInterval(CAR_T);const t=document.getElementById('cartrack');if(!t)return;CAR_I=0;
   t.addEventListener('scroll',()=>{const i=Math.round(t.scrollLeft/t.clientWidth);if(i!==CAR_I){CAR_I=i;carDots()}},{passive:true});
