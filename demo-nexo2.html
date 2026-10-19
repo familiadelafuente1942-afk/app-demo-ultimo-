@@ -3541,7 +3541,7 @@ function avItem(x,o,borrar){
   ${x.txt?`<p style="margin:6px 0">${esc(x.txt)}</p>`:''}
   ${x.resumen?`<div class="avres"><span class="eyebrow">Avance respecto a la foto anterior</span>${esc(x.resumen)}</div>`:(AVPEND.has(x.id)?'<div class="avres muted">Analizando las fotos con IA…</div>':'')}
   ${x.fotos&&x.fotos.length?`<div class="avgrid">${x.fotos.map(u=>`<button type="button" class="avph" data-act="verFotoAv" data-u="${esc(u)}" aria-label="Ver foto"><img src="${esc(u)}" alt="Avance de obra" loading="lazy"></button>`).join('')}</div>`:''}
-  <span class="muted small">${esc(x.autor||'')}</span>${borrar?`<button class="btn sm ghost" data-act="avBorrar" data-o="${o.id}" data-id="${x.id}" style="margin-left:8px">Borrar</button>`:''}</div>`;
+  <span class="muted small">${esc(x.autor||'')}</span>${borrar?`<button class="btn sm ghost" data-act="avEditar" data-o="${o.id}" data-id="${x.id}" style="margin-left:8px">Editar</button><button class="btn sm ghost" data-act="avBorrar" data-o="${o.id}" data-id="${x.id}" style="margin-left:8px">Borrar</button>`:''}</div>`;
 }
 function tabAvances(o){
   const a=AVS[o.id];if(!a||!a.items)avLoad(o);
@@ -3560,13 +3560,13 @@ function secAvCliente(o){
 let AVF=null,AVIMP=[];
 function avSheet(){
   const o=findO(AVF.obra);const tareas=[...new Set((o.tasks||[]).map(t=>t.name))];
-  openSheet(`<span class="eyebrow">${esc(o.nombre)}</span><h2>Cargar avance</h2><div class="sec">
+  openSheet(`<span class="eyebrow">${esc(o.nombre)}</span><h2>${AVF.id?'Editar avance':'Cargar avance'}</h2><div class="sec">
   <label class="f">¿Qué sector o tarea?<select id="av-sec"><option value="">General de la obra</option>${tareas.map(n=>`<option ${AVF.sector===n?'selected':''}>${esc(n)}</option>`).join('')}</select></label>
   <label class="f">Qué se hizo<textarea id="av-txt" rows="3" placeholder="Ej.: se terminó el hormigonado de la losa de planta baja">${esc(AVF.txt||'')}</textarea></label>
-  <span class="eyebrow">Fotos</span><div class="thumbs2">${AVF.fotos.map((f,i)=>`<span><img src="${f}" alt=""><button type="button" data-act="avQuitarFoto" data-i="${i}" aria-label="Quitar foto">✕</button></span>`).join('')}<label class="addph" for="av-foto">+</label><input id="av-foto" type="file" accept="image/*" multiple data-chg="avFoto" hidden></div>
-  <button class="btn gold full" data-act="avGuardar" ${AVF.sub?'disabled':''}>${AVF.sub?'Subiendo… '+AVF.sub:'Guardar avance'}</button><button class="btn full" data-act="close">Cancelar</button></div>`,'Cargar avance');
+  ${AVF.id?`<label class="f">Avance respecto a la foto anterior (texto del análisis)<textarea id="av-res" rows="4">${esc(AVF.resumen||'')}</textarea></label>`:''}<span class="eyebrow">Fotos</span><div class="thumbs2">${AVF.fotos.map((f,i)=>`<span><img src="${f}" alt=""><button type="button" data-act="avQuitarFoto" data-i="${i}" aria-label="Quitar foto">✕</button></span>`).join('')}<label class="addph" for="av-foto">+</label><input id="av-foto" type="file" accept="image/*" multiple data-chg="avFoto" hidden></div>
+  <button class="btn gold full" data-act="avGuardar" ${AVF.sub?'disabled':''}>${AVF.sub?'Subiendo… '+AVF.sub:AVF.id?'Guardar cambios':'Guardar avance'}</button><button class="btn full" data-act="close">Cancelar</button></div>`,'Cargar avance');
 }
-function avLeer(){if(!AVF||!$('#av-txt'))return;AVF.txt=$('#av-txt').value;AVF.sector=$('#av-sec').value}
+function avLeer(){if(!AVF||!$('#av-txt'))return;AVF.txt=$('#av-txt').value;AVF.sector=$('#av-sec').value;if($('#av-res'))AVF.resumen=$('#av-res').value}
 function reducir(file,max=1400,q=.72){return new Promise(res=>{const r=new FileReader();r.onerror=()=>res(null);r.onload=()=>{const im=new Image();im.onerror=()=>res(null);im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',q))};im.src=r.result};r.readAsDataURL(file)})}
 Object.assign(A,{
   avImport:async()=>{
@@ -3586,16 +3586,20 @@ Object.assign(A,{
     catch(e){toast('No se pudo traer. Probá de nuevo.')}
   },
   avNuevo:ds=>{AVF={obra:ds.o,sector:'',txt:'',fotos:[],sub:''};avSheet()},
+  avEditar:ds=>{const o=findO(ds.o),x=((AVS[o.id]||{}).items||[]).find(y=>y.id===ds.id);if(!x)return;AVF={obra:o.id,id:x.id,sector:x.sector||'',txt:x.txt||'',resumen:x.resumen||'',fotos:(x.fotos||[]).slice(),sub:''};avSheet()},
   avQuitarFoto:ds=>{avLeer();AVF.fotos.splice(+ds.i,1);avSheet()},
   verFotoAv:ds=>{const f=addFile('Foto de avance','image/jpeg',ds.u);sheetArchivo({f:f.id})},
   avBorrar:async ds=>{const o=findO(ds.o),cr=credAv(o);if(!cr)return;if(!confirm('¿Borrar este avance?'))return;try{await codApi({op:'av_del',obra:o.id,cred:cr,id:ds.id});toast('Avance borrado');avLoad(o,true)}catch(e){toast('No se pudo borrar. Volvé a ingresar tu código.')}},
   avGuardar:async()=>{
     avLeer();const o=findO(AVF.obra),cr=credAv(o);
-    if(!AVF.txt.trim()&&!AVF.fotos.length){toast('Cargá una foto o escribí qué se hizo');return}
+    if(!AVF.txt.trim()&&!AVF.fotos.length&&!(AVF.resumen||'').trim()){toast('Cargá una foto o escribí qué se hizo');return}
     if(!cr||!cr.codigo){toast('Para cargar avances volvé a ingresar tu código (Salir y entrar de nuevo).');return}
     try{
-      const urls=[];
-      for(let i=0;i<AVF.fotos.length;i++){AVF.sub=`foto ${i+1} de ${AVF.fotos.length}`;avSheet();const r=await codApi({op:'av_foto',obra:o.id,cred:cr,data:AVF.fotos[i]});if(!r.url)throw new Error(r.error||'foto');urls.push(r.url)}
+      const urls=[];let nuevas=0;
+      for(let i=0;i<AVF.fotos.length;i++){if(!AVF.fotos[i].startsWith('data:')){urls.push(AVF.fotos[i]);continue}AVF.sub=`foto ${i+1} de ${AVF.fotos.length}`;avSheet();const r=await codApi({op:'av_foto',obra:o.id,cred:cr,data:AVF.fotos[i]});if(!r.url)throw new Error(r.error||'foto');urls.push(r.url);nuevas++}
+      if(AVF.id){AVF.sub='guardando';avSheet();const e=await codApi({op:'av_edit',obra:o.id,cred:cr,id:AVF.id,item:{sector:AVF.sector,txt:AVF.txt.trim(),fotos:urls,resumen:AVF.resumen||''}});if(!e.ok)throw new Error(e.error||'guardar');const id=AVF.id;closeSheet();AVF=null;toast('Avance actualizado');S.otab='avances';
+        if(nuevas){AVPEND.add(id);codApi({op:'av_resumen',obra:o.id,cred:cr,id}).catch(()=>{}).finally(()=>{AVPEND.delete(id);avLoad(o,true)})}
+        avLoad(o,true);return}
       AVF.sub='guardando';avSheet();
       const au=ROLE()==='direccion'?'Dirección':(o.jefe||'Jefatura de obra');
       const r=await codApi({op:'av_add',obra:o.id,cred:cr,item:{fecha:Date.now(),sector:AVF.sector,txt:AVF.txt.trim(),fotos:urls,autor:au}});
