@@ -2455,6 +2455,8 @@ const A={
   entrarCod:ds=>{const r=ds.r;if(!guardadas(r).length)return;if(r==='jefe'){S.mias=guardadas('jefe');login('jefe')}else{S.audObras=guardadas('aud');login('aud')}},
   olvidarCod:ds=>{olvidarCod(ds.r,ds.o);draw()},
   volverRoles:()=>{S.step='roles';draw()},
+  actualizar:async()=>{toast('Actualizando…');try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})))}catch(e){}try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
+    const u=new URL(location.href);u.searchParams.set('v',Date.now().toString(36));location.replace(u.toString())},
   salir:()=>{sesBorrar();S.u=null;S.step=LOCK==='constructora'?'roles':'panels';closeSheet();draw();scrollTo(0,0)},
   tab:ds=>{S.tab=ds.t;if(S.tab!=='docs')S.obraF='todas';S.filtro='activos';draw();scrollTo(0,0)},
   obra:ds=>{S.obra=ds.id;S.tab='obra';S.otab=ROLE()==='auditor'?'asup':'crono';draw();scrollTo(0,0)},
@@ -2604,7 +2606,7 @@ function draw(){
   const r=ROLE();
   const view=!S.u?(S.step==='roles'?vRoles():S.step==='obras'||S.step==='obrasAud'?vSelObras():S.step==='cons'?vCons():S.step==='clave'?vClave():vLogin()):({inicio:vInicio,obras:vObras,obra:vObra,pedidos:vPedidos,registro:vRegistro,mas:vMas,config:vConfig,claves:vClaves,desempeno:vDesempeno,docs:vDocs,cliente:vCliente}[S.tab]||vInicio)();
   $('#view').innerHTML=view;
-  $('#who').innerHTML=S.u?`<span><b>${esc(S.u.name)}</b>${r==='jefe'||r==='auditor'?`<span class="rol">${plural(misObras().length,'obra','obras')}</span>`:r==='estudio'?`<button class="rol rolbtn" data-act="cambiarCons">${esc(CONSTRUCTORAS.find(c=>c.id===S.cons).n)} ▾</button>`:r==='direccion'?`<span class="rol">${ORG}</span>`:''}</span>${LOCK&&LOCK!=='constructora'?'':'<button class="btn ghost sm" data-act="salir">Salir</button>'}`:'<span class="muted">Ingresá con tu cuenta</span>';
+  $('#who').innerHTML=S.u?`<span><b>${esc(S.u.name)}</b>${r==='jefe'||r==='auditor'?`<span class="rol">${plural(misObras().length,'obra','obras')}</span>`:r==='estudio'?`<button class="rol rolbtn" data-act="cambiarCons">${esc(CONSTRUCTORAS.find(c=>c.id===S.cons).n)} ▾</button>`:r==='direccion'?`<span class="rol">${ORG}</span>`:''}</span><button class="btn ghost sm" data-act="actualizar" aria-label="Actualizar la app" title="Actualizar">↻</button>${LOCK&&LOCK!=='constructora'?'':'<button class="btn ghost sm" data-act="salir">Salir</button>'}`:'<span class="muted">Ingresá con tu cuenta</span>';
   const nb=misNotifs().filter(n=>!n.leido).length;
   const badge=r==='estudio'?estPend().filter(c=>color(c)==='rojo').length:cardsDe(misObras()).filter(c=>color(c)==='rojo').length;
   $('#nav').innerHTML=navItems().map(([k,l,ic])=>`<button data-act="tab" data-t="${k}" ${S.tab===k||(S.tab==='obra'&&k==='obras')||(S.tab==='config'&&k==='mas')||(S.tab==='claves'&&k==='mas')?'aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[ic]}</svg>${l}${k==='pedidos'&&badge?`<span class="badge">${badge}</span>`:''}${(k==='inicio'||k==='cliente')&&nb?`<span class="badge gold">${nb}</span>`:''}</button>`).join('');
