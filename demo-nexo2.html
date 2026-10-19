@@ -1038,6 +1038,24 @@ nav.bottom button[aria-current=page]{background:var(--gl);box-shadow:inset 0 1px
 .tema-seg button{flex:1;padding:10px 8px;border-radius:14px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:6px}
 .tema-seg svg{width:22px;height:22px}
 
+
+/* ===== v13 · todo en vidrio transparente ===== */
+body{background:radial-gradient(50% 32% at 15% 58%,rgba(201,162,75,.20),transparent 70%),radial-gradient(45% 30% at 88% 42%,rgba(91,128,200,.20),transparent 70%),radial-gradient(40% 26% at 60% 92%,rgba(201,162,75,.14),transparent 70%),radial-gradient(120% 46% at 92% -4%,var(--amb1),transparent 62%),radial-gradient(90% 40% at 0% 38%,var(--amb2),transparent 70%),var(--bg);background-attachment:fixed}
+:root{--g-a:rgba(255,255,255,.17);--g-b:rgba(255,255,255,.035);--g-c:rgba(255,255,255,.075);--g-edge:rgba(255,255,255,.26);--g-rim:rgba(255,255,255,.55);--g-low:rgba(0,0,0,.22);--g-fx:blur(18px) saturate(1.9)}
+:root[data-tema="claro"]{--g-a:rgba(255,255,255,.80);--g-b:rgba(255,255,255,.22);--g-c:rgba(255,255,255,.40);--g-edge:rgba(255,255,255,.95);--g-rim:#fff;--g-low:rgba(60,70,120,.14)}
+.card,.kpi,.ucard,.entry,.situ,.aviso,.ia,.nov,.rcard,.selobra,.casa-wrap,.btn:not(.gold):not(.ghost),.chip,.filters button,.seg button,.ia-sug button,.avatar,.tema-seg button,nav.bottom button[aria-current=page]{
+ background:linear-gradient(158deg,var(--g-a) 0%,var(--g-b) 42%,var(--g-c) 100%)!important;
+ -webkit-backdrop-filter:var(--g-fx);backdrop-filter:var(--g-fx);
+ box-shadow:inset 0 1.5px 1px var(--g-rim),inset 0 0 0 1px var(--g-edge),inset 0 -10px 18px var(--g-low),0 12px 26px -12px var(--gl-sh)!important}
+.kpi.k-gold,.invite,.respbox,.cd,.modelbox,.rcard.top1,.selobra[aria-pressed=true],.ia,.aviso.nuevo{
+ background:linear-gradient(158deg,rgba(232,197,133,.36) 0%,rgba(232,197,133,.07) 45%,var(--g-c) 100%)!important}
+.filters button[aria-pressed=true],.seg button[aria-pressed=true],.tema-seg button[aria-pressed=true]{background:linear-gradient(158deg,rgba(232,197,133,.45),rgba(232,197,133,.10))!important;box-shadow:inset 0 1.5px 1px var(--g-rim),inset 0 0 0 1px var(--gold),0 8px 18px -10px var(--gold)!important}
+.btn.gold{background:linear-gradient(180deg,rgba(240,212,150,.92),rgba(199,156,85,.78))!important;-webkit-backdrop-filter:var(--g-fx);backdrop-filter:var(--g-fx);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.8),inset 0 0 0 1px rgba(255,236,190,.55),inset 0 -8px 14px rgba(120,80,20,.28),0 10px 20px -8px rgba(199,156,85,.8)!important}
+.av-ico{background:linear-gradient(158deg,rgba(255,226,160,.62) 0%,rgba(200,150,70,.20) 55%,rgba(255,226,160,.18) 100%)!important;-webkit-backdrop-filter:var(--g-fx);backdrop-filter:var(--g-fx);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.75),inset 0 0 0 1px rgba(255,230,170,.45),inset 0 -8px 12px rgba(120,80,20,.25),0 10px 18px -8px rgba(176,134,74,.6)!important}
+.ia-ico{background:linear-gradient(158deg,var(--g-a),var(--g-b))!important;-webkit-backdrop-filter:var(--g-fx);backdrop-filter:var(--g-fx);box-shadow:inset 0 1.5px 1px var(--g-rim),inset 0 0 0 1px var(--g-edge)!important}
+input,select,textarea{background:linear-gradient(180deg,var(--g-b),var(--g-c))!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:inset 0 1px 3px rgba(0,0,0,.22),inset 0 0 0 1px var(--g-edge)!important}
+nav.bottom .in{background:linear-gradient(158deg,var(--g-a),var(--g-b))!important;box-shadow:inset 0 1.5px 1px var(--g-rim),inset 0 0 0 1px var(--g-edge),0 14px 30px -10px var(--gl-sh)!important}
+header.top{background:linear-gradient(180deg,var(--g-a),var(--g-b))!important}
 /* teclado de vidrio para códigos */
 .kp{position:relative;isolation:isolate;display:flex;flex-wrap:wrap;gap:22px 30px;justify-content:center;align-items:flex-start;margin:10px auto 2px;max-width:760px;padding:18px 8px}
 .kp::before{content:"";position:absolute;inset:-6px 8%;z-index:-1;border-radius:40px;background:radial-gradient(60% 55% at 28% 30%,rgba(201,162,75,.55),transparent 70%),radial-gradient(55% 60% at 78% 70%,rgba(91,128,200,.40),transparent 70%);filter:blur(26px);opacity:.9}
