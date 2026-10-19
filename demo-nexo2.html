@@ -2069,6 +2069,7 @@ function vClave(){
    :`<h2>Tus obras en este dispositivo</h2><div class="sec">${gs.map(o=>`<div class="irow"><span><b>${esc(o.nombre)}</b><br><span class="muted small">${esc(o.ubic)}</span></span><button class="btn sm ghost" data-act="olvidarCod" data-r="${r}" data-o="${o.id}" aria-label="Quitar ${esc(o.nombre)}">Quitar</button></div>`).join('')}<button class="btn gold full" data-act="entrarCod" data-r="${r}">Entrar con ${plural(gs.length,'obra','obras')}</button></div>`;
   return `<button class="back" data-act="${r==='prop'?'volver':'volverRoles'}">← ${r==='prop'?'Paneles':'Roles'}</button><section class="sec"><span class="eyebrow">${T[0]}</span><h1>${T[1]}</h1><p class="muted">${T[2]}</p>
   <form class="sec" data-submit="claveIn"><label class="f">${T[3]}<input id="cl-clave" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${T[4]}" style="letter-spacing:.08em;text-transform:uppercase"></label><button class="btn gold" type="submit">Entrar</button></form>
+  ${(S.pend&&S.pend.length&&(r==='jefe'||r==='aud'))?`<div class="infobox">Elegiste: ${S.sel.map(id=>esc((OBRAS.find(o=>o.id===id)||{}).nombre||'')).join(', ')}. Falta el código de <b>${S.pend.map(id=>esc((OBRAS.find(o=>o.id===id)||{}).nombre||'')).join(', ')}</b>.</div>`:''}
   ${lista}
   <p class="note">${r==='dir'?'El código de Dirección lo definís en Más → Códigos de acceso.':'El código es de una sola obra. Cada obra tiene un código distinto para cada rol.'}</p></section>`;
 }
@@ -2438,10 +2439,16 @@ const A={
   panel:ds=>{if(ds.p==='constructora'){S.step='roles';draw();scrollTo(0,0)}else if(ds.p==='estudio'){S.step='cons';draw();scrollTo(0,0)}else if(esAdmin()&&OBRAS.length){S.cobra=OBRAS[0].id;S.chat=[];login('cli')}else{S.codRol='prop';S.step='clave';draw();scrollTo(0,0)}},
   elegirCons:ds=>{S.cons=ds.c;S.drive={obra:null,cat:null};login('est')},
   cambiarCons:()=>{S.u=null;S.step='cons';draw();scrollTo(0,0)},
-  login:ds=>{if(esAdmin()){if(ds.u==='dir'){login('dir');return}if(OBRAS.length&&(ds.u==='jefe'||ds.u==='aud')){S.sel=(ds.u==='aud'?S.audObras:S.mias)||[];S.sel=S.sel.slice();S.step=ds.u==='aud'?'obrasAud':'obras';draw();scrollTo(0,0);return}}S.codRol=ds.u==='aud'?'aud':ds.u==='jefe'?'jefe':'dir';S.step='clave';draw();scrollTo(0,0)},
+  login:ds=>{if(esAdmin()&&ds.u==='dir'){login('dir');return}
+    if(ds.u==='dir'){S.codRol='dir';S.step='clave';draw();scrollTo(0,0);return}
+    const au=ds.u==='aud';S.codRol=au?'aud':'jefe';S.pend=null;S.sel=(esAdmin()?((au?S.audObras:S.mias)||[]):guardadas(au?'aud':'jefe')).slice();S.step=au?'obrasAud':'obras';draw();scrollTo(0,0)},
   selObra:ds=>{S.sel=S.sel.includes(ds.id)?S.sel.filter(x=>x!==ds.id):[...S.sel,ds.id];draw()},
-  entrarObras:()=>{if(!S.sel.length)return;if(S.step==='obrasAud'){S.audObras=S.sel.slice();login('aud')}else{S.mias=S.sel.slice();login('jefe')}},
-  cambiarObras:()=>{const au=ROLE()==='auditor';S.codRol=au?'aud':'jefe';if(esAdmin()&&OBRAS.length){S.sel=((au?S.audObras:S.mias)||[]).slice();S.u=null;S.step=au?'obrasAud':'obras';draw();scrollTo(0,0);return}S.u=null;S.step='clave';draw();scrollTo(0,0)},
+  entrarObras:()=>{if(!S.sel.length)return;const au=S.step==='obrasAud',r=au?'aud':'jefe';
+    if(esAdmin()){if(au){S.audObras=S.sel.slice();login('aud')}else{S.mias=S.sel.slice();login('jefe')}return}
+    const g=guardadas(r);S.pend=S.sel.filter(id=>!g.includes(id));
+    if(!S.pend.length){if(au){S.audObras=S.sel.slice();login('aud')}else{S.mias=S.sel.slice();login('jefe')}return}
+    S.codRol=r;S.step='clave';draw();scrollTo(0,0)},
+  cambiarObras:()=>{const au=ROLE()==='auditor';S.codRol=au?'aud':'jefe';if(OBRAS.length){S.pend=null;S.sel=(esAdmin()?((au?S.audObras:S.mias)||[]):guardadas(au?'aud':'jefe')).slice();S.u=null;S.step=au?'obrasAud':'obras';draw();scrollTo(0,0);return}S.u=null;S.step='clave';draw();scrollTo(0,0)},
   volver:()=>{S.step='panels';draw()},
   entrarProp:ds=>{S.cobra=ds.o;S.chat=[];login('cli')},
   otraObra:()=>{S.codRol='prop';S.u=null;S.step='clave';draw();scrollTo(0,0)},
@@ -2574,7 +2581,10 @@ const SUBMIT={
     if(!d.ok){toast(d.error||(r==='dir'?'Código incorrecto':r==='prop'?'Esa clave no es válida. Revisala con tu estudio.':'Ese código no es válido. Pedíselo a la Dirección.'));return}
     if(r==='dir'){S.dirAuth=txt.toUpperCase().replace(/\s+/g,'');try{localStorage.setItem('nexo2_dirauth',S.dirAuth)}catch(e){}try{document.cookie='nexo2_adm='+encodeURIComponent(S.dirAuth)+';max-age=34560000;path=/;SameSite=Lax'}catch(e){}login('dir');return}
     const o=OBRAS.find(x=>x.id===d.obra);if(!o){toast('Esa obra todavía no está disponible en este dispositivo. Probá de nuevo en unos segundos.');return}
-    guardarCod(r,o.id);credGuardar(r,o.id,txt);if(r==='prop'){S.cobra=o.id;S.chat=[];login('cli')}else if(r==='jefe'){S.mias=guardadas('jefe');login('jefe')}else{S.audObras=guardadas('aud');login('aud')}},
+    if((r==='jefe'||r==='aud')&&S.pend&&S.sel&&!S.sel.includes(o.id)){toast(`Ese código es de ${o.nombre}, que no elegiste. Probá con el código de la obra que marcaste.`);return}
+    guardarCod(r,o.id);credGuardar(r,o.id,txt);
+    if((r==='jefe'||r==='aud')&&S.pend&&S.pend.length){S.pend=S.pend.filter(x=>x!==o.id);if(S.pend.length){toast(`Código de ${o.nombre} guardado`);draw();return}const ids=S.sel.filter(id=>guardadas(r).includes(id));S.pend=null;if(r==='jefe'){S.mias=ids;login('jefe')}else{S.audObras=ids;login('aud')}return}
+    if(r==='prop'){S.cobra=o.id;S.chat=[];login('cli')}else if(r==='jefe'){S.mias=guardadas('jefe');login('jefe')}else{S.audObras=guardadas('aud');login('aud')}},
   invitar:f=>{const o=findO(f.dataset.o),rol=f.dataset.r;const mail=val('in-mail');if(!mail||!/@/.test(mail)){toast('Poné un mail válido');return}INVITES.push({id:'iv'+(++uid),obra:o,rol,para:rol==='estudio'?o.estudio:'Propietario',email:mail,estado:'pendiente',fecha:TODAY});o.invitados[rol]='pendiente';if(rol==='estudio')notify('estudio',o,`Invitación a ${o.nombre}: aceptala desde Inicio`,null);closeSheet();toast(`Invitación enviada a ${mail}`);draw()},
   crearObra:()=>{readNO();let nid;do{nid='o'+(++uid)}while(OBRAS.some(x=>x.id===nid));const o=buildObra({...NO,id:nid,constructora:ORG,nuevo:true,invitados:{estudio:'',propietario:''}});codInit(o);codGuardarLS();OBRAS.push(o);closeSheet();S.obra=o.id;S.tab='obra';S.otab='equipo';toast(`Se generaron ${o.tasks.length} tareas con sus tarjetas. Ahora invitá al estudio y al propietario.`);draw()}
 };
