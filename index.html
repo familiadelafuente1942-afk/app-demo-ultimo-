@@ -5422,6 +5422,7 @@ const bd = {
       });
       estadoBD.ultimaEscritura = new Date().toISOString();
       estadoBD.ultimoError = null;
+      try { localStorage.setItem("bd_ver_" + tabla, String(Date.now()) + "_" + Math.random().toString(36).slice(2, 8)); } catch {}
       avisarBD();
       return true;
     } catch (e) {
@@ -9365,8 +9366,19 @@ function AreaComercial({ modo } = {}) {
     en: "English",
     pt: "português do Brasil"
   }[idioma] || "español rioplatense (voseo)";
+  const saltarGuardadoRef = useRef(false);
+  // Si hay otra pestaña abierta y guardó cambios, esta pestaña se actualiza en vez de pisarlos con datos viejos.
+  useEffect(() => {
+    function alCambiar(e) {
+      if (e.key !== "bd_ver_prospectos") return;
+      bd.listar("prospectos").then(filas => { saltarGuardadoRef.current = true; setProspectos(filas); });
+    }
+    window.addEventListener("storage", alCambiar);
+    return () => window.removeEventListener("storage", alCambiar);
+  }, []);
   useEffect(() => {
     if (!bdLista) return;
+    if (saltarGuardadoRef.current) { saltarGuardadoRef.current = false; return; }
     (async () => {
       await bd.guardar("prospectos", prospectosAll);
       if (archivoBD.handle) {
