@@ -2321,7 +2321,7 @@ function nuevoInforme(o){const desde=lunesDe(TODAY),hasta=desde+4*DAY;const ts=e
 async function infTraer(auto){const D=INFD;if(!D)return;const o=findO(D.obra);D.cargFotos=true;if(!auto){readInf();sheetInformeForm()}
   for(let k=0;k<40&&AVS[o.id]&&AVS[o.id].cargando;k++)await new Promise(r=>setTimeout(r,150));
   await avLoad(o,true);if(INFD!==D)return;
-  const its=((AVS[o.id]||{}).items||[]).filter(x=>x.fecha>=D.desde-DAY&&x.fecha<=D.hasta+2*DAY);D.urls=D.urls||[];let n=0;
+  const its=((AVS[o.id]||{}).items||[]).filter(x=>x.fecha>=Math.min(D.desde-DAY,Date.now()-8*DAY));D.urls=D.urls||[];let n=0;
   for(const x of its)for(const u of (x.fotos||[])){if(D.urls.includes(u))continue;D.urls.push(u);
     try{const r=await fetch(u);const b=await r.blob();const f=await readFile(new File([b],'avance.jpg',{type:b.type||'image/jpeg'}));if(f){D.fotos.push(f.id);n++}}catch(e){const f=addFile('avance.jpg','image/jpeg',u);D.fotos.push(f.id);n++}}
   D.cargFotos=false;if(INFD!==D)return;readInf();sheetInformeForm();if(!auto)toast(n?`Se sumaron ${n} fotos`:'No hay fotos nuevas de avances en esta semana')}
