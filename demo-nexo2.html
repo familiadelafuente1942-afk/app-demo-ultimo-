@@ -14,12 +14,15 @@ function res(p){return p==='claro'||p==='oscuro'?p:(mq&&mq.matches?'claro':'oscu
 var LV={bg:['#eceef3','#0d0e10'],surface:['#ffffff','#16171a'],raise:['#f3f4f8','#1d1f23'],line:['#d8dbe3','#2a2c31'],'gl':['rgba(255,255,255,.66)','rgba(255,255,255,.07)'],'gl-hi':['rgba(255,255,255,.95)','rgba(255,255,255,.30)'],'gl-line':['rgba(0,0,0,.08)','rgba(255,255,255,.08)'],'gl-sh':['rgba(40,40,70,.18)','rgba(0,0,0,.5)'],'gl-bar':['rgba(244,245,250,.72)','rgba(18,19,23,.66)'],'g-a':['rgba(255,255,255,.80)','rgba(255,255,255,.17)'],'g-b':['rgba(255,255,255,.22)','rgba(255,255,255,.035)'],'g-c':['rgba(255,255,255,.40)','rgba(255,255,255,.075)'],'g-edge':['rgba(255,255,255,.95)','rgba(255,255,255,.26)'],'g-rim':['rgba(255,255,255,1)','rgba(255,255,255,.55)'],'g-low':['rgba(60,70,120,.14)','rgba(0,0,0,.22)'],'amb1':['rgba(184,145,90,.22)','rgba(184,145,90,.16)'],'amb2':['rgba(110,150,225,.2)','rgba(70,110,190,.12)']};
 function pc(c){if(c[0]==='#'){var n=parseInt(c.slice(1),16);return[n>>16&255,n>>8&255,n&255,1]}var m=c.match(/[\d.]+/g).map(Number);return[m[0],m[1],m[2],m[3]==null?1:m[3]]}
 function mix(a,b,t){var x=pc(a),y=pc(b),o=[0,1,2,3].map(function(i){return x[i]+(y[i]-x[i])*t});return'rgba('+Math.round(o[0])+','+Math.round(o[1])+','+Math.round(o[2])+','+Math.round(o[3]*1000)/1000+')'}
-function lum(c){var q=pc(c);return(0.299*q[0]+0.587*q[1]+0.114*q[2])/255}
+function lum(c){var q=pc(c).slice(0,3).map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*q[0]+.7152*q[1]+.0722*q[2]}
 function nivel(v){var t=Math.max(0,Math.min(100,v))/100,st=document.documentElement.style,k;
  for(k in LV)st.setProperty('--'+k,mix(LV[k][0],LV[k][1],t));
- var bg=mix(LV.bg[0],LV.bg[1],t),claro=lum(bg)>0.36;
+ var bg=mix(LV.bg[0],LV.bg[1],t),Y=lum(bg),claro=Y>0.179,mid=Math.max(0,1-Math.abs(Y-0.179)/0.17);
  document.documentElement.setAttribute('data-tema',claro?'claro':'oscuro');
- st.setProperty('--fg',claro?'#17181c':'#ece8e1');st.setProperty('--muted',claro?'#5d616a':'#9a968f');
+ if(claro){st.setProperty('--fg','#0c0d10');st.setProperty('--muted','#33363d');
+  st.setProperty('--g-b','rgba(255,255,255,'+(0.22+0.28*mid).toFixed(2)+')');st.setProperty('--g-c','rgba(255,255,255,'+(0.40+0.30*mid).toFixed(2)+')');st.setProperty('--g-a','rgba(255,255,255,'+(0.80+0.12*mid).toFixed(2)+')')}
+ else{st.setProperty('--fg','#f7f4ee');st.setProperty('--muted','#cfcbc3');
+  st.setProperty('--g-a','rgba(255,255,255,'+(0.17-0.07*mid).toFixed(2)+')');st.setProperty('--g-b','rgba(0,0,0,'+(0.035+0.30*mid).toFixed(2)+')');st.setProperty('--g-c','rgba(0,0,0,'+(0.075+0.34*mid).toFixed(2)+')')}
  var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',bg)}
 function limpiar(){var st=document.documentElement.style,k;for(k in LV)st.removeProperty('--'+k);st.removeProperty('--fg');st.removeProperty('--muted')}
 window.__nivel=function(v){try{localStorage.setItem(K,'nivel:'+v)}catch(e){}nivel(v)};
@@ -1084,6 +1087,7 @@ header.top{background:linear-gradient(180deg,var(--g-a),var(--g-b))!important}
  box-shadow:inset 0 1.5px 1px var(--g-rim),inset 0 0 0 1px var(--g-edge),inset 0 -6px 12px var(--g-low)!important}
 .orow2:hover{box-shadow:inset 0 2px 1px var(--g-rim),inset 0 0 0 1px var(--gold),0 14px 28px -12px var(--gl-sh)!important}
 .sheet{background:linear-gradient(158deg,var(--g-a),var(--g-b) 50%,var(--g-c))!important;-webkit-backdrop-filter:blur(26px) saturate(1.9);backdrop-filter:blur(26px) saturate(1.9);box-shadow:inset 0 2px 1px var(--g-rim),inset 0 0 0 1px var(--g-edge)!important}
+input::placeholder,textarea::placeholder{color:var(--muted)!important;opacity:.8}
 /* teclado de vidrio para códigos */
 .kp{position:relative;isolation:isolate;display:flex;flex-wrap:wrap;gap:22px 30px;justify-content:center;align-items:flex-start;margin:10px auto 2px;max-width:760px;padding:18px 8px}
 .kp::before{content:"";position:absolute;inset:-6px 8%;z-index:-1;border-radius:40px;background:radial-gradient(60% 55% at 28% 30%,rgba(201,162,75,.55),transparent 70%),radial-gradient(55% 60% at 78% 70%,rgba(91,128,200,.40),transparent 70%);filter:blur(26px);opacity:.9}
