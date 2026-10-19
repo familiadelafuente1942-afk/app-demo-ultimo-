@@ -2318,6 +2318,13 @@ function sheetAdic(id){
 let INFD=null;
 function nuevoInforme(o){const desde=lunesDe(TODAY),hasta=desde+4*DAY;const ts=enCurso(o);
   INFD={obra:o.id,desde,hasta,tareas:ts.map(t=>({id:t.id,name:t.name,equipo:t.equipo,av:t.real?t.real.av:0,causa:t.real?.causa||''})),trab:5,lluvia:0,dot:o.dotacion.hoy,ejecutados:'',proxima:'',obs:'',fotos:[],resumen:''}}
+async function infTraer(auto){const D=INFD;if(!D)return;const o=findO(D.obra);D.cargFotos=true;if(!auto){readInf();sheetInformeForm()}
+  for(let k=0;k<40&&AVS[o.id]&&AVS[o.id].cargando;k++)await new Promise(r=>setTimeout(r,150));
+  await avLoad(o,true);if(INFD!==D)return;
+  const its=((AVS[o.id]||{}).items||[]).filter(x=>x.fecha>=D.desde-DAY&&x.fecha<=D.hasta+2*DAY);D.urls=D.urls||[];let n=0;
+  for(const x of its)for(const u of (x.fotos||[])){if(D.urls.includes(u))continue;D.urls.push(u);
+    try{const r=await fetch(u);const b=await r.blob();const f=await readFile(new File([b],'avance.jpg',{type:b.type||'image/jpeg'}));if(f){D.fotos.push(f.id);n++}}catch(e){const f=addFile('avance.jpg','image/jpeg',u);D.fotos.push(f.id);n++}}
+  D.cargFotos=false;if(INFD!==D)return;readInf();sheetInformeForm();if(!auto)toast(n?`Se sumaron ${n} fotos`:'No hay fotos nuevas de avances en esta semana')}
 function readInf(){if(!INFD||!$('#if-trab'))return;INFD.trab=clamp(+val('if-trab')||0,0,6);INFD.lluvia=clamp(+val('if-ll')||0,0,6);INFD.dot=+val('if-dot')||0;INFD.ejecutados=val('if-ej');INFD.proxima=val('if-px');INFD.obs=val('if-obs');INFD.resumen=val('if-res');INFD.tareas.forEach((t,i)=>{t.av=clamp(+val('if-av'+i)||0,0,100);t.causa=val('if-ca'+i)})}
 function sheetInformeForm(){
   const o=findO(INFD.obra),venc=o.cards.filter(c=>color(c)==='rojo');
@@ -2328,7 +2335,7 @@ function sheetInformeForm(){
   <span class="eyebrow">3 · Trabajos ejecutados</span><textarea id="if-ej" rows="3" placeholder="Qué se hizo esta semana">${esc(INFD.ejecutados)}</textarea><button class="btn sm ghost" type="button" data-act="infRegistro" style="align-self:flex-start">Traer lo cargado en el registro diario</button>
   <span class="eyebrow">4 · Próxima semana</span><textarea id="if-px" rows="2">${esc(INFD.proxima)}</textarea>
   <span class="eyebrow">5 · Observaciones y riesgos</span><textarea id="if-obs" rows="3">${esc(INFD.obs)}</textarea>${venc.length?`<button class="btn sm ghost" type="button" data-act="infVenc" style="align-self:flex-start">Sumar las ${venc.length} tarjetas vencidas</button>`:''}
-  <span class="eyebrow">6 · Fotos del informe</span><p class="muted small" style="margin:0">Las fotos que subas salen dentro del informe (completo y PDF) y en el resumen del propietario.</p><div class="thumbs2">${INFD.fotos.map((f,i)=>FILES[f]?`<span><img src="${FILES[f].url}" alt=""><button type="button" data-act="infQuitarFoto" data-i="${i}" aria-label="Quitar foto">✕</button></span>`:'').join('')}<label class="addph" for="if-foto">+</label><input id="if-foto" type="file" accept="image/*" multiple data-chg="infFoto" hidden></div><button class="btn sm ghost" type="button" data-act="infAvFotos" style="align-self:flex-start">Traer las fotos de los avances de esta semana</button>
+  <span class="eyebrow">6 · Fotos de la semana</span><p class="muted small" style="margin:0">Se traen solas de los avances que cargó la obra con fotos. Para sumar fotos, cargá un avance en la pestaña Avances.</p><div class="thumbs2">${INFD.fotos.map((f,i)=>FILES[f]?`<span><img src="${FILES[f].url}" alt=""><button type="button" data-act="infQuitarFoto" data-i="${i}" aria-label="Quitar foto">✕</button></span>`:'').join('')||'<span class="muted small">'+(INFD.cargFotos?'Buscando fotos…':'Todavía no hay fotos de avances esta semana.')+'</span>'}</div><button class="btn sm ghost" type="button" data-act="infAvFotos" style="align-self:flex-start">Actualizar fotos</button>
   <span class="eyebrow">7 · Resumen para el propietario</span><textarea id="if-res" rows="3" placeholder="Dos o tres oraciones simples">${esc(INFD.resumen)}</textarea><button class="btn sm" type="button" data-act="infIA" style="align-self:flex-start">Redactar el resumen con Nexo IA</button>
   <button class="btn gold" type="submit">Guardar informe</button></form>`,'Informe semanal');
 }
@@ -2490,14 +2497,10 @@ const A={
   adic:ds=>sheetAdic(ds.id),
   autorizar:ds=>{const a=ADIC.find(x=>x.id===ds.id);a.autorizo=S.u.name+' · '+fmt(TODAY);notify('jefe',a.obra,`${S.u.name} autorizó el adicional N° ${a.n}`,{t:'adic',id:a.id});toast('Adicional autorizado');draw();sheetAdic(a.id)},
   adicDesde:ds=>{const r=REGISTRO.find(x=>x.id===ds.id);const n=String(ADIC.filter(a=>a.obra===r.obra).length+1).padStart(3,'0');const a={id:'a'+(++uid),obra:r.obra,n,sector:'A definir',txt:r.txt,origen:'Registro del '+fmt(r.fecha),escrito:false,plano:false,total:0,autorizo:null,plazo:null};ADIC.unshift(a);r.adic=a.id;draw();sheetAdic(a.id)},
-  informe:ds=>{nuevoInforme(findO(ds.id));sheetInformeForm()},
+  informe:ds=>{nuevoInforme(findO(ds.id));sheetInformeForm();infTraer(true)},
   infRegistro:()=>{readInf();const o=findO(INFD.obra);const rs=REGISTRO.filter(r=>r.obra===o&&r.fecha>=INFD.desde-2*DAY&&r.fecha<=INFD.hasta+DAY&&r.tipo!=='Pedido');INFD.ejecutados=[INFD.ejecutados,...rs.map(r=>'- '+r.txt)].filter(Boolean).join('\n');if(!rs.length)toast('No hay hechos cargados esta semana');sheetInformeForm()},
   infVenc:()=>{readInf();const o=findO(INFD.obra);INFD.obs=[INFD.obs,...o.cards.filter(c=>color(c)==='rojo').map(c=>`- ${titulo(c)}: vencida hace ${diasRojo(c)} días hábiles`)].filter(Boolean).join('\n');sheetInformeForm()},
-  infAvFotos:async()=>{readInf();const o=findO(INFD.obra);toast('Buscando las fotos de los avances…');await avLoad(o,true);
-    const its=((AVS[o.id]||{}).items||[]).filter(x=>x.fecha>=INFD.desde-DAY&&x.fecha<=INFD.hasta+2*DAY);INFD.urls=INFD.urls||[];let n=0;
-    for(const x of its)for(const u of (x.fotos||[])){if(INFD.urls.includes(u))continue;INFD.urls.push(u);
-      try{const r=await fetch(u);const b=await r.blob();const f=await readFile(new File([b],'avance.jpg',{type:b.type||'image/jpeg'}));if(f){INFD.fotos.push(f.id);n++}}catch(e){const f=addFile('avance.jpg','image/jpeg',u);INFD.fotos.push(f.id);n++}}
-    toast(n?`Se sumaron ${n} fotos de los avances`:'No hay fotos nuevas de avances en esta semana');sheetInformeForm()},
+  infAvFotos:()=>infTraer(false),
   infQuitarFoto:ds=>{readInf();INFD.fotos.splice(+ds.i,1);sheetInformeForm()},
   infIA:async()=>{readInf();const o=findO(INFD.obra);const btn=document.querySelector('[data-act="infIA"]');if(btn){btn.disabled=true;btn.textContent='Redactando…'}
     let t=null;if(SAMPLE){try{const r=await SAMPLE(`Redactá en español rioplatense, en 2 o 3 oraciones simples y cálidas, el resumen semanal para el propietario de la obra ${o.nombre}. Sin tecnicismos, sin costos, sin culpar a nadie. Datos: ${JSON.stringify({tareas:INFD.tareas.map(x=>({tarea:x.name,avance:x.av+'%',atraso:x.causa||'no'})),dias_lluvia:INFD.lluvia,ejecutado:INFD.ejecutados,proxima_semana:INFD.proxima,entrega:fmtY(finContractual(o))})}. Respondé solo con el texto.`,{modelTier:'quick',cache:false});t=(r.text||'').trim()}catch(e){t=null}}
@@ -2542,6 +2545,7 @@ const SUBMIT={
   subir:()=>{keepUp();const o=findO(UP.obra),name=UP.name,cat=UP.cat;if(!name){toast('Poné el nombre del plano');return}if(!UP.file){toast('Elegí el archivo');return}const prev=DOCS.filter(x=>x.obra===o&&x.nombre===name&&x.estado!=='reemplazado');const ver=prev.length?String.fromCharCode(Math.max(...prev.map(x=>x.ver.charCodeAt(0)))+1):'A';prev.forEach(x=>x.estado='reemplazado');const est=ROLE()==='estudio';const x=addDoc(o,prev[0]?.cat||cat,name,ver,'en revisión',est?S.u.name:UP.por,TODAY,{file:UP.file,nuevo:true});notify('auditor',o,`Plano nuevo para revisar: ${name}`,{t:'doc',id:x.id});if(est)notify('jefe',o,`${S.u.name} subió ${name} rev ${ver}`,{t:'doc',id:x.id});closeSheet();toast(`Subido rev ${ver}: le llega a la jefatura y a la auditoría`);draw()},
   adicDatos:f=>{const a=ADIC.find(x=>x.id===f.dataset.id);if($('#ad-esc')?.checked)a.escrito=true;if($('#ad-pl')?.checked)a.plano=true;if(val('ad-tot'))a.total=+val('ad-tot');if(val('ad-pz')!=='')a.plazo=+val('ad-pz');toast('Adicional actualizado');draw();sheetAdic(a.id)},
   informe:()=>{readInf();const o=findO(INFD.obra);if(!INFD.ejecutados){toast('Completá los trabajos ejecutados');return}if(!INFD.resumen){toast('Escribí el resumen para el propietario');return}
+    if(!INFD.fotos.length){toast('Falta el avance con fotos: cargalo en Avances y volvé a armar el informe');return}
     INFD.tareas.forEach(x=>{const t=o.tasks.find(y=>y.id===x.id);if(!t)return;const ini=t.real?.ini||Math.min(TODAY,t.start);t.real={ini,fin:x.av>=100?(t.real?.fin||INFD.hasta):null,av:x.av,causa:x.causa,dot:INFD.dot};if(t.real.fin)t.end=t.real.fin});
     const i={id:'i'+(++uid),n:o.informes.length+1,obra:o,desde:INFD.desde,hasta:INFD.hasta,etapa:etapaDe(o),av:avance(o),avPlan:avancePlan(o),trab:INFD.trab,lluvia:INFD.lluvia,dot:INFD.dot,fin:fmtY(finObra(o)),tareas:INFD.tareas.map(x=>({name:x.name,equipo:x.equipo,av:x.av,estado:x.causa?'Atrasada':'En plazo',causa:x.causa})),ejecutados:INFD.ejecutados,proxima:INFD.proxima,obs:INFD.obs||'Sin observaciones.',fotos:INFD.fotos.slice(),resumen:INFD.resumen,fecha:TODAY};
     o.informes=o.informes.filter(x=>x.desde!==i.desde);o.informes.push(i);i.n=o.informes.length;notify('cliente',o,'Nuevo resumen semanal de tu obra',{t:'inf',id:i.id});notify('direccion',o,`Informe semanal N° ${i.n} de ${o.nombre}`,{t:'inf',id:i.id});
