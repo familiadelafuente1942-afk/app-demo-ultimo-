@@ -1037,6 +1037,24 @@ nav.bottom button[aria-current=page]{background:var(--gl);box-shadow:inset 0 1px
 .tema-seg{display:flex;gap:6px}
 .tema-seg button{flex:1;padding:10px 8px;border-radius:14px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:6px}
 .tema-seg svg{width:22px;height:22px}
+
+/* teclado de vidrio para códigos */
+.kp{display:flex;flex-wrap:wrap;gap:22px 30px;justify-content:center;align-items:flex-start;margin:6px auto 2px;max-width:760px}
+.kp-d{display:grid;grid-template-columns:repeat(3,76px);gap:14px}
+.kp-l{display:grid;grid-template-columns:repeat(7,46px);gap:9px;align-content:start}
+.kp button{appearance:none;-webkit-appearance:none;font:inherit;cursor:pointer;color:var(--fg);border-radius:50%;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ background:radial-gradient(120% 120% at 30% 15%,rgba(255,255,255,.30),rgba(255,255,255,.08) 55%,rgba(255,255,255,.04));
+ -webkit-backdrop-filter:blur(18px) saturate(1.7);backdrop-filter:blur(18px) saturate(1.7);
+ border:.5px solid var(--gl-hi);box-shadow:inset 0 1px 1px rgba(255,255,255,.45),inset 0 -6px 12px rgba(0,0,0,.18),0 6px 18px var(--gl-sh);transition:transform .08s,background .12s;-webkit-tap-highlight-color:transparent;padding:0}
+.kp-d button{font-size:30px;font-weight:300;line-height:1}
+.kp-d button small{font-size:9px;letter-spacing:.18em;margin-top:2px;opacity:.85;font-weight:600}
+.kp-l button{font-size:16px;font-weight:500}
+.kp button:active{transform:scale(.92);background:radial-gradient(120% 120% at 30% 15%,rgba(255,255,255,.55),rgba(255,255,255,.2))}
+:root[data-tema="claro"] .kp button{background:radial-gradient(120% 120% at 30% 15%,rgba(255,255,255,.95),rgba(205,210,225,.55) 60%,rgba(190,196,214,.45));border:.5px solid rgba(0,0,0,.14);box-shadow:inset 0 1px 1px #fff,inset 0 -6px 12px rgba(90,100,140,.16),0 6px 16px rgba(40,40,70,.14)}
+.kp-d .kp-x{font-size:20px}
+.kp-t{display:block;margin:6px auto 0;background:none;border:0;color:var(--muted,#9a9a9a);font-size:12px;text-decoration:underline;cursor:pointer}
+.kp-in{text-align:center;font-size:22px!important;letter-spacing:.18em!important;border-radius:999px!important;background:var(--gl)!important;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:.5px solid var(--gl-hi)!important}
+@media (max-width:520px){.kp-d{grid-template-columns:repeat(3,68px);gap:12px}.kp-l{grid-template-columns:repeat(9,32px);gap:6px}.kp-l button{font-size:13px}}
 </style>
 <div class="app">
   <header class="top">
@@ -3733,6 +3751,34 @@ draw();
 
 </script>
 
+<script>
+/* teclado de vidrio: se agrega solo a los formularios de códigos */
+(function(){
+var SEL='#cl-clave,[id^="cl-m-"],#sa-cod,#to-cod,#ae-cod';
+var DIG=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ']];
+function build(f){
+  if(f.dataset.kp)return;var ins=[].slice.call(f.querySelectorAll(SEL));if(!ins.length)return;f.dataset.kp='1';
+  var cur=ins[0],native=false;
+  ins.forEach(function(i){i.classList.add('kp-in');i.setAttribute('inputmode','none');i.addEventListener('focus',function(){cur=i;});});
+  var d=document.createElement('div');d.className='kp';
+  var h='<div class="kp-d">';DIG.forEach(function(x){h+='<button type="button" data-k="'+x[0]+'" aria-label="'+x[0]+'">'+x[0]+(x[1]?'<small>'+x[1]+'</small>':'')+'</button>'});
+  h+='<button type="button" data-k="-" aria-label="Guion">–</button><button type="button" data-k="0" aria-label="0">0</button><button type="button" class="kp-x" data-k="del" aria-label="Borrar">⌫</button></div><div class="kp-l">';
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(function(c){h+='<button type="button" data-k="'+c+'" aria-label="'+c+'">'+c+'</button>'});
+  h+='</div>';d.innerHTML=h;
+  var t=document.createElement('button');t.type='button';t.className='kp-t';t.textContent='Usar el teclado del dispositivo';
+  var sub=f.querySelector('button[type=submit]');if(sub){f.insertBefore(d,sub);f.insertBefore(t,sub)}else{f.appendChild(d);f.appendChild(t)}
+  d.addEventListener('pointerdown',function(e){e.preventDefault()});
+  d.addEventListener('click',function(e){var b=e.target.closest('button[data-k]');if(!b)return;var k=b.dataset.k;
+    if(k==='del')cur.value=cur.value.slice(0,-1);else cur.value=(cur.value+k).toUpperCase();
+    try{navigator.vibrate&&navigator.vibrate(6)}catch(x){}
+    cur.dispatchEvent(new Event('input',{bubbles:true}))});
+  t.addEventListener('click',function(){native=!native;ins.forEach(function(i){i.setAttribute('inputmode',native?'text':'none')});d.style.display=native?'none':'';t.textContent=native?'Usar el teclado de vidrio':'Usar el teclado del dispositivo';if(native)cur.focus()});
+}
+function scan(){document.querySelectorAll(SEL).forEach(function(i){var f=i.closest('form');if(f)build(f)})}
+new MutationObserver(scan).observe(document.documentElement,{childList:true,subtree:true});
+document.addEventListener('DOMContentLoaded',scan);scan();
+})();
+</script>
 <script>
 /* Seguimiento: avisa a NEXO Control cuántas veces se abre cada panel y si algo se rompe. */
 (function(){
