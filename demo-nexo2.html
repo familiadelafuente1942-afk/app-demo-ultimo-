@@ -2067,13 +2067,14 @@ function vClave(){
   const T={dir:['Dirección','Entrá como Dirección','Ingresá tu código de Dirección. Solo lo sabés vos.','Tu código','Ej.: DIR-0000'],
    jefe:['Jefatura de Obra','Entrá a tus obras','Ingresá el código que te dio la Dirección para tu obra. Si tenés más de una, ingresá cada código una vez: solo vas a ver esas obras.','Código de tu obra','Ej.: J-LP132-0000'],
    aud:['Auditoría','Entrá a tus obras','Ingresá el código que te dio la Dirección para la obra que auditás. Si auditás más de una, ingresá cada código una vez: solo vas a ver esas obras.','Código de la obra','Ej.: A-LP132-0000'],
+   cons:['Constructora','Entrá a la constructora','Ingresá el código que te dio la Dirección: de Dirección, de Jefatura de obra o de Auditoría.','Tu código','Ej.: J-LP132-0000'],
    est:['Estudio de arquitectura','Entrá a tus obras','Ingresá el código que te dio la constructora para tu obra. Si tenés más de una, ingresá cada código una vez: solo vas a ver esas obras.','Código de la obra','Ej.: E-LP132-0000'],
    prop:['Propietario','Entrá a tu obra','El estudio o la constructora te dio una clave para tu obra. Ingresala para ver solo tu casa.','Clave de tu obra','Ej.: LP132-4827']}[r];
   const multi=!!(S.pend&&S.pend.length&&(r==='jefe'||r==='aud'));
   const gs=r==='dir'?[]:guardadas(r).map(id=>OBRAS.find(o=>o.id===id));
   const lista=!gs.length?'':r==='prop'?`<h2>Tus obras en este dispositivo</h2><div class="sec">${gs.map(o=>`<button class="btn" data-act="entrarProp" data-o="${o.id}" style="text-align:left"><b>${esc(o.nombre)}</b> · ${esc(o.ubic)}</button>`).join('')}</div>`
    :`<h2>Tus obras en este dispositivo</h2><div class="sec">${gs.map(o=>`<div class="irow"><span><b>${esc(o.nombre)}</b><br><span class="muted small">${esc(o.ubic)}</span></span><button class="btn sm ghost" data-act="olvidarCod" data-r="${r}" data-o="${o.id}" aria-label="Quitar ${esc(o.nombre)}">Quitar</button></div>`).join('')}<button class="btn gold full" data-act="entrarCod" data-r="${r}">Entrar con ${plural(gs.length,'obra','obras')}</button></div>`;
-  return `<button class="back" data-act="${r==='prop'?'volver':'volverRoles'}">← ${r==='prop'?'Paneles':'Roles'}</button><section class="sec"><span class="eyebrow">${T[0]}</span><h1>${T[1]}</h1><p class="muted">${T[2]}</p>
+  return `<button class="back" data-act="${(r==='prop'||r==='est'||r==='cons')?'volver':'volverRoles'}">← ${(r==='prop'||r==='est'||r==='cons')?'Paneles':'Roles'}</button><section class="sec"><span class="eyebrow">${T[0]}</span><h1>${T[1]}</h1><p class="muted">${T[2]}</p>
   ${multi?`<form class="sec" data-submit="clavesMulti"><p class="muted">Poné el código de cada obra. Cada una tiene su propio código.</p>${S.pend.map(id=>{const o=OBRAS.find(x=>x.id===id)||{};return `<label class="f"><b>${esc(o.nombre||id)}</b> <span class="muted small">· ${esc(o.ubic||'')}</span><input id="cl-m-${id}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${T[4]}" style="letter-spacing:.08em;text-transform:uppercase"></label>`}).join('')}<button class="btn gold" type="submit">Entrar</button></form>`:`<form class="sec" data-submit="claveIn"><label class="f">${T[3]}<input id="cl-clave" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${T[4]}" style="letter-spacing:.08em;text-transform:uppercase"></label><button class="btn gold" type="submit">Entrar</button></form>`}
   ${lista}
   <p class="note">${r==='dir'?'El código de Dirección lo definís en Más → Códigos de acceso.':'El código es de una sola obra. Cada obra tiene un código distinto para cada rol.'}</p></section>`;
@@ -2441,7 +2442,7 @@ const A={
   fontReset:()=>{try{localStorage.removeItem(FONT_LS)}catch(e){}aplicarFuentes({});draw()},
   scrim:(ds,el,e)=>{if(e.target===el)closeSheet()},
   close:()=>closeSheet(),
-  panel:ds=>{if(ds.p==='constructora'){S.step='roles';draw();scrollTo(0,0)}else if(ds.p==='estudio'){if(esAdmin()){S.step='cons';draw();scrollTo(0,0)}else{S.codRol='est';const g=guardadas('est');if(g.length){S.cons=(OBRAS.find(o=>o.id===g[0])||{}).constructora||ORG;S.drive={obra:null,cat:null};login('est')}else{S.step='clave';draw();scrollTo(0,0)}}}else if(esAdmin()&&OBRAS.length){S.cobra=OBRAS[0].id;S.chat=[];login('cli')}else{S.codRol='prop';S.step='clave';draw();scrollTo(0,0)}},
+  panel:ds=>{if(ds.p==='constructora'){if(esAdmin()||guardadas('jefe').length||guardadas('aud').length){S.step='roles'}else{S.codRol='cons';S.step='clave'}draw();scrollTo(0,0)}else if(ds.p==='estudio'){if(esAdmin()){S.step='cons';draw();scrollTo(0,0)}else{S.codRol='est';const g=guardadas('est');if(g.length){S.cons=(OBRAS.find(o=>o.id===g[0])||{}).constructora||ORG;S.drive={obra:null,cat:null};login('est')}else{S.step='clave';draw();scrollTo(0,0)}}}else if(esAdmin()&&OBRAS.length){S.cobra=OBRAS[0].id;S.chat=[];login('cli')}else{S.codRol='prop';S.step='clave';draw();scrollTo(0,0)}},
   elegirCons:ds=>{S.cons=ds.c;S.drive={obra:null,cat:null};login('est')},
   cambiarCons:()=>{pedirCodSalida('cambiarConsYa')},
   cambiarConsYa:()=>{S.bloq=false;S.u=null;S.step='cons';draw();scrollTo(0,0)},
@@ -2480,7 +2481,7 @@ const A={
   actualizar:async()=>{toast('Actualizando…');try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})))}catch(e){}try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
     const u=new URL(location.href);u.searchParams.set('v',Date.now().toString(36));location.replace(u.toString())},
   salir:()=>{if(['jefe','auditor','cliente','estudio'].includes(ROLE())){pedirCodSalida('salirYa');return}A.salirYa()},
-  salirYa:()=>{S.bloq=false;sesBorrar();S.u=null;S.step=LOCK==='constructora'?'roles':'panels';closeSheet();draw();scrollTo(0,0)},
+  salirYa:()=>{S.bloq=false;sesBorrar();S.u=null;if(LOCK==='constructora'){S.codRol='cons';S.step='clave'}else S.step='panels';closeSheet();draw();scrollTo(0,0)},
   tab:ds=>{S.tab=ds.t;if(S.tab!=='docs')S.obraF='todas';S.filtro='activos';draw();scrollTo(0,0)},
   obra:ds=>{S.obra=ds.id;S.tab='obra';S.otab=ROLE()==='auditor'?'asup':'crono';draw();scrollTo(0,0)},
   locked:ds=>{const o=findO(ds.id);if(!o)return;const au=ROLE()==='auditor';
@@ -2610,8 +2611,10 @@ const SUBMIT={
       guardarCod(r,id);credGuardar(r,id,txt);S.pend=S.pend.filter(x=>x!==id);ok++}
     if(S.pend.length){toast(`Revisá el código de: ${falla.join(', ')}`);draw();return}
     const ids=S.sel.filter(id=>guardadas(r).includes(id));S.pend=null;if(r==='jefe'){S.mias=ids;login('jefe')}else{S.audObras=ids;login('aud')}},
-  claveIn:async f=>{const r=S.codRol||'prop',txt=val('cl-clave');if(!normClave(txt)){toast('Escribí el código');return}
-    let d;try{d=await codApi({op:'login',rol:r,codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
+  claveIn:async f=>{let r=S.codRol||'prop';const txt=val('cl-clave');if(!normClave(txt)){toast('Escribí el código');return}
+    let d;try{
+      if(r==='cons'){d={ok:false};for(const q of ['dir','jefe','aud']){const x=await codApi({op:'login',rol:q,codigo:txt});if(x.ok){d=x;r=q;break}}}
+      else d=await codApi({op:'login',rol:r,codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
     if(!d.ok){toast(d.error||(r==='dir'?'Código incorrecto':r==='prop'?'Esa clave no es válida. Revisala con tu estudio.':'Ese código no es válido. Pedíselo a la Dirección.'));return}
     if(r==='dir'){S.dirAuth=txt.toUpperCase().replace(/\s+/g,'');try{localStorage.setItem('nexo2_dirauth',S.dirAuth)}catch(e){}try{document.cookie='nexo2_adm='+encodeURIComponent(S.dirAuth)+';max-age=34560000;path=/;SameSite=Lax'}catch(e){}login('dir');return}
     const o=OBRAS.find(x=>x.id===d.obra);if(!o){toast('Esa obra todavía no está disponible en este dispositivo. Probá de nuevo en unos segundos.');return}
@@ -3513,7 +3516,7 @@ Object.assign(A,{
   iaPdf:ds=>{const p=(S.chat[+ds.i]||{}).adj?.pdfs[+ds.j];if(p)bajar(p.blob,p.name)}
 });
 
-if(LOCK==='cliente'){S.codRol='prop';S.step='clave'}else if(LOCK==='estudio'){S.codRol='est';S.step='clave'}else if(LOCK==='constructora')S.step='roles';
+if(LOCK==='cliente'){S.codRol='prop';S.step='clave'}else if(LOCK==='estudio'){S.codRol='est';S.step='clave'}else if(LOCK==='constructora'){S.codRol='cons';S.step='clave'}
 A.vozParar=()=>{vozParar();clearInterval(VOZ_TIMER)};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)vozParar()});
 addEventListener('pagehide',()=>vozParar());
