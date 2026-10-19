@@ -2587,7 +2587,7 @@ const A={
   actualizar:async()=>{toast('Actualizando…');try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})))}catch(e){}try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
     const u=new URL(location.href);u.searchParams.set('v',Date.now().toString(36));location.replace(u.toString())},
   salir:()=>{if(['jefe','auditor','cliente','estudio'].includes(ROLE())){pedirCodSalida('salirYa');return}A.salirYa()},
-  salirYa:()=>{S.bloq=false;sesBorrar();S.u=null;if(LOCK==='constructora'){S.codRol='cons';S.step='clave'}else S.step='panels';closeSheet();draw();scrollTo(0,0)},
+  salirYa:()=>{S.bloq=false;sesBorrar();accesosCero();S.mias=[];S.audObras=[];S.u=null;if(LOCK==='constructora'){S.codRol='cons';S.step='clave'}else S.step='panels';closeSheet();draw();scrollTo(0,0)},
   tab:ds=>{S.tab=ds.t;if(S.tab!=='docs')S.obraF='todas';S.filtro='activos';draw();scrollTo(0,0)},
   obra:ds=>{S.obra=ds.id;S.tab='obra';S.otab=ROLE()==='auditor'?'asup':'crono';draw();scrollTo(0,0)},
   locked:ds=>{const o=findO(ds.id);if(!o)return;const au=ROLE()==='auditor';
@@ -3665,6 +3665,10 @@ function sesRestaurar(){
 }
 try{if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))Promise.resolve().catch(()=>{})}catch(e){}
 $('#brand-icon').src=ICONO;
+/* Cerrar la app = volver a cero: al abrirla de nuevo (o tocar Salir) se borran sesión, códigos y accesos, y los tres paneles piden el código otra vez. sessionStorage sobrevive a recargas (↻) pero no a cerrar la app. */
+const ACC_KEYS=['nexo2_dirauth','nexo2_cred','nexo2_sesion','nexo2_obras_prop','nexo2_obras_jefe','nexo2_obras_aud'];
+function accesosCero(){try{ACC_KEYS.forEach(k=>localStorage.removeItem(k))}catch(e){}try{['nexo2_adm','nexo2_ses'].forEach(c=>{document.cookie=c+'=;max-age=0;path=/'})}catch(e){}S.dirAuth='';try{codApi({op:'sesion_borrar'}).catch(()=>{})}catch(e){}}
+let FRESH=false;try{if(!sessionStorage.getItem('nexo2_vivo')){FRESH=true;sessionStorage.setItem('nexo2_vivo','1');accesosCero()}}catch(e){}
 try{if(!localStorage.getItem('nexo2_reset_v2')){['nexo2_obras_prop','nexo2_obras_jefe','nexo2_obras_aud','nexo2_sesion'].forEach(k=>localStorage.removeItem(k));localStorage.setItem('nexo2_reset_v2','1')}}catch(e){}
 /* Respaldo: si el aparato borró la memoria local pero quedó la cookie de sesión (400 días), se recupera sin pedir el código otra vez. */
 try{if(!localStorage.getItem(SES_LS)){const c=ckGet();if(c){const q=JSON.parse(c);if(q&&q.r){localStorage.setItem(SES_LS,JSON.stringify({r:q.r,cobra:q.cobra,cons:q.cons}));if(q.dir)localStorage.setItem('nexo2_dirauth',q.dir);if(q.g&&LS_OBRAS[q.r])localStorage.setItem(LS_OBRAS[q.r],JSON.stringify(q.g));if(q.cred)localStorage.setItem('nexo2_cred',q.cred)}}}}catch(e){}
@@ -3673,7 +3677,7 @@ try{if(!localStorage.getItem(SES_LS)){const c=ckGet();if(c){const q=JSON.parse(c
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
 (async function sesRecuperar(){
   try{
-    if(S.u||localStorage.getItem(SES_LS))return;
+    if(FRESH||S.u||localStorage.getItem(SES_LS))return;
     const d=await codApi({op:'sesion'});if(!d||!d.ok||S.u)return;
     if(d.dir){S.dirAuth=d.dir;try{localStorage.setItem('nexo2_dirauth',d.dir)}catch(e){}}
     ['prop','jefe','aud','est'].forEach(r=>(d[r]||[]).forEach(x=>{if(OBRAS.some(o=>o.id===x.id)){guardarCod(r,x.id);credGuardar(r,x.id,x.codigo)}}));
