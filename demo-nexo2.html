@@ -2455,6 +2455,10 @@ const A={
   entrarCod:ds=>{const r=ds.r;if(!guardadas(r).length)return;if(r==='jefe'){S.mias=guardadas('jefe');login('jefe')}else{S.audObras=guardadas('aud');login('aud')}},
   olvidarCod:ds=>{olvidarCod(ds.r,ds.o);draw()},
   volverRoles:()=>{S.step='roles';draw()},
+  modoPrueba:()=>{if(!confirm('¿Borrar los accesos guardados en este dispositivo para probar como un usuario nuevo?'))return;
+    try{['nexo2_dirauth','nexo2_cred','nexo2_sesion','nexo2_obras_prop','nexo2_obras_jefe','nexo2_obras_aud'].forEach(k=>localStorage.removeItem(k))}catch(e){}
+    try{document.cookie='nexo2_adm=;max-age=0;path=/';document.cookie='nexo2_ses=;max-age=0;path=/'}catch(e){}
+    S.dirAuth='';S.u=null;const u=new URL(location.href);u.searchParams.set('v',Date.now().toString(36));location.replace(u.toString())},
   actualizar:async()=>{toast('Actualizando…');try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})))}catch(e){}try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
     const u=new URL(location.href);u.searchParams.set('v',Date.now().toString(36));location.replace(u.toString())},
   salir:()=>{sesBorrar();S.u=null;S.step=LOCK==='constructora'?'roles':'panels';closeSheet();draw();scrollTo(0,0)},
@@ -3325,7 +3329,7 @@ function vLogin(){
   const P2=[['constructora','Constructora','Ejecución y anticipación','Dirección, jefatura de obra y auditoría: cada rol con su acceso.'],['estudio','Estudio de arquitectura','Proyecto y dirección de obra','Tarjetas de cada etapa, documentación centralizada y adicionales.'],['cliente','Propietario','Seguimiento de la obra','Su casa, avance, fotos de la semana y certificados de cada etapa.']].filter(x=>!LOCK||x[0]===LOCK);
   return `<section class="login"><div class="lg-mark" role="img" aria-label="Logo de Nexo: un núcleo con puntos conectados">${markAnim()}</div><div class="lg-word">NEXO</div><div class="lg-tag"><i></i><span>Todos conectados, en tiempo real</span><i></i></div><p class="frase">La obra que se anticipa<br>no se improvisa</p><span class="frase-rule"></span></section>
   <section class="sec"><span class="eyebrow">${LOCK?'Tu acceso':'Ingresá a tu panel'}</span><div class="panels">${P2.map(([k,t,e,dd])=>`<button class="pcard" data-act="panel" data-p="${k}" style="background-image:url('${PANEL_IMG[k]}')"><span class="pshade"></span><span class="pin"><span class="peyebrow">${e}</span><span class="ptitle">${t}</span><span class="pdesc">${dd}</span><span class="pgo">Ingresar →</span></span></button>`).join('')}</div>
-  <p class="note">${LOCK?'Este enlace es una invitación: solo da acceso a este panel.':'Cada usuario entra con su invitación y ve solo lo que le corresponde. En esta demo se elige para recorrer todo.'}</p></section>`;
+  <p class="note">${LOCK?'Este enlace es una invitación: solo da acceso a este panel.':'Cada usuario entra con su invitación y ve solo lo que le corresponde. En esta demo se elige para recorrer todo.'}</p>${LOCK?'':'<button class="btn ghost sm" data-act="modoPrueba" style="margin-top:10px">Probar como usuario nuevo</button><p class="note">Borra los accesos guardados en este dispositivo para probar entrando con un código. Para volver a ser administrador, ingresá con tu código de Dirección.</p>'}</section>`;
 }
 
 /* ================= inicio ================= */
