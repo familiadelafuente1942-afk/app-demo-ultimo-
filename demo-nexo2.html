@@ -2450,7 +2450,8 @@ const A={
     const g=guardadas(r);S.pend=S.sel.filter(id=>!g.includes(id));
     if(!S.pend.length){if(au){S.audObras=S.sel.slice();login('aud')}else{S.mias=S.sel.slice();login('jefe')}return}
     S.codRol=r;S.step='clave';draw();scrollTo(0,0)},
-  cambiarObras:()=>{S.codRol=ROLE()==='auditor'?'aud':'jefe';S.pend=null;S.u=null;S.step='clave';draw();scrollTo(0,0)},
+  cambiarObras:()=>{pedirCodSalida('cambiarObrasYa')},
+  cambiarObrasYa:()=>{S.codRol=ROLE()==='auditor'?'aud':'jefe';S.pend=null;S.u=null;S.step='clave';draw();scrollTo(0,0)},
   volver:()=>{S.step='panels';draw()},
   entrarProp:ds=>{S.cobra=ds.o;S.chat=[];login('cli')},
   otraObra:()=>{S.codRol='prop';S.u=null;S.step='clave';draw();scrollTo(0,0)},
@@ -2470,7 +2471,8 @@ const A={
     S.dirAuth='';S.u=null;const u=new URL(location.href);u.searchParams.set('v',Date.now().toString(36));location.replace(u.toString())},
   actualizar:async()=>{toast('Actualizando…');try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update().catch(()=>{})))}catch(e){}try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
     const u=new URL(location.href);u.searchParams.set('v',Date.now().toString(36));location.replace(u.toString())},
-  salir:()=>{sesBorrar();S.u=null;S.step=LOCK==='constructora'?'roles':'panels';closeSheet();draw();scrollTo(0,0)},
+  salir:()=>{if(['jefe','auditor'].includes(ROLE())){pedirCodSalida('salirYa');return}A.salirYa()},
+  salirYa:()=>{sesBorrar();S.u=null;S.step=LOCK==='constructora'?'roles':'panels';closeSheet();draw();scrollTo(0,0)},
   tab:ds=>{S.tab=ds.t;if(S.tab!=='docs')S.obraF='todas';S.filtro='activos';draw();scrollTo(0,0)},
   obra:ds=>{S.obra=ds.id;S.tab='obra';S.otab=ROLE()==='auditor'?'asup':'crono';draw();scrollTo(0,0)},
   locked:ds=>{const o=findO(ds.id);if(!o)return;const au=ROLE()==='auditor';
@@ -2579,6 +2581,9 @@ const SUBMIT={
     notify('jefe',o,`${AUD_TIPO[a.tipo].corto} ${a.num}: ${a.resultado.toLowerCase()}`,{t:'aud',id:a.id});
     AF=null;toast(`${a.num} guardado: le llega a la jefatura de obra`);draw();sheetAudVer(a.id)},
   modelo:f=>{readMO();const o=findO(f.dataset.o);cambiarModelo(o,MO);MO=null;closeSheet();notify('jefe',o,`La Dirección actualizó el modelo de ${o.nombre}: ${modeloTxt(o)}`,null);toast(`Modelo aplicado: ${modeloTxt(o)}`);draw()},
+  salirCod:async f=>{const txt=val('sa-cod');if(!normClave(txt)){toast('Escribí el código de Dirección');return}
+    let d;try{d=await codApi({op:'login',rol:'dir',codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
+    if(!d.ok){toast('Código incorrecto');return}const a=f.dataset.a;closeSheet();A[a]()},
   tomarObra:async f=>{const id=f.dataset.o,au=ROLE()==='auditor',r=au?'aud':'jefe',txt=val('to-cod'),o=findO(id);if(!normClave(txt)){toast('Escribí el código');return}
     let d;try{d=await codApi({op:'login',rol:r,codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
     if(!d.ok||d.obra!==id){toast(d.ok?`Ese código es de otra obra, no de ${o.nombre}.`:'Ese código no es válido. Pedíselo a la Dirección.');return}
@@ -2602,6 +2607,7 @@ const SUBMIT={
   invitar:f=>{const o=findO(f.dataset.o),rol=f.dataset.r;const mail=val('in-mail');if(!mail||!/@/.test(mail)){toast('Poné un mail válido');return}INVITES.push({id:'iv'+(++uid),obra:o,rol,para:rol==='estudio'?o.estudio:'Propietario',email:mail,estado:'pendiente',fecha:TODAY});o.invitados[rol]='pendiente';if(rol==='estudio')notify('estudio',o,`Invitación a ${o.nombre}: aceptala desde Inicio`,null);closeSheet();toast(`Invitación enviada a ${mail}`);draw()},
   crearObra:()=>{readNO();let nid;do{nid='o'+(++uid)}while(OBRAS.some(x=>x.id===nid));const o=buildObra({...NO,id:nid,constructora:ORG,nuevo:true,invitados:{estudio:'',propietario:''}});codInit(o);codGuardarLS();OBRAS.push(o);closeSheet();S.obra=o.id;S.tab='obra';S.otab='equipo';toast(`Se generaron ${o.tasks.length} tareas con sus tarjetas. Ahora invitá al estudio y al propietario.`);draw()}
 };
+function pedirCodSalida(a){openSheet(`<span class="eyebrow">Salir de este panel</span><h2>Solo la Dirección puede salir</h2><p class="muted">Este acceso quedó asignado a tu jefatura. Para salir o cambiar de panel hace falta el código de Dirección.</p><form class="frm" data-submit="salirCod" data-a="${a}"><label class="f">Código de Dirección<input id="sa-cod" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ej.: DIR-0000" style="letter-spacing:.08em;text-transform:uppercase"></label><button class="btn gold" type="submit">Salir</button><button class="btn" type="button" data-act="close">Cancelar</button></form>`,'Salir')}
 const CHG={
   obraF:v=>{S.obraF=v;draw()},
   regFoto:async(v,el)=>{const f=el.files?.[0];if(!f)return;const t=$('#r-txt')?.value||'';const r=await readFile(f);S.regFoto=r?.id||null;draw();const x=$('#r-txt');if(x)x.value=t},
