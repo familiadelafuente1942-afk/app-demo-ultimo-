@@ -2443,7 +2443,7 @@ const A={
     if(ds.u==='dir'){S.codRol='dir';S.step='clave';draw();scrollTo(0,0);return}
     const au=ds.u==='aud',r=au?'aud':'jefe',g=guardadas(r);S.codRol=r;S.pend=null;
     if(g.length){if(au){S.audObras=g;login('aud')}else{S.mias=g;login('jefe')}return}
-    S.step='clave';draw();scrollTo(0,0)},
+    S.sel=[];S.step=au?'obrasAud':'obras';draw();scrollTo(0,0)},
   selObra:ds=>{S.sel=S.sel.includes(ds.id)?S.sel.filter(x=>x!==ds.id):[...S.sel,ds.id];draw()},
   entrarConCodigos:()=>{if(!S.sel.length)return;const au=S.step==='obrasAud';S.codRol=au?'aud':'jefe';S.pend=S.sel.slice();S.step='clave';draw();scrollTo(0,0)},
   entrarObras:()=>{if(!S.sel.length)return;const au=S.step==='obrasAud',r=au?'aud':'jefe';
@@ -2451,7 +2451,7 @@ const A={
     if(!S.pend.length){if(au){S.audObras=S.sel.slice();login('aud')}else{S.mias=S.sel.slice();login('jefe')}return}
     S.codRol=r;S.step='clave';draw();scrollTo(0,0)},
   cambiarObras:()=>{pedirCodSalida('cambiarObrasYa')},
-  cambiarObrasYa:()=>{S.codRol=ROLE()==='auditor'?'aud':'jefe';S.pend=null;S.u=null;S.step='clave';draw();scrollTo(0,0)},
+  cambiarObrasYa:()=>{const au=ROLE()==='auditor',r=au?'aud':'jefe';S.codRol=r;S.pend=null;S.sel=guardadas(r).slice();S.u=null;S.step=au?'obrasAud':'obras';draw();scrollTo(0,0)},
   volver:()=>{S.step='panels';draw()},
   entrarProp:ds=>{S.cobra=ds.o;S.chat=[];login('cli')},
   otraObra:()=>{S.codRol='prop';S.u=null;S.step='clave';draw();scrollTo(0,0)},
