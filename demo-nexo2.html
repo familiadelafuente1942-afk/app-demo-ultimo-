@@ -3070,7 +3070,7 @@ function econPanel(obras){const E2=econ(obras),A2=E2.reduce((s,x)=>s+x.ahorro,0)
   return `<section class="sec"><div class="sec-head"><h2>Impacto económico</h2><button class="btn sm ghost" data-act="econ">Cómo se calcula</button></div><div class="econ"><button class="eg" data-act="econ"><span>Ahorro por llegar a tiempo</span><b>+${moneyK(A2)}</b><small>${E2.reduce((s,x)=>s+x.ok,0)} tarjetas completas antes del rojo</small></button><button class="er" data-act="econ"><span>Pérdida por esperas</span><b>−${moneyK(Pd)}</b><small>tarjetas vencidas hoy</small></button><button class="eo" data-act="econ"><span>En riesgo · próximos 15 días</span><b>${moneyK(R)}</b><small>si las urgentes llegan tarde</small></button></div></section>`}
 function vInicio(){
   const r=ROLE(),obras=misObras();
-  if(r==='auditor')return `${situacion()}${vIA()}${novedades()}${kpis()}<section class="sec"><div class="sec-head"><h2>Agenda de los próximos 30 días</h2><span class="legend-a"><i class="a-sup"></i>Supervisión <i class="a-rev"></i>Revisión <i class="a-cert"></i>Certificado</span></div>${agendaHTML(agendaAud(obras,30))}</section>`;
+  if(r==='auditor')return `${carrusel(obras)}${situacion()}${vIA()}${novedades()}${kpis()}<section class="sec"><div class="sec-head"><h2>Agenda de los próximos 30 días</h2><span class="legend-a"><i class="a-sup"></i>Supervisión <i class="a-rev"></i>Revisión <i class="a-cert"></i>Certificado</span></div>${agendaHTML(agendaAud(obras,30))}</section>`;
   if(r==='estudio'){
     const inv=INVITES.filter(i=>i.rol==='estudio'&&i.para===S.u.name&&i.estado==='pendiente'&&i.obra.constructora===S.cons);
     const cs=estPend().filter(c=>color(c)!=='futuro');const ad=ADIC.filter(a=>puedeVer(a.obra)&&adicEstado(a)[0]==='Espera autorización').slice(0,2);
