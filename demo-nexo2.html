@@ -2064,12 +2064,12 @@ function vClave(){
    jefe:['Jefatura de Obra','Entrá a tus obras','Ingresá el código que te dio la Dirección para tu obra. Si tenés más de una, ingresá cada código una vez: solo vas a ver esas obras.','Código de tu obra','Ej.: J-LP132-0000'],
    aud:['Auditoría','Entrá a tus obras','Ingresá el código que te dio la Dirección para la obra que auditás. Si auditás más de una, ingresá cada código una vez: solo vas a ver esas obras.','Código de la obra','Ej.: A-LP132-0000'],
    prop:['Propietario','Entrá a tu obra','El estudio o la constructora te dio una clave para tu obra. Ingresala para ver solo tu casa.','Clave de tu obra','Ej.: LP132-4827']}[r];
+  const multi=!!(S.pend&&S.pend.length&&(r==='jefe'||r==='aud'));
   const gs=r==='dir'?[]:guardadas(r).map(id=>OBRAS.find(o=>o.id===id));
   const lista=!gs.length?'':r==='prop'?`<h2>Tus obras en este dispositivo</h2><div class="sec">${gs.map(o=>`<button class="btn" data-act="entrarProp" data-o="${o.id}" style="text-align:left"><b>${esc(o.nombre)}</b> · ${esc(o.ubic)}</button>`).join('')}</div>`
    :`<h2>Tus obras en este dispositivo</h2><div class="sec">${gs.map(o=>`<div class="irow"><span><b>${esc(o.nombre)}</b><br><span class="muted small">${esc(o.ubic)}</span></span><button class="btn sm ghost" data-act="olvidarCod" data-r="${r}" data-o="${o.id}" aria-label="Quitar ${esc(o.nombre)}">Quitar</button></div>`).join('')}<button class="btn gold full" data-act="entrarCod" data-r="${r}">Entrar con ${plural(gs.length,'obra','obras')}</button></div>`;
   return `<button class="back" data-act="${r==='prop'?'volver':'volverRoles'}">← ${r==='prop'?'Paneles':'Roles'}</button><section class="sec"><span class="eyebrow">${T[0]}</span><h1>${T[1]}</h1><p class="muted">${T[2]}</p>
-  <form class="sec" data-submit="claveIn"><label class="f">${T[3]}<input id="cl-clave" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${T[4]}" style="letter-spacing:.08em;text-transform:uppercase"></label><button class="btn gold" type="submit">Entrar</button></form>
-  ${(S.pend&&S.pend.length&&(r==='jefe'||r==='aud'))?`<div class="infobox">Elegiste: ${S.sel.map(id=>esc((OBRAS.find(o=>o.id===id)||{}).nombre||'')).join(', ')}. Falta el código de <b>${S.pend.map(id=>esc((OBRAS.find(o=>o.id===id)||{}).nombre||'')).join(', ')}</b>.</div>`:''}
+  ${multi?`<form class="sec" data-submit="clavesMulti"><p class="muted">Poné el código de cada obra. Cada una tiene su propio código.</p>${S.pend.map(id=>{const o=OBRAS.find(x=>x.id===id)||{};return `<label class="f"><b>${esc(o.nombre||id)}</b> <span class="muted small">· ${esc(o.ubic||'')}</span><input id="cl-m-${id}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${T[4]}" style="letter-spacing:.08em;text-transform:uppercase"></label>`}).join('')}<button class="btn gold" type="submit">Entrar</button></form>`:`<form class="sec" data-submit="claveIn"><label class="f">${T[3]}<input id="cl-clave" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${T[4]}" style="letter-spacing:.08em;text-transform:uppercase"></label><button class="btn gold" type="submit">Entrar</button></form>`}
   ${lista}
   <p class="note">${r==='dir'?'El código de Dirección lo definís en Más → Códigos de acceso.':'El código es de una sola obra. Cada obra tiene un código distinto para cada rol.'}</p></section>`;
 }
@@ -2576,6 +2576,13 @@ const SUBMIT={
     notify('jefe',o,`${AUD_TIPO[a.tipo].corto} ${a.num}: ${a.resultado.toLowerCase()}`,{t:'aud',id:a.id});
     AF=null;toast(`${a.num} guardado: le llega a la jefatura de obra`);draw();sheetAudVer(a.id)},
   modelo:f=>{readMO();const o=findO(f.dataset.o);cambiarModelo(o,MO);MO=null;closeSheet();notify('jefe',o,`La Dirección actualizó el modelo de ${o.nombre}: ${modeloTxt(o)}`,null);toast(`Modelo aplicado: ${modeloTxt(o)}`);draw()},
+  clavesMulti:async f=>{const r=S.codRol||'jefe';const falla=[];let ok=0;
+    for(const id of S.pend.slice()){const o=OBRAS.find(x=>x.id===id),txt=val('cl-m-'+id);if(!normClave(txt)){falla.push(o.nombre);continue}
+      let d;try{d=await codApi({op:'login',rol:r,codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
+      if(!d.ok||d.obra!==id){falla.push(o.nombre);continue}
+      guardarCod(r,id);credGuardar(r,id,txt);S.pend=S.pend.filter(x=>x!==id);ok++}
+    if(S.pend.length){toast(`Revisá el código de: ${falla.join(', ')}`);draw();return}
+    const ids=S.sel.filter(id=>guardadas(r).includes(id));S.pend=null;if(r==='jefe'){S.mias=ids;login('jefe')}else{S.audObras=ids;login('aud')}},
   claveIn:async f=>{const r=S.codRol||'prop',txt=val('cl-clave');if(!normClave(txt)){toast('Escribí el código');return}
     let d;try{d=await codApi({op:'login',rol:r,codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
     if(!d.ok){toast(d.error||(r==='dir'?'Código incorrecto':r==='prop'?'Esa clave no es válida. Revisala con tu estudio.':'Ese código no es válido. Pedíselo a la Dirección.'));return}
