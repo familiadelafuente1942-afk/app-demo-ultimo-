@@ -1841,7 +1841,7 @@ function vObra(){
   const body={crono:tabCrono,sol:tabSol,docs:tabDocs,informes:tabInformes,avances:tabAvances,adic:tabAdic,audit:tabAudit,equipo:tabEquipo,asup:o=>audPanel(o,'sup'),arev:o=>audPanel(o,'rev'),acert:o=>audPanel(o,'cert')}[S.otab](o);
   const facts=aud?'':`<div class="facts"><div class="fact"><span>Ahora</span><b>${iniciada(o)?esc(a.name):'Por iniciar'}</b></div><div class="fact"><span>Próxima tarea</span><b>${n?esc(n.name)+' · '+fmt(n.start):'Entrega'}</b></div><div class="fact"><span>${est?'Entrega contractual':'Entrega prevista'}</span><b class="${!est&&dv>0?'t-naranja':''}">${fmt(est?finContractual(o):finObra(o))}</b><small>${est?'según el cronograma presentado':dv>0?`${plural(dv,'semana','semanas')} después de la base`:'igual que la base'}</small></div><div class="fact"><span>${esDir()?'Pérdida por esperas':est?'Para entregar':'Tarjetas vencidas'}</span><b class="${esDir()?'t-rojo':''}">${esDir()?money(o.cards.reduce((s,c)=>s+costoEst(c),0)):est?falt:o.cards.filter(c=>color(c)==='rojo').length}</b></div></div>`;
   return `<div class="ohead"><button class="back" data-act="tab" data-t="obras">← Obras</button><img class="hero" src="${img(o)}" alt="Render de ${esc(o.nombre)}">
-  <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end"><div><span class="eyebrow">${esc(o.ubic)}</span><h1>${esc(o.nombre)}</h1></div><span class="bigpct">${avance(o)}%</span></div>
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end"><div><span class="eyebrow">${esc(o.ubic)}</span><h1>${esc(o.nombre)}</h1>${esDir()?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn sm" data-act="editarObra" data-o="${o.id}">Editar obra</button><button class="btn sm ghost" data-act="modeloObra" data-o="${o.id}">Cambiar modelo</button></div>`:''}</div><span class="bigpct">${avance(o)}%</span></div>
   <div class="bar"><i style="width:${avance(o)}%"></i><s style="left:${avancePlan(o)}%"></s></div><span class="muted small">Avance real ${avance(o)}% · según la base debería ir ${avancePlan(o)}% · etapa: ${esc(etapaDe(o))}</span>
   <div class="dots"><span class="chip gold">${modeloFull(o)}</span>${aud?'':`<span class="chip">${jefeTxt(o)}</span>`}<span class="chip">Estudio: ${esc(o.estudio)}</span></div>
   ${facts}
@@ -2506,6 +2506,8 @@ const A={
   editar:ds=>{EOID=S.obra;EMODO=ds.m==='base'&&esDir()?'base':'obra';sheetEditor()},
   emodo:ds=>{EMODO=ds.m;sheetEditor()},
   edel:ds=>{const o=findO(EOID);if(EMODO==='base'){o.base=o.base.filter(x=>x.id!==ds.id);toast('Se quitó de la base')}else{const t=o.tasks.find(x=>x.id===ds.id);o.tasks=o.tasks.filter(x=>x!==t);o.cards=o.cards.filter(c=>c.task!==t);o.cert=o.cert.filter(c=>c.task!==t);toast(`Se quitó ${t.name} y sus tarjetas`)}draw();sheetEditor()},
+  editarObra:ds=>{const o=findO(ds.o);if(!o||!esDir())return;const js=[...new Set(['Gonzalo','Camila','Tomás','Julieta',o.jefe].filter(Boolean))];
+    openSheet(`<span class="eyebrow">Dirección</span><h2>Editar ${esc(o.nombre)}</h2><form class="sec" data-submit="editarObra" data-o="${o.id}"><label class="f">Nombre<input id="eo-nom" value="${esc(o.nombre)}"></label><label class="f">Ubicación<input id="eo-ubi" value="${esc(o.ubic||'')}"></label><div class="row2"><label class="f">Jefatura de obra<select id="eo-jefe">${js.map(j=>`<option ${o.jefe===j?'selected':''}>${esc(j)}</option>`).join('')}</select></label><label class="f">Estudio<input id="eo-est" value="${esc(o.estudio||'')}"></label></div><p class="muted small">Para cambiar plantas, superficie, terminación o fecha de inicio usá "Cambiar modelo".</p><button class="btn gold" type="submit">Guardar cambios</button><button class="btn" type="button" data-act="close">Cancelar</button></form>`,'Editar obra')},
   modeloObra:ds=>{MO=null;sheetModelo(ds.o)},
   libItems:ds=>sheetLibItems(ds.r),
   subir:ds=>{UP={obra:ds.o,file:null,cat:S.drive.cat&&CATS.includes(S.drive.cat)?S.drive.cat:'Arquitectura',name:''};sheetUpload()},
@@ -2581,6 +2583,8 @@ const SUBMIT={
     notify('jefe',o,`${AUD_TIPO[a.tipo].corto} ${a.num}: ${a.resultado.toLowerCase()}`,{t:'aud',id:a.id});
     AF=null;toast(`${a.num} guardado: le llega a la jefatura de obra`);draw();sheetAudVer(a.id)},
   modelo:f=>{readMO();const o=findO(f.dataset.o);cambiarModelo(o,MO);MO=null;closeSheet();notify('jefe',o,`La Dirección actualizó el modelo de ${o.nombre}: ${modeloTxt(o)}`,null);toast(`Modelo aplicado: ${modeloTxt(o)}`);draw()},
+  editarObra:f=>{const o=findO(f.dataset.o);if(!o||!esDir())return;const n=val('eo-nom').trim();if(!n){toast('Poné el nombre de la obra');return}
+    o.nombre=n;o.ubic=val('eo-ubi').trim();o.jefe=val('eo-jefe');o.estudio=val('eo-est').trim()||o.estudio;closeSheet();toast('Obra actualizada');draw()},
   salirCod:async f=>{const txt=val('sa-cod');if(!normClave(txt)){toast('Escribí el código de Dirección');return}
     let d;try{d=await codApi({op:'login',rol:'dir',codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
     if(!d.ok){toast('Código incorrecto');return}const a=f.dataset.a;closeSheet();A[a]()},
