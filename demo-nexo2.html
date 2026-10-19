@@ -3573,7 +3573,7 @@ Object.assign(A,{
     const map={};AVIMP.forEach((x,i)=>{const v=$('#im-'+i).value;if(v)map[x.id]=v});
     if(!Object.keys(map).length){toast('Elegí al menos una obra');return}
     toast('Trayendo… puede tardar unos segundos');
-    try{const r=await codApi({op:'av_import',dir:dirAuthGet(),modo:'run',map});closeSheet();toast(`Listo: ${r.creados} avances traídos`+(r.saltados?` (${r.saltados} ya estaban)`:''));Object.keys(AVS).forEach(k=>delete AVS[k]);draw()}
+    try{const r=await codApi({op:'av_import',dir:dirAuthGet(),modo:'run',map});closeSheet();toast(`Listo: ${r.creados} avances traídos`+(r.saltados?` (${r.saltados} ya estaban)`:'')+(r.completados?` · ${r.completados} informes completados`:''));Object.keys(AVS).forEach(k=>delete AVS[k]);draw()}
     catch(e){toast('No se pudo traer. Probá de nuevo.')}
   },
   avNuevo:ds=>{AVF={obra:ds.o,sector:'',txt:'',fotos:[],sub:''};avSheet()},
