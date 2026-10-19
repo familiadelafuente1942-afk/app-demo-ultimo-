@@ -1472,7 +1472,10 @@ OBRAS.forEach(o=>{o.codJefe='';o.codAud='';o.audNombre=''});
 const codLegacy=()=>{try{const g=JSON.parse(localStorage.getItem(COD_LS)||'null');return g&&g.obras?g:null}catch(e){return null}};
 const codData=()=>({dir:DIRCOD,obras:Object.fromEntries(OBRAS.map(o=>[o.id,{clave:o.clave,j:o.codJefe,a:o.codAud}]))});
 function codAplicar(g){if(g.dir)DIRCOD=g.dir;OBRAS.forEach(o=>{const x=(g.obras||{})[o.id];if(x){o.clave=x.clave||'';o.codJefe=x.j||'';o.codAud=x.a||''}})}
-const dirAuthGet=()=>{try{return S.dirAuth||localStorage.getItem('nexo2_dirauth')||''}catch(e){return S.dirAuth||''}};
+const admGet=()=>{try{const m=document.cookie.match(/(?:^|; )nexo2_adm=([^;]*)/);return m?decodeURIComponent(m[1]):''}catch(e){return''}};
+const dirAuthGet=()=>{try{return S.dirAuth||localStorage.getItem('nexo2_dirauth')||admGet()||''}catch(e){return S.dirAuth||admGet()||''}};
+/* Aparato del administrador: con el código de Dirección recordado, entra a cualquier panel sin pedir claves (sobrevive a "Salir"). */
+const esAdmin=()=>!!dirAuthGet();
 async function codApi(body){const r=await fetch('/api/nexo2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error(r.status);return r.json()}
 async function codCargar(){
   try{
@@ -2419,10 +2422,10 @@ const A={
   fontReset:()=>{try{localStorage.removeItem(FONT_LS)}catch(e){}aplicarFuentes({});draw()},
   scrim:(ds,el,e)=>{if(e.target===el)closeSheet()},
   close:()=>closeSheet(),
-  panel:ds=>{if(ds.p==='constructora'){S.step='roles';draw();scrollTo(0,0)}else if(ds.p==='estudio'){S.step='cons';draw();scrollTo(0,0)}else{S.codRol='prop';S.step='clave';draw();scrollTo(0,0)}},
+  panel:ds=>{if(ds.p==='constructora'){S.step='roles';draw();scrollTo(0,0)}else if(ds.p==='estudio'){S.step='cons';draw();scrollTo(0,0)}else if(esAdmin()&&OBRAS.length){S.cobra=OBRAS[0].id;S.chat=[];login('cli')}else{S.codRol='prop';S.step='clave';draw();scrollTo(0,0)}},
   elegirCons:ds=>{S.cons=ds.c;S.drive={obra:null,cat:null};login('est')},
   cambiarCons:()=>{S.u=null;S.step='cons';draw();scrollTo(0,0)},
-  login:ds=>{S.codRol=ds.u==='aud'?'aud':ds.u==='jefe'?'jefe':'dir';S.step='clave';draw();scrollTo(0,0)},
+  login:ds=>{if(esAdmin()){if(ds.u==='dir'){login('dir');return}if(OBRAS.length){const ids=OBRAS.map(o=>o.id);if(ds.u==='jefe'){S.mias=ids;login('jefe');return}if(ds.u==='aud'){S.audObras=ids;login('aud');return}}}S.codRol=ds.u==='aud'?'aud':ds.u==='jefe'?'jefe':'dir';S.step='clave';draw();scrollTo(0,0)},
   selObra:ds=>{S.sel=S.sel.includes(ds.id)?S.sel.filter(x=>x!==ds.id):[...S.sel,ds.id];draw()},
   entrarObras:()=>{if(!S.sel.length)return;if(S.step==='obrasAud'){S.audObras=S.sel.slice();login('aud')}else{S.mias=S.sel.slice();login('jefe')}},
   cambiarObras:()=>{S.codRol=ROLE()==='auditor'?'aud':'jefe';S.u=null;S.step='clave';draw();scrollTo(0,0)},
@@ -2548,7 +2551,7 @@ const SUBMIT={
   claveIn:async f=>{const r=S.codRol||'prop',txt=val('cl-clave');if(!normClave(txt)){toast('Escribí el código');return}
     let d;try{d=await codApi({op:'login',rol:r,codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
     if(!d.ok){toast(d.error||(r==='dir'?'Código incorrecto':r==='prop'?'Esa clave no es válida. Revisala con tu estudio.':'Ese código no es válido. Pedíselo a la Dirección.'));return}
-    if(r==='dir'){S.dirAuth=txt.toUpperCase().replace(/\s+/g,'');try{localStorage.setItem('nexo2_dirauth',S.dirAuth)}catch(e){}login('dir');return}
+    if(r==='dir'){S.dirAuth=txt.toUpperCase().replace(/\s+/g,'');try{localStorage.setItem('nexo2_dirauth',S.dirAuth)}catch(e){}try{document.cookie='nexo2_adm='+encodeURIComponent(S.dirAuth)+';max-age=34560000;path=/;SameSite=Lax'}catch(e){}login('dir');return}
     const o=OBRAS.find(x=>x.id===d.obra);if(!o){toast('Esa obra todavía no está disponible en este dispositivo. Probá de nuevo en unos segundos.');return}
     guardarCod(r,o.id);credGuardar(r,o.id,txt);if(r==='prop'){S.cobra=o.id;S.chat=[];login('cli')}else if(r==='jefe'){S.mias=guardadas('jefe');login('jefe')}else{S.audObras=guardadas('aud');login('aud')}},
   invitar:f=>{const o=findO(f.dataset.o),rol=f.dataset.r;const mail=val('in-mail');if(!mail||!/@/.test(mail)){toast('Poné un mail válido');return}INVITES.push({id:'iv'+(++uid),obra:o,rol,para:rol==='estudio'?o.estudio:'Propietario',email:mail,estado:'pendiente',fecha:TODAY});o.invitados[rol]='pendiente';if(rol==='estudio')notify('estudio',o,`Invitación a ${o.nombre}: aceptala desde Inicio`,null);closeSheet();toast(`Invitación enviada a ${mail}`);draw()},
