@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>Nexo</title><link rel="apple-touch-icon" sizes="180x180" href="/demo-nexo2/logo-180.png?v=3"><link rel="icon" type="image/png" sizes="192x192" href="/demo-nexo2/logo-192.png?v=3"><link rel="manifest" href="/nexo2.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Nexo"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="theme-color" content="#0d0e10"><style id="anclaje">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>Nexo</title><link rel="apple-touch-icon" sizes="180x180" href="demo-nexo2/logo-180.png?v=3"><link rel="icon" type="image/png" sizes="192x192" href="demo-nexo2/logo-192.png?v=3"><link rel="manifest" href="/nexo2.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Nexo"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="theme-color" content="#0d0e10"><style id="anclaje">
 /* Pantalla anclada en el iPhone: sin zoom automático al escribir, sin desborde lateral */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden;max-width:100%}
 body{overflow-x:hidden;max-width:100vw;overscroll-behavior-x:none;touch-action:manipulation}
@@ -3451,8 +3451,12 @@ Object.assign(A,{
 const _drawCfg=draw;draw=function(...a){const r=_drawCfg.apply(this,a);cfgGuardar();return r};
 /* ================= sesión recordada: una vez que entraste, la app queda abierta en este aparato hasta que toques Salir ================= */
 const SES_LS='nexo2_sesion';
-function sesGuardar(){try{const u=S.u;if(!u)return;const d={r:u.id};if(u.id==='cli')d.cobra=S.cobra;if(u.id==='est')d.cons=S.cons;localStorage.setItem(SES_LS,JSON.stringify(d));codApi({op:'sesion_set',last:d}).catch(()=>{})}catch(e){}}
-function sesBorrar(){try{localStorage.removeItem(SES_LS)}catch(e){}try{codApi({op:'sesion_borrar'}).catch(()=>{})}catch(e){}}
+function ckSet(v){try{document.cookie='nexo2_ses='+encodeURIComponent(v)+';max-age=34560000;path=/;SameSite=Lax'}catch(e){}}
+function ckGet(){try{const m=document.cookie.match(/(?:^|; )nexo2_ses=([^;]*)/);return m?decodeURIComponent(m[1]):null}catch(e){return null}}
+function ckDel(){try{document.cookie='nexo2_ses=;max-age=0;path=/'}catch(e){}}
+function sesGuardar(){try{const u=S.u;if(!u)return;const d={r:u.id};if(u.id==='cli')d.cobra=S.cobra;if(u.id==='est')d.cons=S.cons;localStorage.setItem(SES_LS,JSON.stringify(d));
+  try{const c={r:u.id,cobra:d.cobra,cons:d.cons};if(u.id==='dir')c.dir=S.dirAuth||localStorage.getItem('nexo2_dirauth')||'';if((u.id==='jefe'||u.id==='aud')&&LS_OBRAS[u.id]){c.g=guardadas(u.id);c.cred=localStorage.getItem('nexo2_cred')||''}ckSet(JSON.stringify(c))}catch(e){}codApi({op:'sesion_set',last:d}).catch(()=>{})}catch(e){}}
+function sesBorrar(){ckDel();try{localStorage.removeItem(SES_LS)}catch(e){}try{codApi({op:'sesion_borrar'}).catch(()=>{})}catch(e){}}
 const _loginSes=login;
 login=function(id){_loginSes(id);sesGuardar();if(id==='dir')codCargar()};
 function sesRestaurar(){
@@ -3469,6 +3473,8 @@ function sesRestaurar(){
 try{if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))Promise.resolve().catch(()=>{})}catch(e){}
 $('#brand-icon').src=ICONO;
 try{if(!localStorage.getItem('nexo2_reset_v2')){['nexo2_obras_prop','nexo2_obras_jefe','nexo2_obras_aud','nexo2_sesion'].forEach(k=>localStorage.removeItem(k));localStorage.setItem('nexo2_reset_v2','1')}}catch(e){}
+/* Respaldo: si el aparato borró la memoria local pero quedó la cookie de sesión (400 días), se recupera sin pedir el código otra vez. */
+try{if(!localStorage.getItem(SES_LS)){const c=ckGet();if(c){const q=JSON.parse(c);if(q&&q.r){localStorage.setItem(SES_LS,JSON.stringify({r:q.r,cobra:q.cobra,cons:q.cons}));if(q.dir)localStorage.setItem('nexo2_dirauth',q.dir);if(q.g&&LS_OBRAS[q.r])localStorage.setItem(LS_OBRAS[q.r],JSON.stringify(q.g));if(q.cred)localStorage.setItem('nexo2_cred',q.cred)}}}}catch(e){}
 {let ok=!LOCK;try{const d=JSON.parse(localStorage.getItem(SES_LS)||'null');if(LOCK&&d)ok=LOCK==='cliente'?d.r==='cli':LOCK==='estudio'?d.r==='est':['dir','jefe','aud'].includes(d.r)}catch(e){}if(ok)sesRestaurar()}
 /* Si el navegador borró su memoria local (pasa en iPhone), el servidor recuerda este aparato con una cookie firmada de 400 días y devuelve los códigos que ya se habían ingresado. */
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
