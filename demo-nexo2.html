@@ -3833,7 +3833,7 @@ setInterval(()=>{if(document.visibilityState==='visible')bajar()},45000);
 /* ===== DEMO: ingreso directo a cada panel, sin códigos ===== */
 try{localStorage.setItem('nexo2_dirauth','DIR-DEMO')}catch(e){}
 A.login=ds=>{const u=ds.u;if(u==='dir'){S.dirAuth='DIR-DEMO';login('dir')}else{S.sel=[];S.step=u==='aud'?'obrasAud':'obras';draw();scrollTo(0,0)}};
-{const _eo=A.entrarObras;A.entrarObras=function(){if(S.step!=='obrasAud')S.sel.forEach(id=>credGuardar('jefe',id,'DEMO'));return _eo.apply(this,arguments)}}
+{const _eo=A.entrarObras;A.entrarObras=function(){const r=S.step==='obrasAud'?'aud':'jefe';(S.sel||[]).forEach(id=>{guardarCod(r,id);credGuardar(r,id,'DEMO')});return _eo.apply(this,arguments)}}
 {const _pn=A.panel;A.panel=function(ds,el,e){if(ds.p==='cliente'){S.cobra=OBRAS[0].id;S.chat=[];login('cli');return}return _pn.apply(this,arguments)}}
 draw();
 
