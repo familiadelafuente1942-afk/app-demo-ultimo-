@@ -2156,7 +2156,7 @@ document.addEventListener('input',e=>{const t=e.target;if(t&&t.classList&&t.clas
 document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.target.closest('button[data-tema]');if(!b)return;window.__tema(b.dataset.tema);b.parentNode.querySelectorAll('[data-tema]').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'))});
 document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.fontrole){const n=leerFuentes();n[t.dataset.fontrole]=t.value;try{localStorage.setItem(FONT_LS,JSON.stringify(n))}catch(x){}aplicarFuentes(n);t.style.fontFamily="'"+t.value+"'";const p=t.parentNode.querySelector('.fprev');if(p)p.style.fontFamily="'"+t.value+"',sans-serif"}});
 function vMas(){
-  const r=ROLE();const items=r==='direccion'?[['matriz','Usuarios y accesos','Quién ve y quién carga qué, por obra y por rol'],['invites','Invitaciones','Estudios y propietarios invitados a cada obra'],['modelos','Modelos de obra','Duraciones base por rubro, anticipación y tarjetas de cada rubro. Editable.'],['claves','Códigos de acceso','Un código por obra para cada jefe de obra, auditor y propietario'],['config','Configuración de la app','Aspecto claro u oscuro y tipos de letra']]:[['modelos','Modelos de obra','Cómo se arma el cronograma base (lo define la Dirección)'],['cambiarObras','Obras a cargo','Cambiar las obras que tenés a cargo'],['config','Configuración de la app','Aspecto claro u oscuro y tipos de letra']];
+  const r=ROLE();const items=r==='direccion'?[['matriz','Usuarios y accesos','Quién ve y quién carga qué, por obra y por rol'],['invites','Invitaciones','Estudios y propietarios invitados a cada obra'],['modelos','Modelos de obra','Duraciones base por rubro, anticipación y tarjetas de cada rubro. Editable.'],['claves','Códigos de acceso','Un código por obra para cada jefe de obra, auditor y propietario'],['manualTarjetas','Manual: Las tarjetas','Cómo se generan, el semáforo y qué ve cada panel (PDF de 5 hojas)'],['config','Configuración de la app','Aspecto claro u oscuro y tipos de letra']]:[['modelos','Modelos de obra','Cómo se arma el cronograma base (lo define la Dirección)'],['cambiarObras','Obras a cargo','Cambiar las obras que tenés a cargo'],['config','Configuración de la app','Aspecto claro u oscuro y tipos de letra']];
   return `<section class="sec"><h1>Más</h1><div class="list">${items.map(([a,t,dd])=>`<button class="entry" style="text-align:left" data-act="${a}"><b>${t}</b><span class="muted small">${dd}</span></button>`).join('')}</div></section>`;
 }
 
@@ -2668,6 +2668,7 @@ const A={
   leerTodo:()=>{misNotifs().forEach(n=>n.leido=true);draw()},
   matriz:()=>sheetMatriz(),
   modelos:()=>sheetLib(),
+  manualTarjetas:()=>{const w=window.open('demo-nexo2/manual-tarjetas.pdf','_blank');if(!w)location.href='demo-nexo2/manual-tarjetas.pdf'},
   nuevaObra:()=>{NO={nombre:'Golf 310',ubic:'Pilar · Barrio Los Cedros',plantas:2,subsuelo:false,pileta:true,m2:420,nivel:'alto',inicio:'2026-11-02',jefe:'Tomás',estudio:'Estudio Vega & Asociados',jornal:75000,dot:6,late:0,margen:15,edits:[]};sheetNuevaObra()},
   iaSug:ds=>iaAsk(ds.q)
 };
