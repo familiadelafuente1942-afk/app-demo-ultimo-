@@ -171,6 +171,7 @@ input,select,textarea{background:var(--bg);color:var(--fg);border:1px solid var(
 .ohead{display:flex;flex-direction:column;gap:10px}
 .back{border:0;background:none;color:var(--muted);padding:0;font-size:14px;align-self:flex-start}
 .hero{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:block}
+.ohead .hero{max-height:30vh!important;aspect-ratio:auto!important;height:auto;min-height:120px}@media (min-width:700px){.ohead .hero{max-height:26vh!important}}
 .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .fact{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0}
 .fact span{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
