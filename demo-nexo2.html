@@ -2668,7 +2668,7 @@ const A={
   leerTodo:()=>{misNotifs().forEach(n=>n.leido=true);draw()},
   matriz:()=>sheetMatriz(),
   modelos:()=>sheetLib(),
-  manualTarjetas:()=>{const w=window.open('demo-nexo2/manual-tarjetas.pdf','_blank');if(!w)location.href='demo-nexo2/manual-tarjetas.pdf'},
+  manualTarjetas:()=>{openSheet(`<span class="eyebrow">Manual</span><h2>Las tarjetas</h2><p class="small soft">Cómo se generan, el semáforo y qué ve cada panel. Deslizá para pasar de hoja.</p>`+[1,2,3,4,5].map(n=>`<img src="demo-nexo2/manual-t-${n}.jpg" alt="Manual de las tarjetas, hoja ${n} de 5" loading="lazy" style="width:100%;display:block;margin:12px 0;border-radius:14px;border:1px solid var(--line,rgba(255,255,255,.2))">`).join(''),'Manual: Las tarjetas')},
   nuevaObra:()=>{NO={nombre:'Golf 310',ubic:'Pilar · Barrio Los Cedros',plantas:2,subsuelo:false,pileta:true,m2:420,nivel:'alto',inicio:'2026-11-02',jefe:'Tomás',estudio:'Estudio Vega & Asociados',jornal:75000,dot:6,late:0,margen:15,edits:[]};sheetNuevaObra()},
   iaSug:ds=>iaAsk(ds.q)
 };
