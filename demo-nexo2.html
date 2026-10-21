@@ -1,4 +1,6 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>Nexo</title><link rel="apple-touch-icon" sizes="180x180" href="demo-nexo2/logo-180.png?v=3"><link rel="icon" type="image/png" sizes="192x192" href="demo-nexo2/logo-192.png?v=3"><link rel="manifest" href="/nexo2.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Nexo"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="theme-color" content="#0d0e10"><style id="anclaje">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.infph{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}.infph .ph1{width:92px}.infph .ph1 span{position:relative;display:block;width:92px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}.infph .ph1 img{width:100%;height:100%;object-fit:cover}.infph .ph1 button{position:absolute;top:2px;right:2px}.infph .fdi{width:92px;font-size:11px;padding:3px;margin-top:3px;min-width:0}.infph .addph{width:72px;height:72px}
+.enm{width:100%;font:inherit;font-weight:600;padding:6px 8px;border:1px solid var(--line,#ddd);border-radius:8px;background:transparent;color:inherit;min-width:0}.gpct{position:absolute;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:var(--tx,#334);white-space:nowrap;pointer-events:none;line-height:1}.grow.tall .gpct{top:15px;transform:none;line-height:14px}.gpct.done{color:#1f9d55}
+</style><title>Nexo</title><link rel="apple-touch-icon" sizes="180x180" href="demo-nexo2/logo-180.png?v=3"><link rel="icon" type="image/png" sizes="192x192" href="demo-nexo2/logo-192.png?v=3"><link rel="manifest" href="/nexo2.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Nexo"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="theme-color" content="#0d0e10"><style id="anclaje">
 /* Pantalla anclada en el iPhone: sin zoom automático al escribir, sin desborde lateral */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden;max-width:100%}
 body{overflow-x:hidden;max-width:100vw;overscroll-behavior-x:none;touch-action:manipulation}
@@ -1156,7 +1158,7 @@ input::placeholder,textarea::placeholder{color:var(--muted)!important;opacity:.8
 /* ===== DEMO: sin servidor. Todo queda en memoria de esta pestaña ===== */
 (function(){
   const J=x=>new Response(JSON.stringify(x),{status:200,headers:{'Content-Type':'application/json'}});
-  const AV=[];let n=0;
+  const AV=[],INF=[];let n=0;
   const hoy=Date.now(),dia=864e5;
   AV.push({id:'a1',obra:'o1',fecha:hoy-9*dia,sector:'Estructura',txt:'Hormigonado de la losa de planta baja.',resumen:'Se ve la losa terminada y el encofrado ya retirado. Antes solo estaban las columnas.',autor:'Jefatura de obra',fotos:['demo-nexo2/etapa-1.jpg']});
   AV.push({id:'a2',obra:'o1',fecha:hoy-2*dia,sector:'Mampostería',txt:'Levantamos los muros de planta baja.',resumen:'Avanzó el cerramiento: ahora hay muros de ladrillo en el frente, donde antes había solo columnas y losa.',autor:'Jefatura de obra',fotos:['demo-nexo2/etapa-2.jpg']});
@@ -1174,6 +1176,13 @@ input::placeholder,textarea::placeholder{color:var(--muted)!important;opacity:.8
       if(b.op==='av_foto')return Promise.resolve(J({url:b.data}));
       if(b.op==='av_add'){const it={...b.item,id:'d'+(++n),obra:b.obra,resumen:''};AV.push(it);return Promise.resolve(J({ok:true,item:it}))}
       if(b.op==='av_resumen'){const it=AV.find(x=>x.id===b.id);if(it)it.resumen='Con respecto a la foto anterior se nota más avance: la obra muestra trabajos nuevos terminados en el sector indicado. (En el sistema real, la IA compara las dos fotos y lo describe.)';return Promise.resolve(J({ok:true}))}
+      if(b.op==='inf_list')return Promise.resolve(J({items:INF.filter(x=>x.o===b.obra).map(x=>x.q)}));
+      if(b.op==='inf_save'){const q={...b.informe,editado:Date.now(),autor:'Jefatura de obra'};const i=INF.findIndex(x=>x.o===b.obra&&(x.q.id===q.id||x.q.desde===q.desde));if(i>=0)INF.splice(i,1);INF.push({o:b.obra,q});
+        for(let k=AV.length-1;k>=0;k--)if(AV[k].inf===q.id)AV.splice(k,1);
+        const dk=t=>new Date(t-108e5).toISOString().slice(0,10),g={};q.fotos.forEach(f=>(g[dk(f.f)]=g[dk(f.f)]||[]).push(f));const ds=Object.keys(g).sort(),ids=[];
+        ds.forEach((d,k)=>{const it={id:'av'+q.id+'_'+d,obra:b.obra,fecha:Math.min(...g[d].map(f=>f.f)),sector:'',txt:k===ds.length-1?q.ejecutados.slice(0,420):'',autor:'Jefatura de obra',fotos:g[d].map(f=>f.u),inf:q.id,resumen:''};AV.push(it);ids.push(it.id)});
+        return Promise.resolve(J({ok:true,informe:q,avances:ids}))}
+      if(b.op==='inf_del'){const i=INF.findIndex(x=>x.q.id===b.id);if(i>=0)INF.splice(i,1);for(let k=AV.length-1;k>=0;k--)if(AV[k].inf===b.id)AV.splice(k,1);return Promise.resolve(J({ok:true}))}
       if(b.op==='av_del'){const i=AV.findIndex(x=>x.id===b.id);if(i>=0)AV.splice(i,1);return Promise.resolve(J({ok:true}))}
       return Promise.resolve(J({ok:true}));
     }
@@ -1788,7 +1797,7 @@ function informeDoc(i){
 
 /* semilla: informes ya enviados por la jefatura (con su versión corta para el propietario) */
 [['o1',3],['o2',2]].forEach(([oid,n])=>{const o=OBRAS.find(x=>x.id===oid);if(!o)return;for(let k=n;k>=1;k--){const desde=lunesDe(TODAY)-k*7*DAY,hasta=desde+4*DAY;const ts=o.tasks.filter(t=>t.real&&t.real.ini<=hasta&&(!t.real.fin||t.real.fin>=desde));const ll=Math.round(hash(o.id+k)*2);
-  o.informes.push({id:'i'+(++uid),n:o.informes.length+1,obra:o,desde,hasta,etapa:ETAPA[(ts[0]||actual(o)).rubro],av:Math.max(0,avance(o)-k*3),avPlan:Math.max(0,avancePlan(o)-k*3),trab:5-ll,lluvia:ll,dot:o.dot,fin:fmtY(finObra(o)),
+  o.informes.push({sem:true,id:'i'+(++uid),n:o.informes.length+1,obra:o,desde,hasta,etapa:ETAPA[(ts[0]||actual(o)).rubro],av:Math.max(0,avance(o)-k*3),avPlan:Math.max(0,avancePlan(o)-k*3),trab:5-ll,lluvia:ll,dot:o.dot,fin:fmtY(finObra(o)),
     tareas:ts.map(t=>({name:t.name,equipo:t.equipo,av:t.real.fin&&t.real.fin<=hasta?100:Math.max(5,Math.min(95,t.real.av-k*12)),estado:(desvioTarea(o,t)||0)>3?'Atrasada':'En plazo',causa:(desvioTarea(o,t)||0)>3?t.real.causa:''})),
     ejecutados:yJoin(ts.map(t=>t.name))+'.',proxima:'Continuar con '+yJoin(ts.map(t=>t.name.toLowerCase()))+'.',obs:ll?`${ll} ${ll===1?'día':'días'} de lluvia en la semana.`:'Sin observaciones.',fotos:[],
     resumen:`Esta semana seguimos con ${yJoin(ts.map(t=>t.name.toLowerCase()))||'la obra'}. ${ll?'La lluvia nos frenó '+(ll===1?'un día':ll+' días')+'. ':''}La entrega sigue prevista para ${MESL[new Date(finObra(o)).getUTCMonth()]}.`,fecha:hasta+DAY})}});
@@ -1986,8 +1995,9 @@ function tabDocs(o){
 }
 function tabInformes(o){
   const own=puedePedir(o),lun=lunesDe(TODAY),esta=o.informes.find(i=>i.desde===lun);
-  return `${own&&!esta?`<button class="btn gold" data-act="informe" data-id="${o.id}">Armar el informe de esta semana</button>`:esta?`<div class="infobox">El informe de esta semana ya se envió el ${fmt(esta.fecha)}.</div>`:''}
-  <div class="list">${o.informes.slice().reverse().map(i=>`<div class="entry row"><span><b>Informe N° ${i.n} · semana del ${fmt(i.desde)}</b><span class="muted small">Avance ${i.av}% · ${i.trab} días trabajados · ${i.lluvia} de lluvia · ${plural(i.fotos.length,'foto','fotos')}</span></span><span class="fbtns"><button class="btn sm" data-act="verInforme" data-id="${i.id}">Ver</button><button class="btn sm ghost" data-act="pdfInforme" data-id="${i.id}">PDF</button></span></div>`).join('')||'<p class="muted">Todavía no hay informes guardados.</p>'}</div>`;
+  if(!INFL[o.id]||Date.now()-INFL[o.id].t>30000)infLoad(o);
+  return `${own&&!esta?`<button class="btn gold" data-act="informe" data-id="${o.id}">Armar el informe de esta semana</button>`:esta?`<div class="infobox">El informe de esta semana ya se envió el ${fmt(esta.fecha)}.</div>`:''}${own?`<button class="btn ghost" data-act="informeOtra" data-id="${o.id}" style="margin:6px 0">Cargar un informe de una semana anterior</button>`:''}
+  <div class="list">${o.informes.slice().reverse().map(i=>`<div class="entry row"><span><b>Informe N° ${i.n} · semana del ${fmt(i.desde)}</b><span class="muted small">Avance ${i.av}% · ${i.trab} días trabajados · ${i.lluvia} de lluvia · ${plural(i.fotos.length,'foto','fotos')}</span></span><span class="fbtns"><button class="btn sm" data-act="verInforme" data-id="${i.id}">Ver</button><button class="btn sm ghost" data-act="pdfInforme" data-id="${i.id}">PDF</button>${own?`<button class="btn sm ghost" data-act="infEditar" data-id="${i.id}" data-d="${i.desde}">Editar</button>`:''}${own&&i.nube?`<button class="btn sm ghost" data-act="infBorrar" data-id="${i.id}">Borrar</button>`:''}</span></div>`).join('')||'<p class="muted">Todavía no hay informes guardados.</p>'}</div>`;
 }
 function adicCard(x){const[e,c]=adicEstado(x);return `<button class="card" data-act="adic" data-id="${x.id}"><span class="top"><b>${esc(x.obra.nombre)} · Adicional N° ${x.n}</b><span class="status ${c}">${e}</span></span><span class="muted small">${esc(x.sector)} · ${esc(x.txt)}</span>${verCostos()||ROLE()==='estudio'?`<span class="mono">${x.total?money(x.total):'Sin cotizar'}</span>`:''}</button>`}
 function tabAdic(o){const ad=ADIC.filter(x=>x.obra===o);return `<div class="list">${ad.map(adicCard).join('')||'<p class="muted">Sin adicionales.</p>'}</div><p class="note">Los requisitos los verifica la app. Mientras falte uno, el adicional queda bloqueado. ${puedePedir(o)?'Se inicia desde un hecho tipo "Cambio" del Registro.':''}</p>`}
@@ -2442,28 +2452,41 @@ function sheetAdic(id){
 
 /* --- informe semanal --- */
 let INFD=null;
-function nuevoInforme(o){const desde=lunesDe(TODAY),hasta=desde+4*DAY;const ts=enCurso(o);
-  INFD={obra:o.id,desde,hasta,tareas:ts.map(t=>({id:t.id,name:t.name,equipo:t.equipo,av:t.real?t.real.av:0,causa:t.real?.causa||''})),trab:5,lluvia:0,dot:o.dotacion.hoy,ejecutados:'',proxima:'',obs:'',fotos:[],resumen:''}}
-async function infTraer(auto){const D=INFD;if(!D)return;const o=findO(D.obra);D.cargFotos=true;if(!auto){readInf();sheetInformeForm()}
-  for(let k=0;k<40&&AVS[o.id]&&AVS[o.id].cargando;k++)await new Promise(r=>setTimeout(r,150));
-  await avLoad(o,true);if(INFD!==D)return;
-  const its=((AVS[o.id]||{}).items||[]).filter(x=>x.fecha>=Math.min(D.desde-DAY,Date.now()-8*DAY));D.urls=D.urls||[];let n=0;
-  for(const x of its)for(const u of (x.fotos||[])){if(D.urls.includes(u))continue;D.urls.push(u);
-    try{const r=await fetch(u);const b=await r.blob();const f=await readFile(new File([b],'avance.jpg',{type:b.type||'image/jpeg'}));if(f){D.fotos.push(f.id);n++}}catch(e){const f=addFile('avance.jpg','image/jpeg',u);D.fotos.push(f.id);n++}}
-  D.cargFotos=false;if(INFD!==D)return;readInf();sheetInformeForm();if(!auto)toast(n?`Se sumaron ${n} fotos`:'No hay fotos nuevas de avances en esta semana')}
-function readInf(){if(!INFD||!$('#if-trab'))return;INFD.trab=clamp(+val('if-trab')||0,0,6);INFD.lluvia=clamp(+val('if-ll')||0,0,6);INFD.dot=+val('if-dot')||0;INFD.ejecutados=val('if-ej');INFD.proxima=val('if-px');INFD.obs=val('if-obs');INFD.resumen=val('if-res');INFD.tareas.forEach((t,i)=>{t.av=clamp(+val('if-av'+i)||0,0,100);t.causa=val('if-ca'+i)})}
+function nuevoInforme(o,desde0){const hoyL=lunesDe(TODAY),desde=lunesDe(desde0||TODAY),hasta=desde+4*DAY,actualSem=desde===hoyL;
+  const ts=actualSem?enCurso(o):o.tasks.filter(t=>t.start<=hasta+2*DAY&&t.end>=desde);
+  const ex=o.informes.find(x=>x.desde===desde);
+  INFD={obra:o.id,desde,hasta,actualSem,tareas:ts.map(t=>({id:t.id,name:t.name,equipo:t.equipo,av:t.real?t.real.av:0,causa:t.real?.causa||''})),trab:5,lluvia:0,dot:o.dotacion.hoy,ejecutados:'',proxima:'',obs:'',fotos:[],fu:{},ff:{},resumen:'',editId:null,ffecha:actualSem?isoAR(Date.now()):iso(hasta)};
+  if(ex){INFD.editId=ex.id;INFD.n=ex.n;INFD.trab=ex.trab;INFD.lluvia=ex.lluvia;INFD.dot=ex.dot;INFD.ejecutados=ex.ejecutados;INFD.proxima=ex.proxima;INFD.obs=ex.obs==='Sin observaciones.'?'':ex.obs;INFD.resumen=ex.resumen;
+    INFD.fotos=(ex.fotos||[]).slice();(ex.fotos||[]).forEach((f,k)=>{if(ex.fotoU&&ex.fotoU[k])INFD.fu[f]=ex.fotoU[k];INFD.ff[f]=ex.fotoF&&ex.fotoF[k]?isoAR(ex.fotoF[k]):INFD.ffecha});
+    if(ex.tareas&&ex.tareas.length)INFD.tareas=ex.tareas.map(x=>{const t=o.tasks.find(y=>y.name===x.name);return{id:t?t.id:'',name:x.name,equipo:x.equipo,av:x.av,causa:x.causa||''}})}}
+/* fotos del informe: viven en la nube (una sola vez); las lee también Avances */
+const FURL={};
+const fotoDeUrl=u=>FURL[u]&&FILES[FURL[u]]?FURL[u]:(FURL[u]=addFile('Foto de obra','image/jpeg',u).id);
+const tsFoto=iso0=>{const hoy=isoAR(Date.now());if(!/^\d{4}-\d{2}-\d{2}$/.test(iso0||'')||iso0>=hoy)return Date.now();return Date.parse(iso0+'T12:00:00-03:00')};
+function infDesdeNube(o,q){const fs=(q.fotos||[]).filter(f=>f&&f.u);return{...q,obra:o,nube:true,fotos:fs.map(f=>fotoDeUrl(f.u)),fotoU:fs.map(f=>f.u),fotoF:fs.map(f=>f.f)}}
+const INFL={};
+async function infLoad(o,fuerza){const a=INFL[o.id]=INFL[o.id]||{t:0,cargando:false,sig:''};
+  if(a.cargando||(!fuerza&&Date.now()-a.t<30000))return;a.cargando=true;
+  try{const d=await codApi({op:'inf_list',obra:o.id});const its=(d.items||[]);const sig=its.map(x=>x.id+':'+x.editado).join('|');a.t=Date.now();
+    if(sig!==a.sig||fuerza){a.sig=sig;const nubeD=new Set(its.map(x=>x.desde));o.informes=[...o.informes.filter(x=>x.sem&&!nubeD.has(x.desde)),...its.map(x=>infDesdeNube(o,x))].sort((x,y)=>x.desde-y.desde);a.cargando=false;if(!document.querySelector('.sheet form[data-submit="informe"]'))draw();return}}
+  catch(e){a.t=Date.now()}a.cargando=false}
+function readInf(){if(!INFD||!$('#if-trab'))return;if($('#if-ffecha'))INFD.ffecha=$('#if-ffecha').value||INFD.ffecha;INFD.trab=clamp(+val('if-trab')||0,0,6);INFD.lluvia=clamp(+val('if-ll')||0,0,6);INFD.dot=+val('if-dot')||0;INFD.ejecutados=val('if-ej');INFD.proxima=val('if-px');INFD.obs=val('if-obs');INFD.resumen=val('if-res');INFD.tareas.forEach((t,i)=>{t.av=clamp(+val('if-av'+i)||0,0,100);t.causa=val('if-ca'+i)})}
 function sheetInformeForm(){
   const o=findO(INFD.obra),venc=o.cards.filter(c=>color(c)==='rojo');
-  openSheet(`<span class="eyebrow">${esc(o.nombre)} · semana del ${fmt(INFD.desde)} al ${fmt(INFD.hasta)}</span><h2>Informe semanal</h2><p class="muted small">Completá cada parte y guardalo. Lo que cargás es lo que pasó en obra.</p>
+  openSheet(`<span class="eyebrow">${esc(o.nombre)} · semana del ${fmt(INFD.desde)} al ${fmt(INFD.hasta)}</span><h2>Informe semanal${INFD.editId?' · editar':''}</h2><p class="muted small">Este es el único lugar donde se cargan las fotos y lo que se hizo: la sección Avances se arma sola con lo que guardes acá.</p>
+  <label class="f">Semana del informe (elegí cualquier día de esa semana)<input type="date" id="if-sem" value="${iso(INFD.desde)}" max="${isoAR(Date.now())}" data-chg="infSemana"></label>
   <form class="frm" data-submit="informe">
   <span class="eyebrow">1 · Avance por tarea</span><div>${INFD.tareas.map((t,i)=>`<div class="trow"><span class="tn">${esc(t.name)} <span class="muted small">· ${esc(t.equipo)}</span></span><div class="tq"><label class="f sm">Avance %<input id="if-av${i}" type="number" min="0" max="100" value="${t.av}"></label><label class="f sm">Si viene atrasada, ¿por qué?<select id="if-ca${i}"><option value="">En plazo</option>${CAUSAS.map(c=>`<option ${t.causa===c?'selected':''}>${c}</option>`).join('')}</select></label></div></div>`).join('')||'<p class="muted small">No hay tareas en curso esta semana.</p>'}</div>
   <span class="eyebrow">2 · Calendario y dotación</span><div class="row2"><label class="f">Días trabajados<input id="if-trab" type="number" min="0" max="6" value="${INFD.trab}"></label><label class="f">Días de lluvia<input id="if-ll" type="number" min="0" max="6" value="${INFD.lluvia}"></label><label class="f">Dotación promedio<input id="if-dot" type="number" min="0" value="${INFD.dot}"></label></div>
   <span class="eyebrow">3 · Trabajos ejecutados</span><textarea id="if-ej" rows="3" placeholder="Qué se hizo esta semana">${esc(INFD.ejecutados)}</textarea><button class="btn sm ghost" type="button" data-act="infRegistro" style="align-self:flex-start">Traer lo cargado en el registro diario</button>
   <span class="eyebrow">4 · Próxima semana</span><textarea id="if-px" rows="2">${esc(INFD.proxima)}</textarea>
   <span class="eyebrow">5 · Observaciones y riesgos</span><textarea id="if-obs" rows="3">${esc(INFD.obs)}</textarea>${venc.length?`<button class="btn sm ghost" type="button" data-act="infVenc" style="align-self:flex-start">Sumar las ${venc.length} tarjetas vencidas</button>`:''}
-  <span class="eyebrow">6 · Fotos de la semana</span><p class="muted small" style="margin:0">Se traen solas de los avances que cargó la obra con fotos. Para sumar fotos, cargá un avance en la pestaña Avances.</p><div class="thumbs2">${INFD.fotos.map((f,i)=>FILES[f]?`<span><img src="${FILES[f].url}" alt=""><button type="button" data-act="infQuitarFoto" data-i="${i}" aria-label="Quitar foto">✕</button></span>`:'').join('')||'<span class="muted small">'+(INFD.cargFotos?'Buscando fotos…':'Todavía no hay fotos de avances esta semana.')+'</span>'}</div><button class="btn sm ghost" type="button" data-act="infAvFotos" style="align-self:flex-start">Actualizar fotos</button>
+  <span class="eyebrow">6 · Fotos de la semana</span><p class="muted small" style="margin:0">Subí las fotos acá. Cada foto lleva su fecha (podés elegir una anterior); Avances las muestra ordenadas por esa fecha.</p>
+  <label class="f">Fecha de las fotos que vas a subir<input type="date" id="if-ffecha" value="${esc(INFD.ffecha)}" max="${isoAR(Date.now())}"></label>
+  <div class="infph">${INFD.fotos.map((f,i)=>({f,i})).filter(x=>FILES[x.f]).sort((p,q)=>(INFD.ff[p.f]||'').localeCompare(INFD.ff[q.f]||'')).map(({f,i})=>`<div class="ph1"><span><img src="${FILES[f].url}" alt=""><button type="button" data-act="infQuitarFoto" data-i="${i}" aria-label="Quitar foto">✕</button></span><input type="date" class="fdi" value="${esc(INFD.ff[f]||INFD.ffecha)}" max="${isoAR(Date.now())}" data-chg="infFotoFecha" data-f="${f}" aria-label="Fecha de la foto"></div>`).join('')}<label class="addph" for="if-foto" title="Subir fotos">+</label><input id="if-foto" type="file" accept="image/*" multiple data-chg="infFoto" hidden></div>
+  ${INFD.fotos.length?'':'<span class="muted small">Todavía no hay fotos en este informe.</span>'}
   <span class="eyebrow">7 · Resumen para el propietario</span><textarea id="if-res" rows="3" placeholder="Dos o tres oraciones simples">${esc(INFD.resumen)}</textarea><button class="btn sm" type="button" data-act="infIA" style="align-self:flex-start">Redactar el resumen con Nexo IA</button>
-  <button class="btn gold" type="submit">Guardar informe</button></form>`,'Informe semanal');
+  <button class="btn gold" type="submit" ${INFD.sub?'disabled':''}>${INFD.sub?'Guardando… '+INFD.sub:'Guardar informe'}</button></form>`,'Informe semanal');
 }
 function sheetInformeVer(id,modo){
   const i=OBRAS.flatMap(o=>o.informes).find(x=>x.id===id);if(!i)return;const cli=ROLE()==='cliente';modo=cli?'corto':modo||'completo';
@@ -2651,11 +2674,14 @@ const A={
   adic:ds=>sheetAdic(ds.id),
   autorizar:ds=>{const a=ADIC.find(x=>x.id===ds.id);a.autorizo=S.u.name+' · '+fmt(TODAY);notify('jefe',a.obra,`${S.u.name} autorizó el adicional N° ${a.n}`,{t:'adic',id:a.id});toast('Adicional autorizado');draw();sheetAdic(a.id)},
   adicDesde:ds=>{const r=REGISTRO.find(x=>x.id===ds.id);const n=String(ADIC.filter(a=>a.obra===r.obra).length+1).padStart(3,'0');const a={id:'a'+(++uid),obra:r.obra,n,sector:'A definir',txt:r.txt,origen:'Registro del '+fmt(r.fecha),escrito:false,plano:false,total:0,autorizo:null,plazo:null};ADIC.unshift(a);r.adic=a.id;draw();sheetAdic(a.id)},
-  informe:ds=>{nuevoInforme(findO(ds.id));sheetInformeForm();infTraer(true)},
+  informe:ds=>{nuevoInforme(findO(ds.id));sheetInformeForm()},
+  infEditar:ds=>{const o=OBRAS.find(x=>x.informes.some(i=>i.id===ds.id));nuevoInforme(o,+ds.d);sheetInformeForm()},
+  informeOtra:ds=>{const o=findO(ds.id);nuevoInforme(o,lunesDe(TODAY)-7*DAY);sheetInformeForm()},
+  infBorrar:async ds=>{const i=OBRAS.flatMap(o=>o.informes).find(x=>x.id===ds.id);if(!i||!i.nube)return;const o=i.obra,cr=credAv(o);if(!cr||!cr.codigo){toast('Volvé a ingresar tu código para borrar el informe.');return}if(!confirm('¿Borrar este informe? También se quitan sus fotos de Avances.'))return;
+    try{const r=await codApi({op:'inf_del',obra:o.id,cred:cr,id:i.id});if(!r.ok)throw new Error(r.error||'borrar');o.informes=o.informes.filter(x=>x.id!==i.id);toast('Informe borrado');avLoad(o,true);draw()}catch(e){toast('No se pudo borrar el informe. Probá de nuevo.')}},
   infRegistro:()=>{readInf();const o=findO(INFD.obra);const rs=REGISTRO.filter(r=>r.obra===o&&r.fecha>=INFD.desde-2*DAY&&r.fecha<=INFD.hasta+DAY&&r.tipo!=='Pedido');INFD.ejecutados=[INFD.ejecutados,...rs.map(r=>'- '+r.txt)].filter(Boolean).join('\n');if(!rs.length)toast('No hay hechos cargados esta semana');sheetInformeForm()},
   infVenc:()=>{readInf();const o=findO(INFD.obra);INFD.obs=[INFD.obs,...o.cards.filter(c=>color(c)==='rojo').map(c=>`- ${titulo(c)}: vencida hace ${diasRojo(c)} días hábiles`)].filter(Boolean).join('\n');sheetInformeForm()},
-  infAvFotos:()=>infTraer(false),
-  infQuitarFoto:ds=>{readInf();INFD.fotos.splice(+ds.i,1);sheetInformeForm()},
+  infQuitarFoto:ds=>{readInf();const f=INFD.fotos[+ds.i];INFD.fotos.splice(+ds.i,1);delete INFD.ff[f];delete INFD.fu[f];sheetInformeForm()},
   infIA:async()=>{readInf();const o=findO(INFD.obra);const btn=document.querySelector('[data-act="infIA"]');if(btn){btn.disabled=true;btn.textContent='Redactando…'}
     let t=null;if(SAMPLE){try{const r=await SAMPLE(`Redactá en español rioplatense, en 2 o 3 oraciones simples y cálidas, el resumen semanal para el propietario de la obra ${o.nombre}. Sin tecnicismos, sin costos, sin culpar a nadie. Datos: ${JSON.stringify({tareas:INFD.tareas.map(x=>({tarea:x.name,avance:x.av+'%',atraso:x.causa||'no'})),dias_lluvia:INFD.lluvia,ejecutado:INFD.ejecutados,proxima_semana:INFD.proxima,entrega:fmtY(finContractual(o))})}. Respondé solo con el texto.`,{modelTier:'quick',cache:false});t=(r.text||'').trim()}catch(e){t=null}}
     INFD.resumen=t||resumenLocal(o);if(!t)toast('Borrador armado con los datos del informe');sheetInformeForm()},
@@ -2700,12 +2726,30 @@ const SUBMIT={
   avance:f=>{const o=findO(f.dataset.o),t=o.tasks.find(x=>x.id===f.dataset.id);const av=clamp(+val('av-p')||0,0,100);const ini=val('av-ini')?d(val('av-ini')):t.start;const fin=av>=100?(val('av-fin')?d(val('av-fin')):TODAY):null;t.real={ini,fin,av,causa:val('av-causa'),dot:o.dotacion.hoy};t.equipo=val('av-eq')||t.equipo;t.start=ini;if(fin)t.end=fin;toast('Avance guardado');draw();sheetTarea(o.id,t.id)},
   subir:()=>{keepUp();const o=findO(UP.obra),name=UP.name,cat=UP.cat;if(!name){toast('Poné el nombre del plano');return}if(!UP.file){toast('Elegí el archivo');return}const prev=DOCS.filter(x=>x.obra===o&&x.nombre===name&&x.estado!=='reemplazado');const ver=prev.length?String.fromCharCode(Math.max(...prev.map(x=>x.ver.charCodeAt(0)))+1):'A';prev.forEach(x=>x.estado='reemplazado');const est=ROLE()==='estudio';const x=addDoc(o,prev[0]?.cat||cat,name,ver,'en revisión',est?S.u.name:UP.por,TODAY,{file:UP.file,nuevo:true});notify('auditor',o,`Plano nuevo para revisar: ${name}`,{t:'doc',id:x.id});if(est)notify('jefe',o,`${S.u.name} subió ${name} rev ${ver}`,{t:'doc',id:x.id});closeSheet();toast(`Subido rev ${ver}: le llega a la jefatura y a la auditoría`);draw()},
   adicDatos:f=>{const a=ADIC.find(x=>x.id===f.dataset.id);if($('#ad-esc')?.checked)a.escrito=true;if($('#ad-pl')?.checked)a.plano=true;if(val('ad-tot'))a.total=+val('ad-tot');if(val('ad-pz')!=='')a.plazo=+val('ad-pz');toast('Adicional actualizado');draw();sheetAdic(a.id)},
-  informe:()=>{readInf();const o=findO(INFD.obra);if(!INFD.ejecutados){toast('Completá los trabajos ejecutados');return}if(!INFD.resumen){toast('Escribí el resumen para el propietario');return}
-    if(!INFD.fotos.length){toast('Falta el avance con fotos: cargalo en Avances y volvé a armar el informe');return}
-    INFD.tareas.forEach(x=>{const t=o.tasks.find(y=>y.id===x.id);if(!t)return;const ini=t.real?.ini||Math.min(TODAY,t.start);t.real={ini,fin:x.av>=100?(t.real?.fin||INFD.hasta):null,av:x.av,causa:x.causa,dot:INFD.dot};if(t.real.fin)t.end=t.real.fin});
-    const i={id:'i'+(++uid),n:o.informes.length+1,obra:o,desde:INFD.desde,hasta:INFD.hasta,etapa:etapaDe(o),av:avance(o),avPlan:avancePlan(o),trab:INFD.trab,lluvia:INFD.lluvia,dot:INFD.dot,fin:fmtY(finObra(o)),tareas:INFD.tareas.map(x=>({name:x.name,equipo:x.equipo,av:x.av,estado:x.causa?'Atrasada':'En plazo',causa:x.causa})),ejecutados:INFD.ejecutados,proxima:INFD.proxima,obs:INFD.obs||'Sin observaciones.',fotos:INFD.fotos.slice(),resumen:INFD.resumen,fecha:TODAY};
-    o.informes=o.informes.filter(x=>x.desde!==i.desde);o.informes.push(i);i.n=o.informes.length;notify('cliente',o,'Nuevo resumen semanal de tu obra',{t:'inf',id:i.id});notify('direccion',o,`Informe semanal N° ${i.n} de ${o.nombre}`,{t:'inf',id:i.id});
-    INFD=null;toast('Informe guardado: el propietario ya ve el resumen');draw();sheetInformeVer(i.id)},
+  informe:async()=>{readInf();const o=findO(INFD.obra);if(INFD.sub)return;if(!INFD.ejecutados){toast('Completá los trabajos ejecutados');return}if(!INFD.resumen){toast('Escribí el resumen para el propietario');return}
+    if(!INFD.fotos.length){toast('Subí al menos una foto de la semana');return}
+    const cr=credAv(o);if(!cr||!cr.codigo){toast('Para guardar el informe volvé a ingresar tu código (Salir y entrar de nuevo).');return}
+    const D=INFD;
+    try{
+      const fs=[];const tot=D.fotos.length;
+      for(let k=0;k<tot;k++){const id=D.fotos[k],F=FILES[id];if(!F)continue;let u=D.fu[id]||(/^https?:/.test(F.url)?F.url:'');
+        if(!u){D.sub=`foto ${k+1} de ${tot}`;sheetInformeForm();const r=await codApi({op:'av_foto',obra:o.id,cred:cr,data:F.url});if(!r.url)throw new Error(r.error||'foto');u=r.url;D.fu[id]=u}
+        fs.push({u,f:tsFoto(D.ff[id]||D.ffecha)})}
+      D.sub='guardando';sheetInformeForm();
+      const prev=o.informes.find(x=>x.desde===D.desde);
+      const id=D.editId||(prev&&prev.nube?prev.id:'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,5));
+      const n=prev?prev.n:(o.informes.reduce((m,x)=>Math.max(m,x.n||0),0)+1);
+      const q={id,n,desde:D.desde,hasta:D.hasta,etapa:etapaDe(o),av:avance(o),avPlan:avancePlan(o),trab:D.trab,lluvia:D.lluvia,dot:D.dot,fin:fmtY(finObra(o)),tareas:D.tareas.map(x=>({name:x.name,equipo:x.equipo,av:x.av,estado:x.causa?'Atrasada':'En plazo',causa:x.causa})),ejecutados:D.ejecutados,proxima:D.proxima,obs:D.obs||'Sin observaciones.',fotos:fs,resumen:D.resumen,fecha:TODAY};
+      const r=await codApi({op:'inf_save',obra:o.id,cred:cr,informe:q});if(!r.ok)throw new Error(r.error||'guardar');
+      if(D.actualSem)D.tareas.forEach(x=>{const t=o.tasks.find(y=>y.id===x.id);if(!t)return;const ini=t.real?.ini||Math.min(TODAY,t.start);t.real={ini,fin:x.av>=100?(t.real?.fin||D.hasta):null,av:x.av,causa:x.causa,dot:D.dot};if(t.real.fin)t.end=t.real.fin});
+      const i=infDesdeNube(o,r.informe);o.informes=[...o.informes.filter(x=>x.desde!==i.desde&&x.id!==i.id),i].sort((x,y)=>x.desde-y.desde);
+      if(INFL[o.id])INFL[o.id].sig='';
+      if(!prev)notify('cliente',o,'Nuevo resumen semanal de tu obra',{t:'inf',id:i.id});notify('direccion',o,`Informe semanal N° ${i.n} de ${o.nombre}`,{t:'inf',id:i.id});
+      INFD=null;toast('Informe guardado: Avances y el propietario ya ven lo nuevo');
+      (r.avances||[]).forEach(aid=>{AVPEND.add(aid);codApi({op:'av_resumen',obra:o.id,cred:cr,id:aid}).catch(()=>{}).finally(()=>{AVPEND.delete(aid);avLoad(o,true)})});
+      avLoad(o,true);draw();sheetInformeVer(i.id)}
+    catch(e){D.sub='';if(INFD===D)sheetInformeForm();toast('No se pudo guardar el informe: no se guardó nada. Revisá la conexión y probá de nuevo.')}
+  },
   aud:()=>{readAF();const o=findO(AF.obra),F=d(AF.fecha||iso(TODAY));
     if(AF.tipo==='rev'&&!AF.docs.filter(x=>x.nombre).length){toast('Agregá al menos un documento revisado');return}
     if(AF.tipo==='cert'&&!AF.etapa){toast('Indicá la etapa certificada');return}
@@ -3080,7 +3124,7 @@ function gantt(o,C){
         segs+=`<span class="gwarn c-${pend.reduce((a,c)=>ORDEN[color(c)]<ORDEN[a]?color(c):a,'futuro')}" style="left:${Math.max(0,x(k.limit)-20)}px" title="${plural(pend.length,'tarjeta incompleta','tarjetas incompletas')}">${pend.length}</span>`}}
     const isObra=C.obra&&!C.contractual,av=isObra&&t.real?t.real.av:0,dvc=isObra?semDesvio(desvioTarea(o,t)):'';
     const b=C.base&&C.obra?baseDe(o,t):null;
-    const bar=`<button class="gbar ${isObra||C.contractual?'':'gb-base'} ${av>=100?'done':''} ${isObra&&dvc&&dvc!=='verde'&&t.real?'d-'+dvc:''}" data-act="tarea" data-o="${o.id}" data-id="${t.id}" style="left:${x(tp.start)}px;width:${Math.max(6,x(tp.end+3*DAY)-x(tp.start)-2)}px" title="${esc(t.name)} · ${fmt(tp.start)} → ${fmt(tp.end)}" aria-label="${esc(t.name)}: ${fmt(tp.start)} a ${fmt(tp.end)}${isObra?', avance '+av+'%':''}"><i style="width:${av}%"></i></button>`;
+    const bar=`<button class="gbar ${isObra||C.contractual?'':'gb-base'} ${av>=100?'done':''} ${isObra&&dvc&&dvc!=='verde'&&t.real?'d-'+dvc:''}" data-act="tarea" data-o="${o.id}" data-id="${t.id}" style="left:${x(tp.start)}px;width:${Math.max(6,x(tp.end+3*DAY)-x(tp.start)-2)}px" title="${esc(t.name)} · ${fmt(tp.start)} → ${fmt(tp.end)}" aria-label="${esc(t.name)}: ${fmt(tp.start)} a ${fmt(tp.end)}${isObra?', avance '+av+'%':''}"><i style="width:${av}%"></i></button>`+`<span class="gpct ${av>=100?'done':''}" style="left:${x(tp.end+3*DAY)+3}px">${Math.round(Math.min(100,Math.max(0,av||0)))} %</span>`;
     return `<div class="grow ${C.pedidos&&C.obra?'tall':''} ${b?'cmpb':''}"><button class="glabel ${baseIds.has(t.id)?'':'added'}" data-act="tarea" data-o="${o.id}" data-id="${t.id}" title="${esc(t.name)}"><span class="gl-n">${esc(t.name)}</span><span class="gl-d">${fmt(tp.start)} → ${fmt(tp.end)}</span></button><div class="gtrack" style="width:${width}px">${segs}${b?`<span class="gbase2" style="left:${x(b.start)}px;width:${x(b.end+3*DAY)-x(b.start)}px" title="Base · ${fmt(b.start)} → ${fmt(b.end)}"></span>`:''}${bar}</div></div>`}).join('');
   const aud=C.audit?`<div class="grow"><div class="glabel rubro">Auditorías</div><div class="gtrack" style="width:${width}px">${o.sup.map(s=>`<span class="gsup ${s.estado==='realizada'?'done':''}" title="Supervisión · ${fmt(s.fecha)}" style="left:${x(s.fecha)-6}px"></span>`).join('')}${o.cert.map(c=>`<span class="gcert ${c.estado==='certificada'?'done':''}" title="Certificado · ${esc(c.etapa)} · ${fmt(certFecha(c))}" style="left:${x(certFecha(c))-6}px"></span>`).join('')}</div></div>`:'';
   const vlines=C.audit?o.sup.map(s=>`<span class="gvl sup" style="left:${LBL+x(s.fecha)}px"></span>`).join('')+o.cert.map(c=>`<span class="gvl cert" style="left:${LBL+x(certFecha(c))}px"></span>`).join(''):'';
@@ -3114,8 +3158,8 @@ function sheetEditor(){
   <p class="muted small">${base?'La base es la referencia contra la que se mide la obra. Solo la Dirección la modifica.':'Cambiá la fecha de inicio (con el calendario) y la duración en semanas de cualquier tarea. Las tarjetas se mueven solas con su tarea. La base no cambia.'}</p>
   <p class="diff" id="ed-diff"></p>
   <label class="chk2"><input type="checkbox" data-chg="ecasc" ${ECASC?'checked':''}> Al mover una tarea, correr también las que arrancan después</label>
-  <div class="elist">${L.map(t=>`<div class="erow2${base?' erow3':''}" data-id="${t.id}"><span class="en">${esc(t.name)}<span class="muted small" id="ed-r-${t.id}"></span></span><label class="f sm">Inicio<input type="date" id="ed-s-${t.id}" value="${iso(t.start)}" data-chg="eStart" data-id="${t.id}"></label>${base?`<label class="f sm">Fin<input type="date" id="ed-f-${t.id}" value="${iso(t.end)}" data-chg="eFin" data-id="${t.id}"></label>`:''}<label class="f sm">Semanas<input type="number" id="ed-w-${t.id}" min="1" max="40" value="${t.weeks}" data-chg="eWeeks" data-id="${t.id}"></label><button class="edel" data-act="edel" data-id="${t.id}" aria-label="Quitar ${esc(t.name)}" ${!base&&t.start<=TODAY?'disabled title="Ya empezó"':''}>✕</button></div>`).join('')}</div>
-  ${base?'':`<form class="sec boxed" data-submit="eadd"><span class="eyebrow">Agregar tarea o rubro</span><label class="f">Rubro de la biblioteca<select id="ea-rub">${Object.entries(LIB).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join('')}</select></label><label class="f">Nombre<input id="ea-name" placeholder="Ej: Canteros PA (adicional)"></label><div class="row2"><label class="f">Arranca el<input id="ea-ini" type="date" value="${iso(nm)}"></label><label class="f">Semanas<input id="ea-w" type="number" min="1" max="20" value="2"></label></div><label class="chk2"><input type="checkbox" id="ea-ped" checked> Sumar las tarjetas estándar de ese rubro</label><button class="btn gold" type="submit">Agregar</button></form>`}
+  <div class="elist">${L.map(t=>`<div class="erow2${base?' erow3':''}" data-id="${t.id}"><span class="en">${base?`<input class="enm" id="ed-n-${t.id}" value="${esc(t.name)}" maxlength="80" data-chg="eName" data-id="${t.id}" aria-label="Nombre del rubro">`:esc(t.name)}<span class="muted small" id="ed-r-${t.id}"></span></span><label class="f sm">Inicio<input type="date" id="ed-s-${t.id}" value="${iso(t.start)}" data-chg="eStart" data-id="${t.id}"></label>${base?`<label class="f sm">Fin<input type="date" id="ed-f-${t.id}" value="${iso(t.end)}" data-chg="eFin" data-id="${t.id}"></label>`:''}<label class="f sm">Semanas<input type="number" id="ed-w-${t.id}" min="1" max="40" value="${t.weeks}" data-chg="eWeeks" data-id="${t.id}"></label><button class="edel" data-act="edel" data-id="${t.id}" aria-label="Quitar ${esc(t.name)}" ${!base&&t.start<=TODAY?'disabled title="Ya empezó"':''}>✕</button></div>`).join('')}</div>
+  ${base?`<form class="sec boxed" data-submit="ebadd"><span class="eyebrow">Agregar un rubro a la base</span><label class="f">Nombre<input id="eb-name" placeholder="Ej: Parquización" maxlength="80"></label><div class="row2"><label class="f">Inicio<input id="eb-ini" type="date" value="${iso(nm)}"></label><label class="f">Semanas<input id="eb-w" type="number" min="1" max="40" value="2"></label></div><button class="btn gold" type="submit">Agregar a la base</button></form>`:`<form class="sec boxed" data-submit="eadd"><span class="eyebrow">Agregar tarea o rubro</span><label class="f">Rubro de la biblioteca<select id="ea-rub">${Object.entries(LIB).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join('')}</select></label><label class="f">Nombre<input id="ea-name" placeholder="Ej: Canteros PA (adicional)"></label><div class="row2"><label class="f">Arranca el<input id="ea-ini" type="date" value="${iso(nm)}"></label><label class="f">Semanas<input id="ea-w" type="number" min="1" max="20" value="2"></label></div><label class="chk2"><input type="checkbox" id="ea-ped" checked> Sumar las tarjetas estándar de ese rubro</label><button class="btn gold" type="submit">Agregar</button></form>`}
   <button class="btn gold full" data-act="close">Listo</button>`,'Editar cronograma');
   refreshEditor();
 }
@@ -3127,6 +3171,8 @@ const syncReal=t=>{if(t.real){t.real.ini=t.start;if(t.real.fin)t.real.fin=t.end}
 function moverTarea(L,t,newStart,casc=ECASC){const delta=newStart-t.start;if(!delta)return;const old=t.start;if(casc)L.forEach(x=>{if(x!==t&&x.start>=old){x.start=nextWork(x.start+delta);x.end=x.start+(x.weeks*7-3)*DAY;syncReal(x)}});t.start=newStart;t.end=t.start+(t.weeks*7-3)*DAY;syncReal(t);L.sort((a,b)=>a.start-b.start)}
 function durTarea(L,t,w,casc=ECASC){const dw=w-t.weeks;if(!dw)return;const oldEnd=t.end;setDur(t,w);syncReal(t);if(casc)L.forEach(x=>{if(x!==t&&x.start>oldEnd-3*DAY){x.start=nextWork(x.start+dw*7*DAY);x.end=x.start+(x.weeks*7-3)*DAY;syncReal(x)}})}
 const okFecha=v=>{if(!v)return null;const y=+v.slice(0,4);return y>=2024&&y<=2032?nextWork(d(v)):null};
+CHG.eName=(v,el)=>{const o=findO(EOID);if(!o||EMODO!=='base')return;const t=o.base.find(x=>x.id===el.dataset.id);v=(v||'').trim();if(!t)return;if(!v){el.value=t.name;toast('El rubro necesita un nombre');return}t.name=v;const q=o.tasks.find(x=>x.id===t.id);if(q&&q.name!==v)q.name=v;draw()};
+SUBMIT.ebadd=()=>{const o=findO(EOID);if(!o||EMODO!=='base')return;const name=(val('eb-name')||'').trim(),w=clamp(+val('eb-w')||1,1,40),ini=okFecha(val('eb-ini'));if(!name){toast('Poné el nombre del rubro');return}if(!ini){toast('Elegí una fecha de inicio válida');return}o.base.push({id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),rubro:(o.base[o.base.length-1]||{}).rubro||'prelim',name,weeks:w,start:ini,end:ini+(w*7-3)*DAY,equipo:'Dirección'});o.base.sort((a,b)=>a.start-b.start);toast(`Se agregó ${name} a la base`);draw();sheetEditor()};
 CHG.eStart=(v,el)=>{const o=findO(EOID),L=EMODO==='base'?o.base:o.tasks,t=L.find(x=>x.id===el.dataset.id);const f=okFecha(v);if(!f||!t)return;moverTarea(L,t,f);draw();refreshEditor()};
 CHG.eWeeks=(v,el)=>{const o=findO(EOID),L=EMODO==='base'?o.base:o.tasks,t=L.find(x=>x.id===el.dataset.id);if(!t)return;durTarea(L,t,clamp(+v||1,1,40));draw();refreshEditor()};
 CHG.eFin=(v,el)=>{const o=findO(EOID),L=EMODO==='base'?o.base:o.tasks,t=L.find(x=>x.id===el.dataset.id);const f=okFecha(v);if(!f||!t)return;const w=clamp(Math.round((f-t.start+3*DAY)/(7*DAY)),1,40);durTarea(L,t,w);draw();refreshEditor();el.value=iso(t.end)};
@@ -3761,15 +3807,15 @@ function avItem(x,o,borrar){
   ${x.resumen?`<div class="avres"><span class="eyebrow">Avance respecto a la foto anterior</span>${esc(x.resumen)}</div>`:(AVPEND.has(x.id)?'<div class="avres muted">Analizando las fotos con IA…</div>':'')}
   ${borrar&&x.fotos&&x.fotos.length?avCmpHtml(x,o):''}
   ${x.fotos&&x.fotos.length?`<div class="avgrid">${x.fotos.map(u=>`<button type="button" class="avph" data-act="verFotoAv" data-u="${esc(u)}" aria-label="Ver foto"><img src="${esc(u)}" alt="Avance de obra" loading="lazy"></button>`).join('')}</div>`:''}
-  <span class="muted small">${esc(x.autor||'')}</span>${borrar?`<button class="btn sm ghost" data-act="avEditar" data-o="${o.id}" data-id="${x.id}" style="margin-left:8px">Editar</button><button class="btn sm ghost" data-act="avBorrar" data-o="${o.id}" data-id="${x.id}" style="margin-left:8px">Borrar</button>`:''}</div>`;
+  <span class="muted small">${esc(x.autor||'')}${x.inf?' · del informe semanal':''}</span>${borrar&&x.inf?`<button class="btn sm ghost" data-act="avVerInf" data-o="${o.id}" data-id="${x.inf}" style="margin-left:8px">Ver informe</button>`:borrar?`<button class="btn sm ghost" data-act="avEditar" data-o="${o.id}" data-id="${x.id}" style="margin-left:8px">Editar</button><button class="btn sm ghost" data-act="avBorrar" data-o="${o.id}" data-id="${x.id}" style="margin-left:8px">Borrar</button>`:''}</div>`;
 }
 function tabAvances(o){
   const a=AVS[o.id];if(!a||!a.items)avLoad(o);
   const items=((a&&a.items)||[]).slice().sort((p,q)=>q.fecha-p.fecha);
   const w=puedeAv(o);
-  return `${w?`<button class="btn gold" data-act="avNuevo" data-o="${o.id}">+ Cargar avance con fotos</button>`:''}
+  return `${w?`<p class="muted small" style="margin:0 0 8px">Los avances se arman solos con las fotos y lo que se hizo del Informe semanal. Para sumar fotos o cambiar algo, usá la pestaña Informes.</p>`:''}
   ${a&&a.error?`<div class="infobox">${esc(a.error)}</div>`:''}
-  <div class="list">${!a||!a.items?'<p class="muted">Cargando avances…</p>':items.map(x=>avItem(x,o,w)).join('')||`<p class="muted">Todavía no hay avances cargados.${w?' Subí el primero con fotos de lo que se hizo.':''}</p>`}</div>`;
+  <div class="list">${!a||!a.items?'<p class="muted">Cargando avances…</p>':items.map(x=>avItem(x,o,w)).join('')||`<p class="muted">Todavía no hay avances cargados.${w?' Aparecen cuando guardás un informe semanal con fotos.':''}</p>`}</div>`;
 }
 function secAvCliente(o){
   const a=AVS[o.id];if(!a||!a.items)avLoad(o);
@@ -3819,6 +3865,7 @@ Object.assign(A,{
   avDescartarSug:ds=>{delete AVCMP[ds.id];draw()},
   avQuitarFoto:ds=>{avLeer();AVF.fotos.splice(+ds.i,1);avSheet()},
   verFotoAv:ds=>{const f=addFile('Foto de avance','image/jpeg',ds.u);sheetArchivo({f:f.id})},
+  avVerInf:ds=>{const o=findO(ds.o),i=o.informes.find(x=>x.id===ds.id);if(i)sheetInformeVer(i.id);else toast('Ese informe ya no está')},
   avBorrar:async ds=>{const o=findO(ds.o),cr=credAv(o);if(!cr)return;if(!confirm('¿Borrar este avance?'))return;try{await codApi({op:'av_del',obra:o.id,cred:cr,id:ds.id});toast('Avance borrado');avLoad(o,true)}catch(e){toast('No se pudo borrar. Volvé a ingresar tu código.')}},
   avGuardar:async()=>{
     avLeer();const o=findO(AVF.obra),cr=credAv(o);
@@ -3843,6 +3890,9 @@ Object.assign(A,{
 });
 CHG.eoImg=async(v,el)=>{const o=findO(el.dataset.o),f=(el.files||[])[0];if(!o||!f)return;toast('Subiendo el render…');const dat=await reducir(f,1600,.8);if(!dat){toast('No se pudo leer la imagen');return}
   try{const r=await codApi({op:'av_foto',obra:o.id,cred:{rol:'dir',codigo:dirAuthGet()},data:dat});if(!r.url)throw new Error(r.error||'foto');o.imgUrl=r.url;o.sinImg=false;closeSheet();toast('Render actualizado');draw()}catch(e){toast('No se pudo subir el render. Probá de nuevo.')}};
+CHG.infFoto=async(v,el)=>{readInf();const D=INFD;if(!D)return;const fs=[...(el.files||[])].slice(0,40-D.fotos.length);let n=0;for(const f of fs){const dat=await reducir(f);if(!dat)continue;const F=addFile('Foto de obra','image/jpeg',dat);D.fotos.push(F.id);D.ff[F.id]=D.ffecha;n++}if(INFD===D){sheetInformeForm();if(n)toast(`Se sumaron ${plural(n,'foto','fotos')} con fecha ${fmt(Date.parse(D.ffecha+'T12:00:00Z'))}`)}};
+CHG.infFotoFecha=(v,el)=>{if(!INFD||!v)return;readInf();INFD.ff[el.dataset.f]=v;sheetInformeForm()};
+CHG.infSemana=(v,el)=>{if(!INFD||!v)return;const o=findO(INFD.obra),f=okFecha(v)||d(v);if(!f)return;const lun=lunesDe(f);if(lun>lunesDe(TODAY)){toast('No se puede cargar una semana futura');el.value=iso(INFD.desde);return}if(lun===INFD.desde)return;nuevoInforme(o,lun);sheetInformeForm()};
 CHG.avFoto=async(v,el)=>{avLeer();const fs=[...(el.files||[])].slice(0,12-AVF.fotos.length);for(const f of fs){const d=await reducir(f);if(d)AVF.fotos.push(d)}avSheet()};
 /* ================= sincronización compartida (Supabase): lo que cambia la dirección se guarda en la nube y llega a todos los dispositivos ================= */
 {
@@ -3893,6 +3943,7 @@ bajar();
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')bajar();else sucio.forEach(k=>{clearTimeout(tim[k]);subir(k)})});
 setInterval(()=>{if(document.visibilityState==='visible'&&listo)bajar()},25000);
 setInterval(()=>{if(document.visibilityState==='visible')bajar()},45000);
+setTimeout(()=>OBRAS.forEach(o=>infLoad(o,true)),800);setInterval(()=>{if(document.visibilityState==='visible')OBRAS.forEach(o=>infLoad(o))},40000);
 }
 
 /* ===== DEMO: ingreso directo a cada panel, sin códigos ===== */
