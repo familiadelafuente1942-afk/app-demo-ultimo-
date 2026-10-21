@@ -1180,7 +1180,7 @@ input::placeholder,textarea::placeholder{color:var(--muted)!important;opacity:.8
       if(b.op==='inf_save'){const q={...b.informe,editado:Date.now(),autor:'Jefatura de obra'};const i=INF.findIndex(x=>x.o===b.obra&&(x.q.id===q.id||x.q.desde===q.desde));if(i>=0)INF.splice(i,1);INF.push({o:b.obra,q});
         for(let k=AV.length-1;k>=0;k--)if(AV[k].inf===q.id)AV.splice(k,1);
         const dk=t=>new Date(t-108e5).toISOString().slice(0,10),g={};q.fotos.forEach(f=>(g[dk(f.f)]=g[dk(f.f)]||[]).push(f));const ds=Object.keys(g).sort(),ids=[];
-        ds.forEach((d,k)=>{const it={id:'av'+q.id+'_'+d,obra:b.obra,fecha:Math.min(...g[d].map(f=>f.f)),sector:'',txt:k===ds.length-1?q.ejecutados.slice(0,420):'',autor:'Jefatura de obra',fotos:g[d].map(f=>f.u),inf:q.id,resumen:''};AV.push(it);ids.push(it.id)});
+        ds.forEach((d,k)=>{const it={id:'av'+q.id+'_'+d,obra:b.obra,fecha:Math.min(...g[d].map(f=>f.f)),sector:q.etapa||'',txt:k===ds.length-1?q.ejecutados.slice(0,420):'',autor:'Jefatura de obra',fotos:g[d].map(f=>f.u),inf:q.id,resumen:''};AV.push(it);ids.push(it.id)});
         return Promise.resolve(J({ok:true,informe:q,avances:ids}))}
       if(b.op==='inf_del'){const i=INF.findIndex(x=>x.q.id===b.id);if(i>=0)INF.splice(i,1);for(let k=AV.length-1;k>=0;k--)if(AV[k].inf===b.id)AV.splice(k,1);return Promise.resolve(J({ok:true}))}
       if(b.op==='av_del'){const i=AV.findIndex(x=>x.id===b.id);if(i>=0)AV.splice(i,1);return Promise.resolve(J({ok:true}))}
@@ -2452,11 +2452,13 @@ function sheetAdic(id){
 
 /* --- informe semanal --- */
 let INFD=null;
+const etapasObra=o=>{const r=[];[...o.base].sort((a,b)=>a.start-b.start).forEach(t=>{const e=ETAPA[t.rubro];if(e&&!r.includes(e))r.push(e)});return r};
+const etapaEn=(o,f)=>{const b=[...o.base].sort((a,b)=>a.start-b.start);const t=b.find(x=>x.start<=f&&x.end+3*DAY>f)||[...b].reverse().find(x=>x.start<=f)||b[0];return t&&ETAPA[t.rubro]||etapaDe(o)};
 function nuevoInforme(o,desde0){const hoyL=lunesDe(TODAY),desde=lunesDe(desde0||TODAY),hasta=desde+4*DAY,actualSem=desde===hoyL;
   const ts=actualSem?enCurso(o):o.tasks.filter(t=>t.start<=hasta+2*DAY&&t.end>=desde);
   const ex=o.informes.find(x=>x.desde===desde);
-  INFD={obra:o.id,desde,hasta,actualSem,tareas:ts.map(t=>({id:t.id,name:t.name,equipo:t.equipo,av:t.real?t.real.av:0,causa:t.real?.causa||''})),trab:5,lluvia:0,dot:o.dotacion.hoy,ejecutados:'',proxima:'',obs:'',fotos:[],fu:{},ff:{},resumen:'',editId:null,ffecha:actualSem?isoAR(Date.now()):iso(hasta)};
-  if(ex){INFD.editId=ex.id;INFD.n=ex.n;INFD.trab=ex.trab;INFD.lluvia=ex.lluvia;INFD.dot=ex.dot;INFD.ejecutados=ex.ejecutados;INFD.proxima=ex.proxima;INFD.obs=ex.obs==='Sin observaciones.'?'':ex.obs;INFD.resumen=ex.resumen;
+  INFD={obra:o.id,desde,hasta,actualSem,tareas:ts.map(t=>({id:t.id,name:t.name,equipo:t.equipo,av:t.real?t.real.av:0,causa:t.real?.causa||''})),trab:5,lluvia:0,dot:o.dotacion.hoy,ejecutados:'',proxima:'',obs:'',fotos:[],fu:{},ff:{},resumen:'',editId:null,etapa:actualSem?etapaDe(o):etapaEn(o,hasta),ffecha:actualSem?isoAR(Date.now()):iso(hasta)};
+  if(ex){INFD.etapa=ex.etapa||INFD.etapa;INFD.editId=ex.id;INFD.n=ex.n;INFD.trab=ex.trab;INFD.lluvia=ex.lluvia;INFD.dot=ex.dot;INFD.ejecutados=ex.ejecutados;INFD.proxima=ex.proxima;INFD.obs=ex.obs==='Sin observaciones.'?'':ex.obs;INFD.resumen=ex.resumen;
     INFD.fotos=(ex.fotos||[]).slice();(ex.fotos||[]).forEach((f,k)=>{if(ex.fotoU&&ex.fotoU[k])INFD.fu[f]=ex.fotoU[k];INFD.ff[f]=ex.fotoF&&ex.fotoF[k]?isoAR(ex.fotoF[k]):INFD.ffecha});
     if(ex.tareas&&ex.tareas.length)INFD.tareas=ex.tareas.map(x=>{const t=o.tasks.find(y=>y.name===x.name);return{id:t?t.id:'',name:x.name,equipo:x.equipo,av:x.av,causa:x.causa||''}})}}
 /* fotos del informe: viven en la nube (una sola vez); las lee también Avances */
@@ -2470,11 +2472,12 @@ async function infLoad(o,fuerza){const a=INFL[o.id]=INFL[o.id]||{t:0,cargando:fa
   try{const d=await codApi({op:'inf_list',obra:o.id});const its=(d.items||[]);const sig=its.map(x=>x.id+':'+x.editado).join('|');a.t=Date.now();
     if(sig!==a.sig||fuerza){a.sig=sig;const nubeD=new Set(its.map(x=>x.desde));o.informes=[...o.informes.filter(x=>x.sem&&!nubeD.has(x.desde)),...its.map(x=>infDesdeNube(o,x))].sort((x,y)=>x.desde-y.desde);a.cargando=false;if(!document.querySelector('.sheet form[data-submit="informe"]'))draw();return}}
   catch(e){a.t=Date.now()}a.cargando=false}
-function readInf(){if(!INFD||!$('#if-trab'))return;if($('#if-ffecha'))INFD.ffecha=$('#if-ffecha').value||INFD.ffecha;INFD.trab=clamp(+val('if-trab')||0,0,6);INFD.lluvia=clamp(+val('if-ll')||0,0,6);INFD.dot=+val('if-dot')||0;INFD.ejecutados=val('if-ej');INFD.proxima=val('if-px');INFD.obs=val('if-obs');INFD.resumen=val('if-res');INFD.tareas.forEach((t,i)=>{t.av=clamp(+val('if-av'+i)||0,0,100);t.causa=val('if-ca'+i)})}
+function readInf(){if(!INFD||!$('#if-trab'))return;if($('#if-etapa'))INFD.etapa=$('#if-etapa').value;if($('#if-ffecha'))INFD.ffecha=$('#if-ffecha').value||INFD.ffecha;INFD.trab=clamp(+val('if-trab')||0,0,6);INFD.lluvia=clamp(+val('if-ll')||0,0,6);INFD.dot=+val('if-dot')||0;INFD.ejecutados=val('if-ej');INFD.proxima=val('if-px');INFD.obs=val('if-obs');INFD.resumen=val('if-res');INFD.tareas.forEach((t,i)=>{t.av=clamp(+val('if-av'+i)||0,0,100);t.causa=val('if-ca'+i)})}
 function sheetInformeForm(){
   const o=findO(INFD.obra),venc=o.cards.filter(c=>color(c)==='rojo');
   openSheet(`<span class="eyebrow">${esc(o.nombre)} · semana del ${fmt(INFD.desde)} al ${fmt(INFD.hasta)}</span><h2>Informe semanal${INFD.editId?' · editar':''}</h2><p class="muted small">Este es el único lugar donde se cargan las fotos y lo que se hizo: la sección Avances se arma sola con lo que guardes acá.</p>
   <label class="f">Semana del informe (elegí cualquier día de esa semana)<input type="date" id="if-sem" value="${iso(INFD.desde)}" max="${isoAR(Date.now())}" data-chg="infSemana"></label>
+  <label class="f">Etapa a la que corresponde el informe<select id="if-etapa">${(()=>{const L=etapasObra(o);if(INFD.etapa&&!L.includes(INFD.etapa))L.push(INFD.etapa);return L.map(e=>`<option ${e===INFD.etapa?'selected':''}>${esc(e)}</option>`).join('')})()}</select></label><p class="muted small" style="margin:-4px 0 0">Se propone según la fecha y el cronograma base; podés cambiarla.</p>
   <form class="frm" data-submit="informe">
   <span class="eyebrow">1 · Avance por tarea</span><div>${INFD.tareas.map((t,i)=>`<div class="trow"><span class="tn">${esc(t.name)} <span class="muted small">· ${esc(t.equipo)}</span></span><div class="tq"><label class="f sm">Avance %<input id="if-av${i}" type="number" min="0" max="100" value="${t.av}"></label><label class="f sm">Si viene atrasada, ¿por qué?<select id="if-ca${i}"><option value="">En plazo</option>${CAUSAS.map(c=>`<option ${t.causa===c?'selected':''}>${c}</option>`).join('')}</select></label></div></div>`).join('')||'<p class="muted small">No hay tareas en curso esta semana.</p>'}</div>
   <span class="eyebrow">2 · Calendario y dotación</span><div class="row2"><label class="f">Días trabajados<input id="if-trab" type="number" min="0" max="6" value="${INFD.trab}"></label><label class="f">Días de lluvia<input id="if-ll" type="number" min="0" max="6" value="${INFD.lluvia}"></label><label class="f">Dotación promedio<input id="if-dot" type="number" min="0" value="${INFD.dot}"></label></div>
@@ -2739,7 +2742,7 @@ const SUBMIT={
       const prev=o.informes.find(x=>x.desde===D.desde);
       const id=D.editId||(prev&&prev.nube?prev.id:'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,5));
       const n=prev?prev.n:(o.informes.reduce((m,x)=>Math.max(m,x.n||0),0)+1);
-      const q={id,n,desde:D.desde,hasta:D.hasta,etapa:etapaDe(o),av:avance(o),avPlan:avancePlan(o),trab:D.trab,lluvia:D.lluvia,dot:D.dot,fin:fmtY(finObra(o)),tareas:D.tareas.map(x=>({name:x.name,equipo:x.equipo,av:x.av,estado:x.causa?'Atrasada':'En plazo',causa:x.causa})),ejecutados:D.ejecutados,proxima:D.proxima,obs:D.obs||'Sin observaciones.',fotos:fs,resumen:D.resumen,fecha:TODAY};
+      const q={id,n,desde:D.desde,hasta:D.hasta,etapa:D.etapa||etapaDe(o),av:avance(o),avPlan:avancePlan(o),trab:D.trab,lluvia:D.lluvia,dot:D.dot,fin:fmtY(finObra(o)),tareas:D.tareas.map(x=>({name:x.name,equipo:x.equipo,av:x.av,estado:x.causa?'Atrasada':'En plazo',causa:x.causa})),ejecutados:D.ejecutados,proxima:D.proxima,obs:D.obs||'Sin observaciones.',fotos:fs,resumen:D.resumen,fecha:TODAY};
       const r=await codApi({op:'inf_save',obra:o.id,cred:cr,informe:q});if(!r.ok)throw new Error(r.error||'guardar');
       if(D.actualSem)D.tareas.forEach(x=>{const t=o.tasks.find(y=>y.id===x.id);if(!t)return;const ini=t.real?.ini||Math.min(TODAY,t.start);t.real={ini,fin:x.av>=100?(t.real?.fin||D.hasta):null,av:x.av,causa:x.causa,dot:D.dot};if(t.real.fin)t.end=t.real.fin});
       const i=infDesdeNube(o,r.informe);o.informes=[...o.informes.filter(x=>x.desde!==i.desde&&x.id!==i.id),i].sort((x,y)=>x.desde-y.desde);
