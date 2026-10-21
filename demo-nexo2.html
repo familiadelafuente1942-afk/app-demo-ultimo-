@@ -440,6 +440,8 @@ div.glabel{cursor:default}
 .elist{display:flex;flex-direction:column}
 .erow2{display:grid;grid-template-columns:minmax(0,1fr) 138px 74px 32px;gap:8px;align-items:end;padding:8px 0;border-bottom:1px solid var(--line)}
 .erow2 .en{font-weight:600;font-size:13.5px;align-self:center}
+.erow3{grid-template-columns:minmax(0,1fr) 138px 138px 74px 32px}
+@media (max-width:560px){.erow3{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 62px 30px!important;gap:6px}.erow3 .en{grid-column:1/-1}.erow3 input{min-width:0;width:100%;padding-left:8px;padding-right:6px}}
 .f.sm input{padding:7px 8px;font-size:13px}
 @media (max-width:440px){.erow2{grid-template-columns:minmax(0,1fr) 32px}.erow2 .en{grid-column:1/-1}.erow2 label{grid-column:span 1}.erow2{grid-template-columns:1fr 70px 32px}}
 /* pedido */
@@ -1427,6 +1429,7 @@ function cardsDeTarea(o,t){const L=LIB[t.rubro];const out=[];
    Cada obra tiene la lista de planos que necesita, por carpeta. La misma lista la ven la jefatura,
    la auditoría y el estudio (en su drive). Los ítems de plano de las tarjetas apuntan a su plano. */
 function nuevoSlot(o,r,folder,nombre){const s={id:'p'+(++uid),obra:o,rubro:r,folder,nombre};o.planos.push(s);return s}
+function nuevoSlotM(o,r,folder,nombre){const s=nuevoSlot(o,r,folder,nombre);s.manual=true;return s}
 function slotDe(o,r,nombre){return (o.planos||[]).find(s=>s.nombre===nombre)}
 function buildPlanos(o){o.planos=[];const rs=[...new Set(o.tasks.map(t=>t.rubro))];rs.forEach(r=>(LIB[r].doc||[]).filter(x=>x[1]===PL&&condOk(o,x)).forEach(x=>{if(!o.planos.some(s=>s.nombre===x[0]))nuevoSlot(o,r,x[3]||LIB[r].f,x[0])}))}
 const docSlot=x=>x.slot?x.obra.planos.find(s=>s.id===x.slot):null;
@@ -1514,13 +1517,17 @@ const certEstado=c=>c.estado==='certificada'?'certificada':certFecha(c)-TODAY<30
 /* ===== configuración de las obras guardada en este aparato: modelo, m², inicio, jefatura, jornal, obras nuevas ===== */
 const CFG_LS='nexo2_obras_cfg';
 const CFG_KEYS=['audNombre','nombre','ubic','plantas','subsuelo','pileta','m2','nivel','inicio','jefe','estudio','jornal','dot','late','margen','edits','invitados','imgUrl','sinImg'];
+const BASE_OV={};let BASE_DEF={};
 const cfgPick=o=>{const r={};CFG_KEYS.forEach(k=>{if(o[k]!==undefined)r[k]=o[k]});return r};
 const CFG_ORIG=new Set(OBRAS.map(o=>o.id));
 const CFG_DEF=Object.fromEntries(OBRAS.map(o=>[o.id,JSON.parse(JSON.stringify(cfgPick(o)))]));
-try{const g=JSON.parse(localStorage.getItem(CFG_LS)||'null');if(g){Object.entries(g.mod||{}).forEach(([id,ch])=>{const o=OBRAS.find(x=>x.id===id);if(o)Object.assign(o,ch)});(g.nuevas||[]).forEach(c=>{if(c&&c.id&&!OBRAS.some(x=>x.id===c.id))OBRAS.push(c)});(g.del||[]).forEach(id=>{const i=OBRAS.findIndex(x=>x.id===id);if(i>=0)OBRAS.splice(i,1)})}}catch(e){}
+try{const g=JSON.parse(localStorage.getItem(CFG_LS)||'null');if(g){Object.entries(g.mod||{}).forEach(([id,ch])=>{const o=OBRAS.find(x=>x.id===id);if(o){if(ch.baseOv){BASE_OV[id]=ch.baseOv;delete ch.baseOv}Object.assign(o,ch)}});(g.nuevas||[]).forEach(c=>{if(c&&c.id&&!OBRAS.some(x=>x.id===c.id)){if(c.baseOv){BASE_OV[c.id]=c.baseOv;delete c.baseOv}OBRAS.push(c)}});(g.del||[]).forEach(id=>{const i=OBRAS.findIndex(x=>x.id===id);if(i>=0)OBRAS.splice(i,1)})}}catch(e){}
 let CFG_LAST='';
-function cfgGuardar(){try{const mod={},nuevas=[];OBRAS.forEach(o=>{const cur=cfgPick(o);if(CFG_ORIG.has(o.id)){const d=CFG_DEF[o.id],ch={};CFG_KEYS.forEach(k=>{if(JSON.stringify(cur[k])!==JSON.stringify(d[k]))ch[k]=cur[k]});if(Object.keys(ch).length)mod[o.id]=ch}else nuevas.push({id:o.id,constructora:o.constructora,nuevo:o.nuevo,...cur})});const del=[...CFG_ORIG].filter(id=>!OBRAS.some(o=>o.id===id));const t=JSON.stringify(del.length?{mod,nuevas,del}:{mod,nuevas});if(t!==CFG_LAST){CFG_LAST=t;localStorage.setItem(CFG_LS,t)}}catch(e){}}
+function cfgGuardar(){try{const mod={},nuevas=[];OBRAS.forEach(o=>{const cur=cfgPick(o);if(CFG_ORIG.has(o.id)){const d=CFG_DEF[o.id],ch={};CFG_KEYS.forEach(k=>{if(JSON.stringify(cur[k])!==JSON.stringify(d[k]))ch[k]=cur[k]});{const bo=baseOvDe(o);if(bo)ch.baseOv=bo}if(Object.keys(ch).length)mod[o.id]=ch}else{const bo=baseOvDe(o);nuevas.push({id:o.id,constructora:o.constructora,nuevo:o.nuevo,...cur,...(bo?{baseOv:bo}:{})})}});const del=[...CFG_ORIG].filter(id=>!OBRAS.some(o=>o.id===id));const t=JSON.stringify(del.length?{mod,nuevas,del}:{mod,nuevas});if(t!==CFG_LAST){CFG_LAST=t;localStorage.setItem(CFG_LS,t)}}catch(e){}}
 OBRAS.forEach(buildObra);
+/* cronograma base editado por la Dirección: se guarda aparte y se vuelve a aplicar sobre el que arma el modelo */
+OBRAS.forEach(o=>{BASE_DEF[o.id]=JSON.stringify(o.base);const ov=BASE_OV[o.id];if(Array.isArray(ov)&&ov.length)o.base=ov});
+const baseOvDe=o=>{const k=BASE_DEF[o.id];if(k===undefined){BASE_DEF[o.id]=JSON.stringify(o.base);return null}return JSON.stringify(o.base)!==k?o.base:null};
 
 /* historial: lo resuelto antes de hoy, con una tasa de demora distinta por obra */
 OBRAS.forEach(o=>o.cards.forEach(c=>{const k=timing(c),h=hash(c.id+o.id);
@@ -1969,7 +1976,7 @@ function tabSol(o){
 const CATS=['Generales','Estructura','Arquitectura','Instalaciones','Carpinterías','Terminaciones','Exteriores'];
 const DOC_EST={vigente:'t-verde','en revisión':'t-azul','con observaciones':'t-rojo',reemplazado:'t-ok'};
 function docRow(x){const hist=DOCS.filter(y=>y.obra===x.obra&&y.nombre===x.nombre&&y.estado==='reemplazado').length;const nv=x.nuevo&&['jefe','auditor'].includes(ROLE());
-  return `<div class="docrow ${nv?'nuevo':''}"><span class="dl"><span class="dn">${nv?'<span class="tag t-gold">Nuevo</span> ':''}${esc(x.nombre)}</span><span class="dm">rev ${x.ver} · ${esc(x.por)} · ${fmt(x.fecha)}${hist?` · ${hist} ${hist===1?'versión anterior':'versiones anteriores'}`:''}</span>${x.obs?`<span class="small t-rojo">${esc(x.obs)}</span>`:''}<span class="fbtns">${fileBtns({docId:x.id})}${ROLE()==='auditor'&&x.estado==='en revisión'?`<button class="btn sm gold" data-act="nuevoAud" data-t="rev" data-o="${x.obra.id}" data-doc="${x.id}">Revisar</button>`:''}</span></span><span class="status ${DOC_EST[x.estado]}">${x.estado}</span></div>`}
+  return `<div class="docrow ${nv?'nuevo':''}"><span class="dl"><span class="dn">${nv?'<span class="tag t-gold">Nuevo</span> ':''}${esc(x.nombre)}</span><span class="dm">rev ${x.ver} · ${esc(x.por)} · ${fmt(x.fecha)}${hist?` · ${hist} ${hist===1?'versión anterior':'versiones anteriores'}`:''}</span>${x.obs?`<span class="small t-rojo">${esc(x.obs)}</span>`:''}<span class="fbtns">${fileBtns({docId:x.id})}${!x.slot&&typeof puedePlanos==='function'&&puedePlanos(x.obra)?`<button class="btn sm ghost" data-act="docEdit" data-id="${x.id}">Editar</button><button class="btn sm ghost" data-act="docRen" data-id="${x.id}">Renombrar</button><button class="btn sm red" data-act="docDel" data-id="${x.id}">Eliminar</button>`:''}${ROLE()==='auditor'&&x.estado==='en revisión'?`<button class="btn sm gold" data-act="nuevoAud" data-t="rev" data-o="${x.obra.id}" data-doc="${x.id}">Revisar</button>`:''}</span></span><span class="status ${DOC_EST[x.estado]}">${x.estado}</span></div>`}
 function tabDocs(o){
   const r=ROLE(),puede=r==='estudio'||puedePedir(o);
   const docs=DOCS.filter(x=>x.obra===o&&x.estado!=='reemplazado');
@@ -2725,7 +2732,7 @@ const SUBMIT={
     guardarCod('est',o.id);credGuardar('est',o.id,txt);closeSheet();toast(`Se agregó ${o.nombre}`);draw()},
   tomarObra:async f=>{const id=f.dataset.o,au=ROLE()==='auditor',r=au?'aud':'jefe',txt=val('to-cod'),o=findO(id);if(!normClave(txt)){toast('Escribí el código');return}
     let d;try{d=await codApi({op:'login',rol:r,codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
-    if(!d.ok||d.obra!==id){toast(d.ok?`Ese código es de otra obra, no de ${o.nombre}.`:'Ese código no es válido. Pedíselo a la Dirección.');return}
+    if(!d.ok||d.obra!==id){toast('Código incorrecto');return}
     guardarCod(r,id);credGuardar(r,id,txt);if(au)S.audObras=guardadas('aud');else S.mias=guardadas('jefe');closeSheet();toast(`Ahora tenés a cargo ${o.nombre}`);draw()},
   clavesMulti:async f=>{const r=S.codRol||'jefe';const falla=[];let ok=0;
     for(const id of S.pend.slice()){const o=OBRAS.find(x=>x.id===id),txt=val('cl-m-'+id);if(!normClave(txt)){falla.push(o.nombre);continue}
@@ -2738,10 +2745,10 @@ const SUBMIT={
     let d;try{
       if(r==='cons'){d={ok:false};for(const q of ['dir','jefe','aud']){const x=await codApi({op:'login',rol:q,codigo:txt});if(x.ok){d=x;r=q;break}}}
       else d=await codApi({op:'login',rol:r,codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
-    if(!d.ok){toast(d.error||(r==='dir'?'Código incorrecto':r==='prop'?'Esa clave no es válida. Revisala con tu estudio.':'Ese código no es válido. Pedíselo a la Dirección.'));return}
+    if(!d.ok){toast(d.error||(r==='prop'?'Esa clave no es válida. Revisala con tu estudio.':'Código incorrecto'));return}
     if(r==='dir'){S.dirAuth=txt.toUpperCase().replace(/\s+/g,'');try{localStorage.setItem('nexo2_dirauth',S.dirAuth)}catch(e){}try{document.cookie='nexo2_adm='+encodeURIComponent(S.dirAuth)+';max-age=34560000;path=/;SameSite=Lax'}catch(e){}login('dir');return}
     const o=OBRAS.find(x=>x.id===d.obra);if(!o){toast('Esa obra todavía no está disponible en este dispositivo. Probá de nuevo en unos segundos.');return}
-    if((r==='jefe'||r==='aud')&&S.pend&&S.sel&&!S.sel.includes(o.id)){toast(`Ese código es de ${o.nombre}, que no elegiste. Probá con el código de la obra que marcaste.`);return}
+    if((r==='jefe'||r==='aud')&&S.pend&&S.sel&&!S.sel.includes(o.id)){toast('Código incorrecto');return}
     guardarCod(r,o.id);credGuardar(r,o.id,txt);
     if((r==='jefe'||r==='aud')&&S.pend&&S.pend.length){S.pend=S.pend.filter(x=>x!==o.id);if(S.pend.length){toast(`Código de ${o.nombre} guardado`);draw();return}const ids=S.sel.filter(id=>guardadas(r).includes(id));S.pend=null;if(r==='jefe'){S.mias=ids;login('jefe')}else{S.audObras=ids;login('aud')}return}
     if(r==='est'){S.cons=o.constructora;S.drive={obra:null,cat:null};login('est')}else if(r==='prop'){S.cobra=o.id;S.chat=[];login('cli')}else if(r==='jefe'){S.mias=guardadas('jefe');login('jefe')}else{S.audObras=guardadas('aud');login('aud')}},
@@ -2888,10 +2895,10 @@ function vPedidos(){
 }
 
 /* --- planos por rubro: misma lista para jefatura, auditoría y estudio --- */
-function folderStats(o,f){const ss=o.planos.filter(s=>s.folder===f),st=ss.map(slotEstado);const c=k=>st.filter(x=>x===k).length;return{ss,n:ss.length,vig:c('vigente'),sub:c('subido'),obs:c('con observaciones'),falta:c('falta'),nuevos:ss.filter(s=>slotCur(s)?.nuevo).length}}
+function folderStats(o,f){const ss=o.planos.filter(s=>s.folder===f),st=ss.map(slotEstado);const ex=DOCS.filter(x=>x.obra===o&&x.cat===f&&!x.slot&&x.estado!=='reemplazado');const c=k=>st.filter(x=>x===k).length,e=k=>ex.filter(x=>x.estado===k).length;return{ss,ex,n:ss.length+ex.length,vig:c('vigente')+e('vigente'),sub:c('subido')+e('en revisión'),obs:c('con observaciones')+e('con observaciones'),falta:c('falta'),nuevos:ss.filter(s=>slotCur(s)?.nuevo).length+ex.filter(x=>x.nuevo).length}}
 function foldersDe(o){return FOLDERS.filter(([k])=>o.planos.some(s=>s.folder===k)||DOCS.some(x=>x.obra===o&&x.cat===k&&!x.slot&&x.estado!=='reemplazado'))}
 function rubroBtn(o,k,n,act){const s=folderStats(o,k),ex=DOCS.filter(x=>x.obra===o&&x.cat===k&&!x.slot&&x.estado!=='reemplazado').length;const pct=s.n?Math.round(s.vig/s.n*100):100;const nv=s.nuevos&&['jefe','auditor'].includes(ROLE());
-  return `<button class="rubro ${nv?'nuevo':''}" ${act}><span class="rb-ico">${FOLDSVG(24)}</span><span class="rb-t"><b>${esc(n)}</b><span class="muted small">${s.n?`${s.vig} de ${s.n} vigentes`:''}${s.sub?` · <span class="t-gold">${s.sub} subido${s.sub>1?'s':''}</span>`:''}${s.obs?` · <span class="t-rojo">${s.obs} observado${s.obs>1?'s':''}</span>`:''}${ex?`${s.n?' · ':''}${plural(ex,'archivo más','archivos más')}`:''}</span>${s.n?`<span class="prog"><i class="c-${pct===100?'verde':'gold'}" style="width:${pct}%"></i></span>`:''}</span><span class="go">${nv?'<span class="tag t-gold">Nuevo</span>':''}›</span></button>`}
+  return `<button class="rubro ${nv?'nuevo':''}" ${act}><span class="rb-ico">${FOLDSVG(24)}</span><span class="rb-t"><b>${esc(n)}</b><span class="muted small">${s.n?`${s.vig} de ${s.n} vigentes`:''}${s.sub?` · <span class="t-gold">${s.sub} subido${s.sub>1?'s':''}</span>`:''}${s.obs?` · <span class="t-rojo">${s.obs} observado${s.obs>1?'s':''}</span>`:''}</span>${s.n?`<span class="prog"><i class="c-${pct===100?'verde':'gold'}" style="width:${pct}%"></i></span>`:''}</span><span class="go">${nv?'<span class="tag t-gold">Nuevo</span>':''}›</span></button>`}
 function tabDocs(o){
   const r=ROLE();
   const txt=r==='jefe'?'Un rubro por tarjeta, con todos los planos que necesita. Si un plano te llegó por WhatsApp o mail, cargalo vos: queda subido, le llega a la auditoría y actualiza la tarjeta de esa tarea.':r==='auditor'?'Los mismos rubros que ve la jefatura. Los planos subidos esperan tu revisión: al aprobarlos pasan a vigentes.':r==='estudio'?'Las mismas carpetas que en Documentos. Subí cada plano en su lugar de la lista.':'Planos de la obra por rubro, con su estado.';
@@ -2906,7 +2913,7 @@ function folderBody(o,f){const ss=o.planos.filter(s=>s.folder===f),ex=DOCS.filte
   return `<div class="slots">${ss.map(slotRow).join('')}</div>${ex.length?`<div class="card"><div class="top"><h3>Otros archivos de la carpeta</h3><span class="muted small">${ex.length}</span></div>${ex.map(docRow).join('')}</div>`:''}
   ${can?`<div class="row2"><label class="btn ghost" for="fx-${f}" style="cursor:pointer">+ Agregar PDF o archivo a esta carpeta</label><input id="fx-${f}" type="file" multiple data-chg="folderFile" data-o="${o.id}" data-f="${f}" hidden><button class="btn ghost" data-act="nuevoSlot" data-o="${o.id}" data-f="${f}">+ Sumar un plano a la lista</button></div>`:''}`}
 function sheetRubro(oid,f){const o=findO(oid);const s=folderStats(o,f);
-  openSheet(`<span class="eyebrow">${esc(o.nombre)} · planos</span><h2>${esc(FNAME[f])}</h2><p class="muted small">${s.n?`${s.vig} de ${s.n} vigentes${s.sub?` · ${s.sub} subidos esperando revisión`:''}${s.falta?` · ${s.falta} sin subir`:''}.`:''} Cada plano nuevo le llega a la vez a la jefatura y a la auditoría.</p>${folderBody(o,f)}`,FNAME[f])}
+  openSheet(`<span class="eyebrow">${esc(o.nombre)} · planos</span><h2>${esc(FNAME[f])}</h2><p class="muted small">${s.n?`${s.vig} de ${s.n} vigentes${s.sub?` · ${plural(s.sub,"subido","subidos")} esperando revisión`:''}${s.falta?` · ${s.falta} sin subir`:''}.`:''} Cada plano nuevo le llega a la vez a la jefatura y a la auditoría.</p>${folderBody(o,f)}`,FNAME[f])}
 
 /* --- documentos del estudio: carpetas por rubro con la lista de planos que necesita la obra --- */
 function vDocs(){
@@ -2915,7 +2922,7 @@ function vDocs(){
   const crumbs=`<div class="crumbs"><button data-act="drive" data-o="" data-c="">Documentos</button>${o?`<span>›</span><button data-act="drive" data-o="${o.id}" data-c="">${esc(o.nombre)}</button>`:''}${o&&cat?`<span>›</span><b>${esc(cat==='aud'?'Certificados de auditoría':FNAME[cat])}</b>`:''}</div>`;
   const folder=(l,act,sub)=>`<button class="folder" ${act}>${FOLDSVG(28)}<span><b>${esc(l)}</b><span class="muted small">${sub}</span></span><span class="go">›</span></button>`;
   let body='';
-  if(!o)body=`<div class="folders">${obras.map(x=>{const n=x.planos.length,v=x.planos.filter(s=>slotEstado(s)==='vigente').length,f=x.planos.filter(s=>slotEstado(s)==='falta').length;return folder(x.nombre,`data-act="drive" data-o="${x.id}" data-c=""`,`${v} de ${n} planos vigentes${f?` · <span class="t-naranja">${f} por subir</span>`:''}`)}).join('')}</div>`;
+  if(!o)body=`<div class="folders">${obras.map(x=>{const T=foldersDe(x).reduce((a,[k])=>{const q=folderStats(x,k);a.n+=q.n;a.v+=q.vig;a.f+=q.falta;return a},{n:0,v:0,f:0}),n=T.n,v=T.v,f=T.f;return folder(x.nombre,`data-act="drive" data-o="${x.id}" data-c=""`,`${v} de ${n} planos vigentes${f?` · <span class="t-naranja">${f} por subir</span>`:''}`)}).join('')}</div>`;
   else if(!cat)body=`<p class="muted small">Una carpeta por rubro con la lista de planos que necesita la obra. Subí cada uno en su lugar: le llega a la jefatura y a la auditoría y completa la tarjeta de esa tarea.</p><div class="rubros">${foldersDe(o).map(([k,n])=>rubroBtn(o,k,n,`data-act="drive" data-o="${o.id}" data-c="${k}"`)).join('')}${folder('Certificados de auditoría',`data-act="drive" data-o="${o.id}" data-c="aud"`,plural(AUD.filter(a=>a.obra===o&&a.tipo==='cert').length,'certificado','certificados'))}</div>`;
   else if(cat==='aud')body=`<div class="card">${AUD.filter(a=>a.obra===o&&a.tipo==='cert').map(audRow).join('')||'<span class="muted small">Todavía no hay certificados.</span>'}</div>`;
   else body=folderBody(o,cat);
@@ -3107,14 +3114,14 @@ function sheetEditor(){
   <p class="muted small">${base?'La base es la referencia contra la que se mide la obra. Solo la Dirección la modifica.':'Cambiá la fecha de inicio (con el calendario) y la duración en semanas de cualquier tarea. Las tarjetas se mueven solas con su tarea. La base no cambia.'}</p>
   <p class="diff" id="ed-diff"></p>
   <label class="chk2"><input type="checkbox" data-chg="ecasc" ${ECASC?'checked':''}> Al mover una tarea, correr también las que arrancan después</label>
-  <div class="elist">${L.map(t=>`<div class="erow2" data-id="${t.id}"><span class="en">${esc(t.name)}<span class="muted small" id="ed-r-${t.id}"></span></span><label class="f sm">Inicio<input type="date" id="ed-s-${t.id}" value="${iso(t.start)}" data-chg="eStart" data-id="${t.id}"></label><label class="f sm">Semanas<input type="number" id="ed-w-${t.id}" min="1" max="40" value="${t.weeks}" data-chg="eWeeks" data-id="${t.id}"></label><button class="edel" data-act="edel" data-id="${t.id}" aria-label="Quitar ${esc(t.name)}" ${!base&&t.start<=TODAY?'disabled title="Ya empezó"':''}>✕</button></div>`).join('')}</div>
+  <div class="elist">${L.map(t=>`<div class="erow2${base?' erow3':''}" data-id="${t.id}"><span class="en">${esc(t.name)}<span class="muted small" id="ed-r-${t.id}"></span></span><label class="f sm">Inicio<input type="date" id="ed-s-${t.id}" value="${iso(t.start)}" data-chg="eStart" data-id="${t.id}"></label>${base?`<label class="f sm">Fin<input type="date" id="ed-f-${t.id}" value="${iso(t.end)}" data-chg="eFin" data-id="${t.id}"></label>`:''}<label class="f sm">Semanas<input type="number" id="ed-w-${t.id}" min="1" max="40" value="${t.weeks}" data-chg="eWeeks" data-id="${t.id}"></label><button class="edel" data-act="edel" data-id="${t.id}" aria-label="Quitar ${esc(t.name)}" ${!base&&t.start<=TODAY?'disabled title="Ya empezó"':''}>✕</button></div>`).join('')}</div>
   ${base?'':`<form class="sec boxed" data-submit="eadd"><span class="eyebrow">Agregar tarea o rubro</span><label class="f">Rubro de la biblioteca<select id="ea-rub">${Object.entries(LIB).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join('')}</select></label><label class="f">Nombre<input id="ea-name" placeholder="Ej: Canteros PA (adicional)"></label><div class="row2"><label class="f">Arranca el<input id="ea-ini" type="date" value="${iso(nm)}"></label><label class="f">Semanas<input id="ea-w" type="number" min="1" max="20" value="2"></label></div><label class="chk2"><input type="checkbox" id="ea-ped" checked> Sumar las tarjetas estándar de ese rubro</label><button class="btn gold" type="submit">Agregar</button></form>`}
   <button class="btn gold full" data-act="close">Listo</button>`,'Editar cronograma');
   refreshEditor();
 }
 /* actualiza las filas sin redibujar la hoja: el campo que se está editando no pierde el foco */
 function refreshEditor(){const o=findO(EOID);if(!o)return;const L=EMODO==='base'?o.base:o.tasks;const a=document.activeElement;
-  L.forEach(t=>{const s=$('#ed-s-'+t.id),w=$('#ed-w-'+t.id),r=$('#ed-r-'+t.id);if(s&&s!==a)s.value=iso(t.start);if(w&&w!==a)w.value=t.weeks;if(r)r.textContent=` · termina ${fmt(t.end)}${t.real&&t.real.av>=100?' · terminada':t.real?' · en curso':''}`});
+  L.forEach(t=>{const s=$('#ed-s-'+t.id),w=$('#ed-w-'+t.id),r=$('#ed-r-'+t.id),fi=$('#ed-f-'+t.id);if(fi&&fi!==a)fi.value=iso(t.end);if(s&&s!==a)s.value=iso(t.start);if(w&&w!==a)w.value=t.weeks;if(r)r.textContent=` · termina ${fmt(t.end)}${t.real&&t.real.av>=100?' · terminada':t.real?' · en curso':''}`});
   const dv=desvioSem(o),el=$('#ed-diff');if(el){el.className='diff '+(dv>0?'t-naranja':'muted');el.textContent=`Entrega base ${fmt(finBase(o))} · entrega prevista ${fmt(finObra(o))}${dv?` (${dv>0?'+':''}${dv} sem)`:''}`}}
 const syncReal=t=>{if(t.real){t.real.ini=t.start;if(t.real.fin)t.real.fin=t.end}};
 function moverTarea(L,t,newStart,casc=ECASC){const delta=newStart-t.start;if(!delta)return;const old=t.start;if(casc)L.forEach(x=>{if(x!==t&&x.start>=old){x.start=nextWork(x.start+delta);x.end=x.start+(x.weeks*7-3)*DAY;syncReal(x)}});t.start=newStart;t.end=t.start+(t.weeks*7-3)*DAY;syncReal(t);L.sort((a,b)=>a.start-b.start)}
@@ -3122,6 +3129,7 @@ function durTarea(L,t,w,casc=ECASC){const dw=w-t.weeks;if(!dw)return;const oldEn
 const okFecha=v=>{if(!v)return null;const y=+v.slice(0,4);return y>=2024&&y<=2032?nextWork(d(v)):null};
 CHG.eStart=(v,el)=>{const o=findO(EOID),L=EMODO==='base'?o.base:o.tasks,t=L.find(x=>x.id===el.dataset.id);const f=okFecha(v);if(!f||!t)return;moverTarea(L,t,f);draw();refreshEditor()};
 CHG.eWeeks=(v,el)=>{const o=findO(EOID),L=EMODO==='base'?o.base:o.tasks,t=L.find(x=>x.id===el.dataset.id);if(!t)return;durTarea(L,t,clamp(+v||1,1,40));draw();refreshEditor()};
+CHG.eFin=(v,el)=>{const o=findO(EOID),L=EMODO==='base'?o.base:o.tasks,t=L.find(x=>x.id===el.dataset.id);const f=okFecha(v);if(!f||!t)return;const w=clamp(Math.round((f-t.start+3*DAY)/(7*DAY)),1,40);durTarea(L,t,w);draw();refreshEditor();el.value=iso(t.end)};
 A.editar=ds=>{EOID=S.obra;EMODO=esDir()?'base':'obra';if(!esDir()&&!puedeEditar(findO(EOID)))return;sheetEditor()};
 A.capa=ds=>{S.capas[ds.k]=!S.capas[ds.k];draw()};
 SUBMIT.fechas=f=>{const o=findO(f.dataset.o),t=o.tasks.find(x=>x.id===f.dataset.id);const ini=okFecha(val('tf-ini'));const w=clamp(+val('tf-w')||t.weeks,1,40);const casc=$('#tf-casc')?.checked;if(!ini){toast('Elegí una fecha válida');return}
@@ -3150,7 +3158,7 @@ Object.assign(A,{
 });
 Object.assign(SUBMIT,{
   regEdit:f=>{const r=REGISTRO.find(x=>x.id===f.dataset.id);const t=val('re-txt');if(!t){toast('Escribí qué pasó');return}r.txt=t;r.tipo=val('re-tipo');const h=new Date();r.editado=fmt(TODAY)+' '+String(h.getHours()).padStart(2,'0')+':'+String(h.getMinutes()).padStart(2,'0');closeSheet();toast('Hecho actualizado');draw()},
-  nuevoSlot:f=>{const o=findO(f.dataset.o),n=val('ns-n');if(!n){toast('Poné el nombre del plano');return}const t=o.tasks.find(x=>x.id===val('ns-t'));const s=nuevoSlot(o,t.rubro,f.dataset.f,n);let c=o.cards.find(x=>x.task===t&&x.tipo==='doc');if(!c)c=addCard(o,t,'doc',[],{origen:'manual',created:TODAY,enviada:TODAY});const it=addItem(c,{txt:n,tipo:PL,resp:E,origen:'manual'});it.slot=s.id;notify(ROLE()==='estudio'?'jefe':'estudio',o,`Nuevo plano en la lista de ${FNAME[s.folder]}: ${n}`,{t:'card',id:c.id});toast('Plano sumado a la lista y a la tarjeta');draw();sheetRubro(o.id,f.dataset.f)}
+  nuevoSlot:f=>{const o=findO(f.dataset.o),n=val('ns-n');if(!n){toast('Poné el nombre del plano');return}const t=o.tasks.find(x=>x.id===val('ns-t'));const s=nuevoSlotM(o,t.rubro,f.dataset.f,n);let c=o.cards.find(x=>x.task===t&&x.tipo==='doc');if(!c)c=addCard(o,t,'doc',[],{origen:'manual',created:TODAY,enviada:TODAY});const it=addItem(c,{txt:n,tipo:PL,resp:E,origen:'manual'});it.slot=s.id;notify(ROLE()==='estudio'?'jefe':'estudio',o,`Nuevo plano en la lista de ${FNAME[s.folder]}: ${n}`,{t:'card',id:c.id});toast('Plano sumado a la lista y a la tarjeta');draw();sheetRubro(o.id,f.dataset.f)}
 });
 const _respItem=SUBMIT.respItem;SUBMIT.respItem=f=>keepScroll(()=>_respItem(f));
 const _editItem=SUBMIT.editItem;SUBMIT.editItem=f=>_editItem(f);
@@ -3158,10 +3166,34 @@ Object.assign(CHG,{
   respFile:async(v,el)=>{const f=el.files?.[0];if(!f)return;const t=$('#resp-txt')?.value;const r=await readFile(f);RESPF=r?.id||null;keepScroll(()=>sheetCard(el.dataset.c));if(t&&$('#resp-txt'))$('#resp-txt').value=t},
   slotFile:async(v,el)=>{const f=el.files?.[0];if(!f)return;const o=findO(el.dataset.o),s=o.planos.find(p=>p.id===el.dataset.s);const r=await readFile(f);if(!r)return;const est=ROLE()==='estudio';
     const x=subirPlano(s,r.id,est?S.u.name:'Jefatura · recibido por fuera de la app');toast(`${s.nombre}: subido rev ${x.ver}. Le llega a ${est?'la jefatura y a la auditoría':'la auditoría y al estudio'}`);draw();if(document.querySelector('.sheet'))keepScroll(()=>sheetRubro(o.id,s.folder))},
-  folderFile:async(v,el)=>{const o=findO(el.dataset.o),fd=el.dataset.f;let n=0;for(const f of [...(el.files||[])]){const r=await readFile(f);if(!r)continue;addDoc(o,fd,f.name.replace(/\.[^.]+$/,''),'A','vigente',ROLE()==='estudio'?S.u.name:'Jefatura',TODAY,{file:r.id,nuevo:true});n++}
+  folderFile:async(v,el)=>{const o=findO(el.dataset.o),fd=el.dataset.f;let n=0;for(const f of [...(el.files||[])]){const r=await readFile(f);if(!r)continue;const dx=addDoc(o,fd,f.name.replace(/\.[^.]+$/,''),'A','en revisión',ROLE()==='estudio'?S.u.name:'Jefatura',TODAY,{file:r.id,nuevo:true});notify('auditor',o,`Archivo nuevo para revisar: ${dx.nombre} (${FNAME[fd]})`,{t:'doc',id:dx.id});n++}
     if(n){notify(ROLE()==='estudio'?'jefe':'estudio',o,`${plural(n,'archivo nuevo','archivos nuevos')} en ${FNAME[fd]}`,null);toast(`${plural(n,'archivo agregado','archivos agregados')} a ${FNAME[fd]}`)}draw();if(document.querySelector('.sheet'))keepScroll(()=>sheetRubro(o.id,fd))},
   clFoto:async(v,el)=>{S.misFotos=S.misFotos||[];for(const f of [...(el.files||[])]){const r=await readFile(f);if(r)S.misFotos.unshift(r.id)}toast('Fotos guardadas');draw()}
 });
+
+/* --- JO-02: los archivos y planos agregados a mano se pueden editar, renombrar y eliminar --- */
+function volverCarpeta(o,f){closeSheet();draw();if(ROLE()!=='estudio'&&f)sheetRubro(o.id,f)}
+function sheetNombre(titulo,eb,nombre,submit,attrs,conArchivo){openSheet(`<span class="eyebrow">${eb}</span><h2>${titulo}</h2><form class="sec" data-submit="${submit}" ${attrs}><label class="f">Nombre de la tarjeta<input id="rn-n" value="${esc(nombre)}"></label>${conArchivo?'<label class="f">Reemplazar el archivo (opcional)<input id="rn-f" type="file"></label><p class="muted small">Si cambiás el archivo, vuelve a quedar en revisión para la auditoría.</p>':''}<button class="btn gold" type="submit">Guardar</button></form>`,titulo)}
+Object.assign(A,{
+  docEdit:ds=>{const x=DOCS.find(d=>d.id===ds.id);if(!x)return;sheetNombre('Editar archivo',`${esc(x.obra.nombre)} · ${esc(FNAME[x.cat]||x.cat)}`,x.nombre,'docEdit',`data-id="${x.id}"`,true)},
+  docRen:ds=>{const x=DOCS.find(d=>d.id===ds.id);if(!x)return;sheetNombre('Renombrar tarjeta',`${esc(x.obra.nombre)} · ${esc(FNAME[x.cat]||x.cat)}`,x.nombre,'docEdit',`data-id="${x.id}"`,false)},
+  docDel:ds=>{const x=DOCS.find(d=>d.id===ds.id);if(!x)return;if(!confirm('¿Eliminar este archivo de la carpeta?'))return;const k=DOCS.indexOf(x);if(k>=0)DOCS.splice(k,1);toast('Archivo eliminado');volverCarpeta(x.obra,x.cat)},
+  slotEdit:ds=>{const o=findO(ds.o),sl=o.planos.find(p=>p.id===ds.s);if(!sl)return;sheetNombre('Editar plano',`${esc(o.nombre)} · ${esc(FNAME[sl.folder]||sl.folder)}`,sl.nombre,'slotEdit',`data-o="${o.id}" data-s="${sl.id}"`,true)},
+  slotRen:ds=>{const o=findO(ds.o),sl=o.planos.find(p=>p.id===ds.s);if(!sl)return;sheetNombre('Renombrar tarjeta',`${esc(o.nombre)} · ${esc(FNAME[sl.folder]||sl.folder)}`,sl.nombre,'slotEdit',`data-o="${o.id}" data-s="${sl.id}"`,false)},
+  slotDel:ds=>{const o=findO(ds.o),sl=o.planos.find(p=>p.id===ds.s);if(!sl)return;if(!confirm('¿Eliminar este plano de la carpeta?'))return;
+    slotItems(sl).forEach(i=>{const c=i.card;if(i.origen==='manual'){c.items=c.items.filter(z=>z!==i);if(!c.items.length)o.cards=o.cards.filter(z=>z!==c)}else delete i.slot});
+    for(let k=DOCS.length-1;k>=0;k--)if(DOCS[k].slot===sl.id)DOCS.splice(k,1);
+    o.planos=o.planos.filter(p=>p!==sl);toast('Plano eliminado');volverCarpeta(o,sl.folder)}
+});
+SUBMIT.docEdit=async f=>{const x=DOCS.find(d=>d.id===f.dataset.id);if(!x)return;const n=val('rn-n').trim();if(!n){toast('Poné el nombre');return}
+  const fl=$('#rn-f')?.files?.[0];let r=null;if(fl){r=await readFile(fl);if(!r){toast('No se pudo leer el archivo');return}}
+  x.nombre=n;if(r){x.file=r.id;x.ver=String.fromCharCode((x.ver||'A').charCodeAt(0)+1);x.estado='en revisión';x.nuevo=true;x.fecha=TODAY;notify('auditor',x.obra,`Archivo actualizado para revisar: ${n} (${FNAME[x.cat]||x.cat})`,{t:'doc',id:x.id})}
+  toast('Cambios guardados');volverCarpeta(x.obra,x.cat)};
+SUBMIT.slotEdit=async f=>{const o=findO(f.dataset.o),sl=o.planos.find(p=>p.id===f.dataset.s);if(!sl)return;const n=val('rn-n').trim();if(!n){toast('Poné el nombre');return}
+  const fl=$('#rn-f')?.files?.[0];let r=null;if(fl){r=await readFile(fl);if(!r){toast('No se pudo leer el archivo');return}}
+  sl.nombre=n;slotItems(sl).forEach(i=>{i.txt=n});slotDocs(sl).forEach(x=>{x.nombre=n});
+  if(r)subirPlano(sl,r.id,ROLE()==='estudio'?S.u.name:porFuera());
+  toast('Cambios guardados');volverCarpeta(o,sl.folder)};
 function updCasa(){const w=document.querySelector('.casa-wrap');if(!w){draw();return}const tmp=document.createElement('div');tmp.innerHTML=vCliente();
   ['.casa-wrap','.hitos.h7'].forEach(s=>{const a=document.querySelector(s),b=tmp.querySelector(s);if(a&&b)a.replaceWith(b)});const rg=document.querySelector('.casa-rng');if(rg&&+rg.value!==S.casa)rg.value=S.casa}
 document.addEventListener('input',e=>{const el=e.target.closest('[data-inp]');if(!el)return;
@@ -3268,7 +3300,7 @@ function slotRow(s){const r=ROLE(),cur=slotCur(s),st=slotEstado(s),[lab,cls]=SLO
   const rec=st==='falta'&&(puedePedir(s.obra)||esDir())?`<button class="btn sm red" data-act="reclamar" data-o="${s.obra.id}" data-s="${s.id}">Reclamar al estudio</button>`:'';
   return `<div class="slot st-${st.replace(' ','-')} ${nv?'nuevo':''}"><div class="sl-h"><span class="sl-n">${nv?'<span class="tag t-gold">Nuevo</span> ':''}${esc(s.nombre)}</span><span class="status ${cls}">${lab}</span></div>
   <span class="dm">${cur?`rev ${cur.ver} · ${esc(cur.por)} · ${fmt(cur.fecha)}${hist?` · ${plural(hist,'versión anterior','versiones anteriores')}`:''}`:'Todavía no se subió'}${ts.length?` · para ${esc(ts[0].name)} (${fmt(ts[0].start)})`:''}</span>${cur&&cur.obs?`<span class="small t-rojo">${esc(cur.obs)}</span>`:''}${s.reclamos?`<span class="small t-naranja">Reclamado ${plural(s.reclamos,'vez','veces')} · último ${fmt(s.ultReclamo)}</span>`:''}
-  <span class="fbtns">${cur?fileBtns({docId:cur.id}):''}${r==='auditor'&&st==='subido'?`<button class="btn sm gold" data-act="nuevoAud" data-t="rev" data-o="${s.obra.id}" data-doc="${cur.id}">Revisar</button>`:''}${rec}${up}</span></div>`}
+  <span class="fbtns">${cur?fileBtns({docId:cur.id}):''}${r==='auditor'&&st==='subido'?`<button class="btn sm gold" data-act="nuevoAud" data-t="rev" data-o="${s.obra.id}" data-doc="${cur.id}">Revisar</button>`:''}${s.manual&&puedePlanos(s.obra)?`<button class="btn sm ghost" data-act="slotEdit" data-o="${s.obra.id}" data-s="${s.id}">Editar</button><button class="btn sm ghost" data-act="slotRen" data-o="${s.obra.id}" data-s="${s.id}">Renombrar</button><button class="btn sm red" data-act="slotDel" data-o="${s.obra.id}" data-s="${s.id}">Eliminar</button>`:''}${rec}${up}</span></div>`}
 function folderBody(o,f){const ss=o.planos.filter(s=>s.folder===f),ex=DOCS.filter(x=>x.obra===o&&x.cat===f&&!x.slot&&x.estado!=='reemplazado');const can=puedePlanos(o);const falt=ss.filter(s=>slotEstado(s)==='falta').length;const rec=(puedePedir(o)||esDir())&&falt>1;
   return `${rec?`<button class="btn red full" data-act="reclamarTodos" data-o="${o.id}" data-f="${f}">Reclamar los ${falt} planos que faltan</button>`:''}<div class="slots">${ss.map(slotRow).join('')||'<p class="muted small">Esta carpeta todavía no tiene planos en la lista.</p>'}</div>${ex.length?`<div class="card"><div class="top"><h3>Otros archivos de la carpeta</h3><span class="muted small">${ex.length}</span></div>${ex.map(docRow).join('')}</div>`:''}
   ${can?`<div class="fold-acts">${ROLE()==='estudio'?'':`<label class="btn ghost" for="fp-${f}" style="cursor:pointer">+ Cargar plano recibido por fuera de la app</label><input id="fp-${f}" type="file" multiple data-chg="folderPlano" data-o="${o.id}" data-f="${f}" hidden>`}<label class="btn ghost" for="fx-${f}" style="cursor:pointer">+ Agregar PDF o archivo</label><input id="fx-${f}" type="file" multiple data-chg="folderFile" data-o="${o.id}" data-f="${f}" hidden><button class="btn ghost" data-act="nuevoSlot" data-o="${o.id}" data-f="${f}">+ Sumar un plano a la lista</button></div>`:''}`}
@@ -3286,7 +3318,7 @@ SUBMIT.nuevaCarpeta=f=>{const o=findO(f.dataset.o),n=val('nc-n');if(!n){toast('P
 Object.assign(CHG,{
   slotFile:async(v,el)=>{const f=el.files?.[0];if(!f)return;const o=findO(el.dataset.o),s=o.planos.find(p=>p.id===el.dataset.s);const r=await readFile(f);if(!r)return;const est=ROLE()==='estudio';
     const x=subirPlano(s,r.id,est?S.u.name:porFuera());toast(`${s.nombre}: subido rev ${x.ver}. Le llega a ${est?'la jefatura y a la auditoría':'la auditoría y al estudio'}`);draw();if(document.querySelector('.sheet'))keepScroll(()=>sheetRubro(o.id,s.folder))},
-  folderPlano:async(v,el)=>{const o=findO(el.dataset.o),fd=el.dataset.f;let n=0;for(const f of [...(el.files||[])]){const r=await readFile(f);if(!r)continue;const nombre=f.name.replace(/\.[^.]+$/,'');const s=o.planos.find(p=>p.folder===fd&&p.nombre===nombre)||nuevoSlot(o,null,fd,nombre);subirPlano(s,r.id,porFuera());n++}
+  folderPlano:async(v,el)=>{const o=findO(el.dataset.o),fd=el.dataset.f;let n=0;for(const f of [...(el.files||[])]){const r=await readFile(f);if(!r)continue;const nombre=f.name.replace(/\.[^.]+$/,'');const s=o.planos.find(p=>p.folder===fd&&p.nombre===nombre)||nuevoSlotM(o,null,fd,nombre);subirPlano(s,r.id,porFuera());n++}
     if(n)toast(`${plural(n,'plano cargado','planos cargados')} en ${FNAME[fd]}: le llega a la auditoría y al estudio`);draw();if(document.querySelector('.sheet'))keepScroll(()=>sheetRubro(o.id,fd))},
   itemCant:(v,el)=>{const c=findC(el.dataset.c),i=c&&c.items.find(x=>x.id===el.dataset.i);if(!i)return;i.cant=v.trim();toast(i.cant?`Cantidad guardada: ${i.cant}`:'Cantidad borrada')}
 });
@@ -3717,10 +3749,17 @@ async function avLoad(o,fuerza){
   catch(e){a.error='No se pudieron cargar los avances. Revisá la conexión.';if(!a.items)a.items=[];a.t=Date.now()}
   a.cargando=false;draw();
 }
+const AVCMP={};
+function avCmpHtml(x,o){const c=AVCMP[x.id];
+  if(!c)return `<div style="margin:6px 0"><button class="btn sm" data-act="avComparar" data-o="${o.id}" data-id="${x.id}">Comparar con fotos anteriores (IA)</button></div>`;
+  if(c.cargando)return '<div class="avres muted">Comparando con fotos anteriores…</div>';
+  if(c.error)return `<div class="avres"><span class="small t-rojo">${esc(c.error)}</span></div><div style="margin:6px 0"><button class="btn sm" data-act="avComparar" data-o="${o.id}" data-id="${x.id}">Probar de nuevo</button></div>`;
+  return `<div class="avres sug"><span class="eyebrow">Sugerencia de la IA · compara el ${fAR(c.previo.fecha)} con el ${fAR(c.actual.fecha)}</span>${esc(c.texto)}<div class="small muted" style="margin-top:6px">Es una sugerencia: no queda en el registro de la obra hasta que la confirmes.</div><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm gold" data-act="avGuardarSug" data-o="${o.id}" data-id="${x.id}">Guardar en el avance</button><button class="btn sm ghost" data-act="avDescartarSug" data-id="${x.id}">Descartar</button></div></div>`}
 function avItem(x,o,borrar){
   return `<div class="card avc"><div class="top"><b>${fAR(x.fecha)} · ${hAR(x.fecha)}</b>${x.sector?`<span class="chip">${esc(x.sector)}</span>`:''}</div>
   ${x.txt?`<p style="margin:6px 0">${esc(x.txt)}</p>`:''}
   ${x.resumen?`<div class="avres"><span class="eyebrow">Avance respecto a la foto anterior</span>${esc(x.resumen)}</div>`:(AVPEND.has(x.id)?'<div class="avres muted">Analizando las fotos con IA…</div>':'')}
+  ${borrar&&x.fotos&&x.fotos.length?avCmpHtml(x,o):''}
   ${x.fotos&&x.fotos.length?`<div class="avgrid">${x.fotos.map(u=>`<button type="button" class="avph" data-act="verFotoAv" data-u="${esc(u)}" aria-label="Ver foto"><img src="${esc(u)}" alt="Avance de obra" loading="lazy"></button>`).join('')}</div>`:''}
   <span class="muted small">${esc(x.autor||'')}</span>${borrar?`<button class="btn sm ghost" data-act="avEditar" data-o="${o.id}" data-id="${x.id}" style="margin-left:8px">Editar</button><button class="btn sm ghost" data-act="avBorrar" data-o="${o.id}" data-id="${x.id}" style="margin-left:8px">Borrar</button>`:''}</div>`;
 }
@@ -3743,11 +3782,14 @@ function avSheet(){
   const o=findO(AVF.obra);const tareas=[...new Set((o.tasks||[]).map(t=>t.name))];
   openSheet(`<span class="eyebrow">${esc(o.nombre)}</span><h2>${AVF.id?'Editar avance':'Cargar avance'}</h2><div class="sec">
   <label class="f">¿Qué sector o tarea?<select id="av-sec"><option value="">General de la obra</option>${tareas.map(n=>`<option ${AVF.sector===n?'selected':''}>${esc(n)}</option>`).join('')}</select></label>
+  <label class="f">Fecha de las fotos<input type="date" id="av-fecha" value="${esc(AVF.fecha||isoAR(Date.now()))}" max="${isoAR(Date.now())}"></label>
   <label class="f">Qué se hizo<textarea id="av-txt" rows="3" placeholder="Ej.: se terminó el hormigonado de la losa de planta baja">${esc(AVF.txt||'')}</textarea></label>
   ${AVF.id?`<label class="f">Avance respecto a la foto anterior (texto del análisis)<textarea id="av-res" rows="4">${esc(AVF.resumen||'')}</textarea></label>`:''}<span class="eyebrow">Fotos</span><div class="thumbs2">${AVF.fotos.map((f,i)=>`<span><img src="${f}" alt=""><button type="button" data-act="avQuitarFoto" data-i="${i}" aria-label="Quitar foto">✕</button></span>`).join('')}<label class="addph" for="av-foto">+</label><input id="av-foto" type="file" accept="image/*" multiple data-chg="avFoto" hidden></div>
   <button class="btn gold full" data-act="avGuardar" ${AVF.sub?'disabled':''}>${AVF.sub?'Subiendo… '+AVF.sub:AVF.id?'Guardar cambios':'Guardar avance'}</button><button class="btn full" data-act="close">Cancelar</button></div>`,'Cargar avance');
 }
-function avLeer(){if(!AVF||!$('#av-txt'))return;AVF.txt=$('#av-txt').value;AVF.sector=$('#av-sec').value;if($('#av-res'))AVF.resumen=$('#av-res').value}
+const isoAR=t=>new Date(t-108e5).toISOString().slice(0,10);
+const fechaAv=iso=>{const hoy=isoAR(Date.now());if(!/^\d{4}-\d{2}-\d{2}$/.test(iso||'')||iso>=hoy)return Date.now();return Date.parse(iso+'T12:00:00-03:00')};
+function avLeer(){if(!AVF||!$('#av-txt'))return;if($('#av-fecha'))AVF.fecha=$('#av-fecha').value;AVF.txt=$('#av-txt').value;AVF.sector=$('#av-sec').value;if($('#av-res'))AVF.resumen=$('#av-res').value}
 function reducir(file,max=1400,q=.72){return new Promise(res=>{const r=new FileReader();r.onerror=()=>res(null);r.onload=()=>{const im=new Image();im.onerror=()=>res(null);im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',q))};im.src=r.result};r.readAsDataURL(file)})}
 Object.assign(A,{
   avImport:async()=>{
@@ -3766,24 +3808,32 @@ Object.assign(A,{
     try{const r=await codApi({op:'av_import',dir:dirAuthGet(),modo:'run',map});closeSheet();toast(`Listo: ${r.creados} avances traídos`+(r.saltados?` (${r.saltados} ya estaban)`:'')+(r.completados?` · ${r.completados} informes completados`:''));Object.keys(AVS).forEach(k=>delete AVS[k]);draw()}
     catch(e){toast('No se pudo traer. Probá de nuevo.')}
   },
-  avNuevo:ds=>{AVF={obra:ds.o,sector:'',txt:'',fotos:[],sub:''};avSheet()},
-  avEditar:ds=>{const o=findO(ds.o),x=((AVS[o.id]||{}).items||[]).find(y=>y.id===ds.id);if(!x)return;AVF={obra:o.id,id:x.id,sector:x.sector||'',txt:x.txt||'',resumen:x.resumen||'',fotos:(x.fotos||[]).slice(),sub:''};avSheet()},
+  avNuevo:ds=>{AVF={obra:ds.o,sector:'',txt:'',fotos:[],sub:'',fecha:isoAR(Date.now())};avSheet()},
+  avEditar:ds=>{const o=findO(ds.o),x=((AVS[o.id]||{}).items||[]).find(y=>y.id===ds.id);if(!x)return;AVF={obra:o.id,id:x.id,fecha:isoAR(x.fecha),fechaOrig:isoAR(x.fecha),sector:x.sector||'',txt:x.txt||'',resumen:x.resumen||'',fotos:(x.fotos||[]).slice(),sub:''};avSheet()},
+  avComparar:async ds=>{const o=findO(ds.o),cr=credAv(o);if(!cr||!cr.codigo){toast('Para comparar volvé a ingresar tu código (Salir y entrar de nuevo).');return}
+    AVCMP[ds.id]={cargando:true};draw();
+    try{const r=await codApi({op:'av_comparar',obra:o.id,cred:cr,id:ds.id});AVCMP[ds.id]=r.ok?{texto:r.texto,previo:r.previo,actual:r.actual}:{error:r.error||'No se pudo comparar las fotos.'}}
+    catch(e){AVCMP[ds.id]={error:'No se pudo analizar las fotos. Probá de nuevo.'}}draw()},
+  avGuardarSug:async ds=>{const o=findO(ds.o),cr=credAv(o),x=((AVS[o.id]||{}).items||[]).find(y=>y.id===ds.id),c=AVCMP[ds.id];if(!x||!c||!c.texto)return;
+    try{const e=await codApi({op:'av_edit',obra:o.id,cred:cr,id:x.id,item:{sector:x.sector||'',txt:x.txt||'',fotos:x.fotos||[],resumen:c.texto}});if(!e.ok)throw new Error(e.error||'guardar');delete AVCMP[ds.id];toast('Análisis guardado en el avance');avLoad(o,true)}catch(e){toast('No se pudo guardar el análisis. Probá de nuevo.')}},
+  avDescartarSug:ds=>{delete AVCMP[ds.id];draw()},
   avQuitarFoto:ds=>{avLeer();AVF.fotos.splice(+ds.i,1);avSheet()},
   verFotoAv:ds=>{const f=addFile('Foto de avance','image/jpeg',ds.u);sheetArchivo({f:f.id})},
   avBorrar:async ds=>{const o=findO(ds.o),cr=credAv(o);if(!cr)return;if(!confirm('¿Borrar este avance?'))return;try{await codApi({op:'av_del',obra:o.id,cred:cr,id:ds.id});toast('Avance borrado');avLoad(o,true)}catch(e){toast('No se pudo borrar. Volvé a ingresar tu código.')}},
   avGuardar:async()=>{
     avLeer();const o=findO(AVF.obra),cr=credAv(o);
+    if(AVF.fecha&&AVF.fecha>isoAR(Date.now())){toast('La fecha no puede ser futura');return}
     if(!AVF.txt.trim()&&!AVF.fotos.length&&!(AVF.resumen||'').trim()){toast('Cargá una foto o escribí qué se hizo');return}
     if(!cr||!cr.codigo){toast('Para cargar avances volvé a ingresar tu código (Salir y entrar de nuevo).');return}
     try{
       const urls=[];let nuevas=0;
       for(let i=0;i<AVF.fotos.length;i++){if(!AVF.fotos[i].startsWith('data:')){urls.push(AVF.fotos[i]);continue}AVF.sub=`foto ${i+1} de ${AVF.fotos.length}`;avSheet();const r=await codApi({op:'av_foto',obra:o.id,cred:cr,data:AVF.fotos[i]});if(!r.url)throw new Error(r.error||'foto');urls.push(r.url);nuevas++}
-      if(AVF.id){AVF.sub='guardando';avSheet();const e=await codApi({op:'av_edit',obra:o.id,cred:cr,id:AVF.id,item:{sector:AVF.sector,txt:AVF.txt.trim(),fotos:urls,resumen:AVF.resumen||''}});if(!e.ok)throw new Error(e.error||'guardar');const id=AVF.id;closeSheet();AVF=null;toast('Avance actualizado');S.otab='avances';
+      if(AVF.id){AVF.sub='guardando';avSheet();const e=await codApi({op:'av_edit',obra:o.id,cred:cr,id:AVF.id,item:{sector:AVF.sector,txt:AVF.txt.trim(),fotos:urls,resumen:AVF.resumen||'',...(AVF.fecha&&AVF.fecha!==AVF.fechaOrig?{fecha:fechaAv(AVF.fecha)}:{})}});if(!e.ok)throw new Error(e.error||'guardar');const id=AVF.id;closeSheet();AVF=null;toast('Avance actualizado');S.otab='avances';
         if(nuevas){AVPEND.add(id);codApi({op:'av_resumen',obra:o.id,cred:cr,id}).catch(()=>{}).finally(()=>{AVPEND.delete(id);avLoad(o,true)})}
         avLoad(o,true);return}
       AVF.sub='guardando';avSheet();
       const au=ROLE()==='direccion'?'Dirección':(o.jefe||'Jefatura de obra');
-      const r=await codApi({op:'av_add',obra:o.id,cred:cr,item:{fecha:Date.now(),sector:AVF.sector,txt:AVF.txt.trim(),fotos:urls,autor:au}});
+      const r=await codApi({op:'av_add',obra:o.id,cred:cr,item:{fecha:fechaAv(AVF.fecha),sector:AVF.sector,txt:AVF.txt.trim(),fotos:urls,autor:au}});
       if(!r.ok)throw new Error(r.error||'guardar');
       closeSheet();AVF=null;toast('Avance guardado');S.otab='avances';
       if(urls.length&&r.item){AVPEND.add(r.item.id);codApi({op:'av_resumen',obra:o.id,cred:cr,id:r.item.id}).catch(()=>{}).finally(()=>{AVPEND.delete(r.item.id);avLoad(o,true)})}
@@ -3807,8 +3857,9 @@ async function subir(k){
   const v=lget(k);if(v==null||v===VACIO)return;
   const t=Date.now();
   try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:MAP[k],t,v})});
-    if(r.ok){lset('nexo2_sync_t_'+k,String(t));sucio.delete(k)}}catch(e){}
+    if(r.ok){lset('nexo2_sync_t_'+k,String(t));sucio.delete(k);falloAviso=false}else throw new Error('http')}catch(e){if(!falloAviso){falloAviso=true;try{toast('No se pudo guardar en la nube. El cambio quedó solo en este aparato; revisá la conexión.')}catch(x){}}}
 }
+let falloAviso=false;
 Storage.prototype.setItem=function(k,v){
   if(this===localStorage&&MAP[k]){const antes=lget(k);rawSet.call(this,k,v);if(antes!==v){sucio.add(k);if(listo){clearTimeout(tim[k]);tim[k]=setTimeout(()=>subir(k),700)}}return}
   return rawSet.call(this,k,v);
@@ -3832,13 +3883,15 @@ async function bajar(){
   }catch(e){}
   listo=true;
   if(cambio){
-    const ocupado=document.querySelector('#layer .sheet,input:focus,textarea:focus');
-    if(!ocupado)location.reload();
+    const ocupado=()=>document.querySelector('#layer .sheet,input:focus,textarea:focus');
+    if(!ocupado())location.reload();
+    else{const iv=setInterval(()=>{if(!ocupado()){clearInterval(iv);location.reload()}},2000)}
   }
   sucio.forEach(k=>subir(k));
 }
 bajar();
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')bajar()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')bajar();else sucio.forEach(k=>{clearTimeout(tim[k]);subir(k)})});
+setInterval(()=>{if(document.visibilityState==='visible'&&listo)bajar()},25000);
 setInterval(()=>{if(document.visibilityState==='visible')bajar()},45000);
 }
 
