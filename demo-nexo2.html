@@ -173,7 +173,7 @@ input,select,textarea{background:var(--bg);color:var(--fg);border:1px solid var(
 .ohead{display:flex;flex-direction:column;gap:10px}
 .back{border:0;background:none;color:var(--muted);padding:0;font-size:14px;align-self:flex-start}
 .hero{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:block}
-.hero2{display:grid;grid-template-columns:1fr 1fr;gap:6px}.hero2 img{width:100%;height:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:block}@media (min-width:700px){.hero2 img{aspect-ratio:4/3;max-height:42vh}}
+.hero2{display:grid;grid-template-columns:1fr 1fr;gap:6px}.hero2 .hs{position:relative;aspect-ratio:3/4;border-radius:12px;border:1px solid var(--line);overflow:hidden;background:#000}.hero2 .hs img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease}.hero2 .hs img.on{opacity:1}@media (min-width:700px){.hero2 .hs{aspect-ratio:4/3;max-height:42vh}}
 .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .fact{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0}
 .fact span{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
@@ -1525,7 +1525,7 @@ const certFecha=c=>['losa','fund','pileta'].includes(c.task.rubro)?c.task.end-2*
 const certEstado=c=>c.estado==='certificada'?'certificada':certFecha(c)-TODAY<30*DAY?'pendiente':'programada';
 /* ===== configuración de las obras guardada en este aparato: modelo, m², inicio, jefatura, jornal, obras nuevas ===== */
 const CFG_LS='nexo2_obras_cfg';
-const CFG_KEYS=['audNombre','nombre','ubic','plantas','subsuelo','pileta','m2','nivel','inicio','jefe','estudio','jornal','dot','late','margen','edits','invitados','imgUrl','sinImg'];
+const CFG_KEYS=['audNombre','nombre','ubic','plantas','subsuelo','pileta','m2','nivel','inicio','jefe','estudio','jornal','dot','late','margen','edits','invitados','imgUrl','sinImg','renders','rndOcultos'];
 const BASE_OV={};let BASE_DEF={};
 const cfgPick=o=>{const r={};CFG_KEYS.forEach(k=>{if(o[k]!==undefined)r[k]=o[k]});return r};
 const CFG_ORIG=new Set(OBRAS.map(o=>o.id));
@@ -1808,11 +1808,23 @@ function imgVacia(o){const t=String(o.constructora||ORG||'');if(_phC[t])return _
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450"><rect width="800" height="450" fill="#000"/><image href="${LOGO}" x="270" y="60" width="260" height="228" preserveAspectRatio="xMidYMid meet"/><text x="400" y="345" fill="#c9a45c" font-family="Georgia,serif" font-size="30" letter-spacing="6" text-anchor="middle">${t.toUpperCase().replace(/[<>&"]/g,'')}</text><text x="400" y="385" fill="#8d8f96" font-family="Arial,sans-serif" font-size="18" letter-spacing="3" text-anchor="middle">SIN RENDER TODAVÍA</text></svg>`;
   return _phC[t]='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)}
 const HERO_GAL=true,HERO_DUP={o1:0,o2:1,o3:0,o4:0};
-function heroDos(o){const a=img(o);let b='';try{const r=(RENDERS[o.id]||[]).map(x=>Array.isArray(x)?x[0]:x).filter((x,i)=>typeof x==='string'&&i!==HERO_DUP[o.id]&&x!==a);b=r[0]||''}catch(e){}
-  if(!b&&HERO_GAL){const g=GAL.filter(x=>x!==a);if(g.length){let h=0;for(const c of String(o.id))h+=c.charCodeAt(0);b=g[h%g.length]}}
-  if(!b)b=imgVacia(o);
-  return `<div class="hero2"><img src="${a}" alt="Render de ${esc(o.nombre)}"><img src="${b}" alt="${esc(o.nombre)}"></div>`}
-const img=o=>o.imgUrl||(o.sinImg?imgVacia(o):(FOTOS[o.id]||imgVacia(o)));
+/* renders de la obra: los de siempre (menos los que se quitaron) + los que carga la Dirección (guardados en la nube dentro de la config) */
+const imgBase=o=>o.imgUrl||(o.sinImg?'':(FOTOS[o.id]||''));
+function rendersItems(o){const r=[],oc=o.rndOcultos||[],m=imgBase(o);
+  if(m)r.push({k:o.imgUrl?'u':'f',u:m});
+  (RENDERS[o.id]||[]).map(x=>Array.isArray(x)?x[0]:x).forEach((x,i)=>{if(typeof x==='string'&&i!==HERO_DUP[o.id]&&x!==m)r.push({k:'r'+i,u:x})});
+  const base=r.filter(x=>!oc.includes(x.k));
+  return [...base,...(o.renders||[]).map(u=>({k:u,u,nuevo:true}))]}
+const rendersDe=o=>rendersItems(o).map(x=>x.u);
+const img=o=>rendersDe(o)[0]||imgVacia(o);
+let HEROT=0;
+function heroPar(o){const L=rendersDe(o),n=L.length;if(!n)return[imgVacia(o),imgVacia(o)];if(n===1)return[L[0],imgVacia(o)];if(n===2)return[L[0],L[1]];return[L[HEROT%n],L[(HEROT+1)%n]]}
+function heroDos(o){const[a,b]=heroPar(o);
+  return `<div class="hero2" data-o="${o.id}">${[a,b].map((u,i)=>`<div class="hs"><img class="on" src="${esc(u)}" alt="${i?esc(o.nombre):'Render de '+esc(o.nombre)}"><img src="" alt="" aria-hidden="true"></div>`).join('')}</div>`}
+/* pase automático y suave de los renders (solo visual, sin controles) */
+setInterval(()=>{if(document.hidden)return;const hs=document.querySelectorAll('.hero2[data-o]');if(!hs.length)return;HEROT++;
+  hs.forEach(h=>{const o=findO(h.dataset.o);if(!o||rendersDe(o).length<3)return;const par=heroPar(o);h.querySelectorAll('.hs').forEach((sl,i)=>{const cur=sl.querySelector('img.on'),nx=[...sl.querySelectorAll('img')].find(x=>x!==cur);if(!cur||!nx||cur.getAttribute('src')===par[i])return;
+    nx.onload=()=>{nx.classList.add('on');cur.classList.remove('on')};nx.src=par[i]})})},4500);
 const LOCKSVG='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 const CICON={doc:'<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',mat:'<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',ope:'<path d="M4 20h16M6 20V10l6-5 6 5v10"/><path d="M10 20v-5h4v5"/>',ser:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'};
 const cico=(t,s=18)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${CICON[t]}</svg>`;
@@ -2661,11 +2673,11 @@ const A={
   emodo:ds=>{EMODO=ds.m;sheetEditor()},
   edel:ds=>{const o=findO(EOID);if(EMODO==='base'){o.base=o.base.filter(x=>x.id!==ds.id);toast('Se quitó de la base')}else{const t=o.tasks.find(x=>x.id===ds.id);o.tasks=o.tasks.filter(x=>x!==t);o.cards=o.cards.filter(c=>c.task!==t);o.cert=o.cert.filter(c=>c.task!==t);toast(`Se quitó ${t.name} y sus tarjetas`)}draw();sheetEditor()},
   editarObra:ds=>{const o=findO(ds.o);if(!o||!esDir())return;const js=[...new Set(['Gonzalo','Camila','Tomás','Julieta',o.jefe].filter(Boolean))];
-    openSheet(`<span class="eyebrow">Dirección</span><h2>Editar ${esc(o.nombre)}</h2><form class="sec" data-submit="editarObra" data-o="${o.id}"><label class="f">Nombre<input id="eo-nom" value="${esc(o.nombre)}"></label><label class="f">Ubicación<input id="eo-ubi" value="${esc(o.ubic||'')}"></label><div class="row2"><label class="f">Jefatura de obra<select id="eo-jefe">${js.map(j=>`<option ${o.jefe===j?'selected':''}>${esc(j)}</option>`).join('')}</select></label><label class="f">Estudio<input id="eo-est" value="${esc(o.estudio||'')}"></label></div><span class="eyebrow">Render de la obra</span><div style="display:flex;gap:12px;align-items:center"><img src="${img(o)}" alt="" style="width:96px;height:64px;object-fit:cover;border-radius:8px"><label class="btn sm" for="eo-img" style="cursor:pointer">Cargar otro render</label><button class="btn sm ghost" type="button" data-act="quitarRender" data-o="${o.id}">Quitar imagen</button><input id="eo-img" type="file" accept="image/*" data-chg="eoImg" data-o="${o.id}" hidden></div><p class="muted small">Para cambiar plantas, superficie, terminación o fecha de inicio usá "Cambiar modelo".</p><button class="btn gold" type="submit">Guardar cambios</button><button class="btn" type="button" data-act="close">Cancelar</button><button class="btn ghost" type="button" data-act="eliminarObra" data-o="${o.id}" style="color:#c0392b">Eliminar esta obra</button></form>`,'Editar obra')},
+    openSheet(`<span class="eyebrow">Dirección</span><h2>Editar ${esc(o.nombre)}</h2><form class="sec" data-submit="editarObra" data-o="${o.id}"><label class="f">Nombre<input id="eo-nom" value="${esc(o.nombre)}"></label><label class="f">Ubicación<input id="eo-ubi" value="${esc(o.ubic||'')}"></label><div class="row2"><label class="f">Jefatura de obra<select id="eo-jefe">${js.map(j=>`<option ${o.jefe===j?'selected':''}>${esc(j)}</option>`).join('')}</select></label><label class="f">Estudio<input id="eo-est" value="${esc(o.estudio||'')}"></label></div><span class="eyebrow">Render de la obra</span><div class="infph">${rendersItems(o).map(x=>`<div class="ph1"><span><img src="${esc(x.u)}" alt="Render"><button type="button" data-act="quitarRender" data-o="${o.id}" data-k="${esc(x.k)}" aria-label="Quitar este render">✕</button></span></div>`).join('')||'<span class="muted small">Todavía no hay renders: se ve el logo.</span>'}</div><div><label class="btn sm" for="eo-img" style="cursor:pointer">Cargar otro render</label><input id="eo-img" type="file" accept="image/*" multiple data-chg="eoImg" data-o="${o.id}" hidden></div><p class="muted small">Para cambiar plantas, superficie, terminación o fecha de inicio usá "Cambiar modelo".</p><button class="btn gold" type="submit">Guardar cambios</button><button class="btn" type="button" data-act="close">Cancelar</button><button class="btn ghost" type="button" data-act="eliminarObra" data-o="${o.id}" style="color:#c0392b">Eliminar esta obra</button></form>`,'Editar obra')},
   codFaltan:()=>{OBRAS.forEach(codInit);codGuardarLS();toast('Códigos generados');draw()},
   agregarObraEst:()=>openSheet(`<span class="eyebrow">Estudio</span><h2>Agregar obra</h2><p class="muted">Poné el código que te dio la constructora para la nueva obra.</p><form class="frm" data-submit="agregarObraEst"><label class="f">Código de la obra<input id="ae-cod" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ej.: E-LP132-0000" style="letter-spacing:.08em;text-transform:uppercase"></label><button class="btn gold" type="submit">Agregar</button><button class="btn" type="button" data-act="close">Cancelar</button></form>`,'Agregar obra'),
   brillo:()=>openSheet(`<span class="eyebrow">Aspecto</span><h2>Del blanco al negro</h2><p class="muted small">Deslizá el cursor.</p>${nivelSlider()}<button class="btn" type="button" data-act="close">Listo</button>`,'Brillo'),
-  quitarRender:ds=>{const o=findO(ds.o);if(!o||!esDir())return;if(!confirm('¿Quitar la imagen de esta obra? Va a quedar el logo hasta que cargues el render que corresponde.'))return;o.imgUrl='';o.sinImg=true;closeSheet();toast('Imagen quitada');draw()},
+  quitarRender:ds=>{const o=findO(ds.o);if(!o||!esDir())return;if(!confirm('¿Quitar este render? Los demás quedan.'))return;const it=rendersItems(o).find(x=>x.k===ds.k);if(!it)return;if(it.nuevo)o.renders=(o.renders||[]).filter(u=>u!==it.u);else o.rndOcultos=[...(o.rndOcultos||[]),it.k];toast('Render quitado');draw();A.editarObra&&A.editarObra({o:o.id})},
   eliminarObra:ds=>{const o=findO(ds.o);if(!o||!esDir())return;if(!confirm(`¿Eliminar ${o.nombre}? Se borra de la cartera de todos los dispositivos y no se puede deshacer.`))return;
     const i=OBRAS.indexOf(o);if(i>=0)OBRAS.splice(i,1);closeSheet();S.tab='obras';S.obra=null;S.otab='crono';toast('Obra eliminada');draw()},
   modeloObra:ds=>{MO=null;sheetModelo(ds.o)},
@@ -3891,8 +3903,10 @@ Object.assign(A,{
     }catch(e){AVF.sub='';avSheet();toast('No se pudo guardar el avance. Probá de nuevo.')}
   }
 });
-CHG.eoImg=async(v,el)=>{const o=findO(el.dataset.o),f=(el.files||[])[0];if(!o||!f)return;toast('Subiendo el render…');const dat=await reducir(f,1600,.8);if(!dat){toast('No se pudo leer la imagen');return}
-  try{const r=await codApi({op:'av_foto',obra:o.id,cred:{rol:'dir',codigo:dirAuthGet()},data:dat});if(!r.url)throw new Error(r.error||'foto');o.imgUrl=r.url;o.sinImg=false;closeSheet();toast('Render actualizado');draw()}catch(e){toast('No se pudo subir el render. Probá de nuevo.')}};
+CHG.eoImg=async(v,el)=>{const o=findO(el.dataset.o),fs=[...(el.files||[])].slice(0,12);if(!o||!fs.length)return;toast(fs.length>1?`Subiendo ${fs.length} renders…`:'Subiendo el render…');let n=0,mal=0;
+  for(const f of fs){const dat=await reducir(f,1600,.8);if(!dat){mal++;continue}
+    try{const r=await codApi({op:'av_foto',obra:o.id,cred:{rol:'dir',codigo:dirAuthGet()},data:dat});if(!r.url)throw new Error(r.error||'foto');o.renders=[...(o.renders||[]),r.url];n++}catch(e){mal++}}
+  toast(n?`Se ${n>1?'sumaron '+n+' renders':'sumó el render'}`+(mal?` · ${mal} no se pudo subir`:''):'No se pudo subir. Probá de nuevo.');draw();el.value='';if(A.editarObra)A.editarObra({o:o.id})};
 CHG.infFoto=async(v,el)=>{readInf();const D=INFD;if(!D)return;const fs=[...(el.files||[])].slice(0,40-D.fotos.length);let n=0;for(const f of fs){const dat=await reducir(f);if(!dat)continue;const F=addFile('Foto de obra','image/jpeg',dat);D.fotos.push(F.id);D.ff[F.id]=D.ffecha;n++}if(INFD===D){sheetInformeForm();if(n)toast(`Se sumaron ${plural(n,'foto','fotos')} con fecha ${fmt(Date.parse(D.ffecha+'T12:00:00Z'))}`)}};
 CHG.infFotoFecha=(v,el)=>{if(!INFD||!v)return;readInf();INFD.ff[el.dataset.f]=v;sheetInformeForm()};
 CHG.infSemana=(v,el)=>{if(!INFD||!v)return;const o=findO(INFD.obra),f=okFecha(v)||d(v);if(!f)return;const lun=lunesDe(f);if(lun>lunesDe(TODAY)){toast('No se puede cargar una semana futura');el.value=iso(INFD.desde);return}if(lun===INFD.desde)return;nuevoInforme(o,lun);sheetInformeForm()};
