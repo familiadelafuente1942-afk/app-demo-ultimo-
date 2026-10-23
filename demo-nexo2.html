@@ -752,6 +752,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.9;
 .g6 .ghl{white-space:nowrap;color:var(--fg);opacity:.9;font-weight:600}.g6 .ghito{top:19px}
 .gfin{position:absolute;top:1px;transform:translateX(-100%);z-index:7;background:var(--gold);color:#1a1612;font-weight:800;font-size:10.5px;padding:3px 8px;border-radius:5px 0 0 5px;white-space:nowrap}
 .gvl.fin{top:0;bottom:0;width:0;border-left:2px solid var(--gold);position:absolute;z-index:3;pointer-events:none}
+.gb-fr{background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.35) 0 5px,transparent 5px 10px)!important;outline:2px dashed var(--naranja,#e0883a);outline-offset:1px}.gb-ad{box-shadow:0 0 0 2px var(--azul,#4a78c2)}.gfr{color:var(--naranja,#e0883a);font-weight:800}.gad{color:var(--azul,#4a78c2);font-weight:800}.trow .tg{font-size:10px;text-transform:uppercase;letter-spacing:.05em;border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:4px}.trow.est-frenada{border-left:3px solid var(--naranja,#e0883a);padding-left:6px}.trow.est-adelantada{border-left:3px solid var(--azul,#4a78c2);padding-left:6px}.trow .prev{align-self:flex-end}table.tb{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:8px}table.tb th,table.tb td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}
 .vsel{font-weight:800;color:var(--gold)}label.vsel select#vista-sel{background-color:var(--gold)!important;color:#1a1612!important;font-weight:800!important;border:0!important;border-radius:8px}
 
 /* propietario */
@@ -1543,7 +1544,7 @@ const certFecha=c=>['losa','fund','pileta'].includes(c.task.rubro)?c.task.end-2*
 const certEstado=c=>c.estado==='certificada'?'certificada':certFecha(c)-TODAY<30*DAY?'pendiente':'programada';
 /* ===== configuración de las obras guardada en este aparato: modelo, m², inicio, jefatura, jornal, obras nuevas ===== */
 const CFG_LS='nexo2_obras_cfg';
-const CFG_KEYS=['audNombre','nombre','ubic','plantas','subsuelo','pileta','m2','nivel','inicio','jefe','estudio','jornal','dot','late','margen','edits','invitados','imgUrl','sinImg','renders','rndOcultos','tpl','mod2','ov','resp'];
+const CFG_KEYS=['audNombre','nombre','ubic','plantas','subsuelo','pileta','m2','nivel','inicio','jefe','estudio','jornal','dot','late','margen','edits','invitados','imgUrl','sinImg','renders','rndOcultos','tpl','mod2','ov','resp','reanud'];
 const BASE_OV={};let BASE_DEF={};
 const cfgPick=o=>{const r={};CFG_KEYS.forEach(k=>{if(o[k]!==undefined)r[k]=o[k]});return r};
 const CFG_ORIG=new Set(OBRAS.map(o=>o.id));
@@ -3208,7 +3209,7 @@ function faseHoy(o){const T=o.tasks,act=T.filter(t=>!hecha(t)&&t.start<=TODAY+2*
   const nx=T.filter(t=>t.start>TODAY).sort((a,b)=>a.start-b.start)[0];return nx?nx.fase||1:3}
 const vistaDe=o=>((S.vsel=S.vsel||{})[o.id])||('f'+faseHoy(o));
 const etOrd=(c,o)=>{const i=tplT(o).etapas.findIndex(e=>e.codigo===c);return i<0?99:i};
-function filaT(o,t,extra){return{...t,avisos:tplAvisos(o,t),man:t.manual,...(extra||{})}}
+function filaT(o,t,extra){return{...t,avisos:tplAvisos(o,t),man:t.manual,nota:t.desdeInforme?'· agregada desde informe':undefined,...(extra||{})}}
 function ganttTpl(o,C){
   const v=vistaDe(o),C2={...C,obra:true,exact:true,finLbl:v==='gen'?'Fin de obra':v==='p6'?'':'Fin de Fase '+v.slice(1),pedidos:v==='p6'?true:C.pedidos};let rows=[],rango=null;
   const grupos=ts=>{const m={};ts.forEach(t=>{const k=t.etapaCod||('M:'+(t.etapa||'Otras'));(m[k]=m[k]||[]).push(t)});return Object.entries(m).sort((a,b)=>etOrd(a[0],o)-etOrd(b[0],o)||Math.min(...a[1].map(t=>t.start))-Math.min(...b[1].map(t=>t.start)))};
@@ -3343,7 +3344,7 @@ const ikey=i=>{if(!i.k)i.k=i.txt;return i.k};
 const skey=s=>{if(!s.sk)s.sk=s.manual?'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5):s.rubro+'|'+s.folder+'|'+s.nombre;return s.sk};
 const dkey=(o,x)=>{const s=x.slot?(o.planos||[]).find(p=>p.id===x.slot):null;return(s?skey(s):'c:'+x.cat)+'|'+x.nombre+'|'+x.ver};
 function ovMapa(o){const m={r:{},c:{},p:{},dc:{},t:{}};
-  o.tasks.forEach(t=>{const k=tkey(o,t);if(t.real)m.r[k]=JSON.stringify(t.real);const b=o.base.find(x=>x.id===t.id);if(b&&(b.start!==t.start||b.end!==t.end))m.t[k]=JSON.stringify([t.start,t.end,t.weeks])});
+  o.tasks.forEach(t=>{const k=tkey(o,t),der=t.real&&t.real.src==='inf';if(t.real&&!der)m.r[k]=JSON.stringify(t.real);const b=o.base.find(x=>x.id===t.id);if(!der&&b&&(b.start!==t.start||b.end!==t.end))m.t[k]=JSON.stringify([t.start,t.end,t.weeks])});
   o.cards.forEach(cd=>{const its={};cd.items.forEach(i=>{its[ikey(i)]=[i.estado,i.fecha||0,i.obs||'',i.resp,i.respuesta?[i.respuesta.txt||'',i.respuesta.fecha||0,i.respuesta.por||'',i.respuesta.nuevo?1:0]:0,i.txt,i.tipo,i.g||'',i.origen||'']});
     m.c[ckey(o,cd)]=JSON.stringify({e:cd.enviada||0,im:cd.impacto||'',it:cd.impactoTxt||'',tp:cd.tipo,d:cd.rdesc||'',a:cd.apert==null?null:cd.apert,p:cd.plazo==null?null:cd.plazo,rt:cd.rtipo||'',cu:cd.custom?1:0,ky:cd.ckey||'',tk:tkey(o,cd.task),i:its})});
   (o.planos||[]).forEach(s=>{m.p[skey(s)]=JSON.stringify({r:s.rubro,f:s.folder,n:s.nombre,m:s.manual?1:0})});
@@ -3520,8 +3521,8 @@ function gantt(o,C){
         segs+=`<span class="gwarn c-${pend.reduce((a,c)=>ORDEN[color(c)]<ORDEN[a]?color(c):a,'futuro')}" style="left:${Math.max(0,x(k.limit)-20)}px" title="${plural(pend.length,'tarjeta incompleta','tarjetas incompletas')}">${pend.length}</span>`}}
     const isObra=C.obra&&!C.contractual,av=isObra&&t.real?t.real.av:0,dvc=isObra&&!tp.agg?semDesvio(desvioTarea(o,t)):'';
     const b=C.base&&C.obra?baseDe(o,t):null;
-    const isH=!!(!tp.agg&&(tp.hito||t.hito)),bar=(isH?`<span class="gdia" style="left:${x(fEnd(tp.end))-1}px" title="Hito"></span>`:'')+`<button class="gbar ${isH?'hitob':''} ${isObra||C.contractual?'':'gb-base'} ${av>=100?'done':''} ${isObra&&dvc&&dvc!=='verde'&&t.real?'d-'+dvc:''}" data-act="${tp.agg?'vistaEtapa':'tarea'}" data-o="${o.id}" data-id="${t.id}" data-e="${esc(tp.e||'')}" style="left:${x(tp.start)}px;width:${Math.max(6,x(fEnd(tp.end))-x(tp.start)-2)}px" title="${esc(t.name)} · ${fmt(tp.start)} → ${fmt(tp.end)}" aria-label="${esc(t.name)}: ${fmt(tp.start)} a ${fmt(tp.end)}${isObra?', avance '+av+'%':''}"><i style="width:${av}%"></i></button>`+`<span class="gpct ${av>=100?'done':''}" style="left:${x(fEnd(tp.end))+3}px">${Math.round(Math.min(100,Math.max(0,av||0)))} %</span>`;
-    return `<div class="grow ${C.pedidos&&C.obra?'tall':''} ${b?'cmpb':''}"><button class="glabel ${isH?'hitoT':''} ${baseIds.has(t.id)||tp.agg?'':'added'}" data-act="${tp.agg?'vistaEtapa':'tarea'}" data-o="${o.id}" data-id="${t.id}" data-e="${esc(tp.e||'')}" title="${esc(t.name)}"><span class="gl-n">${tp.avisos&&tp.avisos.length?'<span class="gavi" title="'+esc(tp.avisos.join(' · '))+'">⚠</span> ':''}${tp.man?'<span class="gman" title="Editada a mano">✎</span> ':''}${esc(t.name)}${tp.nota?'<em class="gnota"> '+esc(tp.nota)+'</em>':''}</span><span class="gl-d">${fmt(tp.start)} → ${fmt(tp.end)}</span></button><div class="gtrack" style="width:${width}px">${segs}${b?`<span class="gbase2" style="left:${x(b.start)}px;width:${x(fEnd(b.end))-x(b.start)}px" title="Base · ${fmt(b.start)} → ${fmt(b.end)}"></span>`:''}${bar}</div></div>`}).join('');
+    const isH=!!(!tp.agg&&(tp.hito||t.hito)),bar=(isH?`<span class="gdia" style="left:${x(fEnd(tp.end))-1}px" title="Hito"></span>`:'')+`<button class="gbar ${isH?'hitob':''} ${(!tp.agg&&t.frena)?'gb-fr':''} ${(!tp.agg&&t.adel)?'gb-ad':''} ${isObra||C.contractual?'':'gb-base'} ${av>=100?'done':''} ${isObra&&dvc&&dvc!=='verde'&&t.real?'d-'+dvc:''}" data-act="${tp.agg?'vistaEtapa':'tarea'}" data-o="${o.id}" data-id="${t.id}" data-e="${esc(tp.e||'')}" style="left:${x(tp.start)}px;width:${Math.max(6,x(fEnd(tp.end))-x(tp.start)-2)}px" title="${esc(t.name)} · ${fmt(tp.start)} → ${fmt(tp.end)}" aria-label="${esc(t.name)}: ${fmt(tp.start)} a ${fmt(tp.end)}${isObra?', avance '+av+'%':''}"><i style="width:${av}%"></i></button>`+`<span class="gpct ${av>=100?'done':''}" style="left:${x(fEnd(tp.end))+3}px">${Math.round(Math.min(100,Math.max(0,av||0)))} %</span>`;
+    return `<div class="grow ${C.pedidos&&C.obra?'tall':''} ${b?'cmpb':''}"><button class="glabel ${isH?'hitoT':''} ${baseIds.has(t.id)||tp.agg?'':'added'}" data-act="${tp.agg?'vistaEtapa':'tarea'}" data-o="${o.id}" data-id="${t.id}" data-e="${esc(tp.e||'')}" title="${esc(t.name)}"><span class="gl-n">${!tp.agg&&t.frena?'<span class="gfr" title="Frenada: '+esc(t.frena.causa)+'">⏸ '+workBetween(t.frena.desde-DAY,TODAY)+' d</span> ':''}${!tp.agg&&t.adel?'<span class="gad" title="Adelantada para dar continuidad">↗</span> ':''}${tp.avisos&&tp.avisos.length?'<span class="gavi" title="'+esc(tp.avisos.join(' · '))+'">⚠</span> ':''}${tp.man?'<span class="gman" title="Editada a mano">✎</span> ':''}${esc(t.name)}${tp.nota?'<em class="gnota"> '+esc(tp.nota)+'</em>':''}</span><span class="gl-d">${fmt(tp.start)} → ${fmt(tp.end)}</span></button><div class="gtrack" style="width:${width}px">${segs}${b?`<span class="gbase2" style="left:${x(b.start)}px;width:${x(fEnd(b.end))-x(b.start)}px" title="Base · ${fmt(b.start)} → ${fmt(b.end)}"></span>`:''}${bar}</div></div>`}).join('');
   const aud=C.audit?`<div class="grow"><div class="glabel rubro">Auditorías</div><div class="gtrack" style="width:${width}px">${o.sup.map(s=>`<span class="gsup ${s.estado==='realizada'?'done':''}" title="Supervisión · ${fmt(s.fecha)}" style="left:${x(s.fecha)-6}px"></span>`).join('')}${o.cert.map(c=>`<span class="gcert ${c.estado==='certificada'?'done':''}" title="Certificado · ${esc(c.etapa)} · ${fmt(certFecha(c))}" style="left:${x(certFecha(c))-6}px"></span>`).join('')}</div></div>`:'';
   const vlines=C.audit?o.sup.map(s=>`<span class="gvl sup" style="left:${LBL+x(s.fecha)}px"></span>`).join('')+o.cert.map(c=>`<span class="gvl cert" style="left:${LBL+x(certFecha(c))}px"></span>`).join(''):'';
   return `<div class="gwrap" id="gwrap" data-scroll="${hoyDentro?Math.max(0,x(TODAY)-220):0}"><div class="gantt g6" style="width:${width+LBL}px;--W:${W}px;--LBL:${LBL}px">
@@ -4343,6 +4344,228 @@ setInterval(()=>{if(document.visibilityState==='visible'&&listo)bajar()},25000);
 setInterval(()=>{if(document.visibilityState==='visible')bajar()},45000);
 setTimeout(()=>OBRAS.forEach(o=>infLoad(o,true)),800);setInterval(()=>{if(document.visibilityState==='visible')OBRAS.forEach(o=>infLoad(o))},40000);
 }
+
+/* ================= INF-01 a INF-09 · informe semanal vinculado al cronograma ================= */
+const INF_CAUSAS=[['Clima','Climático'],['Falta de definiciones del estudio o dirección de obra','Estudio, DO o comitente'],['Falta de planos','Estudio, DO o comitente'],['Falta de materiales','Constructora'],['Subcontratista o gremio','Constructora'],['Decisión del comitente','Estudio, DO o comitente'],['Interna de la constructora','Constructora'],['Otra','Constructora']];
+const INF_RESP=['Climático','Estudio, DO o comitente','Constructora'];
+const respDe=c=>(INF_CAUSAS.find(x=>x[0]===c)||[])[1]||'Constructora';
+const fmtD=t=>{const x=new Date(t);return String(x.getUTCDate()).padStart(2,'0')+'/'+String(x.getUTCMonth()+1).padStart(2,'0')+'/'+x.getUTCFullYear()};
+const perTxt=(a,b)=>'del '+fmtD(a)+' al '+fmtD(b);
+const cierreDe=t=>lunesDe(t)+4*DAY;
+const hastaDe=i=>i.hasta||(i.desde+4*DAY);
+const tidDe=(o,x)=>x.tid||((o.tasks.find(t=>t.name===x.name)||{}).id)||'';
+const avOk=x=>x.av!=null&&x.av!==''&&!isNaN(+x.av);
+const infAv=(i,x)=>avOk(x)&&(i.v===2||+x.av>0)?+x.av:null;
+const causaTxtDe=x=>x.causa==='Otra'?('Otra'+(x.causaTxt?': '+x.causaTxt:'')):(x.causa||'');
+function infRenum(o){o.informes.sort((a,b)=>hastaDe(a)-hastaDe(b));o.informes.forEach((i,k)=>{i.n=k+1})}
+function avPrevio(o,tid,hasta,exId){let r=null;o.informes.forEach(i=>{if(i.id===exId||hastaDe(i)>=hasta)return;(i.tareas||[]).forEach(x=>{if(tidDe(o,x)===tid){const v=infAv(i,x);if(v!=null)r=v}})});return r}
+function planPct(o,t,hasta){const b=baseDe(o,t)||t,tot=workBetween(b.start-DAY,b.end)||1,hecho=hasta<b.start?0:workBetween(b.start-DAY,Math.min(hasta,b.end));return clamp(Math.round(hecho/tot*100),0,100)}
+function filaInf(o,t,hasta,exId,tipo){return{tid:t.id,name:t.name,equipo:t.equipo||'',fase:t.fase||0,etapa:t.etapa||ETAPA[t.rubro]||'',nivel:t.nivel||'',tipo,av:avPrevio(o,t.id,hasta,exId),previsto:planPct(o,t,hasta),causa:'',causaTxt:'',resp:'',estado:'',desdeF:0,card:'',vinc:[]}}
+function tareasSemana(o,desde,hasta,exId){const out=[];
+  o.tasks.forEach(t=>{const b=baseDe(o,t)||t,pv=avPrevio(o,t.id,hasta,exId),fin=fEnd(Math.max(t.end,b.end));
+    if((pv!=null&&pv>=100)||(pv==null&&t.real&&t.real.fin&&t.real.fin<desde&&t.real.src!=='inf'))return;
+    let tipo='';
+    if((t.start<=hasta+2*DAY&&fEnd(t.end)>desde)||(b.start<=hasta+2*DAY&&fEnd(b.end)>desde))tipo='curso';
+    else if(fin<=desde){if((pv!=null&&pv<100)||(pv==null&&fin>desde-14*DAY)||(pv==null&&t.real&&t.real.src!=='inf'&&t.real.av>0&&t.real.av<100))tipo='atrasada'}
+    else if(t.start>hasta+2*DAY&&((pv!=null&&pv>0)||(t.real&&t.real.ini&&t.real.ini<=hasta&&t.real.av>0&&t.real.av<100)))tipo='adelantada';
+    if(tipo)out.push({r:filaInf(o,t,hasta,exId,tipo),s:t.start})});
+  return out.sort((a,b)=>(a.r.fase-b.r.fase)||(a.s-b.s)).map(x=>x.r)}
+const infTieneDatos=x=>avOk(x)||x.estado||x.causa;
+/* avance real, fechas reales, frenos y adelantos: se derivan siempre de los informes (el de fecha más reciente manda) */
+function infDerivar(o){const L=o.informes.filter(i=>i.nube&&i.tareas&&i.tareas.length).slice().sort((a,b)=>hastaDe(a)-hastaDe(b)),por={};
+  L.forEach(i=>i.tareas.forEach(x=>{const k=tidDe(o,x);if(!k)return;(por[k]=por[k]||[]).push({i,x})}));
+  o.tasks.forEach(t=>{const E=por[t.id];t.frena=null;t.adel=null;if(!E)return;
+    const conAv=E.filter(e=>infAv(e.i,e.x)!=null);
+    if(conAv.length){const ult=conAv[conAv.length-1],av=infAv(ult.i,ult.x),pos=conAv.find(e=>infAv(e.i,e.x)>0),fn=conAv.find(e=>infAv(e.i,e.x)>=100);
+      if(t.endOrig==null)t.endOrig=t.end;
+      if(pos||av>0){t.real={...(t.real&&t.real.src!=='inf'?t.real:{}),ini:pos?pos.i.desde:t.start,fin:fn?hastaDe(fn.i):null,av,causa:causaTxtDe(ult.x),dot:ult.i.dot||o.dot,src:'inf'};t.end=t.real.fin?Math.max(t.start,t.real.fin):Math.max(t.start,t.endOrig)}
+      else if(t.real&&t.real.src==='inf'){t.real=undefined;t.end=t.endOrig}}
+    const es=E.filter(e=>e.x.estado==='frenada'||e.x.estado==='reanudada'),le=es[es.length-1];
+    if(le&&le.x.estado==='frenada'){let k=es.length-1;while(k>0&&es[k-1].x.estado==='frenada')k--;const x0=es[k].x,desde=x0.desdeF||es[k].i.desde;
+      if(!(o.reanud&&o.reanud[t.id]&&o.reanud[t.id]>=desde))t.frena={desde,causa:causaTxtDe(le.x),resp:le.x.resp||respDe(le.x.causa),card:le.x.card||''}}
+    const ad=E.filter(e=>e.x.estado==='adelantada');if(ad.length)t.adel={vinc:ad[ad.length-1].x.vinc||[]}})}
+/* ===== carga y numeración ===== */
+async function infLoad(o,fuerza){const a=INFL[o.id]=INFL[o.id]||{t:0,cargando:false,sig:''};
+  if(a.cargando||(!fuerza&&Date.now()-a.t<30000))return;a.cargando=true;
+  try{const d=await codApi({op:'inf_list',obra:o.id});const its=(d.items||[]);const sig=its.map(x=>x.id+':'+x.editado).join('|');a.t=Date.now();
+    if(sig!==a.sig||fuerza){a.sig=sig;o.informes=its.length?its.map(x=>infDesdeNube(o,x)):o.informes.filter(x=>x.sem);infRenum(o);infDerivar(o);a.cargando=false;if(!document.querySelector('.sheet form[data-submit="informe"]'))draw();return}}
+  catch(e){a.t=Date.now()}a.cargando=false}
+/* ===== el informe: una sola fecha (viernes de cierre) ===== */
+const viernesMax=()=>cierreDe(TODAY);
+function nuevoInforme(o,desde0){const hasta=cierreDe(desde0||TODAY),desde=hasta-4*DAY,ex=o.informes.find(x=>x.nube&&hastaDe(x)===hasta);
+  INFD={obra:o.id,desde,hasta,tareas:ex?[]:tareasSemana(o,desde,hasta,null),trab:5,lluvia:0,dot:o.dotacion.hoy,ejecutados:'',proxima:'',obs:'',fotos:[],fu:{},ff:{},resumen:'',editId:null,etapa:etapaEn(o,hasta),dirty:false,q:'',addOpen:false,nq:'',ne:''};
+  if(ex){INFD.etapa=ex.etapa||INFD.etapa;INFD.editId=ex.id;INFD.n=ex.n;INFD.trab=ex.trab;INFD.lluvia=ex.lluvia;INFD.dot=ex.dot;INFD.ejecutados=ex.ejecutados;INFD.proxima=ex.proxima;INFD.obs=ex.obs==='Sin observaciones.'?'':ex.obs;INFD.resumen=ex.resumen;
+    INFD.fotos=(ex.fotos||[]).slice();(ex.fotos||[]).forEach((f,k)=>{if(ex.fotoU&&ex.fotoU[k])INFD.fu[f]=ex.fotoU[k];INFD.ff[f]=ex.fotoF&&ex.fotoF[k]?isoAR(ex.fotoF[k]):iso(hasta)});
+    INFD.tareas=(ex.tareas||[]).map(x=>{const k=tidDe(o,x),t=o.tasks.find(y=>y.id===k),cs=x.causa&&INF_CAUSAS.some(c=>c[0]===x.causa);
+      return{tid:k,name:x.name,equipo:x.equipo||'',fase:x.fase||(t&&t.fase)||0,etapa:x.etapa||(t&&t.etapa)||'',nivel:x.nivel||(t&&t.nivel)||'',tipo:x.tipo||'curso',av:infAv(ex,x),previsto:t?planPct(o,t,hasta):(x.previsto||0),causa:cs?x.causa:(x.causa?'Otra':''),causaTxt:x.causaTxt||(x.causa&&!cs?x.causa:''),resp:x.resp||'',estado:(x.estado==='frenada'||x.estado==='reanudada'||x.estado==='adelantada')?x.estado:'',desdeF:x.desdeF||0,card:x.card||'',vinc:x.vinc||[],add:!!x.add,nueva:x.nueva}})}
+  try{const dk=infDK();const r=JSON.parse(localStorage.getItem(dk)||'null');if(r&&r.D&&Date.now()-r.t<14*864e5)INFD.draft=r}catch(e){}}
+const infDK=()=>'nexo2_inf_borrador_'+INFD.obra+'_'+(INFD.editId||'nuevo');
+function readInf(){if(!INFD||!$('#if-trab'))return;const g=id=>{const e=$('#'+id);return e?e.value:undefined};
+  if($('#if-etapa'))INFD.etapa=$('#if-etapa').value;INFD.trab=clamp(+val('if-trab')||0,0,6);INFD.lluvia=clamp(+val('if-ll')||0,0,6);INFD.dot=+val('if-dot')||0;INFD.ejecutados=val('if-ej');INFD.proxima=val('if-px');INFD.obs=val('if-obs');INFD.resumen=val('if-res');
+  if($('#if-nq'))INFD.nq=$('#if-nq').value;if($('#if-ne'))INFD.ne=$('#if-ne').value;
+  INFD.tareas.forEach((t,i)=>{const a=g('if-av'+i);if(a!==undefined)t.av=a.trim()===''?null:clamp(Math.round(+a)||0,0,100);
+    const es=g('if-es'+i);if(es!==undefined)t.estado=es;const ca=g('if-ca'+i);if(ca!==undefined)t.causa=ca;const ct=g('if-ct'+i);if(ct!==undefined)t.causaTxt=ct;
+    const rs=g('if-rs'+i);if(rs!==undefined)t.resp=rs;const fd=g('if-fd'+i);if(fd)t.desdeF=d(fd);const cd=g('if-cd'+i);if(cd!==undefined)t.card=cd;
+    const vk=[...document.querySelectorAll('.sheet input[data-vk="'+i+'"]')];if(vk.length)t.vinc=vk.filter(x=>x.checked).map(x=>x.value)})}
+const infFrenadasOpc=o=>{const m=new Map();INFD.tareas.forEach(x=>{if(x.estado==='frenada')m.set(x.tid,x.name)});o.tasks.forEach(t=>{if(t.frena&&!m.has(t.id))m.set(t.id,t.name)});return[...m]};
+function infFilaHTML(t,i,o){const sub=[t.fase?'Fase '+t.fase:'',t.etapa,t.nivel].filter(Boolean).join(' · '),tag=({atrasada:'Atrasada',adelantada:'Adelantada',agregada:'Agregada desde informe'})[t.tipo]||'';
+  const baja=t.av!=null&&t.av<t.previsto,fr=t.estado==='frenada',needC=baja||fr;
+  const cards=o.cards.filter(c=>!cDone(c)&&(c.task&&c.task.id===t.tid)),cardsAll=o.cards.filter(c=>!cDone(c));
+  const cardOpts=(cards.length?cards:cardsAll.slice(0,40)).map(c=>{const k=(c.rcod||c.id)+'|'+titulo(c);return `<option value="${esc(k)}" ${t.card===k?'selected':''}>${esc(titulo(c).slice(0,70))}</option>`}).join('');
+  const ext=needC?`<div class="row2"><label class="f sm">${fr?'Causa del freno':'Si viene atrasada, ¿por qué?'}<select id="if-ca${i}" data-chg="infRow"><option value="">Elegí una causa</option>${INF_CAUSAS.map(c=>`<option ${t.causa===c[0]?'selected':''}>${esc(c[0])}</option>`).join('')}</select></label><label class="f sm">Responsable<select id="if-rs${i}" ${t.causa==='Otra'?'':'disabled'}>${INF_RESP.map(r=>`<option ${(t.resp||respDe(t.causa))===r?'selected':''}>${r}</option>`).join('')}</select></label></div>${t.causa==='Otra'?`<label class="f sm">Detalle de la causa<input id="if-ct${i}" value="${esc(t.causaTxt||'')}"></label>`:''}`:'';
+  const frx=fr?`<div class="row2"><label class="f sm">Frenada desde<input id="if-fd${i}" type="date" value="${iso(t.desdeF||INFD.desde)}" max="${iso(INFD.hasta)}"></label><label class="f sm">Pedido pendiente (tarjeta)<select id="if-cd${i}"><option value="">Ninguno</option>${cardOpts}</select></label></div>`:'';
+  const adx=t.estado==='adelantada'?(()=>{const L=infFrenadasOpc(o).filter(x=>x[0]!==t.tid);return `<div class="small muted">Se arrancó antes para darle continuidad a la obra. Tarea(s) frenada(s) que lo motivaron:</div>${L.length?L.map(([k,n])=>`<label class="chk2"><input type="checkbox" data-vk="${i}" value="${esc(k)}" ${t.vinc.includes(k)?'checked':''}> ${esc(n)}</label>`).join(''):'<div class="small muted">No hay tareas frenadas: marcá primero la tarea frenada.</div>'}`})():'';
+  return `<div class="trow ${t.estado?'est-'+t.estado:''}"><span class="tn"><b>${esc(t.name)}</b>${tag?` <span class="tg">${tag}</span>`:''}<span class="muted small" style="display:block">${esc(sub)}${t.equipo?' · '+esc(t.equipo):''}</span></span>
+  <div class="tq"><label class="f sm">Avance acumulado %<input id="if-av${i}" type="number" min="0" max="100" inputmode="numeric" placeholder="sin dato" value="${t.av==null?'':t.av}" data-chg="infRow"></label><span class="prev small ${baja?'t-naranja':'muted'}">previsto ${t.previsto} %</span>
+  <label class="f sm">Estado<select id="if-es${i}" data-chg="infRow"><option value="">Normal</option><option value="frenada" ${t.estado==='frenada'?'selected':''}>Frenada</option><option value="reanudada" ${t.estado==='reanudada'?'selected':''}>Reanudada</option><option value="adelantada" ${t.estado==='adelantada'?'selected':''}>Adelantada para dar continuidad</option></select></label></div>
+  ${ext}${frx}${adx}${t.add||t.nueva?`<button type="button" class="btn sm red" data-act="infQuitarT" data-i="${i}">Quitar del informe</button>`:''}</div>`}
+function infAgregarHTML(o){const D=INFD;if(!D.addOpen)return `<button type="button" class="btn sm" data-act="infAddAbrir">+ Agregar tarea</button>`;
+  const q=(D.q||'').toLowerCase(),ya=new Set(D.tareas.map(x=>x.tid)),res=o.tasks.filter(t=>!ya.has(t.id)&&(!q||(t.name+' '+(t.etapa||'')+' '+(t.nivel||'')).toLowerCase().includes(q))).slice(0,14);
+  return `<div class="boxed"><label class="f sm">Buscar en el cronograma<input id="if-q" value="${esc(D.q||'')}" placeholder="Nombre, etapa o nivel" data-chg="infQ"></label>${res.map(t=>`<button type="button" class="chipbtn" data-act="infAddT" data-id="${esc(t.id)}">+ ${esc(t.name)} <span class="muted small">· Fase ${t.fase||'-'} · ${esc(t.etapa||'')}</span></button>`).join('')||'<span class="muted small">No hay tareas con ese texto.</span>'}
+  <span class="eyebrow">Tarea no prevista</span><div class="row2"><label class="f sm">Nombre<input id="if-nq" value="${esc(D.nq||'')}" placeholder="Qué se hizo"></label><label class="f sm">Etapa<select id="if-ne">${etapasObra(o).map(e=>`<option ${D.ne===e?'selected':''}>${esc(e)}</option>`).join('')}</select></label></div>
+  <button type="button" class="btn sm gold" data-act="infAddNueva">Agregar tarea no prevista</button> <button type="button" class="btn sm ghost" data-act="infAddCerrar">Cerrar</button></div>`}
+function sheetInformeForm(){
+  const D=INFD,o=findO(D.obra),venc=o.cards.filter(c=>color(c)==='rojo'),dup=D.dup?o.informes.find(x=>x.id===D.dup.id):null;
+  const avisos=[
+    D.draft?`<div class="infobox">Tenés un borrador sin guardar (${new Date(D.draft.t).toLocaleString('es-AR')}): ¿continuar?<br><button type="button" class="btn sm gold" data-act="infDraftSi">Continuar con el borrador</button> <button type="button" class="btn sm ghost" data-act="infDraftNo">Descartarlo</button></div>`:'',
+    dup?`<div class="infobox"><b>Ya hay un informe de esa semana (N° ${dup.n}, ${perTxt(dup.desde,hastaDe(dup))}).</b><br><button type="button" class="btn sm" data-act="infDupAbrir">Abrir el informe existente</button> <button type="button" class="btn sm red" data-act="infDupReemp">${D.dup.conf?'Confirmar: reemplazarlo':'Reemplazarlo'}</button> <button type="button" class="btn sm ghost" data-act="infDupCancel">Cancelar</button></div>`:'',
+    D.sugEtapa?`<div class="infobox">Según la nueva fecha correspondería la etapa «${esc(D.sugEtapa)}». <button type="button" class="btn sm" data-act="infEtapaSug">Usar esa etapa</button></div>`:'',
+    D.pendFotos?`<div class="infobox">${plural(D.pendFotos.n,'foto tiene','fotos tienen')} la fecha de cierre anterior (${fmtD(Date.parse(D.pendFotos.viejo+'T12:00:00Z'))}). ¿Las movemos a la nueva fecha (${fmtD(Date.parse(D.pendFotos.nuevo+'T12:00:00Z'))})? <button type="button" class="btn sm gold" data-act="infFotosSi">Sí</button> <button type="button" class="btn sm" data-act="infFotosNo">No</button></div>`:''].join('');
+  openSheet(`<span class="eyebrow">${esc(o.nombre)} · informe ${perTxt(D.desde,D.hasta)}</span><h2>Informe semanal${D.editId?' · editar':''}</h2><p class="muted small">Este es el único lugar donde se cargan las fotos y lo que se hizo: la sección Avances se arma sola con lo que guardes acá. Se guarda un borrador solo mientras escribís.</p>
+  <label class="f">Fecha de cierre del informe (viernes)<input type="date" id="if-sem" value="${iso(D.hasta)}" max="${iso(viernesMax())}" data-chg="infSemana"></label>
+  <p class="small" id="if-per"><b>Informe ${perTxt(D.desde,D.hasta)}</b></p>${avisos}
+  <label class="f">Etapa a la que corresponde el informe<select id="if-etapa">${(()=>{const L=etapasObra(o);if(D.etapa&&!L.includes(D.etapa))L.push(D.etapa);return L.map(e=>`<option ${e===D.etapa?'selected':''}>${esc(e)}</option>`).join('')})()}</select></label><p class="muted small" style="margin:-4px 0 0">Se propone según la fecha y el cronograma base; podés cambiarla.</p>
+  <form class="frm" data-submit="informe">
+  <span class="eyebrow">1 · Avance por tarea</span><p class="muted small" style="margin:0">Las tareas salen del cronograma de esa semana. El % es el avance acumulado real; dejalo vacío si no tenés el dato.</p><div>${D.tareas.map((t,i)=>infFilaHTML(t,i,o)).join('')||'<p class="muted small">No hay tareas del cronograma para esta semana. Podés agregar una.</p>'}</div>${infAgregarHTML(o)}
+  <span class="eyebrow">2 · Calendario y dotación</span><div class="row2"><label class="f">Días trabajados<input id="if-trab" type="number" min="0" max="6" value="${D.trab}"></label><label class="f">Días de lluvia<input id="if-ll" type="number" min="0" max="6" value="${D.lluvia}"></label><label class="f">Dotación promedio<input id="if-dot" type="number" min="0" value="${D.dot}"></label></div>
+  <span class="eyebrow">3 · Trabajos ejecutados</span><textarea id="if-ej" rows="3" placeholder="Qué se hizo esta semana">${esc(D.ejecutados)}</textarea><button class="btn sm ghost" type="button" data-act="infRegistro" style="align-self:flex-start">Traer lo cargado en el registro diario</button>
+  <span class="eyebrow">4 · Próxima semana</span><textarea id="if-px" rows="2">${esc(D.proxima)}</textarea>
+  <span class="eyebrow">5 · Observaciones y riesgos</span><textarea id="if-obs" rows="3">${esc(D.obs)}</textarea>${venc.length?`<button class="btn sm ghost" type="button" data-act="infVenc" style="align-self:flex-start">Sumar las ${venc.length} tarjetas vencidas</button>`:''}
+  <span class="eyebrow">6 · Fotos de la semana</span><p class="muted small" style="margin:0">Las fotos toman la fecha de cierre (${fmtD(D.hasta)}). Si hace falta, podés cambiar la fecha de una foto puntual.</p>
+  <div class="infph">${D.fotos.map((f,i)=>({f,i})).filter(x=>FILES[x.f]).sort((p,q)=>(D.ff[p.f]||'').localeCompare(D.ff[q.f]||'')).map(({f,i})=>`<div class="ph1"><span><img src="${FILES[f].url}" alt=""><button type="button" data-act="infQuitarFoto" data-i="${i}" aria-label="Quitar foto">✕</button></span><input type="date" class="fdi" value="${esc(D.ff[f]||iso(D.hasta))}" max="${iso(viernesMax())}" data-chg="infFotoFecha" data-f="${f}" aria-label="Fecha propia de la foto"></div>`).join('')}<label class="addph" for="if-foto" title="Subir fotos">+</label><input id="if-foto" type="file" accept="image/*" multiple data-chg="infFoto" hidden></div>
+  ${D.fotos.length?'':'<span class="muted small">Todavía no hay fotos en este informe.</span>'}
+  <span class="eyebrow">7 · Resumen para el propietario</span><textarea id="if-res" rows="3" placeholder="Dos o tres oraciones simples">${esc(D.resumen)}</textarea><button class="btn sm" type="button" data-act="infIA" style="align-self:flex-start">Redactar el resumen con Nexo IA</button>
+  <button class="btn gold" type="submit" ${D.sub?'disabled':''}>${D.sub?'Guardando… '+D.sub:'Guardar informe'}</button></form>`,'Informe semanal');
+}
+const infRe=()=>keepScroll(sheetInformeForm);
+CHG.infRow=(v,el)=>{if(!INFD)return;readInf();INFD.dirty=true;const m=/^if-ca(\d+)$/.exec(el.id);if(m){const t=INFD.tareas[+m[1]];if(t&&t.causa!=='Otra')t.resp=respDe(t.causa)}infRe()};
+CHG.infQ=(v)=>{if(!INFD)return;readInf();INFD.q=v;INFD.addOpen=true;infRe()};
+A.infAddAbrir=()=>{readInf();INFD.addOpen=true;infRe()};A.infAddCerrar=()=>{readInf();INFD.addOpen=false;infRe()};
+A.infAddT=ds=>{readInf();const o=findO(INFD.obra),t=o.tasks.find(x=>x.id===ds.id);if(!t)return;const r=filaInf(o,t,INFD.hasta,INFD.editId,'agregada');r.add=true;INFD.tareas.push(r);INFD.dirty=true;infRe()};
+A.infAddNueva=()=>{readInf();const o=findO(INFD.obra),nm=(INFD.nq||'').trim();if(!nm){toast('Escribí qué se hizo');return}const et=INFD.ne||etapasObra(o)[0];
+  INFD.tareas.push({tid:'xi'+Date.now().toString(36)+Math.random().toString(36).slice(2,4),name:nm,equipo:'',fase:0,etapa:et,nivel:'',tipo:'agregada',av:null,previsto:0,causa:'',causaTxt:'',resp:'',estado:'',desdeF:0,card:'',vinc:[],nueva:{name:nm,etapa:et}});INFD.nq='';INFD.dirty=true;infRe()};
+A.infQuitarT=ds=>{readInf();INFD.tareas.splice(+ds.i,1);INFD.dirty=true;infRe()};
+/* cambio de fecha: nada se borra */
+CHG.infSemana=(v,el)=>{if(!INFD||!v)return;const f=d(v);if(!f)return;const nh=cierreDe(f);if(nh>viernesMax()){toast('No se puede cargar una semana futura');el.value=iso(INFD.hasta);return}
+  readInf();if(nh===INFD.hasta){infRe();return}const o=findO(INFD.obra),dup=o.informes.find(x=>x.nube&&hastaDe(x)===nh&&x.id!==INFD.editId);
+  if(dup){INFD.dup={id:dup.id,hasta:nh};INFD.dirty=true;infRe();return}infAplicarFecha(nh)};
+function infAplicarFecha(nh){const D=INFD,o=findO(D.obra),viejo=iso(D.hasta);D.hasta=nh;D.desde=nh-4*DAY;D.dirty=true;
+  const keep=D.tareas.filter(x=>x.add||x.nueva||infTieneDatos(x));
+  keep.forEach(x=>{const t=o.tasks.find(y=>y.id===x.tid);if(t)x.previsto=planPct(o,t,nh)});
+  const nuevas=tareasSemana(o,D.desde,nh,D.editId).filter(r=>!keep.some(k=>k.tid===r.tid));D.tareas=[...keep,...nuevas];
+  const sug=etapaEn(o,nh);D.sugEtapa=sug&&sug!==D.etapa?sug:'';
+  const mv=D.fotos.filter(f=>D.ff[f]===viejo);D.pendFotos=mv.length?{n:mv.length,viejo,nuevo:iso(nh)}:null;D.dup=null;infRe()}
+A.infDupCancel=()=>{INFD.dup=null;infRe()};
+A.infDupAbrir=()=>{const D=INFD,o=findO(D.obra),x=o.informes.find(i=>i.id===D.dup.id);infDraftSave();if(!x)return;nuevoInforme(o,x.desde);sheetInformeForm()};
+A.infDupReemp=()=>{const D=INFD;if(!D.dup.conf){D.dup.conf=true;infRe();return}const h=D.dup.hasta,id=D.dup.id;D.reemplaza=id;infAplicarFecha(h);D.reemplaza=id};
+A.infEtapaSug=()=>{readInf();INFD.etapa=INFD.sugEtapa;INFD.sugEtapa='';infRe()};
+A.infFotosSi=()=>{const P=INFD.pendFotos;if(P)INFD.fotos.forEach(f=>{if(INFD.ff[f]===P.viejo)INFD.ff[f]=P.nuevo});INFD.pendFotos=null;infRe()};
+A.infFotosNo=()=>{INFD.pendFotos=null;infRe()};
+CHG.infFoto=async(v,el)=>{readInf();const D=INFD;if(!D)return;const fs=[...(el.files||[])].slice(0,40-D.fotos.length);let n=0;for(const f of fs){const dat=await reducir(f);if(!dat)continue;const F=addFile('Foto de obra','image/jpeg',dat);D.fotos.push(F.id);D.ff[F.id]=iso(D.hasta);n++}D.dirty=true;if(INFD===D){sheetInformeForm();if(n)toast(`Se sumaron ${plural(n,'foto','fotos')} con fecha ${fmtD(D.hasta)}`)}};
+CHG.infFotoFecha=(v,el)=>{if(!INFD||!v)return;readInf();INFD.ff[el.dataset.f]=v;INFD.dirty=true;infRe()};
+/* borrador automático */
+function infDraftSave(){try{if(!INFD||!document.querySelector('.sheet form[data-submit="informe"]')||INFD.sub)return;readInf();if(!INFD.dirty)return;const D=INFD,keys=['obra','desde','hasta','tareas','trab','lluvia','dot','ejecutados','proxima','obs','resumen','editId','etapa','ff','fu'],S2={};keys.forEach(k=>S2[k]=D[k]);
+  const fotos=D.fotos.filter(f=>FILES[f]).map(f=>({id:f,url:D.fu[f]||FILES[f].url}));
+  try{localStorage.setItem(infDK(),JSON.stringify({t:Date.now(),D:S2,fotos}))}catch(e){try{localStorage.setItem(infDK(),JSON.stringify({t:Date.now(),D:S2,fotos:fotos.filter(x=>/^https?:/.test(x.url))}))}catch(e2){}}}catch(e){}}
+setInterval(infDraftSave,4000);
+document.addEventListener('input',e=>{if(INFD&&e.target.closest&&e.target.closest('.sheet form[data-submit="informe"]'))INFD.dirty=true},true);
+A.infDraftSi=()=>{const r=INFD.draft;if(!r)return;const D=INFD;Object.assign(D,r.D);D.fotos=[];D.fu=r.D.fu||{};D.ff=r.D.ff||{};(r.fotos||[]).forEach(p=>{const F=addFile('Foto de obra','image/jpeg',p.url);D.fotos.push(F.id);if(/^https?:/.test(p.url))D.fu[F.id]=p.url;const viejo=Object.keys(r.D.ff||{}).find(k=>k===p.id);if(viejo)D.ff[F.id]=r.D.ff[viejo]});D.draft=null;D.dirty=true;infRe()};
+A.infDraftNo=()=>{try{localStorage.removeItem(infDK())}catch(e){}INFD.draft=null;infRe()};
+/* guardar */
+function infCrearNuevas(o,D){D.tareas.filter(x=>x.nueva&&!o.tasks.some(t=>t.id===x.tid)).forEach(x=>{const ec=o.tpl?(tplT(o).etapas.find(e=>tplEtNom(e.codigo,tplT(o))===x.nueva.etapa)||{}):{},rub=(ec.codigo&&TPL_RUBRO[ec.codigo])||Object.keys(ETAPA).find(k=>ETAPA[k]===x.nueva.etapa)||'prelim',st=nextWork(D.desde);
+  const t={id:x.tid,cod:'',fase:ec.fase||1,etapaCod:ec.codigo||'',etapa:x.nueva.etapa,lk:'',li:-1,nivel:'',rubro:rub,name:x.name,weeks:1,start:st,end:Math.max(st,D.hasta),hito:false,cond:'',manual:true,desdeInforme:true,ov:0,par:false};
+  o.base.push({...t});o.tasks.push({...t,equipo:(EQUIPO[rub]||'Cuadrilla general')+' A'});x.tid=t.id;x.fase=t.fase;x.etapa=t.etapa;x.tipo='agregada'})}
+SUBMIT.informe=async()=>{readInf();const o=findO(INFD.obra);if(INFD.sub)return;if(!INFD.ejecutados){toast('Completá los trabajos ejecutados');return}if(!INFD.resumen){toast('Escribí el resumen para el propietario');return}
+  if(!INFD.fotos.length){toast('Subí al menos una foto de la semana');return}
+  const mal=INFD.tareas.find(x=>x.estado==='frenada'&&!x.causa);if(mal){toast('La tarea frenada «'+mal.name+'» necesita una causa');return}
+  const cr=credAv(o);if(!cr||!cr.codigo){toast('Para guardar el informe volvé a ingresar tu código (Salir y entrar de nuevo).');return}
+  const D=INFD;
+  try{
+    const fs=[];const tot=D.fotos.length;
+    for(let k=0;k<tot;k++){const id=D.fotos[k],F=FILES[id];if(!F)continue;let u=D.fu[id]||(/^https?:/.test(F.url)?F.url:'');
+      if(!u){D.sub=`foto ${k+1} de ${tot}`;sheetInformeForm();const r=await codApi({op:'av_foto',obra:o.id,cred:cr,data:F.url});if(!r.url)throw new Error(r.error||'foto');u=r.url;D.fu[id]=u}
+      fs.push({u,f:tsFoto(D.ff[id]||iso(D.hasta))})}
+    D.sub='guardando';sheetInformeForm();
+    const id=D.editId||'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    const resp=x=>x.causa==='Otra'?(x.resp||'Constructora'):respDe(x.causa);
+    const q={id,v:2,n:0,desde:D.desde,hasta:D.hasta,cierre:D.hasta,etapa:D.etapa||etapaDe(o),av:avance(o),avPlan:avancePlan(o),trab:D.trab,lluvia:D.lluvia,dot:D.dot,fin:fmtY(finObra(o)),
+      tareas:D.tareas.map(x=>({tid:x.tid,name:x.name,equipo:x.equipo,fase:x.fase,etapa:x.etapa,nivel:x.nivel,tipo:x.tipo,av:x.av,previsto:x.previsto,estado:x.estado||'',causa:x.causa,causaTxt:x.causaTxt,resp:x.causa?resp(x):'',desdeF:x.estado==='frenada'?(x.desdeF||D.desde):0,card:x.card,vinc:x.vinc,add:!!x.add,nueva:x.nueva})),
+      ejecutados:D.ejecutados,proxima:D.proxima,obs:D.obs||'Sin observaciones.',fotos:fs,resumen:D.resumen,fecha:TODAY};
+    const r=await codApi({op:'inf_save',obra:o.id,cred:cr,informe:q,reemplazar:D.reemplaza||''});
+    if(!r.ok){if(r.error==='dup'){const x=o.informes.find(z=>z.nube&&hastaDe(z)===D.hasta&&z.id!==id);D.sub='';D.dup={id:(x&&x.id)||r.id,hasta:D.hasta};if(INFD===D)infRe();toast('Ya existe un informe de esa semana');return}throw new Error(r.error||'guardar')}
+    const prev=o.informes.find(x=>x.id===id);
+    infCrearNuevas(o,D);
+    const i=infDesdeNube(o,r.informe);o.informes=[...o.informes.filter(x=>x.nube&&x.id!==i.id&&hastaDe(x)!==hastaDe(i)),i];infRenum(o);infDerivar(o);cfgGuardar();
+    try{localStorage.removeItem(infDK())}catch(e){}
+    if(INFL[o.id])INFL[o.id].sig='';
+    if(!prev)notify('cliente',o,'Nuevo resumen semanal de tu obra',{t:'inf',id:i.id});notify('direccion',o,`Informe semanal N° ${i.n} de ${o.nombre}`,{t:'inf',id:i.id});
+    INFD=null;toast('Informe guardado: Avances, el cronograma y el propietario ya ven lo nuevo');
+    (r.avances||[]).forEach(aid=>{AVPEND.add(aid);codApi({op:'av_resumen',obra:o.id,cred:cr,id:aid}).catch(()=>{}).finally(()=>{AVPEND.delete(aid);avLoad(o,true)})});
+    avLoad(o,true);draw();sheetInformeVer(i.id)}
+  catch(e){D.sub='';if(INFD===D)sheetInformeForm();toast('No se pudo guardar el informe: no se guardó nada. Revisá la conexión y probá de nuevo.')}
+};
+A.infBorrar=async ds=>{const i=OBRAS.flatMap(o=>o.informes).find(x=>x.id===ds.id);if(!i||!i.nube)return;const o=i.obra,cr=credAv(o);if(!cr||!cr.codigo){toast('Volvé a ingresar tu código para borrar');return}
+  try{const r=await codApi({op:'inf_del',obra:o.id,cred:cr,id:i.id});if(!r.ok)throw new Error(r.error||'borrar');o.informes=o.informes.filter(x=>x.id!==i.id);infRenum(o);infDerivar(o);if(INFL[o.id])INFL[o.id].sig='';toast('Informe borrado');avLoad(o,true);draw()}catch(e){toast('No se pudo borrar el informe')}};
+A.infEditar=ds=>{const o=OBRAS.find(x=>x.informes.some(i=>i.id===ds.id));const i=o.informes.find(x=>x.id===ds.id);nuevoInforme(o,i.desde);sheetInformeForm()};
+/* ===== lista y vista del informe ===== */
+function tabInformes(o){
+  const own=puedePedir(o),esta=o.informes.find(i=>hastaDe(i)===viernesMax());
+  if(!INFL[o.id]||Date.now()-INFL[o.id].t>30000)infLoad(o);
+  return `${own&&!esta?`<button class="btn gold" data-act="informe" data-id="${o.id}">Armar el informe de esta semana</button>`:esta?`<div class="infobox">El informe de esta semana ya se envió el ${fmt(esta.fecha)}.</div>`:''}${own?`<button class="btn ghost" data-act="informeOtra" data-id="${o.id}" style="margin:6px 0">Cargar un informe de una semana anterior</button>`:''}${esDir()?`<button class="btn ghost" data-act="infFrenos" data-id="${o.id}" style="margin:6px 0">Reprogramaciones y frenos de obra</button>`:''}
+  <div class="list">${o.informes.slice().sort((a,b)=>hastaDe(b)-hastaDe(a)).map(i=>`<div class="entry row"><span><b>Informe N° ${i.n} · ${perTxt(i.desde,hastaDe(i))}</b><span class="muted small">Avance ${i.av}% · ${i.trab} días trabajados · ${i.lluvia} de lluvia · ${plural(i.fotos.length,'foto','fotos')}</span></span><span class="fbtns"><button class="btn sm" data-act="verInforme" data-id="${i.id}">Ver</button><button class="btn sm ghost" data-act="pdfInforme" data-id="${i.id}">PDF</button>${own?`<button class="btn sm ghost" data-act="infEditar" data-id="${i.id}">Editar</button>`:''}${own&&i.nube?`<button class="btn sm ghost" data-act="infBorrar" data-id="${i.id}">Borrar</button>`:''}</span></div>`).join('')||'<p class="muted">Todavía no hay informes guardados.</p>'}</div>`;
+}
+function infRepro(i){const T=(i.tareas||[]),fr=T.filter(x=>x.estado==='frenada'),ad=T.filter(x=>x.estado==='adelantada'),re=T.filter(x=>x.estado==='reanudada');
+  const dias=x=>workBetween((x.desdeF||i.desde)-DAY,hastaDe(i));
+  return{fr,ad,re,rows:[...fr.map(x=>[x.name,'Frenada',causaTxtDe(x),x.resp||respDe(x.causa),dias(x)+' días hábiles']),...re.map(x=>[x.name,'Reanudada','','','']),...ad.map(x=>[x.name,'Adelantada para dar continuidad','', '', (x.vinc||[]).map(k=>(T.find(y=>y.tid===k)||{}).name||'').filter(Boolean).join(', ')])]}}
+function informeDoc(i){
+  const o=i.obra,R=infRepro(i);
+  return{titulo:'Informe semanal de obra',sub:'Jefatura de Obra · '+ORG,obra:o.nombre,num:`INF-${String(i.n).padStart(2,'0')}`,fecha:`${fmtN(i.desde)} al ${fmtN(hastaDe(i))}`,
+    campos:[['Etapa',i.etapa],['Avance real / plan',`${i.av}% / ${i.avPlan}%`],['Días trabajados',`${i.trab} de 5`],['Días de lluvia',String(i.lluvia)],['Dotación promedio',`${i.dot} personas`],['Fin de obra estimado',i.fin]],
+    secciones:[{h:'Avance por tarea',tabla:{cols:['Tarea','Avance','Previsto','Estado'],w:[.46,.14,.14,.26],rows:(i.tareas||[]).map(t=>{const av=infAv(i,t);return[t.name,av==null?'sin dato':av+'%',t.previsto!=null&&t.v!==0&&i.v===2?t.previsto+'%':'',({frenada:'Frenada',reanudada:'Reanudada',adelantada:'Adelantada'})[t.estado]||(t.estado==='Atrasada'?'Atrasada':av!=null&&t.previsto!=null&&i.v===2&&av<t.previsto?'Atrasada':'En plazo')+(t.causa?' · '+causaTxtDe(t):'')]})}},
+      ...(R.rows.length?[{h:'Reprogramaciones de la semana',tabla:{cols:['Tarea','Situación','Causa','Responsable','Días / vínculo'],w:[.28,.2,.22,.16,.14],rows:R.rows}}]:[]),
+      {h:'Trabajos ejecutados',texto:i.ejecutados},{h:'Próxima semana',texto:i.proxima},{h:'Observaciones y riesgos',texto:i.obs},{h:'Registro visual',fotos:i.fotos}],
+    firmas:[['Jefatura de Obra',o.nombre],['','Dirección']]};
+}
+function sheetInformeVer(id,modo){
+  const i=OBRAS.flatMap(o=>o.informes).find(x=>x.id===id);if(!i)return;const cli=ROLE()==='cliente';modo=cli?'corto':modo||'completo';
+  openSheet(`<span class="eyebrow">${esc(i.obra.nombre)}</span><h2>Informe N° ${i.n} · ${perTxt(i.desde,hastaDe(i))}</h2>${cli?'':`<div class="seg"><button data-act="infModo" data-id="${i.id}" data-m="completo" aria-pressed="${modo==='completo'}">Completo</button><button data-act="infModo" data-id="${i.id}" data-m="corto" aria-pressed="${modo==='corto'}">Lo que ve el propietario</button></div>`}
+  ${modo==='corto'?`<div class="paper"><div class="ph"><b>${esc(i.obra.nombre)}</b><span>Informe ${perTxt(i.desde,hastaDe(i))}</span></div><p>${esc(i.resumen)}</p>${i.fotos.length?`<div class="pfotos">${i.fotos.map(f=>FILES[f]?`<img src="${FILES[f].url}" alt="Foto">`:'').join('')}</div>`:''}</div>`:docHTML(informeDoc(i))}
+  ${cli?'':`<button class="btn gold" data-act="pdfInforme" data-id="${i.id}">Descargar PDF</button>`}`,'Informe semanal');
+}
+/* ===== Dirección: frenos y reprogramaciones ===== */
+function infEpisodios(o){const eps=[],ab={};
+  o.informes.filter(i=>i.nube&&i.tareas).forEach(i=>i.tareas.forEach(x=>{const k=tidDe(o,x)||x.name;
+    if(x.estado==='frenada'){if(!ab[k]){const e={k,name:x.name,causa:causaTxtDe(x),resp:x.resp||respDe(x.causa),desde:x.desdeF||i.desde,hasta:null};ab[k]=e;eps.push(e)}}
+    else if(x.estado==='reanudada'&&ab[k]){ab[k].hasta=i.desde;delete ab[k]}}));
+  eps.forEach(e=>{const ro=o.reanud&&o.reanud[e.k];if(!e.hasta&&ro&&ro>=e.desde)e.hasta=ro;e.dias=workBetween(e.desde-DAY,e.hasta||TODAY)});return eps}
+function infResumen(o){const E=infEpisodios(o),suma=(f)=>{const m={};E.forEach(e=>{m[f(e)]=(m[f(e)]||0)+e.dias});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
+  const porT=suma(e=>e.name),dObra=Math.round((desvioSem(o)||0)*5);
+  const tareas=porT.map(([n,dd])=>{const t=o.tasks.find(x=>x.name===n);return[n,dd,t?(desvioTarea(o,t)==null?'':desvioTarea(o,t)):'']});
+  return{E,porT:tareas,porC:suma(e=>e.causa||'Sin causa'),porR:suma(e=>e.resp||'Constructora'),dObra,total:E.reduce((s,e)=>s+e.dias,0)}}
+A.infFrenos=ds=>{const o=findO(ds.id),R=infResumen(o);const tb=(cols,rows)=>`<table class="tb"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${esc(String(c))}</td>`).join('')}</tr>`).join('')||'<tr><td colspan="9" class="muted">Sin datos</td></tr>'}</tbody></table>`;
+  openSheet(`<span class="eyebrow">${esc(o.nombre)} · Dirección</span><h2>Reprogramaciones y frenos</h2><p class="muted small">Se arma con los informes semanales. El cronograma base no se modifica. ${R.total} días hábiles de frenado en total; la obra se prevé ${R.dObra>0?R.dObra+' días hábiles atrasada':'sin atraso'} respecto de la base: aunque algunas tareas se frenaron, la obra siguió avanzando con otras.</p>
+  <span class="eyebrow">Por tarea · atraso de la tarea vs. atraso de la obra</span>${tb(['Tarea','Días frenada','Atraso de la tarea (días háb.)','Atraso de la obra (días háb.)'],R.porT.map(r=>[r[0],r[1],r[2],R.dObra]))}
+  <span class="eyebrow">Por causa</span>${tb(['Causa','Días frenados'],R.porC)}<span class="eyebrow">Por responsable</span>${tb(['Responsable','Días frenados'],R.porR)}
+  <div class="row2"><button class="btn gold" data-act="infFrenosPdf" data-id="${o.id}">Descargar PDF</button><button class="btn" data-act="infFrenosCsv" data-id="${o.id}">Descargar Excel (CSV)</button></div>`,'Frenos')};
+const infFrenosRows=o=>{const R=infResumen(o);return{R,det:R.E.map(e=>[e.name,e.causa,e.resp,fmtD(e.desde),e.hasta?fmtD(e.hasta):'sigue frenada',e.dias])}};
+A.infFrenosPdf=async ds=>{const o=findO(ds.id),{R,det}=infFrenosRows(o);toast('Generando PDF…');try{const b=await docPDF({titulo:'Reprogramaciones y frenos de obra',sub:'Dirección · '+ORG,obra:o.nombre,num:'',fecha:fmtD(TODAY),campos:[['Días hábiles frenados',String(R.total)],['Atraso de la obra vs. base',R.dObra+' días hábiles']],
+  secciones:[{h:'Frenos por tarea',tabla:{cols:['Tarea','Causa','Responsable','Desde','Hasta','Días'],w:[.28,.24,.16,.1,.12,.1],rows:det}},{h:'Por causa',tabla:{cols:['Causa','Días frenados'],w:[.7,.3],rows:R.porC.map(r=>[r[0],String(r[1])])}},{h:'Por responsable',tabla:{cols:['Responsable','Días frenados'],w:[.7,.3],rows:R.porR.map(r=>[r[0],String(r[1])])}},{h:'Atraso de cada tarea vs. atraso de la obra',tabla:{cols:['Tarea','Días frenada','Atraso tarea (d)','Atraso obra (d)'],w:[.46,.18,.18,.18],rows:R.porT.map(r=>[r[0],String(r[1]),String(r[2]),String(R.dObra)])}}],firmas:[['','Dirección']]});bajar(b,`Frenos_${slug(o.nombre)}.pdf`)}catch(e){toast('No se pudo generar el PDF')}};
+A.infFrenosCsv=ds=>{const o=findO(ds.id),{R,det}=infFrenosRows(o),q=v=>'"'+String(v).replace(/"/g,'""')+'"';const L=[['Tarea','Causa','Responsable','Desde','Hasta','Días hábiles frenada'],...det,[],['Por causa','Días'],...R.porC,[],['Por responsable','Días'],...R.porR,[],['Tarea','Días frenada','Atraso tarea (días háb.)','Atraso obra (días háb.)'],...R.porT.map(r=>[r[0],r[1],r[2],R.dObra])];
+  bajar(new Blob(['﻿'+L.map(r=>r.map(q).join(';')).join('\n')],{type:'text/csv;charset=utf-8'}),`Frenos_${slug(o.nombre)}.csv`)};
+A.reanudar=ds=>{const o=findO(ds.o);if(!o||!(esDir()||puedeEditar(o)))return;o.reanud=o.reanud||{};o.reanud[ds.id]=TODAY;infDerivar(o);cfgGuardar();toast('Tarea reanudada');draw()};
+/* arranque: numeración, derivados y carga de informes de todas las obras */
+OBRAS.forEach(o=>{infRenum(o)});
+setTimeout(()=>OBRAS.forEach(o=>infLoad(o)),1500);setInterval(()=>OBRAS.forEach(o=>infLoad(o)),60000);
 
 try{document.querySelectorAll('.brand .mono').forEach(e=>{if(/20\d\d$/.test(e.textContent.trim()))e.textContent=new Date(TODAY).toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).replace(/[.,]/g,'')})}catch(e){}
 /* ===== DEMO: ingreso directo a cada panel, sin códigos ===== */
