@@ -32,7 +32,7 @@ function ap(p){p=p||pref();if(String(p).indexOf('nivel:')===0){nivel(+String(p).
  var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='claro'?'#eceef3':'#0d0e10')}
 window.__tema=function(p){try{if(p)localStorage.setItem(K,p)}catch(e){}ap(p||pref())};window.__temaPref=pref;
 if(mq){var f=function(){if(pref()==='auto')ap('auto')};mq.addEventListener?mq.addEventListener('change',f):mq.addListener&&mq.addListener(f)}
-ap();})();</script><script src="demo-dict.js"></script><script src="demo-i18n.js"></script></head><body>
+ap();})();</script><script>window.NEXO_DEMO=true</script><script src="demo-dict.js"></script><script src="demo-i18n.js"></script></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -401,6 +401,7 @@ nav.bottom .badge{position:absolute;top:5px;left:calc(50% + 6px);background:var(
 .boxed{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg)}
 .chk2{display:flex;gap:8px;align-items:center;font-size:13.5px;color:var(--fg)}
 .chk2 input{width:auto}
+input.bad{border-color:#c0392b!important;box-shadow:0 0 0 2px rgba(192,57,43,.25)}
 details>summary{cursor:pointer;list-style:none}
 details>summary::-webkit-details-marker{display:none}
 details.card summary{font-weight:600}
@@ -1635,7 +1636,7 @@ function tplAvisos(o,t){const out=[];if(!t.cod)return out;const T=tplT(o).tareas
 
 OBRAS.forEach(buildObra);
 /* cronograma base editado por la Dirección: se guarda aparte y se vuelve a aplicar sobre el que arma el modelo */
-OBRAS.forEach(o=>{BASE_DEF[o.id]=JSON.stringify(o.base);const ov=BASE_OV[o.id];if(Array.isArray(ov)&&ov.length){o.base=ov;if(o.tpl)tplResync(o)}});
+OBRAS.forEach(o=>{BASE_DEF[o.id]=JSON.stringify(o.base);const ov=BASE_OV[o.id];if(Array.isArray(ov)&&ov.length){o.tasks.forEach(t=>{const b=o.base.find(x=>x.id===t.id);if(b)t._b=[b.start,b.end,b.weeks]});o.base=ov;if(o.tpl)tplResync(o);else baseSync(o)}});
 const baseOvDe=o=>{const k=BASE_DEF[o.id];if(k===undefined){BASE_DEF[o.id]=JSON.stringify(o.base);return null}return JSON.stringify(o.base)!==k?o.base:null};
 
 /* historial: lo resuelto antes de hoy, con una tasa de demora distinta por obra */
@@ -1896,7 +1897,7 @@ function informeDoc(i){
 }
 
 /* semilla: informes ya enviados por la jefatura (con su versión corta para el propietario) */
-[['o1',3],['o2',2]].forEach(([oid,n])=>{const o=OBRAS.find(x=>x.id===oid);if(!o)return;for(let k=n;k>=1;k--){const desde=lunesDe(TODAY)-k*7*DAY,hasta=desde+4*DAY;const ts=o.tasks.filter(t=>t.real&&t.real.ini<=hasta&&(!t.real.fin||t.real.fin>=desde));const ll=Math.round(hash(o.id+k)*2);
+(window.NEXO_DEMO?[['o1',3],['o2',2]]:[]).forEach(([oid,n])=>{const o=OBRAS.find(x=>x.id===oid);if(!o)return;for(let k=n;k>=1;k--){const desde=lunesDe(TODAY)-k*7*DAY,hasta=desde+4*DAY;const ts=o.tasks.filter(t=>t.real&&t.real.ini<=hasta&&(!t.real.fin||t.real.fin>=desde));const ll=Math.round(hash(o.id+k)*2);
   o.informes.push({sem:true,id:'i'+(++uid),n:o.informes.length+1,obra:o,desde,hasta,etapa:ETAPA[(ts[0]||actual(o)).rubro],av:Math.max(0,avance(o)-k*3),avPlan:Math.max(0,avancePlan(o)-k*3),trab:5-ll,lluvia:ll,dot:o.dot,fin:fmtY(finObra(o)),
     tareas:ts.map(t=>({name:t.name,equipo:t.equipo,av:t.real.fin&&t.real.fin<=hasta?100:Math.max(5,Math.min(95,t.real.av-k*12)),estado:(desvioTarea(o,t)||0)>3?'Atrasada':'En plazo',causa:(desvioTarea(o,t)||0)>3?t.real.causa:''})),
     ejecutados:yJoin(ts.map(t=>t.name))+'.',proxima:'Continuar con '+yJoin(ts.map(t=>t.name.toLowerCase()))+'.',obs:ll?`${ll} ${ll===1?'día':'días'} de lluvia en la semana.`:'Sin observaciones.',fotos:[],
@@ -2895,11 +2896,11 @@ const SUBMIT={
     if(!d.ok||d.obra!==id){toast('Código incorrecto');return}
     guardarCod(r,id);credGuardar(r,id,txt);if(au)S.audObras=guardadas('aud');else S.mias=guardadas('jefe');closeSheet();toast(`Ahora tenés a cargo ${o.nombre}`);draw()},
   clavesMulti:async f=>{const r=S.codRol||'jefe';const falla=[];let ok=0;
-    for(const id of S.pend.slice()){const o=OBRAS.find(x=>x.id===id),txt=val('cl-m-'+id);if(!normClave(txt)){falla.push(o.nombre);continue}
+    for(const id of S.pend.slice()){const o=OBRAS.find(x=>x.id===id),txt=val('cl-m-'+id);if(!normClave(txt)){falla.push(id);continue}
       let d;try{d=await codApi({op:'login',rol:r,codigo:txt})}catch(e){toast('Sin conexión con el servidor. Probá de nuevo.');return}
-      if(!d.ok||d.obra!==id){falla.push(o.nombre);continue}
+      if(!d.ok||d.obra!==id){falla.push(id);continue}
       guardarCod(r,id);credGuardar(r,id,txt);S.pend=S.pend.filter(x=>x!==id);ok++}
-    if(S.pend.length){toast(`Revisá el código de: ${falla.join(', ')}`);draw();return}
+    if(S.pend.length){toast(falla.length>1?'Código incorrecto en '+falla.length+' obras. Revisá los campos marcados.':'Código incorrecto. Revisá el campo marcado.');draw();falla.forEach(id=>{const e=document.getElementById('cl-m-'+id);if(e){e.classList.add('bad');e.setAttribute('aria-invalid','true')}});return}
     const ids=S.sel.filter(id=>guardadas(r).includes(id));S.pend=null;if(r==='jefe'){S.mias=ids;login('jefe')}else{S.audObras=ids;login('aud')}},
   claveIn:async f=>{let r=S.codRol||'prop';const txt=val('cl-clave');if(!normClave(txt)){toast('Escribí el código');return}
     let d;try{
@@ -3126,7 +3127,7 @@ function casaSVG(k,cur){/* k = etapa que se muestra (0 a 6) · imágenes con la 
   return `<svg viewBox="0 0 900 506" class="casa" role="img" aria-label="La casa en la etapa ${ETAPAS_CASA[k][0]}, con la misma fachada del render"><rect width="900" height="506" fill="#101114"/><image href="${src}" x="0" y="0" width="900" height="506" preserveAspectRatio="xMidYMid slice"/></svg>`}
 function vCliente(){
   const o=COBRA(),et=etapaDe(o),idx=Math.max(0,HITOS_CLIENTE.indexOf(et));const k=S.casa===undefined||S.casa===null?idx:S.casa;
-  const rr=iaRendersObra(o),g=rr.map(x=>[x.src,x.cap]),stageOK=(o===OBRAS[0]),cur=g.length?g[S.gal%g.length]:null;
+  const rr=iaRendersObra(o),g0=rr.map(x=>[x.src,x.cap]),g=[...g0,...rendersDe(o).filter(u=>u&&u.indexOf('data:image/svg')!==0&&!g0.some(y=>y[0]===u)).map(u=>[u,'Render'])],stageOK=(o===OBRAS[0]),cur=g.length?g[S.gal%g.length]:null;
   const inf=o.informes.at(-1),prev=o.informes.slice(0,-1).reverse();
   const fC=finContractual(o),sem=Math.max(0,Math.round((fC-TODAY)/(7*DAY)));const ct=contractual(o);
   const fechas=[...o.sup.filter(s=>s.estado==='programada').slice(0,2).map(s=>({t:s.fecha,n:'Visita de la auditoría técnica',k:'visita'})),...hitosObra(o).filter(h=>h.t>TODAY&&['Obra cerrada: techos terminados','Instalaciones probadas','Pisos y revestimientos terminados'].includes(h.name)).slice(0,2).map(h=>({t:h.t,n:h.name,k:'hito'})),{t:fC,n:'Entrega de tu casa',k:'hito'}].sort((a,b)=>a.t-b.t);
@@ -4366,9 +4367,9 @@ function tareasSemana(o,desde,hasta,exId){const out=[];
     if((pv!=null&&pv>=100)||(pv==null&&t.real&&t.real.fin&&t.real.fin<desde&&t.real.src!=='inf'))return;
     let tipo='';
     if((t.start<=hasta+2*DAY&&fEnd(t.end)>desde)||(b.start<=hasta+2*DAY&&fEnd(b.end)>desde))tipo='curso';
-    else if(fin<=desde){if((pv!=null&&pv<100)||(pv==null&&fin>desde-14*DAY)||(pv==null&&t.real&&t.real.src!=='inf'&&t.real.av>0&&t.real.av<100))tipo='atrasada'}
+    else if(fin<=desde){if((pv!=null&&pv<100)||(pv==null)||(pv==null&&t.real&&t.real.src!=='inf'&&t.real.av>0&&t.real.av<100))tipo='atrasada'}
     else if(t.start>hasta+2*DAY&&((pv!=null&&pv>0)||(t.real&&t.real.ini&&t.real.ini<=hasta&&t.real.av>0&&t.real.av<100)))tipo='adelantada';
-    if(tipo)out.push({r:filaInf(o,t,hasta,exId,tipo),s:t.start})});
+    if(tipo){const r=filaInf(o,t,hasta,exId,tipo);if(tipo==='atrasada'&&pv==null)r.sd=true;out.push({r,s:t.start})}});
   return out.sort((a,b)=>(a.r.fase-b.r.fase)||(a.s-b.s)).map(x=>x.r)}
 const infTieneDatos=x=>avOk(x)||x.estado||x.causa;
 /* avance real, fechas reales, frenos y adelantos: se derivan siempre de los informes (el de fecha más reciente manda) */
@@ -4396,11 +4397,11 @@ function nuevoInforme(o,desde0){const hasta=cierreDe(desde0||TODAY),desde=hasta-
   INFD={obra:o.id,desde,hasta,tareas:ex?[]:tareasSemana(o,desde,hasta,null),trab:5,lluvia:0,dot:o.dotacion.hoy,ejecutados:'',proxima:'',obs:'',fotos:[],fu:{},ff:{},resumen:'',editId:null,etapa:etapaEn(o,hasta),dirty:false,q:'',addOpen:false,nq:'',ne:''};
   if(ex){INFD.etapa=ex.etapa||INFD.etapa;INFD.editId=ex.id;INFD.n=ex.n;INFD.trab=ex.trab;INFD.lluvia=ex.lluvia;INFD.dot=ex.dot;INFD.ejecutados=ex.ejecutados;INFD.proxima=ex.proxima;INFD.obs=ex.obs==='Sin observaciones.'?'':ex.obs;INFD.resumen=ex.resumen;
     INFD.fotos=(ex.fotos||[]).slice();(ex.fotos||[]).forEach((f,k)=>{if(ex.fotoU&&ex.fotoU[k])INFD.fu[f]=ex.fotoU[k];INFD.ff[f]=ex.fotoF&&ex.fotoF[k]?isoAR(ex.fotoF[k]):iso(hasta)});
-    INFD.tareas=(ex.tareas||[]).map(x=>{const k=tidDe(o,x),t=o.tasks.find(y=>y.id===k),cs=x.causa&&INF_CAUSAS.some(c=>c[0]===x.causa);
-      return{tid:k,name:x.name,equipo:x.equipo||'',fase:x.fase||(t&&t.fase)||0,etapa:x.etapa||(t&&t.etapa)||'',nivel:x.nivel||(t&&t.nivel)||'',tipo:x.tipo||'curso',av:infAv(ex,x),previsto:t?planPct(o,t,hasta):(x.previsto||0),causa:cs?x.causa:(x.causa?'Otra':''),causaTxt:x.causaTxt||(x.causa&&!cs?x.causa:''),resp:x.resp||'',estado:(x.estado==='frenada'||x.estado==='reanudada'||x.estado==='adelantada')?x.estado:'',desdeF:x.desdeF||0,card:x.card||'',vinc:x.vinc||[],add:!!x.add,nueva:x.nueva}})}
+    INFD.tareas=(ex.tareas||[]).map(x=>{const sd0=x.tipo==='atrasada'&&x.sd!==false&&!x.add&&(x.sd||!infTieneDatos(x)),k=tidDe(o,x),t=o.tasks.find(y=>y.id===k),cs=x.causa&&INF_CAUSAS.some(c=>c[0]===x.causa);
+      return{tid:k,name:x.name,equipo:x.equipo||'',fase:x.fase||(t&&t.fase)||0,etapa:x.etapa||(t&&t.etapa)||'',nivel:x.nivel||(t&&t.nivel)||'',tipo:x.tipo||'curso',av:infAv(ex,x),previsto:t?planPct(o,t,hasta):(x.previsto||0),causa:cs?x.causa:(x.causa?'Otra':''),causaTxt:x.causaTxt||(x.causa&&!cs?x.causa:''),resp:x.resp||'',estado:(x.estado==='frenada'||x.estado==='reanudada'||x.estado==='adelantada')?x.estado:'',desdeF:x.desdeF||0,card:x.card||'',vinc:x.vinc||[],add:!!x.add,nueva:x.nueva,sd:sd0}})}
   try{const dk=infDK();const r=JSON.parse(localStorage.getItem(dk)||'null');if(r&&r.D&&Date.now()-r.t<14*864e5)INFD.draft=r}catch(e){}}
 const infDK=()=>'nexo2_inf_borrador_'+INFD.obra+'_'+(INFD.editId||'nuevo');
-function readInf(){if(!INFD||!$('#if-trab'))return;const g=id=>{const e=$('#'+id);return e?e.value:undefined};
+function readInf(){if(!INFD||!$('#if-trab'))return;if($('#if-sd'))INFD.sdOpen=$('#if-sd').open;const g=id=>{const e=$('#'+id);return e?e.value:undefined};
   if($('#if-etapa'))INFD.etapa=$('#if-etapa').value;INFD.trab=clamp(+val('if-trab')||0,0,6);INFD.lluvia=clamp(+val('if-ll')||0,0,6);INFD.dot=+val('if-dot')||0;INFD.ejecutados=val('if-ej');INFD.proxima=val('if-px');INFD.obs=val('if-obs');INFD.resumen=val('if-res');
   if($('#if-nq'))INFD.nq=$('#if-nq').value;if($('#if-ne'))INFD.ne=$('#if-ne').value;
   INFD.tareas.forEach((t,i)=>{const a=g('if-av'+i);if(a!==undefined)t.av=a.trim()===''?null:clamp(Math.round(+a)||0,0,100);
@@ -4436,7 +4437,7 @@ function sheetInformeForm(){
   <p class="small" id="if-per"><b>Informe ${perTxt(D.desde,D.hasta)}</b></p>${avisos}
   <label class="f">Etapa a la que corresponde el informe<select id="if-etapa">${(()=>{const L=etapasObra(o);if(D.etapa&&!L.includes(D.etapa))L.push(D.etapa);return L.map(e=>`<option ${e===D.etapa?'selected':''}>${esc(e)}</option>`).join('')})()}</select></label><p class="muted small" style="margin:-4px 0 0">Se propone según la fecha y el cronograma base; podés cambiarla.</p>
   <form class="frm" data-submit="informe">
-  <span class="eyebrow">1 · Avance por tarea</span><p class="muted small" style="margin:0">Las tareas salen del cronograma de esa semana. El % es el avance acumulado real; dejalo vacío si no tenés el dato.</p><div>${D.tareas.map((t,i)=>infFilaHTML(t,i,o)).join('')||'<p class="muted small">No hay tareas del cronograma para esta semana. Podés agregar una.</p>'}</div>${infAgregarHTML(o)}
+  <span class="eyebrow">1 · Avance por tarea</span><p class="muted small" style="margin:0">Las tareas salen del cronograma de esa semana. El % es el avance acumulado real; dejalo vacío si no tenés el dato.</p><div>${(()=>{const pr=[],sd=[];D.tareas.forEach((t,i)=>{(t.sd?sd:pr).push(infFilaHTML(t,i,o))});const ab=D.sdOpen||D.tareas.some(t=>t.sd&&infTieneDatos(t));return pr.join('')+(sd.length?`<details id="if-sd" class="boxed" ${ab?'open':''}><summary><b>Atrasadas sin datos (${sd.length})</b> <span class="muted small">· ya debieron terminar y nunca tuvieron avance cargado · tocá para abrir</span></summary>${sd.join('')}</details>`:'')})()||'<p class="muted small">No hay tareas del cronograma para esta semana. Podés agregar una.</p>'}</div>${infAgregarHTML(o)}
   <span class="eyebrow">2 · Calendario y dotación</span><div class="row2"><label class="f">Días trabajados<input id="if-trab" type="number" min="0" max="6" value="${D.trab}"></label><label class="f">Días de lluvia<input id="if-ll" type="number" min="0" max="6" value="${D.lluvia}"></label><label class="f">Dotación promedio<input id="if-dot" type="number" min="0" value="${D.dot}"></label></div>
   <span class="eyebrow">3 · Trabajos ejecutados</span><textarea id="if-ej" rows="3" placeholder="Qué se hizo esta semana">${esc(D.ejecutados)}</textarea><button class="btn sm ghost" type="button" data-act="infRegistro" style="align-self:flex-start">Traer lo cargado en el registro diario</button>
   <span class="eyebrow">4 · Próxima semana</span><textarea id="if-px" rows="2">${esc(D.proxima)}</textarea>
@@ -4499,7 +4500,7 @@ SUBMIT.informe=async()=>{readInf();const o=findO(INFD.obra);if(INFD.sub)return;i
     const id=D.editId||'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
     const resp=x=>x.causa==='Otra'?(x.resp||'Constructora'):respDe(x.causa);
     const q={id,v:2,n:0,desde:D.desde,hasta:D.hasta,cierre:D.hasta,etapa:D.etapa||etapaDe(o),av:avance(o),avPlan:avancePlan(o),trab:D.trab,lluvia:D.lluvia,dot:D.dot,fin:fmtY(finObra(o)),
-      tareas:D.tareas.map(x=>({tid:x.tid,name:x.name,equipo:x.equipo,fase:x.fase,etapa:x.etapa,nivel:x.nivel,tipo:x.tipo,av:x.av,previsto:x.previsto,estado:x.estado||'',causa:x.causa,causaTxt:x.causaTxt,resp:x.causa?resp(x):'',desdeF:x.estado==='frenada'?(x.desdeF||D.desde):0,card:x.card,vinc:x.vinc,add:!!x.add,nueva:x.nueva})),
+      tareas:D.tareas.map(x=>({tid:x.tid,name:x.name,equipo:x.equipo,fase:x.fase,etapa:x.etapa,nivel:x.nivel,tipo:x.tipo,av:x.av,previsto:x.previsto,estado:x.estado||'',causa:x.causa,causaTxt:x.causaTxt,resp:x.causa?resp(x):'',desdeF:x.estado==='frenada'?(x.desdeF||D.desde):0,card:x.card,vinc:x.vinc,add:!!x.add,nueva:x.nueva,sd:!!x.sd})),
       ejecutados:D.ejecutados,proxima:D.proxima,obs:D.obs||'Sin observaciones.',fotos:fs,resumen:D.resumen,fecha:TODAY};
     const r=await codApi({op:'inf_save',obra:o.id,cred:cr,informe:q,reemplazar:D.reemplaza||''});
     if(!r.ok){if(r.error==='dup'){const x=o.informes.find(z=>z.nube&&hastaDe(z)===D.hasta&&z.id!==id);D.sub='';D.dup={id:(x&&x.id)||r.id,hasta:D.hasta};if(INFD===D)infRe();toast('Ya existe un informe de esa semana');return}throw new Error(r.error||'guardar')}
@@ -4567,6 +4568,28 @@ A.reanudar=ds=>{const o=findO(ds.o);if(!o||!(esDir()||puedeEditar(o)))return;o.r
 OBRAS.forEach(o=>{infRenum(o)});
 setTimeout(()=>OBRAS.forEach(o=>infLoad(o)),1500);setInterval(()=>OBRAS.forEach(o=>infLoad(o)),60000);
 
+
+/* ===== DIR-06: el cronograma base manda en todos los paneles (sin copias separadas) ===== */
+function tareaConDatos(o,t){const c=[];
+  if(t.real&&(t.real.av>0||(t.real.ini&&t.real.src!=='inf')))c.push('avance cargado');
+  const ni=(o.informes||[]).filter(i=>i.nube&&(i.tareas||[]).some(x=>tidDe(o,x)===t.id&&(avOk(x)||x.estado))).length;if(ni)c.push(ni+(ni===1?' informe semanal con datos':' informes semanales con datos'));
+  const nc=o.cards.filter(cd=>cd.task===t&&cd.items.some(i=>iDone(i)||i.respuesta)).length;if(nc)c.push(nc+(nc===1?' pedido con respuesta':' pedidos con respuesta'));
+  const na=((AVS[o.id]||{}).items||[]).filter(x=>x.sector===t.name).length;if(na)c.push(na+(na===1?' avance con fotos':' avances con fotos'));
+  return c}
+function baseSync(o){const ids=new Set(o.base.map(b=>b.id));let ch=false;
+  o.tasks=o.tasks.filter(t=>{if(ids.has(t.id))return true;o.cards=o.cards.filter(c=>c.task!==t);o.cert=(o.cert||[]).filter(c=>c.task!==t);ch=true;return false});
+  o.base.forEach(b=>{const t=o.tasks.find(x=>x.id===b.id);
+    if(!t){const n={...b,equipo:b.equipo||((typeof EQUIPO!=='undefined'&&EQUIPO[b.rubro]||'Cuadrilla general')+' A')};n._b=[b.start,b.end,b.weeks];o.tasks.push(n);ch=true;return}
+    if(t.name!==b.name){t.name=b.name;ch=true}
+    if(t._b){const ds=b.start-t._b[0],de=b.end-t._b[1],dw=b.weeks-t._b[2];if(ds||de||dw){t.start+=ds;t.end+=de;t.weeks=Math.max(1,(t.weeks||1)+dw);ch=true}}
+    t._b=[b.start,b.end,b.weeks]});
+  if(ch)o.tasks.sort((a,b)=>a.start-b.start);return ch}
+['eName','eStart','eWeeks','eFin'].forEach(k=>{const f=CHG[k];CHG[k]=function(){const r=f.apply(this,arguments);const o=findO(EOID);if(o&&EMODO==='base'){baseSync(o);draw();if(typeof refreshEditor==='function')refreshEditor()}return r}});
+{const f=SUBMIT.ebadd;SUBMIT.ebadd=function(){const r=f.apply(this,arguments);const o=findO(EOID);if(o&&EMODO==='base'){baseSync(o);draw()}return r}}
+{const f=A.edel;A.edel=function(ds){const o=findO(EOID);if(o&&EMODO==='base'){const b=o.base.find(x=>x.id===ds.id),t=o.tasks.find(x=>x.id===ds.id);
+  if(b&&t){const dt=tareaConDatos(o,t);if(dt.length&&!confirm(`"${t.name}" ya tiene datos: ${dt.join(', ')}.\nSi lo quitás de la base se borra de todos los paneles (Dirección, Jefatura de Obra y Propietario). ¿Quitarlo igual?`))return}
+  o.base=o.base.filter(x=>x.id!==ds.id);baseSync(o);toast('Se quitó de la base');draw();sheetEditor();return}
+  return f.apply(this,arguments)}}
 try{document.querySelectorAll('.brand .mono').forEach(e=>{if(/20\d\d$/.test(e.textContent.trim()))e.textContent=new Date(TODAY).toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).replace(/[.,]/g,'')})}catch(e){}
 /* ===== DEMO: ingreso directo a cada panel, sin códigos ===== */
 try{localStorage.setItem('nexo2_dirauth','DIR-DEMO')}catch(e){}
