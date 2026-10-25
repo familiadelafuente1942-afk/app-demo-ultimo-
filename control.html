@@ -943,8 +943,8 @@ function Dashboard({ tabs }) {
   const [cargando, setCargando] = useState(true);
   const [actividad, setActividad] = useState({ obras: 0, personal: 0, matpedidos: 0, pedidos: 0, mensajes: 0, avance: 0, certificados: 0, bitacora: 0, auditoria: 0 });
   const [actividadHoy, setActividadHoy] = useState({ matpedidos: 0, pedidos: 0, mensajes: 0, avance: 0, certificados: 0, bitacora: 0, auditoria: 0 });
-  const [aperturas, setAperturas] = useState({ total: 0, hoy: 0, ultima: null, hoyPorVista: { contratista: 0, cliente: 0, constructora: 0, propietario: 0 }, porVista: { contratista: 0, cliente: 0, constructora: 0, propietario: 0 }, porHora: new Array(24).fill(0) });
-  const [estadoApps, setEstadoApps] = useState({ contratista: { errores: 0 }, cliente: { errores: 0 }, constructora: { errores: 0 }, propietario: { errores: 0 } });
+  const [aperturas, setAperturas] = useState({ total: 0, hoy: 0, ultima: null, hoyPorVista: { contratista: 0, cliente: 0, constructora: 0, propietario: 0, nexo2: 0 }, porVista: { contratista: 0, cliente: 0, constructora: 0, propietario: 0, nexo2: 0 }, porHora: new Array(24).fill(0) });
+  const [estadoApps, setEstadoApps] = useState({ contratista: { errores: 0 }, cliente: { errores: 0 }, constructora: { errores: 0 }, propietario: { errores: 0 }, nexo2: { errores: 0 } });
   const [costoClaude, setCostoClaude] = useState({ mes: null, hoy: null, porApp: [], ultimos7: [] }); // null = todavía no cargó
   const [incidentes, setIncidentes] = useState([]);
   const [uptime, setUptime] = useState({ pct: null, chequeos: 0, historial: [], senal: null }); // null = todavía no cargó
@@ -1045,17 +1045,18 @@ function Dashboard({ tabs }) {
       let hoy = totalDesdeRango(rHoy);
       const filasVentana = await rVentana.json();
 
-      const porVista = { contratista: 0, cliente: 0, constructora: 0, propietario: 0 };
+      const porVista = { contratista: 0, cliente: 0, constructora: 0, propietario: 0, nexo2: 0 };
       const porHora = new Array(24).fill(0);
-      const hoyPorVista = { contratista: 0, cliente: 0, constructora: 0, propietario: 0 };
+      const hoyPorVista = { contratista: 0, cliente: 0, constructora: 0, propietario: 0, nexo2: 0 };
       const inicioHoyMs = new Date().setHours(0, 0, 0, 0);
       let hoyFilas = 0;
       (filasVentana || []).forEach(f => {
-        if (f.app && porVista.hasOwnProperty(f.app)) porVista[f.app]++;
+        const vk = f.app && String(f.app).indexOf("nexo2") === 0 ? "nexo2" : f.app;
+        if (vk && porVista.hasOwnProperty(vk)) porVista[vk]++;
         const fecha = new Date(f.creado_en);
         if (!isNaN(fecha)) {
           porHora[fecha.getHours()]++;
-          if (fecha.getTime() >= inicioHoyMs) { hoyFilas++; if (f.app && hoyPorVista.hasOwnProperty(f.app)) hoyPorVista[f.app]++; }
+          if (fecha.getTime() >= inicioHoyMs) { hoyFilas++; if (vk && hoyPorVista.hasOwnProperty(vk)) hoyPorVista[vk]++; }
         }
       });
       // El contador "hoy" nunca puede ser menor que las filas de hoy que vemos.
@@ -1077,11 +1078,12 @@ function Dashboard({ tabs }) {
       );
       if (!r.ok) throw new Error("HTTP " + r.status);
       const filas = await r.json();
-      const estado = { contratista: { errores: 0 }, cliente: { errores: 0 }, constructora: { errores: 0 }, propietario: { errores: 0 } };
+      const estado = { contratista: { errores: 0 }, cliente: { errores: 0 }, constructora: { errores: 0 }, propietario: { errores: 0 }, nexo2: { errores: 0 } };
       (filas || []).forEach(f => {
-        if (f.app && estado.hasOwnProperty(f.app)) {
-          estado[f.app].errores++;
-          if (!estado[f.app].ultimo) estado[f.app].ultimo = f.mensaje; // el primero es el más reciente (order desc)
+        const ek = f.app && String(f.app).indexOf("nexo2") === 0 ? "nexo2" : f.app;
+        if (ek && estado.hasOwnProperty(ek)) {
+          estado[ek].errores++;
+          if (!estado[ek].ultimo) estado[ek].ultimo = f.mensaje; // el primero es el más reciente (order desc)
         }
       });
       setEstadoApps(estado);
@@ -1333,6 +1335,7 @@ function Dashboard({ tabs }) {
         { label: "App Cliente", tag: "cliente" },
         { label: "App Constructora", tag: "constructora" },
         { label: "App Propietario", tag: "propietario" },
+        { label: "NEXO 2.0", tag: "nexo2" },
       ].map((a, i) => {
         const e = estadoApps[a.tag] || { errores: 0 };
         const ok = e.errores === 0;
@@ -1457,15 +1460,15 @@ function Dashboard({ tabs }) {
     ),
     h("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10, fontSize: 12, color: "var(--text-faint)" } },
       "Hoy por vista:",
-      [["Contratista", "contratista", "#a07c3a"], ["Cliente", "cliente", "#2e9e5b"], ["Constructora", "constructora", "#3b82c4"], ["Propietario", "propietario", "#c4604a"]].map(([n, k, c]) =>
+      [["Contratista", "contratista", "#a07c3a"], ["Cliente", "cliente", "#2e9e5b"], ["Constructora", "constructora", "#3b82c4"], ["Propietario", "propietario", "#c4604a"], ["NEXO 2.0", "nexo2", "#6b5bd6"]].map(([n, k, c]) =>
         h("span", { key: k, style: { border: "1px solid " + c, borderRadius: 999, padding: "2px 10px", color: c } }, n + " " + aperturas.hoyPorVista[k])
       )
     ),
     h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 10, marginTop: 10 } },
       h("div", { className: "gauge", style: { padding: "16px" } },
         h("div", { className: "gauge-label", style: { marginBottom: 12 } }, "Uso por vista · aperturas"),
-        [["Contratista", "contratista", "#a07c3a"], ["Cliente", "cliente", "#2e9e5b"], ["Constructora", "constructora", "#3b82c4"], ["Propietario", "propietario", "#c4604a"]].map(([n, k, c]) => {
-          const maxV = Math.max(1, aperturas.porVista.contratista, aperturas.porVista.cliente, aperturas.porVista.constructora, aperturas.porVista.propietario);
+        [["Contratista", "contratista", "#a07c3a"], ["Cliente", "cliente", "#2e9e5b"], ["Constructora", "constructora", "#3b82c4"], ["Propietario", "propietario", "#c4604a"], ["NEXO 2.0", "nexo2", "#6b5bd6"]].map(([n, k, c]) => {
+          const maxV = Math.max(1, aperturas.porVista.contratista, aperturas.porVista.cliente, aperturas.porVista.constructora, aperturas.porVista.propietario, aperturas.porVista.nexo2);
           const v = aperturas.porVista[k];
           return h("div", { key: k, style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 } },
             h("div", { style: { width: 92, fontSize: 11, letterSpacing: ".04em", color: c, textTransform: "uppercase" } }, n),
@@ -1477,7 +1480,7 @@ function Dashboard({ tabs }) {
         }),
         h("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-faint)", borderTop: "1px solid #e5e5ea", paddingTop: 8 } },
           h("span", null, "TOTAL (30 días)"),
-          h("span", { style: { color: "var(--text)", fontWeight: 600 } }, aperturas.porVista.contratista + aperturas.porVista.cliente + aperturas.porVista.constructora + aperturas.porVista.propietario)
+          h("span", { style: { color: "var(--text)", fontWeight: 600 } }, aperturas.porVista.contratista + aperturas.porVista.cliente + aperturas.porVista.constructora + aperturas.porVista.propietario, aperturas.porVista.nexo2)
         )
       ),
       h("div", { className: "gauge", style: { padding: "16px", display: "flex", flexDirection: "column", alignItems: "center" } },
