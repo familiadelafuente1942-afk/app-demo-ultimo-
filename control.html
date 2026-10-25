@@ -582,6 +582,7 @@ const h = React.createElement;
 // ════════════════════════════════════════════════════════════
 const SUPA_URL = "https://bxhjgxzvayszfqwlwinq.supabase.co";
 const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4aGpneHp2YXlzemZxd2x3aW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NTI4NTMsImV4cCI6MjA5ODQyODg1M30.Wq7TbIUc0t3u7vbmi_yU49BlOaWzl9sByySBpV1HcZQ";
+const NEXO2_STATS = "https://nexoentorno.vercel.app/api/nexo2?stats=1";
 const APP_URL = "https://vvconstruccionesultimo.vercel.app";
 const AUTH_URL = "https://bxhjgxzvayszfqwlwinq.supabase.co/functions/v1/a-nexo-auth";
 const HEALTH_URL = "https://bxhjgxzvayszfqwlwinq.supabase.co/functions/v1/hyper-worker";
@@ -942,6 +943,7 @@ function BadgeFalla() {
 function Dashboard({ tabs }) {
   const [cargando, setCargando] = useState(true);
   const [actividad, setActividad] = useState({ obras: 0, personal: 0, matpedidos: 0, pedidos: 0, mensajes: 0, avance: 0, certificados: 0, bitacora: 0, auditoria: 0 });
+  const [nexo, setNexo] = useState({ obras: 0, informes: 0, informesHoy: 0, informes7: 0, avances: 0, avancesHoy: 0, avances7: 0, fotos: 0, ultima: 0 });
   const [actividadHoy, setActividadHoy] = useState({ matpedidos: 0, pedidos: 0, mensajes: 0, avance: 0, certificados: 0, bitacora: 0, auditoria: 0 });
   const [aperturas, setAperturas] = useState({ total: 0, hoy: 0, ultima: null, hoyPorVista: { contratista: 0, cliente: 0, constructora: 0, propietario: 0, nexo2: 0 }, porVista: { contratista: 0, cliente: 0, constructora: 0, propietario: 0, nexo2: 0 }, porHora: new Array(24).fill(0) });
   const [estadoApps, setEstadoApps] = useState({ contratista: { errores: 0 }, cliente: { errores: 0 }, constructora: { errores: 0 }, propietario: { errores: 0 }, nexo2: { errores: 0 } });
@@ -1016,6 +1018,18 @@ function Dashboard({ tabs }) {
       // No mostramos los números viejos como si fueran de ahora — se marca la falla
       // y la sección avisa en vez de mentir con un 0 o un número desactualizado.
       setFallas(f => ({ ...f, actividad: true }));
+    }
+
+    // 3b) NEXO 2.0: la app de hoy guarda sus datos en su propio servidor (solo conteos)
+    try {
+      const r = await fetch(NEXO2_STATS, { cache: "no-store" });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const d = await r.json();
+      if (!d || !d.ok) throw new Error("sin datos");
+      setNexo(d);
+      setFallas(f => ({ ...f, nexo: false }));
+    } catch (e) {
+      setFallas(f => ({ ...f, nexo: true }));
     }
 
     // 4) Aperturas de app — tabla liviana propia (no bco_storage). El total y "hoy"
@@ -1290,16 +1304,16 @@ function Dashboard({ tabs }) {
       ),
       h("div", { className: "hero-stats" },
         h("div", { className: "hero-stat" },
-          h("div", { className: "hero-stat-num mono" }, actividad.obras),
+          h("div", { className: "hero-stat-num mono" }, nexo.obras),
           h("div", { className: "hero-stat-label" }, "Obras")
         ),
         h("div", { className: "hero-stat" },
-          h("div", { className: "hero-stat-num mono" }, actividad.personal),
-          h("div", { className: "hero-stat-label" }, "Personal / usuarios")
+          h("div", { className: "hero-stat-num mono" }, nexo.informes),
+          h("div", { className: "hero-stat-label" }, "Informes semanales")
         ),
         h("div", { className: "hero-stat" },
-          h("div", { className: "hero-stat-num mono" }, actividad.pedidos + actividad.matpedidos),
-          h("div", { className: "hero-stat-label" }, "Pedidos")
+          h("div", { className: "hero-stat-num mono" }, nexo.avances),
+          h("div", { className: "hero-stat-label" }, "Avances con fotos")
         ),
         h("div", { className: "hero-stat" },
           h("div", { className: "hero-stat-num mono" }, "$" + totalCostos),
@@ -1405,16 +1419,11 @@ function Dashboard({ tabs }) {
 
     // Actividad de HOY — para que no se pierda en un total que solo crece.
     // Si todo está en 0 acá, hoy no hubo movimiento (aunque el total histórico sea alto).
-    h("div", { className: "section-label" }, "Actividad de hoy", fallas.actividad && h(BadgeFalla)),
+    h("div", { className: "section-label" }, "Actividad de hoy · NEXO 2.0", fallas.nexo && h(BadgeFalla)),
     h("div", { className: "gauge-grid" },
       [
-        { label: "Pedidos de materiales", val: actividadHoy.matpedidos },
-        { label: "Pedidos generales", val: actividadHoy.pedidos },
-        { label: "Mensajes / fotos", val: actividadHoy.mensajes },
-        { label: "Registros de avance", val: actividadHoy.avance },
-        { label: "Certificados semanales", val: actividadHoy.certificados },
-        { label: "Bitácoras cargadas", val: actividadHoy.bitacora },
-        { label: "Auditorías", val: actividadHoy.auditoria },
+        { label: "Informes semanales cargados hoy", val: nexo.informesHoy },
+        { label: "Avances con fotos de hoy", val: nexo.avancesHoy },
       ].map((g, i) =>
         h("div", { className: "gauge", key: i },
           h("div", { className: "gauge-label" }, g.label),
@@ -1424,18 +1433,15 @@ function Dashboard({ tabs }) {
     ),
 
     // Actividad
-    h("div", { className: "section-label" }, "Actividad del sistema", fallas.actividad && h(BadgeFalla)),
+    h("div", { className: "section-label" }, "Actividad del sistema · NEXO 2.0" + (nexo.ultima ? " · último movimiento " + hace(new Date(nexo.ultima).toISOString()) : ""), fallas.nexo && h(BadgeFalla)),
     h("div", { className: "gauge-grid" },
       [
-        { label: "Obras activas", val: actividad.obras },
-        { label: "Personal / usuarios", val: actividad.personal },
-        { label: "Pedidos de materiales", val: actividad.matpedidos },
-        { label: "Pedidos generales", val: actividad.pedidos },
-        { label: "Mensajes / fotos", val: actividad.mensajes },
-        { label: "Registros de avance", val: actividad.avance },
-        { label: "Certificados semanales", val: actividad.certificados },
-        { label: "Bitácoras cargadas", val: actividad.bitacora },
-        { label: "Auditorías", val: actividad.auditoria },
+        { label: "Obras", val: nexo.obras },
+        { label: "Informes semanales", val: nexo.informes },
+        { label: "Informes de los últimos 7 días", val: nexo.informes7 },
+        { label: "Avances con fotos", val: nexo.avances },
+        { label: "Avances de los últimos 7 días", val: nexo.avances7 },
+        { label: "Fotos de obra", val: nexo.fotos },
       ].map((g, i) =>
         h("div", { className: "gauge", key: i },
           h("div", { className: "gauge-label" }, g.label),
