@@ -1538,14 +1538,15 @@ function buildObra(o){
   o.dotacion={hoy:o.dot,ayer:o.dot,ok:false};o.informes=[];o.invitados=o.invitados||{estudio:'aceptada',propietario:'aceptada'};
   o.sup=[];for(let t=nextWork(d(o.inicio)+(14+(+o.id.slice(1)||0)%4)*DAY);t<=finObra(o);t=nextWork(t+14*DAY))o.sup.push({id:'s'+(++uid),fecha:t,estado:t<TODAY?'realizada':'programada'});
   o.cert=o.tpl?tplCert(o):[];if(!o.tpl)o.tasks.forEach(t=>{if(t.rubro==='losa')o.cert.push({id:'k'+(++uid),task:t,etapa:'Hormigonado de '+t.name.replace('Estructura · losa sobre','losa sobre'),estado:''});if(t.rubro==='fund')o.cert.push({id:'k'+(++uid),task:t,etapa:'Hormigonado de platea',estado:''});if(t.rubro==='mamp')o.cert.push({id:'k'+(++uid),task:t,etapa:t.name,estado:''});if(t.rubro==='sanit')o.cert.push({id:'k'+(++uid),task:t,etapa:'Instalaciones previo a revoques',estado:''});if(t.rubro==='cubierta')o.cert.push({id:'k'+(++uid),task:t,etapa:'Cubierta e impermeabilización',estado:''});if(t.rubro==='pileta')o.cert.push({id:'k'+(++uid),task:t,etapa:'Estructura de pileta',estado:''})});
-  if(!o.nuevo&&!o.tpl)seedReal(o);
+  if(!o.nuevo&&!o.tpl&&!o.cero)seedReal(o);
+  if(o.cero)o.sup=o.sup.filter(s=>s.estado==='programada');
   return o;
 }
 const certFecha=c=>['losa','fund','pileta'].includes(c.task.rubro)?c.task.end-2*DAY:c.task.end;
 const certEstado=c=>c.estado==='certificada'?'certificada':certFecha(c)-TODAY<30*DAY?'pendiente':'programada';
 /* ===== configuración de las obras guardada en este aparato: modelo, m², inicio, jefatura, jornal, obras nuevas ===== */
 const CFG_LS='nexo2_obras_cfg';
-const CFG_KEYS=['audNombre','nombre','ubic','plantas','subsuelo','pileta','m2','nivel','inicio','jefe','estudio','jornal','dot','late','margen','edits','invitados','imgUrl','sinImg','renders','rndOcultos','tpl','mod2','ov','resp','reanud'];
+const CFG_KEYS=['audNombre','nombre','ubic','plantas','subsuelo','pileta','m2','nivel','inicio','jefe','estudio','jornal','dot','late','margen','edits','invitados','imgUrl','sinImg','renders','rndOcultos','tpl','mod2','ov','resp','reanud','cero'];
 const BASE_OV={};let BASE_DEF={};
 const cfgPick=o=>{const r={};CFG_KEYS.forEach(k=>{if(o[k]!==undefined)r[k]=o[k]});return r};
 const CFG_ORIG=new Set(OBRAS.map(o=>o.id));
@@ -1640,15 +1641,15 @@ OBRAS.forEach(o=>{BASE_DEF[o.id]=JSON.stringify(o.base);const ov=BASE_OV[o.id];i
 const baseOvDe=o=>{const k=BASE_DEF[o.id];if(k===undefined){BASE_DEF[o.id]=JSON.stringify(o.base);return null}return JSON.stringify(o.base)!==k?o.base:null};
 
 /* historial: lo resuelto antes de hoy, con una tasa de demora distinta por obra */
-OBRAS.forEach(o=>o.tpl||o.cards.forEach(c=>{const k=timing(c),h=hash(c.id+o.id);
+OBRAS.forEach(o=>o.tpl||o.cero||o.cards.forEach(c=>{const k=timing(c),h=hash(c.id+o.id);
   if(k.limit<TODAY-8*DAY){const late=hash(c.task.name+o.id+c.tipo)<o.late;const f=late?Math.min(TODAY-DAY,k.limit+Math.round(2+h*8)*DAY):k.limit-Math.round(1+h*6)*DAY;
     c.enviada=k.open;c.items.forEach((i,n)=>{i.estado=hash(i.txt+o.id)<.07?'na':'ok';i.fecha=f-(n%3)*DAY;if(c.tipo==='doc'&&i.estado==='ok')i.respuesta={txt:'Enviado.',fecha:i.fecha-DAY,file:null,nuevo:false,por:i.resp===E?o.estudio:P}})}
   else if(TODAY>=k.open){c.enviada=k.open;const share=color(c)==='verde'?.25:color(c)==='amarillo'?.45:.6;c.items.forEach((i,n)=>{const r=hash(i.id+'s');if(r<share){i.estado='ok';i.fecha=TODAY-Math.round(1+r*10)*DAY}else if(c.tipo==='mat'&&r<share+.25)i.estado='pedido'})}}));
-function seedItem(oid,txt,patch){const o=OBRAS.find(x=>x.id===oid);if(!o)return null;for(const c of o.cards)for(const i of c.items)if(i.txt.startsWith(txt)&&!iDone(i)){Object.assign(i,patch);return i}return null}
+function seedItem(oid,txt,patch){const o=OBRAS.find(x=>x.id===oid);if(!o||o.cero)return null;for(const c of o.cards)for(const i of c.items)if(i.txt.startsWith(txt)&&!iDone(i)){Object.assign(i,patch);return i}return null}
 /* respuestas nuevas del estudio, todavía sin verificar por la jefatura */
 [['o2','Despieces de revestimientos de baños','Va el despiece de baños y cocina rev B. Falta confirmar la piedra con el propietario.',d('2026-10-13')],['o1','Planta de niveles de contrapiso','Adjuntamos plano de niveles rev B con NPT por local.',d('2026-10-14')]].forEach(([oid,txt,msg,f])=>{const i=seedItem(oid,txt,{estado:'recibido'});if(!i)return;const o=i.card.obra;i.respuesta={txt:msg,fecha:f,file:null,nuevo:true,por:o.estudio};const s=o.planos.find(p=>p.id===i.slot);if(s){addDoc(o,s.folder,s.nombre,'A','reemplazado',o.estudio,f-25*DAY,{slot:s.id});const x=addDoc(o,s.folder,s.nombre,'B','en revisión',o.estudio,f,{slot:s.id,nuevo:true});i.respuesta.doc=x.id;notify('auditor',o,`Plano nuevo para revisar: ${s.nombre}`,{t:'doc',id:x.id})}notify('jefe',o,`${o.estudio} respondió: ${i.txt}`,{t:'card',id:i.card.id})});
-{const c=OBRAS[0].cards.find(c=>c.tipo==='doc'&&color(c)==='naranja')||OBRAS[0].cards.find(c=>color(c)==='rojo');if(c){c.impacto='medias';c.impactoTxt='La cuadrilla sigue en otro frente mientras espera las definiciones.'}}
-{const o=OBRAS[0];const c=o.cards.find(c=>c.tipo==='doc'&&c.task.rubro==='revest');if(c)addItem(c,{txt:'Altura de mesadas y zócalos de cocina',tipo:DF,resp:E,origen:'manual'})}
+if(!OBRAS[0].cero){const c=OBRAS[0].cards.find(c=>c.tipo==='doc'&&color(c)==='naranja')||OBRAS[0].cards.find(c=>color(c)==='rojo');if(c){c.impacto='medias';c.impactoTxt='La cuadrilla sigue en otro frente mientras espera las definiciones.'}}
+if(!OBRAS[0].cero){const o=OBRAS[0];const c=o.cards.find(c=>c.tipo==='doc'&&c.task.rubro==='revest');if(c)addItem(c,{txt:'Altura de mesadas y zócalos de cocina',tipo:DF,resp:E,origen:'manual'})}
 
 /* documentación: planos ya recibidos (una carpeta por rubro, una versión vigente por plano) */
 OBRAS.forEach(o=>o.planos.forEach(s=>{if(slotDocs(s).length)return;const its=slotItems(s),ok=its.filter(i=>i.estado==='ok');if(!ok.length)return;const f=Math.min(...ok.map(i=>i.fecha||TODAY)),two=hash(s.id)<.4;
@@ -1661,7 +1662,7 @@ OBRAS.forEach(o=>o.planos.forEach(s=>{if(slotDocs(s).length)return;const its=slo
  {obra:'o1',n:'002',sector:'Living',txt:'Se modificaron las vigas V110 y V120 con 10 cm más de altura en el sector living.',origen:'Estudio · por mail',escrito:true,plano:true,total:0,autorizo:null,plazo:2},
  {obra:'o1',n:'001',sector:'Pileta',txt:'Marcado de la pileta pedido en obra el 12 de febrero, fuera del alcance original.',origen:'Dirección de obra · por escrito',escrito:true,plano:true,total:5000000,autorizo:null,plazo:0},
  {obra:'o2',n:'001',sector:'Planta alta',txt:'Cambio de tabique de baño principal para ampliar vestidor.',origen:'Propietario · por WhatsApp',escrito:true,plano:false,total:1850000,autorizo:null,plazo:1}
-].forEach(a=>ADIC.push({id:'a'+(++uid),...a,obra:OBRAS.find(o=>o.id===a.obra)}));
+].filter(a=>!(OBRAS.find(o=>o.id===a.obra)||{}).cero).forEach(a=>ADIC.push({id:'a'+(++uid),...a,obra:OBRAS.find(o=>o.id===a.obra)}));
 function reqs(a){return[['Pedido por escrito',a.escrito],['Plano de definición o modificación adjunto',a.plano],['Cotización mayor a $0',a.total>0],['Incidencia en plazo acordada',a.plazo!==null],['Autorización con nombre y fecha',!!a.autorizo]]}
 function adicEstado(a){const f=reqs(a).filter(r=>!r[1]).length;if(!f)return['Autorizado','t-verde'];if(f===1&&!a.autorizo)return['Espera autorización','t-amarillo'];return['Bloqueado · faltan '+f,'t-rojo']}
 
@@ -1673,7 +1674,7 @@ function adicEstado(a){const f=reqs(a).filter(r=>!r[1]).length;if(!f)return['Aut
  {obra:'o1',fecha:d('2026-10-02'),tipo:'Novedad',txt:'Ingresó la cuadrilla de revoque grueso en PB.'},
  {obra:'o2',fecha:d('2026-10-07'),tipo:'Incidencia',txt:'Faltó el corralón con la arena fina; la cuadrilla pasó a limpieza.'},
  {obra:'o2',fecha:d('2026-10-06'),tipo:'Novedad',txt:'Terminado el emplacado de cielorrasos en PB.'}
-].forEach(r=>REGISTRO.push({id:'r'+(++uid),...r,obra:OBRAS.find(o=>o.id===r.obra),hora:'17:30'}));
+].filter(r=>!(OBRAS.find(o=>o.id===r.obra)||{}).cero).forEach(r=>REGISTRO.push({id:'r'+(++uid),...r,obra:OBRAS.find(o=>o.id===r.obra),hora:'17:30'}));
 
 /* ================= usuarios y roles ================= */
 const USERS=[
@@ -1858,7 +1859,7 @@ function addAud(tipo,obra,fecha,data){const a={id:'au'+(++uid),tipo,num:'',obra,
 function renumber(){['sup','rev','cert'].forEach(t=>AUD.filter(a=>a.tipo===t).sort((a,b)=>a.fecha-b.fecha||a.id.localeCompare(b.id)).forEach((a,i)=>a.num=`${AUD_TIPO[t].pre}-2026-${String(i+1).padStart(3,'0')}`))}
 const tareaEn=(o,f)=>o.tasks.filter(t=>t.start<=f).sort((a,b)=>b.start-a.start)[0]||o.tasks[0];
 /* semilla: lo que la auditoría ya emitió en cada obra */
-OBRAS.filter(o=>o.constructora===ORG).forEach(o=>{
+OBRAS.filter(o=>o.constructora===ORG&&!o.cero).forEach(o=>{
   o.sup.filter(s=>s.estado==='realizada').forEach(s=>{const h=hash(s.id+o.id),t=tareaEn(o,s.fecha),pool=OBS_POOL[t.rubro]||OBS_POOL.def;const res=h<.68?'Conforme':h<.95?'Conforme con observaciones':'No conforme';
     const obs=res==='Conforme'?[]:pool.slice(0,res==='No conforme'?2:1).map((x,i)=>({desc:x[0],sol:x[1],sector:x[2],crit:res==='No conforme'?'Alta':CRIT[1+i%2]}));
     const a=addAud('sup',o,s.fecha,{periodo:`${new Date(s.fecha).getUTCDate()<=15?'1ª':'2ª'} quincena de ${MESL[new Date(s.fecha).getUTCMonth()]} 2026 · ${t.name}`,presentes:'Auditoría · Jefatura de Obra',obs,interf:res==='No conforme'?[INTERF_POOL[0]]:[],fotos:[],resultado:res,conclusion:res==='Conforme'?'Los trabajos verificados se ajustan a la documentación vigente.':'Se solicita corregir lo observado antes de avanzar con la etapa siguiente.',responsable:'Auditoría técnica'});s.acta=a.id;s.resultado=res});
@@ -2775,7 +2776,7 @@ const A={
   emodo:ds=>{EMODO=ds.m;sheetEditor()},
   edel:ds=>{const o=findO(EOID);if(EMODO==='base'){o.base=o.base.filter(x=>x.id!==ds.id);toast('Se quitó de la base')}else{const t=o.tasks.find(x=>x.id===ds.id);o.tasks=o.tasks.filter(x=>x!==t);o.cards=o.cards.filter(c=>c.task!==t);o.cert=o.cert.filter(c=>c.task!==t);toast(`Se quitó ${t.name} y sus tarjetas`)}draw();sheetEditor()},
   editarObra:ds=>{const o=findO(ds.o);if(!o||!esDir())return;const js=[...new Set(['Gonzalo','Camila','Tomás','Julieta',o.jefe].filter(Boolean))];
-    openSheet(`<span class="eyebrow">Dirección</span><h2>Editar ${esc(o.nombre)}</h2><form class="sec" data-submit="editarObra" data-o="${o.id}"><label class="f">Nombre<input id="eo-nom" value="${esc(o.nombre)}"></label><label class="f">Ubicación<input id="eo-ubi" value="${esc(o.ubic||'')}"></label><div class="row2"><label class="f">Jefatura de obra<select id="eo-jefe">${js.map(j=>`<option ${o.jefe===j?'selected':''}>${esc(j)}</option>`).join('')}</select></label><label class="f">Estudio<input id="eo-est" value="${esc(o.estudio||'')}"></label></div><span class="eyebrow">Render de la obra</span><div class="infph">${rendersItems(o).map(x=>`<div class="ph1"><span><img src="${esc(x.u)}" alt="Render"><button type="button" data-act="quitarRender" data-o="${o.id}" data-k="${esc(x.k)}" aria-label="Quitar este render">✕</button></span></div>`).join('')||'<span class="muted small">Todavía no hay renders: se ve el logo.</span>'}</div><div><label class="btn sm" for="eo-img" style="cursor:pointer">Cargar otro render</label><input id="eo-img" type="file" accept="image/*" multiple data-chg="eoImg" data-o="${o.id}" hidden></div><p class="muted small">Para cambiar plantas, superficie, terminación o fecha de inicio usá "Cambiar modelo".</p><button class="btn gold" type="submit">Guardar cambios</button><button class="btn" type="button" data-act="close">Cancelar</button><button class="btn ghost" type="button" data-act="eliminarObra" data-o="${o.id}" style="color:#c0392b">Eliminar esta obra</button></form>`,'Editar obra')},
+    openSheet(`<span class="eyebrow">Dirección</span><h2>Editar ${esc(o.nombre)}</h2><form class="sec" data-submit="editarObra" data-o="${o.id}"><label class="f">Nombre<input id="eo-nom" value="${esc(o.nombre)}"></label><label class="f">Ubicación<input id="eo-ubi" value="${esc(o.ubic||'')}"></label><div class="row2"><label class="f">Jefatura de obra<select id="eo-jefe">${js.map(j=>`<option ${o.jefe===j?'selected':''}>${esc(j)}</option>`).join('')}</select></label><label class="f">Estudio<input id="eo-est" value="${esc(o.estudio||'')}"></label></div><span class="eyebrow">Render de la obra</span><div class="infph">${rendersItems(o).map(x=>`<div class="ph1"><span><img src="${esc(x.u)}" alt="Render"><button type="button" data-act="quitarRender" data-o="${o.id}" data-k="${esc(x.k)}" aria-label="Quitar este render">✕</button></span></div>`).join('')||'<span class="muted small">Todavía no hay renders: se ve el logo.</span>'}</div><div><label class="btn sm" for="eo-img" style="cursor:pointer">Cargar otro render</label><input id="eo-img" type="file" accept="image/*" multiple data-chg="eoImg" data-o="${o.id}" hidden></div><p class="muted small">Para cambiar plantas, superficie, terminación o fecha de inicio usá "Cambiar modelo".</p><button class="btn gold" type="submit">Guardar cambios</button><button class="btn" type="button" data-act="close">Cancelar</button><button class="btn ghost" type="button" data-act="eliminarObra" data-o="${o.id}" style="color:#c0392b">Eliminar esta obra</button><span class="eyebrow">Empezar de cero</span><p class="muted small">Borra el avance cargado (informes, avances, fotos, pedidos, planos subidos) y deja la obra lista para cargar desde hoy. Descarga un respaldo antes.</p><button class="btn ghost" type="button" data-act="ceroObra" data-o="${o.id}" style="color:#c0392b">Dejar esta obra en cero</button><button class="btn ghost" type="button" data-act="ceroObra" data-o="todas" style="color:#c0392b">Dejar todas las obras en cero</button></form>`,'Editar obra')},
   codFaltan:()=>{OBRAS.forEach(codInit);codGuardarLS();toast('Códigos generados');draw()},
   agregarObraEst:()=>openSheet(`<span class="eyebrow">Estudio</span><h2>Agregar obra</h2><p class="muted">Poné el código que te dio la constructora para la nueva obra.</p><form class="frm" data-submit="agregarObraEst"><label class="f">Código de la obra<input id="ae-cod" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ej.: E-LP132-0000" style="letter-spacing:.08em;text-transform:uppercase"></label><button class="btn gold" type="submit">Agregar</button><button class="btn" type="button" data-act="close">Cancelar</button></form>`,'Agregar obra'),
   brillo:()=>openSheet(`<span class="eyebrow">Aspecto</span><h2>Del blanco al negro</h2><p class="muted small">Deslizá el cursor.</p>${nivelSlider()}<button class="btn" type="button" data-act="close">Listo</button>`,'Brillo'),
@@ -4590,6 +4591,26 @@ function baseSync(o){const ids=new Set(o.base.map(b=>b.id));let ch=false;
   if(b&&t){const dt=tareaConDatos(o,t);if(dt.length&&!confirm(`"${t.name}" ya tiene datos: ${dt.join(', ')}.\nSi lo quitás de la base se borra de todos los paneles (Dirección, Jefatura de Obra y Propietario). ¿Quitarlo igual?`))return}
   o.base=o.base.filter(x=>x.id!==ds.id);baseSync(o);toast('Se quitó de la base');draw();sheetEditor();return}
   return f.apply(this,arguments)}}
+
+/* ===== Dejar la obra en cero (Dirección): respaldo descargable, borra informes/avances de la nube y el avance/pedidos/planos cargados; la obra, el cronograma y los códigos quedan ===== */
+function respaldoDescarga(obj,nombre){const blob=new Blob([JSON.stringify(obj,null,1)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=nombre;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},4000)}
+A.ceroObra=async ds=>{if(!esDir())return;const L=ds.o==='todas'?OBRAS.filter(o=>o.tasks&&o.tasks.length):[findO(ds.o)].filter(Boolean);if(!L.length)return;
+  const cod=dirAuthGet();if(!cod){toast('Volvé a ingresar tu código de Dirección');return}
+  if(!confirm(`¿Dejar en cero ${L.length===1?L[0].nombre:'las '+L.length+' obras'}?\n\nSe borra: informes semanales, avances y fotos, % de avance, pedidos y respuestas, planos subidos, adicionales y registro diario.\nQueda: la obra, el cronograma base, los códigos y los renders.\n\nAntes se descarga un respaldo con todo lo que hay hoy.`))return;
+  toast('Armando el respaldo…');const bk={t:Date.now(),version:'nexo2-respaldo-cero',obras:{}};
+  try{for(const o of L){const [inf,av]=await Promise.all([codApi({op:'inf_list',obra:o.id}),codApi({op:'av_list',obra:o.id})]);
+      bk.obras[o.id]={nombre:o.nombre,informes:inf.items||[],avances:av.items||[],cfg:cfgPick(o),adicionales:ADIC.filter(a=>a.obra===o).map(a=>({...a,obra:o.id})),registro:REGISTRO.filter(r=>r.obra===o).map(r=>({...r,obra:o.id})),avancePct:avance(o)}}}
+  catch(e){toast('No pude leer lo que hay en la nube. No se borró nada.');return}
+  try{respaldoDescarga(bk,'nexo2-respaldo-antes-de-cero-'+isoAR(Date.now())+'.json')}catch(e){toast('No pude descargar el respaldo. No se borró nada.');return}
+  if(!confirm('El respaldo se descargó. ¿Confirmás borrar ahora?'))return;
+  let mal=0;
+  for(const o of L){const b=bk.obras[o.id],cr={rol:'dir',codigo:cod};
+    for(const i of b.informes){try{const r=await codApi({op:'inf_del',obra:o.id,cred:cr,id:i.id});if(r&&r.error)mal++}catch(e){mal++}}
+    const sueltos=(await codApi({op:'av_list',obra:o.id}).catch(()=>({items:[]}))).items||[];
+    for(const a of sueltos){try{const r=await codApi({op:'av_del',obra:o.id,cred:cr,id:a.id});if(r&&r.error)mal++}catch(e){mal++}}}
+  if(mal){toast(`No se pudo borrar todo de la nube (${mal}). Probá de nuevo; el respaldo ya está descargado.`);return}
+  L.forEach(o=>{respaldoObra(o,'Antes de dejar en cero');o.cero=Date.now();delete o.ov;delete o.reanud});
+  cfgGuardar();toast('Listo: las obras quedaron en cero. Recargando…');setTimeout(()=>location.reload(),900)};
 try{document.querySelectorAll('.brand .mono').forEach(e=>{if(/20\d\d$/.test(e.textContent.trim()))e.textContent=new Date(TODAY).toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).replace(/[.,]/g,'')})}catch(e){}
 /* ===== DEMO: ingreso directo a cada panel, sin códigos ===== */
 try{localStorage.setItem('nexo2_dirauth','DIR-DEMO')}catch(e){}
