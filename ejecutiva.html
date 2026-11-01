@@ -762,6 +762,12 @@ header{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 42
 .ia-chat .ia-a{align-self:flex-start;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:#fff;border-bottom-left-radius:4px}
 </style>
 <style>#flujo,#planes,.feat3,.trust,#demo,.cta-strip:not(.cta-final){display:none!important}</style>
+<style>
+#portada .pt-voz{display:inline-flex;align-items:center;gap:10px;margin:0 0 18px;padding:12px 18px;border-radius:999px;background:rgba(227,190,120,.16);border:1px solid #E3BE78;color:#F5F3EE;font:400 17px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none;line-height:1.3}
+#portada .pt-voz b{color:#E3BE78;font-weight:700}
+#portada .pt-mic{font-size:20px}
+@media(max-width:700px){#portada .pt-voz{font-size:15px;border-radius:18px;display:flex}}
+</style>
 </head>
 <body class="no-js">
 
@@ -781,6 +787,7 @@ header{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 42
       <div class="pt-txt">
         <h1><span><i class="art"></i> <em>tiempo</em> es el</span> <span>margen de tu obra.</span> <span>Cada atraso cuesta.</span></h1>
         <p class="pt-lead">NEXO ordena los tiempos de tu obra para que terminar en fecha sea la regla, no la excepción. Menos días perdidos, más dinero en tu bolsillo.</p>
+        <a class="pt-voz" onclick="cerrarPortada('ia')"><span class="pt-mic">🎙</span><b>IA por voz:</b> hablale a tu obra y te contesta</a>
         <p class="pt-para">Para constructoras que quieren ser eficientes con el tiempo — y ganar más con cada obra</p>
         <div class="pt-ctas"><button class="pt-cta" onclick="abrirDemo()">Probar demo &nbsp;→</button><button class="pt-cta pt-cta2" onclick="cerrarPortada('flujo')">Cómo funciona</button></div>
               </div>
