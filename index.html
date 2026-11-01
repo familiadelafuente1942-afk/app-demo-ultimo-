@@ -735,6 +735,20 @@ header{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 42
 #vista-landing .btn-ghost{background:linear-gradient(115deg,transparent 28%,rgba(255,255,255,.7) 42%,transparent 58%),linear-gradient(158deg,rgba(255,255,255,.9),rgba(240,243,250,.5))!important;box-shadow:inset 0 2px 1px #fff,inset 0 0 0 1px rgba(255,255,255,.95),0 10px 20px -10px rgba(30,40,80,.4)!important}
 #vista-landing .pill,#vista-landing .chip{background:linear-gradient(158deg,rgba(255,255,255,.95),rgba(240,243,250,.55));box-shadow:inset 0 1.5px 1px #fff,0 4px 10px -5px rgba(30,40,80,.3);border:1px solid rgba(255,255,255,.95)}
 </style>
+<style>
+/* Ajustes de jerarquía y ritmo de lectura (análisis de la landing, 01/11/26) */
+.cta-strip{padding:34px 20px;text-align:center;background:var(--cream,#faf7f1)}
+.cta-strip p{margin:0 0 14px;font-size:17px;font-weight:600;color:var(--navy)}
+.ia-sec{padding:64px 0;background:var(--navy,#14213a);color:#fff}
+.ia-sec .eyebrow b{color:#e2bd78}
+.ia-sec h2{color:#fff;margin:10px 0 12px}
+.ia-sec .sub{color:rgba(255,255,255,.82);max-width:640px}
+.ia-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:28px 0}
+.ia-grid div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:18px}
+.ia-grid b{display:block;font-size:16px;margin-bottom:6px;color:#fff}
+.ia-grid span{font-size:14px;line-height:1.5;color:rgba(255,255,255,.8)}
+@media(max-width:700px){.hero p.byline{display:none}.ia-sec{padding:44px 0}}
+</style>
 </head>
 <body class="no-js">
 
@@ -829,6 +843,21 @@ header{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 42
   </div>
 </section>
 
+<section class="ia-sec" id="ia">
+  <div class="wrap">
+    <div class="eyebrow"><span></span><b>Nexo IA con voz</b></div>
+    <h2>Hablale a tu obra. Te contesta.</h2>
+    <p class="sub">Mientras manejás o estás en el pozo, preguntale cómo viene cada obra. Nexo IA lee los datos reales y te responde en el momento.</p>
+    <div class="ia-grid">
+      <div><b>Preguntá lo que quieras</b><span>"¿Qué obra está más atrasada y por qué?" Te contesta con los datos de tus obras.</span></div>
+      <div><b>Pedí un PDF</b><span>"Armame un PDF con el estado de todas las obras." Lo genera al instante.</span></div>
+      <div><b>Pedí fotos y renders</b><span>"Mostrame los renders de la obra." Aparecen en la conversación.</span></div>
+      <div><b>Con voz</b><span>Le hablás y te responde hablando, sin tener que mirar el celular.</span></div>
+    </div>
+    <button class="btn btn-brass" onclick="abrirDemo()">Probar la demo →</button>
+  </div>
+</section>
+
 <section class="pains">
   <div class="wrap">
     <div class="eyebrow"><span></span><b>El problema de hoy</b></div>
@@ -849,6 +878,8 @@ header{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 42
     </div>
   </div>
 </section>
+
+<section class="cta-strip"><p>¿Te pasa algo de esto? Mirá cómo lo resuelve NEXO.</p><button class="btn btn-brass" onclick="abrirDemo()">Probar la demo →</button></section>
 
 <section class="section" id="modulos">
   <div class="wrap">
@@ -900,6 +931,8 @@ header{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 42
     </div>
   </div>
 </section>
+
+<section class="cta-strip"><p>Tocá el sistema real en un minuto, sin hablar con nadie.</p><button class="btn btn-brass" onclick="abrirDemo()">Probar la demo →</button></section>
 
 <section class="flow" id="flujo">
   <div class="section wrap">
