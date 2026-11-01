@@ -749,6 +749,12 @@ header{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 42
 .ia-grid span{font-size:14px;line-height:1.5;color:rgba(255,255,255,.8)}
 @media(max-width:700px){.hero p.byline{display:none}.ia-sec{padding:44px 0}}
 </style>
+<style>
+#portada .pt-ctas{display:flex;gap:12px;flex-wrap:wrap}
+#portada .pt-ctas .pt-cta2{background:transparent!important;color:#F5F3EE!important;border:1px solid #E3BE78!important;box-shadow:none!important}
+#portada .pt-ctas .pt-cta2:hover{background:rgba(227,190,120,.14)!important}
+@media(max-width:700px){#portada .pt-ctas{flex-direction:column}#portada .pt-ctas .pt-cta{width:100%;padding:0 20px}}
+</style>
 </head>
 <body class="no-js">
 
@@ -769,7 +775,7 @@ header{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 42
         <h1><span><i class="art"></i> <em>tiempo</em> es el</span> <span>margen de tu obra.</span> <span>Cada atraso cuesta.</span></h1>
         <p class="pt-lead">NEXO ordena los tiempos de tu obra para que terminar en fecha sea la regla, no la excepción. Menos días perdidos, más dinero en tu bolsillo.</p>
         <p class="pt-para">Para constructoras que quieren ser eficientes con el tiempo — y ganar más con cada obra</p>
-        <button class="pt-cta" onclick="cerrarPortada('flujo')">Cómo funciona &nbsp;→</button>
+        <div class="pt-ctas"><button class="pt-cta" onclick="abrirDemo()">Probar demo &nbsp;→</button><button class="pt-cta pt-cta2" onclick="cerrarPortada('flujo')">Cómo funciona</button></div>
               </div>
       <div class="pt-panel" aria-label="Ejemplo ilustrativo de panel">
         <div class="pp-top"><b>Estado de obra</b><span>Ejemplo</span></div>
