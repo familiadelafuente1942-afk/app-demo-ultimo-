@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Cotizador Meridian</title>
+<link rel="icon" href="demo-nexo2/logo-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f1ec;--card:#fff;--ink:#1b1d22;--muted:#6d6f76;--line:#e2ddd2;--gold:#b8915a;--gold2:#d9b98a;--ok:#1e8e5a;--bad:#c0392b}
+@media(prefers-color-scheme:dark){:root{--bg:#14161a;--card:#1d2026;--ink:#f4efe6;--muted:#a3a39c;--line:#33363d}}
+*{box-sizing:border-box;font-family:'Playfair Display',Georgia,serif}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px calc(40px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;gap:14px;padding:8px 0 16px}
+header img{width:58px;height:58px;border-radius:50%;flex:none}
+header b{font-size:20px;display:block}
+header span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+h1{font-size:22px;margin:0 0 4px}
+h2{font-size:17px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin-top:12px;font-size:15px}
+.kv span{color:var(--muted)}
+label{display:block;font-size:13px;color:var(--muted);margin-top:12px}
+input,select,textarea{width:100%;margin-top:4px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:16px}
+textarea{min-height:76px;resize:vertical}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media(max-width:520px){.g2{grid-template-columns:1fr}}
+.it{border-top:1px solid var(--line);padding:12px 0}
+.it:first-of-type{border-top:0;padding-top:0}
+.it b{display:block}
+.it .q{color:var(--gold);font-weight:600;font-size:14px}
+.it .r{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.it .t{font-size:14px;margin-top:6px;text-align:right}
+.tot{display:flex;justify-content:space-between;font-size:18px;font-weight:700;border-top:2px solid var(--gold);padding-top:12px;margin-top:6px}
+button{width:100%;padding:15px;border-radius:999px;border:0;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a1408;font-size:17px;font-weight:700;cursor:pointer}
+button:disabled{opacity:.55}
+.err{color:var(--bad);font-size:14px;margin-top:10px;min-height:1em}
+.doc{display:block;margin-top:8px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;color:var(--ink);text-decoration:none;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.okb{text-align:center;padding:30px 16px}
+.okb .ic{width:64px;height:64px;border-radius:50%;background:var(--ok);color:#fff;font-size:34px;line-height:64px;margin:0 auto 14px}
+
+/* listas desplegables: siempre letra oscura sobre fondo claro (se leen en modo claro y oscuro, PC y Apple) */
+select option,select optgroup{background-color:#fff!important;color:#16171a!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div><b>Cotizador Meridian</b><span>Constructora Meridian</span></div></header>
+<div id="app"><div class="card"><div class="sub">Cargando el pedido…</div></div></div>
+</div>
+<script src="demo-nexo-api.js"></script><script>
+(function(){
+const A=document.getElementById('app'),id=(new URLSearchParams(location.search).get('p')||'').toLowerCase();
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const f0=n=>Math.round(n||0).toLocaleString('es-AR',{maximumFractionDigits:0});
+const num=s=>{s=String(s||'').replace(/[^\d,]/g,'').replace(',','.');return parseFloat(s)||0};
+const api=b=>fetch('/api/nexo2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json().then(j=>({s:r.status,j})));
+const fecha=d=>{if(!d)return'';const p=d.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d};
+let P=null;
+function msg(t,s){A.innerHTML='<div class="card"><h1>'+esc(t)+'</h1><div class="sub">'+esc(s)+'</div></div>'}
+if(!/^[a-z0-9]{10,24}$/.test(id)){msg('Link incompleto','Pedile a Meridian que te reenvíe el link de cotización.');return}
+api({op:'cz_ver',id}).then(({s,j})=>{if(s!==200||!j.ok){msg('No encontramos el pedido',(j&&j.error)||'Pedile a Meridian que te reenvíe el link.');return}
+ if(j.cerrado){msg('Pedido cerrado','Este pedido de cotización ya no recibe ofertas. Gracias.');return}P=j.ped||{};pintar()}).catch(()=>msg('Sin conexión','No pudimos cargar el pedido. Probá de nuevo en un momento.'));
+function pintar(){const it=P.items||[];
+ A.innerHTML='<div class="card"><span class="sub">Pedido de cotización</span><h1>'+esc(P.g||'Pedido')+'</h1>'+(P.obra?'<div class="sub">Obra: '+esc(P.obra)+'</div>':'')+
+ '<div class="kv">'+(P.entrega?'<span>Entrega requerida</span><b>'+esc(P.entrega)+'</b>':'')+(P.lugar?'<span>Lugar de entrega</span><b>'+esc(P.lugar)+'</b>':'')+(P.pago?'<span>Forma de pago propuesta</span><b>'+esc(P.pago)+'</b>':'')+
+ '<span>Precios</span><b>'+(P.iva==='con'?'Finales, con IVA incluido':'Sin IVA (el IVA se informa aparte)')+'</b>'+(P.hasta?'<span>Cotizar hasta el</span><b>'+esc(fecha(P.hasta))+'</b>':'')+'</div>'+(P.notas?'<div class="sub" style="margin-top:12px;white-space:pre-wrap">'+esc(P.notas)+'</div>':'')+'</div>'+
+ ((P.docs||[]).length?'<div class="card"><h2>Documentación</h2><div class="sub">Planos, planillas y fotos para cotizar. Tocá para abrir o descargar.</div>'+P.docs.map(d=>/^https:\/\//.test(d.u||'')?'<a class="doc" href="'+esc(d.u)+'" target="_blank" rel="noopener">📎 '+esc(d.n||'Archivo')+'</a>':'').join('')+'</div>':'')+
+ '<div class="card"><h2>Tu empresa</h2><label>Razón social o nombre *<input id="prov" autocomplete="organization"></label><div class="g2"><label>Persona de contacto<input id="cont" autocomplete="name"></label><label>Teléfono o WhatsApp<input id="tel" inputmode="tel" autocomplete="tel"></label></div></div>'+
+ '<div class="card"><h2>Precios</h2><div class="g2"><label>Moneda<select id="mon"><option value="ARS">Pesos</option><option value="USD">Dólares (U$s)</option></select></label><label>IVA<select id="iva"><option value="sin"'+(P.iva==='con'?'':' selected')+'>Mis precios son sin IVA</option><option value="con"'+(P.iva==='con'?' selected':'')+'>Mis precios incluyen IVA</option></select></label></div><label>Alícuota de IVA<select id="ivap"><option value="21">21%</option><option value="10.5">10,5%</option><option value="0">Exento / no corresponde</option></select></label><div style="margin-top:14px">'+
+ it.map((x,i)=>'<div class="it"><b>'+esc(x.n)+'</b><span class="q">'+f0(x.q)+' '+esc(x.u||'')+(x.m?' · Medidas: '+esc(x.m):'')+'</span><div class="r"><label>Precio unitario<input data-pu="'+i+'" inputmode="decimal" placeholder="Dejalo vacío si no lo cotizás"></label><label>Marca, modelo u observación<input data-ob="'+i+'"></label></div><div class="t" data-st="'+i+'"></div></div>').join('')+
+ '</div><div class="tot"><span>Total</span><span id="tot">—</span></div><div class="sub" id="totn" style="text-align:right"></div></div>'+
+ '<div class="card"><h2>Condiciones</h2><div class="g2"><label>Plazo de entrega *<input id="ent" placeholder="Ej.: 15 días desde la orden"></label><label>Validez de la oferta<input id="val" placeholder="Ej.: 10 días"></label></div><div class="g2"><label>Anticipo que pedís (%)<input id="ant" inputmode="numeric" placeholder="0"></label><label>Flete hasta la obra<select id="fle"><option value="">Elegí</option><option value="incluido">Incluido en el precio</option><option value="no incluido">No incluido</option></select></label></div><label>Forma de pago<input id="pago" placeholder="Ej.: anticipo y saldo contra entrega"></label><label>Aclaraciones<textarea id="notas" placeholder="Lo que incluye, lo que no incluye, alternativas…"></textarea></label></div>'+
+ '<button id="env">Enviar cotización</button><div class="err" id="err"></div>';
+ A.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.pu!==undefined){const v=t.value.replace(/[^\d,]/g,''),p=v.split(','),e0=p[0].replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,'.');t.value=p.length>1?e0+','+p[1].slice(0,2):e0}calc()});
+ A.addEventListener('change',calc);const eb=document.getElementById('env');let pd=0;eb.onclick=enviar;eb.addEventListener('pointerdown',()=>{pd=Date.now()});document.addEventListener('click',e=>{if(e.target!==eb&&Date.now()-pd<1500&&!(e.target.closest&&e.target.closest('input,select,textarea,a,label,button'))){pd=0;enviar()}})}
+function calc(){const it=P.items||[],m=document.getElementById('mon').value==='USD'?'U$s ':'$ ';let T=0,n=0;
+ it.forEach((x,i)=>{const pu=num(A.querySelector('[data-pu="'+i+'"]').value),st=A.querySelector('[data-st="'+i+'"]');if(pu){T+=pu*x.q;n++;st.textContent='Subtotal: '+m+f0(pu*x.q)}else st.textContent=''});
+ document.getElementById('tot').textContent=n?m+f0(T):'—';
+ const iv=document.getElementById('iva').value,pc=+document.getElementById('ivap').value;
+ document.getElementById('totn').textContent=n?(iv==='con'?'IVA incluido':pc?'Más IVA '+String(pc).replace('.',',')+'%: '+m+f0(T*pc/100)+' · Total con IVA '+m+f0(T*(1+pc/100)):'Sin IVA'):''}
+function enviar(){const b0=document.getElementById('env');if(!b0||b0.disabled)return;const E=document.getElementById('err'),v=i=>document.getElementById(i).value.trim(),it=P.items||[];E.textContent='';
+ const items=it.map((x,i)=>({i,pu:num(A.querySelector('[data-pu="'+i+'"]').value),obs:A.querySelector('[data-ob="'+i+'"]').value.trim().slice(0,200)}));
+ if(!v('prov')){E.textContent='Falta la razón social o el nombre de tu empresa.';document.getElementById('prov').focus();return}
+ if(!items.some(x=>x.pu>0)){E.textContent='Cargá el precio de al menos un ítem.';return}
+ if(!v('ent')){E.textContent='Falta el plazo de entrega.';document.getElementById('ent').focus();return}
+ const b=document.getElementById('env');b.disabled=true;b.textContent='Enviando…';
+ api({op:'cz_resp',id,resp:{prov:v('prov').slice(0,120),cont:v('cont').slice(0,80),tel:v('tel').slice(0,40),mon:v('mon'),iva:v('iva'),ivap:+v('ivap'),items,ent:v('ent').slice(0,200),val:v('val').slice(0,100),ant:Math.max(0,Math.min(100,Math.round(num(v('ant'))))),fle:v('fle'),pago:v('pago').slice(0,300),notas:v('notas').slice(0,1500)}}).then(({s,j})=>{
+  if(s===200&&j.ok){A.innerHTML='<div class="card okb"><div class="ic">✓</div><h1>Cotización enviada</h1><div class="sub">Gracias, '+esc(v0)+'. Meridian ya la recibió y se va a comunicar con vos.</div></div>';scrollTo(0,0)}
+  else{E.textContent=(j&&j.error)||'No se pudo enviar. Probá de nuevo.';b.disabled=false;b.textContent='Enviar cotización'}}).catch(()=>{E.textContent='Sin conexión. Probá de nuevo.';b.disabled=false;b.textContent='Enviar cotización'});
+ var v0=v('prov')}
+})();
+</script>
+</body>
+</html>
