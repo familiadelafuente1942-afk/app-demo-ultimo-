@@ -1143,6 +1143,9 @@ input::placeholder,textarea::placeholder{color:var(--muted)!important;opacity:.8
  border:1px solid rgba(255,255,255,.95);
  box-shadow:inset 0 1.5px 1px #fff,inset 0 -8px 14px rgba(90,100,150,.16),0 8px 22px rgba(60,70,120,.20)}
 /* ===== v14 · vidrio que brilla ===== */
+/* Nexo IA como ícono (igual que en Barracas): botón redondo con la estrella, en todas las pantallas */
+.iafab{overflow:visible}.iafab .fab-lb{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;font-style:normal;font-family:var(--tech);font-size:10px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:var(--fg);text-shadow:0 1px 3px var(--bg)}
+.iafab img{border-radius:50%!important}.iafab{bottom:calc(108px + env(safe-area-inset-bottom,0px))!important}
 .lg-logo{display:flex;justify-content:center;animation:lg-mark 1.4s cubic-bezier(.2,.8,.2,1) .3s both}.lg-logo img{width:min(76vw,330px);height:auto;display:block;filter:drop-shadow(0 0 18px rgba(226,189,120,.18))}
 :root[data-tema="claro"] .lg-logo img{background:#0b0b0c;border-radius:26px;padding:22px 24px;box-sizing:content-box;width:min(66vw,290px);box-shadow:0 18px 40px -18px rgba(0,0,0,.55)}
 .mk-star{transform-box:view-box;transform-origin:50% 50%;animation:mk-star 3.4s ease-in-out infinite}@keyframes mk-star{0%,100%{filter:drop-shadow(0 0 6px rgba(226,189,120,.25))}50%{filter:drop-shadow(0 0 16px rgba(226,189,120,.6))}}
@@ -2086,11 +2089,11 @@ function vInicio(){
     <section class="sec"><div class="sec-head"><h2>Sus obras</h2><span class="muted small">${obras.length} con ${esc(CONSTRUCTORAS.find(c=>c.id===S.cons).n)}</span></div>${obrasStrip(obras)}</section>
     <section class="sec"><div class="sec-head"><h2>Lo que necesitan las obras</h2><button class="btn sm ghost" data-act="tab" data-t="pedidos">Ver todas</button></div><div class="list">${cs.map(c=>cardHTML(c)).join('')||'<p class="muted">No hay entregas pendientes.</p>'}</div></section>
     ${ad.length?`<section class="sec"><h2>Adicionales para autorizar</h2><div class="list">${ad.map(adicCard).join('')}</div></section>`:''}
-    ${vIA()}`;
+    `;
   }
   const av=cardsDe(obras).filter(c=>['rojo','naranja','amarillo'].includes(color(c))||cNuevos(c)).sort((a,b)=>(cNuevos(b)>0)-(cNuevos(a)>0)||ORDEN[color(a)]-ORDEN[color(b)]||timing(a).limit-timing(b).limit);
   return `${situacion()}${novedades()}${kpis()}${r==='direccion'?econPanel(obras):''}<section class="sec"><div class="sec-head"><h2>${r==='direccion'?'Obras en curso':'Tus obras'}</h2><button class="btn sm ghost" data-act="tab" data-t="obras">${r==='direccion'?'Ver cartera':'Ver obras'}</button></div>${obrasStrip(obras)}</section>
-  ${vIA()}
+  
   <section class="sec"><div class="sec-head"><h2>Tarjetas que requieren atención</h2><span class="muted small">de más urgente a menos</span></div><div class="list">${av.slice(0,8).map(c=>cardHTML(c)).join('')||'<p class="muted">Sin avisos.</p>'}</div>${av.length>8?`<button class="btn ghost full" data-act="tab" data-t="pedidos">Ver las ${av.length}</button>`:''}</section>`;
 }
 
@@ -3362,11 +3365,11 @@ KPI.est_margen.calc=()=>{const m=margenProm();return{v:`${m.d>0?'+':''}${m.d.toL
 function adicPend(){return ADIC.filter(a=>puedeVer(a.obra)&&adicEstado(a)[0]!=='Autorizado')}
 function vInicio(){
   const r=ROLE(),obras=misObras();
-  if(r==='auditor')return `${situacion()}${vIA()}${novedades()}${kpis()}<section class="sec"><div class="sec-head"><h2>Agenda de los próximos 30 días</h2><span class="legend-a"><i class="a-sup"></i>Supervisión <i class="a-rev"></i>Revisión <i class="a-cert"></i>Certificado</span></div>${agendaHTML(agendaAud(obras,30))}</section>`;
+  if(r==='auditor')return `${situacion()}${novedades()}${kpis()}<section class="sec"><div class="sec-head"><h2>Agenda de los próximos 30 días</h2><span class="legend-a"><i class="a-sup"></i>Supervisión <i class="a-rev"></i>Revisión <i class="a-cert"></i>Certificado</span></div>${agendaHTML(agendaAud(obras,30))}</section>`;
   if(r==='estudio'){
     const inv=INVITES.filter(i=>i.rol==='estudio'&&i.para===S.u.name&&i.estado==='pendiente'&&i.obra.constructora===S.cons);
     const cs=estPend().filter(c=>color(c)!=='futuro');const ad=ADIC.filter(a=>puedeVer(a.obra)&&adicEstado(a)[0]==='Espera autorización');
-    return `${inv.map(i=>`<section class="invite"><span class="eyebrow">Invitación de ${esc(CONSTRUCTORAS.find(c=>c.id===i.obra.constructora).n)}</span><h2>${esc(i.obra.nombre)}</h2><p class="small">Te invitan como estudio y dirección de obra. Al aceptar, la obra aparece en tu panel con sus tarjetas, carpetas de planos y cronograma.</p><div class="row2"><button class="btn gold" data-act="aceptarInv" data-id="${i.id}">Aceptar invitación</button></div></section>`).join('')}${situacion()}${newsEstudio()}${vIA()}
+    return `${inv.map(i=>`<section class="invite"><span class="eyebrow">Invitación de ${esc(CONSTRUCTORAS.find(c=>c.id===i.obra.constructora).n)}</span><h2>${esc(i.obra.nombre)}</h2><p class="small">Te invitan como estudio y dirección de obra. Al aceptar, la obra aparece en tu panel con sus tarjetas, carpetas de planos y cronograma.</p><div class="row2"><button class="btn gold" data-act="aceptarInv" data-id="${i.id}">Aceptar invitación</button></div></section>`).join('')}${situacion()}${newsEstudio()}
     <section class="sec"><div class="sec-head"><h2>Lo que necesitan las obras</h2><button class="btn sm ghost" data-act="tab" data-t="pedidos">Ver todas</button></div><p class="muted small">Por tarea, como en el cronograma. Tocá una tarjeta para responder cada ítem.</p><div class="list">${porTarea(cs,true,6)||'<p class="muted">No hay entregas pendientes.</p>'}</div></section>
     ${novedades()}${kpis()}
     <section class="sec"><div class="sec-head"><h2>Sus obras</h2><span class="muted small">${obras.length} con ${esc(CONSTRUCTORAS.find(c=>c.id===S.cons).n)}</span></div>${obrasStrip(obras)}</section>
@@ -3374,7 +3377,7 @@ function vInicio(){
   }
   const av=cardsDe(obras).filter(c=>['rojo','naranja','amarillo'].includes(color(c))||cNuevos(c)).sort((a,b)=>(cNuevos(b)>0)-(cNuevos(a)>0)||ORDEN[color(a)]-ORDEN[color(b)]||timing(a).limit-timing(b).limit);
   const ad=r==='direccion'?adicPend():[];
-  return `${situacion()}${vIA()}${novedades()}${kpis()}${r==='direccion'?econPanel(obras):''}
+  return `${situacion()}${novedades()}${kpis()}${r==='direccion'?econPanel(obras):''}
   ${ad.length?`<section class="sec"><div class="sec-head"><h2>Adicionales en curso</h2><span class="muted small">${ad.length} sin autorizar</span></div><div class="list">${ad.map(adicCard).join('')}</div></section>`:''}
   <section class="sec"><div class="sec-head"><h2>${r==='direccion'?'Obras en curso':'Tus obras'}</h2><button class="btn sm ghost" data-act="tab" data-t="obras">${r==='direccion'?'Ver cartera':'Ver obras'}</button></div>${obrasStrip(obras)}</section>
   <section class="sec"><div class="sec-head"><h2>Tarjetas que requieren atención</h2><span class="muted small">de más urgente a menos</span></div><div class="list">${av.slice(0,8).map(c=>cardHTML(c)).join('')||'<p class="muted">Sin avisos.</p>'}</div>${av.length>8?`<button class="btn ghost full" data-act="tab" data-t="pedidos">Ver las ${av.length}</button>`:''}</section>`;
@@ -3482,7 +3485,7 @@ function vCliente(){
   return `${propBar()}${g.length?`<section class="sec"><div class="gallery"><img src="${cur[0]}" alt="${cur[1]}"><div class="gcap"><span>${cur[1]}</span><span>${S.gal%g.length+1} / ${g.length}</span></div></div><div class="thumbs">${g.map((x,i)=>`<button data-act="gal" data-i="${i}" aria-pressed="${S.gal%g.length===i}" aria-label="${x[1]}"><img src="${x[0]}" alt=""></button>`).join('')}</div></section>`:`<section class="sec"><div class="entry"><b>Renders del proyecto</b><span class="muted">Todavía no hay renders cargados para esta obra.</span></div></section>`}
   <section class="sec"><span class="eyebrow">${esc(o.ubic)}</span><h1>${esc(o.nombre)}</h1>
   <div class="cl-top"><div><span class="bigpct">${avance(o)}%</span><span class="muted"> de avance</span></div><div class="cd"><b>${sem}</b><span>semanas para la entrega<br><span class="muted">${fmtY(fC)}</span></span></div></div><div class="bar"><i style="width:${avance(o)}%"></i></div></section>
-  ${vIA()}
+  
   ${secAvCliente(o)}
   <section class="sec"><div class="sec-head"><h2>Tu casa, etapa por etapa</h2><span class="muted small">deslizá para recorrerla</span></div>
   <div class="casa-wrap">${stageOK?casaSVG(k,idx):''}<div class="casa-cap"><b>${ETAPAS_CASA[k][0]}</b><span>${ETAPAS_CASA[k][1]}</span><span class="${k<idx?'t-verde':k===idx?'t-gold':'muted'}">${k<idx?'Terminada':k===idx?'Estamos acá':'Próximamente'}${rk&&k<6?` · ${fmt(rk[0])} a ${fmt(rk[1])}`:k===6?` · ${fmt(fC)}`:''}</span></div></div>
@@ -4031,8 +4034,8 @@ document.addEventListener('input',e=>{const el=e.target.closest('[data-inp]');if
   if(el.dataset.inp==='cmp'){S.cmp=+el.value;el.closest('.cmp').style.setProperty('--p',el.value+'%')}});
 /* Nexo IA a mano en todas las pantallas: botón flotante fuera del inicio */
 const _draw=draw;
-draw=function(){_draw();let fab=document.getElementById('iafab');const show=S.u&&!['inicio','cliente'].includes(S.tab);
-  if(show&&!fab){fab=document.createElement('button');fab.id='iafab';fab.className='iafab';fab.dataset.act='iaOpen';fab.setAttribute('aria-label','Abrir Nexo IA');fab.innerHTML=`<img src="${ICONO}" alt=""><span>Nexo IA</span>`;document.body.appendChild(fab)}
+draw=function(){_draw();let fab=document.getElementById('iafab');const show=!!S.u;
+  if(show&&!fab){fab=document.createElement('button');fab.id='iafab';fab.className='iafab';fab.dataset.act='iaOpen';fab.setAttribute('aria-label','Abrir Nexo IA');fab.innerHTML=`<img src="${ICONO}" alt=""><span>Nexo IA</span><em class="fab-lb">Nexo IA</em>`;document.body.appendChild(fab)}
   if(fab)fab.hidden=!show};
 
 /* tarjetas que ya tienen la ventana abierta al crear la obra o la tarea: le llegan hoy al estudio */
@@ -4073,18 +4076,18 @@ function econPanel(obras){const E2=econ(obras),A2=E2.reduce((s,x)=>s+x.ahorro,0)
   return `<section class="sec"><div class="sec-head"><h2>Impacto económico</h2><button class="btn sm ghost" data-act="econ">Cómo se calcula</button></div><div class="econ"><button class="eg" data-act="econ"><span>Ahorro por llegar a tiempo</span><b>+${moneyK(A2)}</b><small>${E2.reduce((s,x)=>s+x.ok,0)} tarjetas completas antes del rojo</small></button><button class="er" data-act="econ"><span>Pérdida por esperas</span><b>−${moneyK(Pd)}</b><small>tarjetas vencidas hoy</small></button><button class="eo" data-act="econ"><span>En riesgo · próximos 15 días</span><b>${moneyK(R)}</b><small>si las urgentes llegan tarde</small></button></div></section>`}
 function vInicio(){
   const r=ROLE(),obras=misObras();
-  if(r==='auditor')return `${carrusel(obras)}${situacion()}${vIA()}${novedades()}${kpis()}<section class="sec"><div class="sec-head"><h2>Agenda de los próximos 30 días</h2><span class="legend-a"><i class="a-sup"></i>Supervisión <i class="a-rev"></i>Revisión <i class="a-cert"></i>Certificado</span></div>${agendaHTML(agendaAud(obras,30))}</section>`;
+  if(r==='auditor')return `${carrusel(obras)}${situacion()}${novedades()}${kpis()}<section class="sec"><div class="sec-head"><h2>Agenda de los próximos 30 días</h2><span class="legend-a"><i class="a-sup"></i>Supervisión <i class="a-rev"></i>Revisión <i class="a-cert"></i>Certificado</span></div>${agendaHTML(agendaAud(obras,30))}</section>`;
   if(r==='estudio'){
     const inv=INVITES.filter(i=>i.rol==='estudio'&&i.para===S.u.name&&i.estado==='pendiente'&&i.obra.constructora===S.cons);
     const cs=estPend().filter(c=>color(c)!=='futuro');const ad=ADIC.filter(a=>puedeVer(a.obra)&&adicEstado(a)[0]==='Espera autorización').slice(0,2);
     return `${inv.map(i=>`<section class="invite"><span class="eyebrow">Invitación de ${esc(CONSTRUCTORAS.find(c=>c.id===i.obra.constructora).n)}</span><h2>${esc(i.obra.nombre)}</h2><p class="small">Te invitan como estudio y dirección de obra. Al aceptar, la obra aparece en tu panel con sus tarjetas, carpetas de planos y cronograma.</p><div class="row2"><button class="btn gold" data-act="aceptarInv" data-id="${i.id}">Aceptar invitación</button></div></section>`).join('')}
-    ${carrusel(obras)}${situacion()}${newsEstudio()}${vIA()}${novedades()}
+    ${carrusel(obras)}${situacion()}${newsEstudio()}${novedades()}
     <section class="sec"><div class="sec-head"><h2>Lo que necesitan las obras</h2><button class="btn sm ghost" data-act="tab" data-t="pedidos">Ver todas</button></div><div class="list">${porTarea(cs,true,4)||'<p class="muted">No hay entregas pendientes.</p>'}</div></section>
     ${ad.length?`<section class="sec"><h2>Adicionales para autorizar</h2><div class="list">${ad.map(adicCard).join('')}</div></section>`:''}`;
   }
   const av=cardsDe(obras).filter(c=>['rojo','naranja','amarillo'].includes(color(c))||cNuevos(c)).sort((a,b)=>(cNuevos(b)>0)-(cNuevos(a)>0)||ORDEN[color(a)]-ORDEN[color(b)]||timing(a).limit-timing(b).limit);
   const ad=r==='direccion'?adicPend().slice(0,2):[];
-  return `${carrusel(obras)}${situacion()}${vIA()}${r==='direccion'?econPanel(obras):kpis()}${novedades()}
+  return `${carrusel(obras)}${situacion()}${r==='direccion'?econPanel(obras):kpis()}${novedades()}
   ${ad.length?`<section class="sec"><div class="sec-head"><h2>Últimos adicionales</h2><button class="btn sm ghost" data-act="adicTodos">Ver todos (${adicPend().length})</button></div><div class="list">${ad.map(adicCard).join('')}</div></section>`:''}
   <section class="sec"><div class="sec-head"><h2>Tarjetas que requieren atención</h2>${av.length>5?`<button class="btn sm ghost" data-act="tab" data-t="pedidos">Ver las ${av.length}</button>`:''}</div><div class="list">${av.slice(0,5).map(c=>cardHTML(c)).join('')||'<p class="muted">Sin avisos.</p>'}</div></section>`;
 }
