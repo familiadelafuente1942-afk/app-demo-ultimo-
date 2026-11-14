@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<title>Cotizador Meridian</title>
+<title>Cotizador Meridian</title><meta property="og:title" content="Cotizador Meridian"><meta property="og:description" content="Pedido de cotización de Constructora Meridian"><meta property="og:image" content="https://app-demo-ultimo.vercel.app/demo-nexo2/logo-512.png">
 <link rel="icon" href="demo-nexo2/logo-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -45,6 +45,10 @@ button:disabled{opacity:.55}
 
 /* listas desplegables: siempre letra oscura sobre fondo claro (se leen en modo claro y oscuro, PC y Apple) */
 select option,select optgroup{background-color:#fff!important;color:#16171a!important}
+
+.adj{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}.adj a{display:inline-flex;align-items:center;gap:6px;border:1px solid #ddd6c8;border-radius:10px;padding:4px 8px;font-size:13px;color:inherit;text-decoration:none;background:#fff}.adj img{width:96px;height:96px;object-fit:cover;border-radius:8px;display:block}
+
+.upb{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:10px 16px;border-radius:999px;border:1px solid #b8915a;color:#8a6a3c;font-weight:600;cursor:pointer;background:#fff}.arw{display:flex;align-items:center;gap:8px;margin-top:8px}.arw a{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:inherit}.arx{border:1px solid #ddd6c8!important;background:#fff!important;color:#333!important;border-radius:999px!important;padding:4px 12px!important;cursor:pointer;width:auto!important;flex:none!important;margin:0!important;font-size:14px!important}.arw a{display:block;padding:8px 0;font-size:15px}
 </style>
 </head>
 <body>
@@ -64,7 +68,12 @@ let P=null;
 function msg(t,s){A.innerHTML='<div class="card"><h1>'+esc(t)+'</h1><div class="sub">'+esc(s)+'</div></div>'}
 if(!/^[a-z0-9]{10,24}$/.test(id)){msg('Link incompleto','Pedile a Meridian que te reenvíe el link de cotización.');return}
 api({op:'cz_ver',id}).then(({s,j})=>{if(s!==200||!j.ok){msg('No encontramos el pedido',(j&&j.error)||'Pedile a Meridian que te reenvíe el link.');return}
- if(j.cerrado){msg('Pedido cerrado','Este pedido de cotización ya no recibe ofertas. Gracias.');return}P=j.ped||{};pintar()}).catch(()=>msg('Sin conexión','No pudimos cargar el pedido. Probá de nuevo en un momento.'));
+ if(j.cerrado){msg('Pedido cerrado','Este pedido de cotización ya no recibe ofertas. Gracias.');return}P=j.ped||{};marca();pintar()}).catch(()=>msg('Sin conexión','No pudimos cargar el pedido. Probá de nuevo en un momento.'));
+/* marca de la constructora que pide la cotización (Meridian por defecto; V+V Construcciones si el pedido lo indica) */
+function marca(){if(P.marca!=='vv')return;window.ORGN='V+V Construcciones';document.title='Cotizador V+V Construcciones';const h=document.querySelector('header');if(h)h.innerHTML='<img src="/vv-icon-192.png" alt="V+V Construcciones" style="border-radius:50%"><div><b>Cotizador V+V</b><span>V+V Construcciones</span></div>'}
+let ARCH=[],SUB=0;
+function pintaArch(){const L=document.getElementById('arl');if(!L)return;L.innerHTML=ARCH.map((a,i)=>'<div class="arw"><a href="'+esc(a.u)+'" target="_blank" rel="noopener">📄 '+esc(a.n)+'</a><button type="button" class="arx" data-arx="'+i+'">✕</button></div>').join('');document.getElementById('ars').textContent=SUB?'Subiendo '+SUB+'…':'';L.querySelectorAll('[data-arx]').forEach(b=>b.onclick=()=>{ARCH.splice(+b.dataset.arx,1);pintaArch()})}
+async function subirArch(files){const L=[...files];SUB+=L.length;pintaArch();for(const f of L){try{if(f.size>25e6)throw new Error('pesa más de 25 MB');const {s,j}=await api({op:'cz_up_url',id,name:f.name,size:f.size});if(s!==200||!j.ok)throw new Error((j&&j.error)||'no se pudo preparar la subida');const r=await fetch(j.up,{method:'PUT',headers:{'Content-Type':f.type||'application/octet-stream'},body:f});if(!r.ok)throw new Error('falló la subida');if(ARCH.length<5)ARCH.push({n:f.name.slice(0,120),u:j.pub})}catch(e){const E=document.getElementById('err');if(E)E.textContent='No se pudo subir “'+f.name+'”: '+e.message}SUB--;pintaArch()}}
 function pintar(){const it=P.items||[];
  A.innerHTML='<div class="card"><span class="sub">Pedido de cotización</span><h1>'+esc(P.g||'Pedido')+'</h1>'+(P.obra?'<div class="sub">Obra: '+esc(P.obra)+'</div>':'')+
  '<div class="kv">'+(P.entrega?'<span>Entrega requerida</span><b>'+esc(P.entrega)+'</b>':'')+(P.lugar?'<span>Lugar de entrega</span><b>'+esc(P.lugar)+'</b>':'')+(P.pago?'<span>Forma de pago propuesta</span><b>'+esc(P.pago)+'</b>':'')+
@@ -72,12 +81,13 @@ function pintar(){const it=P.items||[];
  ((P.docs||[]).length?'<div class="card"><h2>Documentación</h2><div class="sub">Planos, planillas y fotos para cotizar. Tocá para abrir o descargar.</div>'+P.docs.map(d=>/^https:\/\//.test(d.u||'')?'<a class="doc" href="'+esc(d.u)+'" target="_blank" rel="noopener">📎 '+esc(d.n||'Archivo')+'</a>':'').join('')+'</div>':'')+
  '<div class="card"><h2>Tu empresa</h2><label>Razón social o nombre *<input id="prov" autocomplete="organization"></label><div class="g2"><label>Persona de contacto<input id="cont" autocomplete="name"></label><label>Teléfono o WhatsApp<input id="tel" inputmode="tel" autocomplete="tel"></label></div></div>'+
  '<div class="card"><h2>Precios</h2><div class="g2"><label>Moneda<select id="mon"><option value="ARS">Pesos</option><option value="USD">Dólares (U$s)</option></select></label><label>IVA<select id="iva"><option value="sin"'+(P.iva==='con'?'':' selected')+'>Mis precios son sin IVA</option><option value="con"'+(P.iva==='con'?' selected':'')+'>Mis precios incluyen IVA</option></select></label></div><label>Alícuota de IVA<select id="ivap"><option value="21">21%</option><option value="10.5">10,5%</option><option value="0">Exento / no corresponde</option></select></label><div style="margin-top:14px">'+
- it.map((x,i)=>'<div class="it"><b>'+esc(x.n)+'</b><span class="q">'+f0(x.q)+' '+esc(x.u||'')+(x.m?' · Medidas: '+esc(x.m):'')+'</span><div class="r"><label>Precio unitario<input data-pu="'+i+'" inputmode="decimal" placeholder="Dejalo vacío si no lo cotizás"></label><label>Marca, modelo u observación<input data-ob="'+i+'"></label></div><div class="t" data-st="'+i+'"></div></div>').join('')+
+ it.map((x,i)=>'<div class="it"><b>'+esc(x.n)+'</b><span class="q">'+f0(x.q)+' '+esc(x.u||'')+(x.m?' · Medidas: '+esc(x.m):'')+'</span>'+(((x.adj||[]).filter(z=>/^https:\/\//.test(z.u||''))).length?'<div class="adj">'+x.adj.filter(z=>/^https:\/\//.test(z.u||'')).map(z=>'<a href="'+esc(z.u)+'" target="_blank" rel="noopener" title="'+esc(z.n||'')+'">'+(/\.(jpe?g|png|webp|gif|heic)(\?|$)/i.test(z.u)?'<img src="'+esc(z.u)+'" alt="'+esc(z.n||'Foto')+'">':'📄 '+esc(z.n||'Plano'))+'</a>').join('')+'</div>':'')+'<div class="r"><label>Precio unitario<input data-pu="'+i+'" inputmode="decimal" placeholder="Dejalo vacío si no lo cotizás"></label><label>Marca, modelo u observación<input data-ob="'+i+'"></label></div><div class="t" data-st="'+i+'"></div></div>').join('')+
  '</div><div class="tot"><span>Total</span><span id="tot">—</span></div><div class="sub" id="totn" style="text-align:right"></div></div>'+
  '<div class="card"><h2>Condiciones</h2><div class="g2"><label>Plazo de entrega *<input id="ent" placeholder="Ej.: 15 días desde la orden"></label><label>Validez de la oferta<input id="val" placeholder="Ej.: 10 días"></label></div><div class="g2"><label>Anticipo que pedís (%)<input id="ant" inputmode="numeric" placeholder="0"></label><label>Flete hasta la obra<select id="fle"><option value="">Elegí</option><option value="incluido">Incluido en el precio</option><option value="no incluido">No incluido</option></select></label></div><label>Forma de pago<input id="pago" placeholder="Ej.: anticipo y saldo contra entrega"></label><label>Aclaraciones<textarea id="notas" placeholder="Lo que incluye, lo que no incluye, alternativas…"></textarea></label></div>'+
+ '<div class="card"><h2>Tu presupuesto en PDF</h2><div class="sub">Si ya tenés el presupuesto armado, subilo acá (PDF, foto, Excel o Word). Podés mandarlo solo o junto con los precios de arriba.</div><div id="arl"></div><label class="upb">📄 Subir presupuesto<input type="file" id="arf" multiple accept="application/pdf,image/*,.xls,.xlsx,.doc,.docx" hidden></label><div class="sub" id="ars"></div></div>'+
  '<button id="env">Enviar cotización</button><div class="err" id="err"></div>';
  A.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.pu!==undefined){const v=t.value.replace(/[^\d,]/g,''),p=v.split(','),e0=p[0].replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,'.');t.value=p.length>1?e0+','+p[1].slice(0,2):e0}calc()});
- A.addEventListener('change',calc);const eb=document.getElementById('env');let pd=0;eb.onclick=enviar;eb.addEventListener('pointerdown',()=>{pd=Date.now()});document.addEventListener('click',e=>{if(e.target!==eb&&Date.now()-pd<1500&&!(e.target.closest&&e.target.closest('input,select,textarea,a,label,button'))){pd=0;enviar()}})}
+ A.addEventListener('change',calc);document.getElementById('arf').addEventListener('change',e=>subirArch(e.target.files));const eb=document.getElementById('env');let pd=0;eb.onclick=enviar;eb.addEventListener('pointerdown',()=>{pd=Date.now()});document.addEventListener('click',e=>{if(e.target!==eb&&Date.now()-pd<1500&&!(e.target.closest&&e.target.closest('input,select,textarea,a,label,button'))){pd=0;enviar()}})}
 function calc(){const it=P.items||[],m=document.getElementById('mon').value==='USD'?'U$s ':'$ ';let T=0,n=0;
  it.forEach((x,i)=>{const pu=num(A.querySelector('[data-pu="'+i+'"]').value),st=A.querySelector('[data-st="'+i+'"]');if(pu){T+=pu*x.q;n++;st.textContent='Subtotal: '+m+f0(pu*x.q)}else st.textContent=''});
  document.getElementById('tot').textContent=n?m+f0(T):'—';
@@ -86,11 +96,12 @@ function calc(){const it=P.items||[],m=document.getElementById('mon').value==='U
 function enviar(){const b0=document.getElementById('env');if(!b0||b0.disabled)return;const E=document.getElementById('err'),v=i=>document.getElementById(i).value.trim(),it=P.items||[];E.textContent='';
  const items=it.map((x,i)=>({i,pu:num(A.querySelector('[data-pu="'+i+'"]').value),obs:A.querySelector('[data-ob="'+i+'"]').value.trim().slice(0,200)}));
  if(!v('prov')){E.textContent='Falta la razón social o el nombre de tu empresa.';document.getElementById('prov').focus();return}
- if(!items.some(x=>x.pu>0)){E.textContent='Cargá el precio de al menos un ítem.';return}
+ if(SUB){E.textContent='Esperá a que termine de subir el presupuesto.';return}
+ if(!items.some(x=>x.pu>0)&&!ARCH.length){E.textContent='Cargá el precio de al menos un ítem o subí tu presupuesto en PDF.';return}
  if(!v('ent')){E.textContent='Falta el plazo de entrega.';document.getElementById('ent').focus();return}
  const b=document.getElementById('env');b.disabled=true;b.textContent='Enviando…';
- api({op:'cz_resp',id,resp:{prov:v('prov').slice(0,120),cont:v('cont').slice(0,80),tel:v('tel').slice(0,40),mon:v('mon'),iva:v('iva'),ivap:+v('ivap'),items,ent:v('ent').slice(0,200),val:v('val').slice(0,100),ant:Math.max(0,Math.min(100,Math.round(num(v('ant'))))),fle:v('fle'),pago:v('pago').slice(0,300),notas:v('notas').slice(0,1500)}}).then(({s,j})=>{
-  if(s===200&&j.ok){A.innerHTML='<div class="card okb"><div class="ic">✓</div><h1>Cotización enviada</h1><div class="sub">Gracias, '+esc(v0)+'. Meridian ya la recibió y se va a comunicar con vos.</div></div>';scrollTo(0,0)}
+ api({op:'cz_resp',id,resp:{prov:v('prov').slice(0,120),cont:v('cont').slice(0,80),tel:v('tel').slice(0,40),mon:v('mon'),iva:v('iva'),ivap:+v('ivap'),items,ent:v('ent').slice(0,200),val:v('val').slice(0,100),ant:Math.max(0,Math.min(100,Math.round(num(v('ant'))))),fle:v('fle'),pago:v('pago').slice(0,300),notas:v('notas').slice(0,1500),arch:ARCH.slice(0,5)}}).then(({s,j})=>{
+  if(s===200&&j.ok){A.innerHTML='<div class="card okb"><div class="ic">✓</div><h1>Cotización enviada</h1><div class="sub">Gracias, '+esc(v0)+'. '+(window.ORGN||'Meridian')+' ya la recibió y se va a comunicar con vos.</div></div>';scrollTo(0,0)}
   else{E.textContent=(j&&j.error)||'No se pudo enviar. Probá de nuevo.';b.disabled=false;b.textContent='Enviar cotización'}}).catch(()=>{E.textContent='Sin conexión. Probá de nuevo.';b.disabled=false;b.textContent='Enviar cotización'});
  var v0=v('prov')}
 })();

@@ -34,6 +34,7 @@
       if(op==='cz_resp'){if(P.cerrado)return R({error:'Este pedido ya está cerrado'},403);var r=b.resp||{};P.resps.push(Object.assign({},r,{rid:Date.now().toString(36),t:Date.now()}));save(s);return R({ok:true})}
       if(op==='cz_leer')return P.k===b.k?R({ok:true,resps:P.resps}):R({error:'No autorizado'},403);
       if(op==='cz_sub')return R({ok:true});
+      if(op==='cz_up_url')return R({error:'En la demo no se suben archivos.'},400);
       return R({error:'Operación inválida'},400)}
     if(op.indexOf('cmpr_')===0){
       if(op==='cmpr_all'){var out={};(b.obras||[]).forEach(function(id){if(s.cmp[id])out[id]=s.cmp[id]});return R({ok:true,docs:out})}
