@@ -142,21 +142,26 @@ async function exigirAdmin(req) {
   return { mail, token };
 }
 
+
+// Llama a Anthropic con la clave de este proyecto; si falta o no es válida, usa el proxy de nexoentorno (misma cuenta).
+async function anthropicFetch(body) {
+  const key = (process.env.ANTHROPIC_API_KEY || "").replace(/\s+/g, "");
+  if (key.startsWith("sk-ant-")) {
+    const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" }, body: JSON.stringify(body) });
+    if (r.status !== 401) return r;
+  }
+  return fetch("https://nexoentorno.vercel.app/api/claude", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+}
+
 async function claude(prompt, opts) {
   opts = opts || {};
-  const key = (process.env.ANTHROPIC_API_KEY || "").replace(/\s+/g, "");
-  if (!key.startsWith("sk-ant-")) throw Object.assign(new Error("Falta ANTHROPIC_API_KEY en Vercel."), { status: 500 });
   const body = {
     model: process.env.MOTOR_MODEL || "claude-sonnet-5-5",
     max_tokens: opts.max || 3000,
     messages: [{ role: "user", content: prompt }]
   };
   if (opts.buscar) body.tools = [{ type: "web_search_20250305", name: "web_search", max_uses: opts.buscar }];
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify(body)
-  });
+  const r = await anthropicFetch(body);
   const data = await r.json();
   if (!r.ok) throw Object.assign(new Error((data && data.error && data.error.message) || "Error de la IA"), { status: 502 });
   return (data.content || []).filter(b => b.type === "text").map(b => b.text).join("").trim();
@@ -542,14 +547,12 @@ async function handler(req, res) {
       if (req.method !== "POST") return res.status(405).json({ error: "Usá POST" });
       const origen = String(req.headers.origin || req.headers.referer || "");
       if (origen && !/^https:\/\/app-demo-ultimo(-[a-z0-9-]+)?\.vercel\.app/.test(origen)) return res.status(403).json({ error: "Origen no permitido" });
-      const key = (process.env.ANTHROPIC_API_KEY || "").replace(/\s+/g, "");
-      if (!key.startsWith("sk-ant-")) return res.status(500).json({ error: { message: "Falta ANTHROPIC_API_KEY en Vercel." } });
       const b = leerBody(req) || {};
       const body = { model: b.model || "claude-sonnet-5-5", max_tokens: Math.min(Number(b.max_tokens) || 1500, 8000), messages: Array.isArray(b.messages) ? b.messages : [] };
       if (b.system) body.system = b.system;
       if (Array.isArray(b.tools)) body.tools = b.tools.filter(t => t && /web_search/.test(String(t.type || ""))).map(t => Object.assign({}, t, { max_uses: Math.min(Number(t.max_uses) || 5, 10) }));
       if (b.temperature != null) body.temperature = b.temperature;
-      const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" }, body: JSON.stringify(body) });
+      const r = await anthropicFetch(body);
       const txt = await r.text();
       res.status(r.status).setHeader("Content-Type", "application/json");
       return res.send(txt);
