@@ -536,6 +536,25 @@ async function handler(req, res) {
       return res.status(200).send('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:system-ui;max-width:480px;margin:60px auto;padding:0 16px"><h2>Listo, te dimos de baja.</h2><p>No vas a recibir más mensajes de NEXO. / Você não receberá mais mensagens do NEXO.</p></body>');
     }
 
+    // IA para la demo y el Centro de Operaciones: usa la clave de Vercel, así nadie pega claves en el navegador.
+    if (accion === "ia") {
+      if (req.method === "OPTIONS") return res.status(204).end();
+      if (req.method !== "POST") return res.status(405).json({ error: "Usá POST" });
+      const origen = String(req.headers.origin || req.headers.referer || "");
+      if (origen && !/^https:\/\/app-demo-ultimo(-[a-z0-9-]+)?\.vercel\.app/.test(origen)) return res.status(403).json({ error: "Origen no permitido" });
+      const key = (process.env.ANTHROPIC_API_KEY || "").replace(/\s+/g, "");
+      if (!key.startsWith("sk-ant-")) return res.status(500).json({ error: { message: "Falta ANTHROPIC_API_KEY en Vercel." } });
+      const b = leerBody(req) || {};
+      const body = { model: b.model || "claude-sonnet-5-5", max_tokens: Math.min(Number(b.max_tokens) || 1500, 8000), messages: Array.isArray(b.messages) ? b.messages : [] };
+      if (b.system) body.system = b.system;
+      if (Array.isArray(b.tools)) body.tools = b.tools.filter(t => t && /web_search/.test(String(t.type || ""))).map(t => Object.assign({}, t, { max_uses: Math.min(Number(t.max_uses) || 5, 10) }));
+      if (b.temperature != null) body.temperature = b.temperature;
+      const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" }, body: JSON.stringify(body) });
+      const txt = await r.text();
+      res.status(r.status).setHeader("Content-Type", "application/json");
+      return res.send(txt);
+    }
+
     // Cron automático de Vercel
     if (accion === "cron") {
       const sec = (process.env.CRON_SECRET || "").trim();

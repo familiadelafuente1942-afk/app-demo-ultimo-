@@ -656,6 +656,8 @@ header{ background:rgba(244,245,250,.68)!important; -webkit-backdrop-filter:blur
 <script>
 /* IA directa desde el navegador: prueba otro modelo si el primero ya no existe, reintenta si hay límite y devuelve el motivo real del error */
 window.iaFetch=async function(url,init){
+  /* Sin clave en el navegador: la IA pasa por el servidor (clave guardada en Vercel) */
+  try{var hk=(init&&init.headers&&(init.headers["x-api-key"]||""))||"";if(/api\.anthropic\.com/.test(url)&&!/^sk-/.test(hk)){url="/api/motor?accion=ia";init=Object.assign({},init,{headers:{"Content-Type":"application/json"}});}}catch(e){}
   var modelos=[window.__iaModelo,"claude-sonnet-4-6","claude-sonnet-5-5","claude-haiku-4-5-20251001"].filter(function(x,i,a){return x&&a.indexOf(x)===i});
   var base=JSON.parse(init.body),r;
   for(var k=0;k<modelos.length;k++){
@@ -1930,7 +1932,6 @@ async function llamarIA({
   max_tokens
 }) {
   apiKey = limpiarClave(apiKey);
-  if (apiKey.length < 20 || apiKey.indexOf("sk-") !== 0) throw new Error("sin_clave");
   const userContent = Array.isArray(content) && content.length ? content : [{
     type: "text",
     text: prompt
@@ -2032,7 +2033,7 @@ function PanelDemo() {
   const [apiKey, setApiKey] = useState(() => limpiarClave(localStorage.getItem("demo_api_key")));
   const [verKey, setVerKey] = useState(false);
   const claveLimpia = limpiarClave(apiKey);
-  const iaOk = claveLimpia.length >= 20 && claveLimpia.indexOf("sk-") === 0;
+  const iaOk = true; // la IA usa la clave guardada en Vercel
   function guardarKey(k) {
     setApiKey(k);
     const limpia = limpiarClave(k);
@@ -6773,8 +6774,7 @@ const claveIaRepository = {
   // Tolerante a propósito: cualquier clave de Anthropic razonable pasa.
   // Antes exigía el prefijo exacto y rechazaba claves válidas por un espacio.
   estaLista() {
-    const k = this.obtener();
-    return k.length >= 20 && k.indexOf("sk-") === 0;
+    return true; // la clave vive en Vercel; la del navegador es opcional
   }
 };
 
