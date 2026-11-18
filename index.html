@@ -5751,7 +5751,7 @@ const archivoBD = {
     return {
       handle: h,
       nombre: h.name,
-      datos,
+      datos: rev.data, // el contenido, no el envoltorio del archivo
       revision: rev
     };
   },
@@ -10161,10 +10161,11 @@ ${hist}`;
         setAviso(rev.motivo);
         return;
       }
-      const comp = await compararConActual(datos);
+      // Se compara y se aplica el contenido (rev.data), no el envoltorio del archivo.
+      const comp = await compararConActual(rev.data);
       setImportPendiente({
         ...rev,
-        datos,
+        datos: rev.data,
         comp,
         origen: f.name,
         vincular: false
