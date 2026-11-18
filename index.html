@@ -9378,7 +9378,9 @@ function CampaniaComercial({ prospectos, setProspectos }) {
 function AreaComercial({ modo } = {}) {
   const [prospectosAll, setProspectos] = useState([]);
   const [paisVista, setPaisVista] = useState("todos");
-  const prospectos = paisVista === "todos" ? prospectosAll : prospectosAll.filter(p => (p.pais || "ar") === paisVista);
+  const [rolVista, setRolVista] = useState("todos");
+  const rolDe = p => { const r = String(p.rol || "").toLowerCase(); return r.startsWith("estud") ? "estudio" : r.startsWith("desarr") ? "desarrollador" : r.startsWith("constr") ? "constructora" : "otro"; };
+  const prospectos = prospectosAll.filter(p => (paisVista === "todos" || (p.pais || "ar") === paisVista) && (rolVista === "todos" || rolDe(p) === rolVista));
   const [plantillas, setPlantillas] = useState([]);
   const [bdLista, setBdLista] = useState(false);
   const [estBD, setEstBD] = useState({
@@ -10438,6 +10440,12 @@ ${hist}`;
       const cant = prospectosAll.filter(x => pp.id === "todos" || (x.pais || "ar") === pp.id).length;
       return React.createElement("button", { key: pp.id, onClick: () => setPaisVista(pp.id), style: { display: "flex", alignItems: "center", gap: 7, padding: "6px 12px", borderRadius: 9, border: `2px solid ${on ? "#B0894F" : "rgba(255,255,255,.18)"}`, background: on ? "#FBF6EE" : "rgba(255,255,255,.06)", cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700, color: on ? "#8A6A38" : "#C8D0DA", minHeight: 36 } },
         pp.bandera ? React.createElement("img", { src: pp.bandera, alt: "", style: { width: 24, height: 16, borderRadius: 2, display: "block" } }) : null, pp.nombre, React.createElement("span", { style: { opacity: .6, fontWeight: 600 } }, cant));
+    })), React.createElement("div", { style: { display: "flex", gap: 7, flexWrap: "wrap", alignItems: "center", marginBottom: 10 } },
+    React.createElement("span", { style: { fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "#8B95A5", marginRight: 4 } }, "Tipo"),
+    (window.ROLES_VENTAS || [["todos", "Todos"], ["estudio", "Estudios de arquitectura"], ["constructora", "Constructoras"], ["desarrollador", "Desarrolladoras"]]).map(([id, nombre]) => {
+      const on = rolVista === id;
+      const cant = prospectosAll.filter(x => (paisVista === "todos" || (x.pais || "ar") === paisVista) && (id === "todos" || rolDe(x) === id)).length;
+      return React.createElement("button", { key: id, onClick: () => setRolVista(id), style: { display: "flex", alignItems: "center", gap: 7, padding: "6px 12px", borderRadius: 9, border: `2px solid ${on ? "#B0894F" : "rgba(255,255,255,.18)"}`, background: on ? "#FBF6EE" : "rgba(255,255,255,.06)", cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700, color: on ? "#8A6A38" : "#C8D0DA", minHeight: 36 } }, nombre, React.createElement("span", { style: { opacity: .6, fontWeight: 600 } }, cant));
     })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
