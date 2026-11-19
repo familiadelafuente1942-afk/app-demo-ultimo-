@@ -13,7 +13,26 @@ textarea{width:100%;min-height:90px}.row{display:flex;gap:8px;flex-wrap:wrap;ali
 .it{border-top:1px solid var(--bd);padding:10px 0}.tag{font-size:11px;background:#232b37;border-radius:6px;padding:2px 7px;margin-right:4px}
 #msg{position:sticky;top:0;background:var(--br);color:#1a1405;padding:8px 12px;border-radius:9px;margin-bottom:10px;display:none;font-weight:700}
 .stop{font-size:15px;padding:12px 18px}.on{color:var(--ok)}.off{color:var(--no)}
-</style></head><body>
+</style><style id="vidrio-nexo2">
+/* Motor con el mismo vidrio que NEXO 2 */
+:root{--g-a:rgba(255,255,255,.17);--g-b:rgba(255,255,255,.035);--g-c:rgba(255,255,255,.075);--g-rim:rgba(255,255,255,.55);--g-edge:rgba(255,255,255,.26);--g-low:rgba(0,0,0,.22);--g-fx:blur(18px) saturate(1.9);--gl-sh:rgba(0,0,0,.5);--glint:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.17) 41%,rgba(255,255,255,.04) 50%,transparent 58%);--oro1:rgba(244,218,160,.95);--oro2:rgba(199,156,85,.75);--oro-tx:#2a1c05;--tx:#ece8e1;--mu:#a29d95}
+html.bf{--oro1:#f0dc55;--oro2:#c9ad00;--oro-tx:#1c1b1b}
+html{background:#0d0e10}body{min-height:100vh}
+body{background:radial-gradient(1100px 700px at 12% 8%,rgba(184,145,90,.13),transparent 60%),radial-gradient(1000px 650px at 88% 28%,rgba(70,100,170,.16),transparent 62%),#0d0e10 fixed!important;color:var(--tx)}
+.card{background:var(--glint),linear-gradient(158deg,var(--g-a) 0%,var(--g-b) 42%,var(--g-c) 100%)!important;border:0!important;border-radius:22px!important;-webkit-backdrop-filter:var(--g-fx);backdrop-filter:var(--g-fx);box-shadow:inset 0 2px 1px var(--g-rim),inset 0 0 0 1px var(--g-edge),inset 0 -12px 22px var(--g-low),0 14px 28px -12px var(--gl-sh)!important;padding:16px 18px!important}
+.kpi div,.tag{background:linear-gradient(158deg,var(--g-b),var(--g-c))!important;border-radius:14px!important;box-shadow:inset 0 1.5px 1px rgba(255,255,255,.35),inset 0 0 0 1px var(--g-edge),inset 0 -6px 12px var(--g-low)!important}
+.tag{border-radius:999px!important}
+button{background:var(--glint),linear-gradient(158deg,var(--g-a) 0%,var(--g-b) 42%,var(--g-c) 100%)!important;border:0!important;border-radius:999px!important;color:#f2efe9!important;padding:9px 15px!important;-webkit-backdrop-filter:var(--g-fx);backdrop-filter:var(--g-fx);box-shadow:inset 0 2px 1px var(--g-rim),inset 0 0 0 1px var(--g-edge),inset 0 -10px 18px var(--g-low),0 10px 22px -12px var(--gl-sh)!important}
+button.p{background:var(--glint),linear-gradient(180deg,var(--oro1),var(--oro2))!important;color:var(--oro-tx)!important;box-shadow:inset 0 2px 1px rgba(255,255,255,.85),inset 0 -8px 14px rgba(120,80,20,.28),0 10px 22px -8px rgba(199,156,85,.7)!important}
+button.v{background:var(--glint),linear-gradient(180deg,rgba(110,214,150,.9),rgba(46,150,95,.75))!important;color:#06140d!important}
+button.r{background:var(--glint),linear-gradient(180deg,rgba(255,130,118,.92),rgba(200,60,50,.78))!important;color:#fff!important}
+input,select,textarea{background:linear-gradient(158deg,var(--g-b),var(--g-c))!important;color:var(--tx)!important;border:1px solid var(--g-edge)!important;border-radius:12px!important;box-shadow:inset 0 1px 3px rgba(0,0,0,.25)!important}
+select option{color:#111;background:#f4f4f6}
+input[type=checkbox]{accent-color:#d8b077}html.bf input[type=checkbox]{accent-color:#E2C200}
+.it{border-top:1px solid rgba(255,255,255,.12)!important}.mu{color:var(--mu)!important}
+#msg.mal{background:var(--glint),linear-gradient(180deg,rgba(255,130,118,.95),rgba(200,60,50,.85))!important;color:#fff!important}
+#msg{background:var(--glint),linear-gradient(180deg,var(--oro1),var(--oro2))!important;color:var(--oro-tx)!important;border-radius:999px!important;box-shadow:inset 0 2px 1px rgba(255,255,255,.8),0 10px 22px -8px rgba(0,0,0,.5)!important}
+</style><script>if(/belfast/.test(location.pathname))document.documentElement.classList.add("bf")</script></head><body>
 <div id="msg"></div>
 <div id="login" class="card" style="max-width:380px;margin:30px auto;display:none">
   <h2>Motor de marketing</h2><p class="mu">Ingresá con tu cuenta de administrador.</p>
@@ -55,7 +74,7 @@ textarea{width:100%;min-height:90px}.row{display:flex;gap:8px;flex-wrap:wrap;ali
 var SU="https://agcmhrbxqtibrtmhwrrx.supabase.co",KEY="sb_publishable_kGPLp-DPPglnf6Eo3zPu6Q_OvE0MCkZ",T=null,ST=null;
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function aviso(t,mal){var m=$("msg");m.textContent=t;m.style.display="block";m.style.background=mal?"#ef5b5b":"#c9a35a";m.style.color=mal?"#fff":"#1a1405";clearTimeout(aviso.t);aviso.t=setTimeout(function(){m.style.display="none"},6000)}
+function aviso(t,mal){var m=$("msg");m.textContent=t;m.style.display="block";m.className=mal?"mal":"";clearTimeout(aviso.t);aviso.t=setTimeout(function(){m.style.display="none"},6000)}
 function api(a,b){return fetch("/api/motor?marca=belfast&accion="+a,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+T},body:JSON.stringify(b||{})}).then(function(r){return r.json().then(function(j){if(!r.ok){if(r.status==401&&T){salir()}throw new Error(j.error||"Error")}return j})})}
 function salir(){T=null;try{localStorage.removeItem("motor_tk")}catch(e){}$("app").style.display="none";$("login").style.display="block"}
 function entrar(){fetch(SU+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},body:JSON.stringify({email:$("em").value.trim(),password:$("pw").value})}).then(function(r){return r.json()}).then(function(j){if(!j.access_token){aviso("Mail o contraseña incorrectos.",1);return}T=j.access_token;$("pw").value="";try{localStorage.setItem("motor_tk",JSON.stringify({t:T,e:Date.now()+50*60000}))}catch(e){}iniciar()})}
