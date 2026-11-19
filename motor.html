@@ -85,7 +85,7 @@ function aprobarTodo(){if(!confirm("¿Aprobar todo lo pendiente? Igual no sale n
 function enviarYa(){ocupado(0,function(){return api("enviar_ahora").then(function(r){aviso("Mails enviados: "+r.mails.enviados+(r.mails.motivo?" ("+r.mails.motivo+")":"")+". Posteos: "+r.posts.publicados);estado();cola();audit()})})}
 function audit(){api("auditoria").then(function(r){$("aud").innerHTML=r.items.slice(0,25).map(function(i){return esc(i.creado.slice(0,16).replace("T"," "))+" · "+esc(i.actor)+" · <b>"+esc(i.accion)+"</b>"}).join("<br>")||"Sin actividad todavía."}).catch(function(){})}
 (function(){try{var s=JSON.parse(localStorage.getItem("motor_tk")||"null");if(s&&s.e>Date.now()){T=s.t;iniciar();return}}catch(e){}T="";iniciar()})();
-</script><script src="dicc-extra.js?v=2"></script>
+</script><script src="dicc-extra.js?v=2"></script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&display=swap"><style>body, body *:not(svg):not(svg *){ font-family:"Playfair Display",Georgia,serif !important; }</style>
 <script>
 // Idioma del motor: sigue al de la página (ES / EN / PT).
 (function(){

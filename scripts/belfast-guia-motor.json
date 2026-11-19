@@ -1,12 +1,83 @@
 [
- {"t":"Qué es el motor","c":["Es el ayudante que trabaja solo: busca estudios y desarrolladoras, les escribe mails y prepara los posteos y reels de Belfast.","Todo lo que prepara queda en una cola. Nada sale hacia afuera sin que vos lo apruebes.","Se abre con el botón 🚀 Motor, arriba de todo."]},
- {"t":"Para qué lo usamos","c":["Llenar la base de datos con estudios y desarrolladoras de Argentina y Uruguay.","Hacer el primer contacto por mail, con un mensaje escrito para cada empresa.","Mantener las redes de Belfast activas con posteos y reels de obra, sin tener que escribirlos a mano cada día."]},
- {"t":"1 · Buscar prospectos con IA","c":["Elegí país (Argentina o Uruguay) y tipo (estudios o desarrolladoras) y tocá Buscar.","La IA trae empresas con web, mail, teléfono e Instagram cuando los encuentra. Quedan en la Base de datos del Comercial.","\"Redactar mails a prospectos nuevos\" escribe un mail para cada uno y lo deja en la cola."]},
- {"t":"2 · Generar posteos","c":["Elegí las redes (LinkedIn, Instagram, Facebook), para cuántos días y el idioma, y tocá Generar.","La IA escribe posteos sobre Belfast: planificación, proceso y ejecución, y terminación.","Los posteos también van a la cola para que los revises."]},
- {"t":"3 · Cola de aprobación","c":["Acá está todo lo que el motor preparó: mails y posteos.","Leelo, corregilo si hace falta, y aprobalo o rechazalo. \"Aprobar todo lo pendiente\" aprueba de una vez.","Los filtros muestran pendientes, aprobados, enviados, con error y rechazados."]},
- {"t":"4 · Videos para Reels","c":["Los videos nuevos aparecen solos en esta tarjeta.","Podés bajarlos y subirlos a mano, o ponerles fecha y hora y tocar \"Programar los elegidos\".","Los programados entran a la cola; cuando los aprobás, el motor los publica en Instagram el día indicado."]},
- {"t":"Topes y calentamiento","c":["Topes: cuántos mails y cuántos posteos puede mandar por día como máximo.","Calentamiento: los primeros días manda pocos mails y va subiendo de a poco, para que no caigan en spam.","Cada mail lleva un link de baja; si alguien se da de baja, no le escribe más."]},
- {"t":"Lo que hace solo","c":["Todos los días a las 9 de la mañana manda los mails aprobados y publica los posteos aprobados, respetando los topes.","\"Enviar ahora lo aprobado\" lo hace en el momento, sin esperar.","El Registro de actividad muestra todo lo que hizo: búsquedas, aprobaciones y envíos."]},
- {"t":"Lo que falta para que ande completo","c":["Configurar la casilla info@belfastcm.com: hasta entonces los mails quedan frenados.","Conectar Instagram, Facebook y LinkedIn de Belfast para que publique solo.","Mientras tanto ya se puede buscar, redactar y aprobar: queda todo listo para cuando se conecte."]},
- {"t":"Rutina semanal sugerida","c":["Lunes: buscar prospectos nuevos y redactar los mails.","Durante la semana: revisar la cola y aprobar lo que esté bien.","Viernes: generar los posteos de la semana siguiente y programar los reels de las obras en curso.","A los que contestan, seguilos desde el Embudo del Comercial."]}
+ {
+  "t": "Qué es el motor",
+  "c": [
+   "Es el ayudante que trabaja solo: busca estudios y desarrolladoras, les escribe mails y prepara los posteos y reels de Belfast.",
+   "Todo lo que prepara queda en una cola. Nada sale hacia afuera sin que vos lo apruebes.",
+   "Se abre con Motor, en la barra de abajo."
+  ]
+ },
+ {
+  "t": "Para qué lo usamos",
+  "c": [
+   "Llenar la base de datos con estudios y desarrolladoras de Argentina y Uruguay.",
+   "Hacer el primer contacto por mail, con un mensaje escrito para cada empresa.",
+   "Mantener las redes de Belfast activas con posteos y reels de obra, sin tener que escribirlos a mano cada día."
+  ]
+ },
+ {
+  "t": "1 · Buscar prospectos con IA",
+  "c": [
+   "Elegí país (Argentina o Uruguay) y tipo (estudios o desarrolladoras) y tocá Buscar.",
+   "La IA trae empresas con web, mail, teléfono e Instagram cuando los encuentra. Quedan en la Base de datos del Comercial.",
+   "\"Redactar mails a prospectos nuevos\" escribe un mail para cada uno y lo deja en la cola."
+  ]
+ },
+ {
+  "t": "2 · Generar posteos",
+  "c": [
+   "Elegí las redes (LinkedIn, Instagram, Facebook), para cuántos días y el idioma, y tocá Generar.",
+   "La IA escribe posteos sobre Belfast: planificación, proceso y ejecución, y terminación.",
+   "Los posteos también van a la cola para que los revises."
+  ]
+ },
+ {
+  "t": "3 · Cola de aprobación",
+  "c": [
+   "Acá está todo lo que el motor preparó: mails y posteos.",
+   "Leelo, corregilo si hace falta, y aprobalo o rechazalo. \"Aprobar todo lo pendiente\" aprueba de una vez.",
+   "Los filtros muestran pendientes, aprobados, enviados, con error y rechazados."
+  ]
+ },
+ {
+  "t": "4 · Videos para Reels",
+  "c": [
+   "Los videos nuevos aparecen solos en esta tarjeta.",
+   "Podés bajarlos y subirlos a mano, o ponerles fecha y hora y tocar \"Programar los elegidos\".",
+   "Los programados entran a la cola; cuando los aprobás, el motor los publica en Instagram el día indicado."
+  ]
+ },
+ {
+  "t": "Topes y calentamiento",
+  "c": [
+   "Topes: cuántos mails y cuántos posteos puede mandar por día como máximo.",
+   "Calentamiento: los primeros días manda pocos mails y va subiendo de a poco, para que no caigan en spam.",
+   "Cada mail lleva un link de baja; si alguien se da de baja, no le escribe más."
+  ]
+ },
+ {
+  "t": "Lo que hace solo",
+  "c": [
+   "Todos los días a las 9 de la mañana manda los mails aprobados y publica los posteos aprobados, respetando los topes.",
+   "\"Enviar ahora lo aprobado\" lo hace en el momento, sin esperar.",
+   "El Registro de actividad muestra todo lo que hizo: búsquedas, aprobaciones y envíos."
+  ]
+ },
+ {
+  "t": "Lo que falta para que ande completo",
+  "c": [
+   "Configurar la casilla info@belfastcm.com: hasta entonces los mails quedan frenados.",
+   "Conectar Instagram, Facebook y LinkedIn de Belfast para que publique solo.",
+   "Mientras tanto ya se puede buscar, redactar y aprobar: queda todo listo para cuando se conecte."
+  ]
+ },
+ {
+  "t": "Rutina semanal sugerida",
+  "c": [
+   "Lunes: buscar prospectos nuevos y redactar los mails.",
+   "Durante la semana: revisar la cola y aprobar lo que esté bien.",
+   "Viernes: generar los posteos de la semana siguiente y programar los reels de las obras en curso.",
+   "A los que contestan, seguilos desde el Embudo del Comercial."
+  ]
+ }
 ]

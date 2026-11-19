@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es">
 <head>
-<script src="dicc-extra.js?v=2"></script>
+<script src="dicc-extra.js?v=2"></script><link rel="stylesheet" href="ventas-ui.css?v=3"><script src="ventas-ui.js?v=1"></script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="light only" />
@@ -1393,6 +1393,10 @@ body.bf-panel .bf-obras{ display:none!important; }
  "Sitio web": [
   "Website",
   "Site"
+ ],
+ "Se abre con Motor, en la barra de abajo.": [
+  "Open it with Engine, in the bottom bar.",
+  "Abre com Motor, na barra de baixo."
  ]
 });</script><style>body.en-ventas #barra-volver{display:none!important} html,body{background:#282627}</style></head>
 <body class="no-js en-ventas con-motor">
@@ -11144,8 +11148,9 @@ ${hist}`;
       flexWrap: "wrap",
       alignItems: "center"
     }
-  }, [["panel", "Panel"], ["embudo", ["Embudo", prospectos.length ? " · " + prospectos.length : ""]], ["buscar", "🔎 Buscar clientes"], ["base", ["Base de datos", prospectos.length ? " · " + prospectos.length : ""]], ["campania", "✉ Campaña"], ["plantillas", ["Plantillas", plantillas.length ? " · " + plantillas.length : ""]], ["guia", "Guía de ventas"], ["guiamotor", "Guía del motor"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+  }, [["panel", "Panel"], ["embudo", ["Embudo", prospectos.length ? " · " + prospectos.length : ""]], ["buscar", "Buscar clientes"], ["base", ["Base de datos", prospectos.length ? " · " + prospectos.length : ""]], ["campania", "Campaña"], ["plantillas", ["Plantillas", plantillas.length ? " · " + plantillas.length : ""]], ["guia", "Guía de ventas"], ["guiamotor", "Guía del motor"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
     key: id,
+    "data-t": id,
     className: "mvtab" + (vista === id ? " act" : ""),
     onClick: () => {
       setVista(id);
@@ -13424,7 +13429,7 @@ ${hist}`;
     }
   }, t.texto)))), vista === "guia" && /*#__PURE__*/React.createElement(GuiaVentas, null), vista === "guiamotor" && /*#__PURE__*/React.createElement(GuiaVentas, { bloques: GUIA_MOTOR }));
 }
-const GUIA_MOTOR = [{"t": "Qué es el motor", "c": ["Es el ayudante que trabaja solo: busca estudios y desarrolladoras, les escribe mails y prepara los posteos y reels de Belfast.", "Todo lo que prepara queda en una cola. Nada sale hacia afuera sin que vos lo apruebes.", "Se abre con el botón 🚀 Motor, arriba de todo."]}, {"t": "Para qué lo usamos", "c": ["Llenar la base de datos con estudios y desarrolladoras de Argentina y Uruguay.", "Hacer el primer contacto por mail, con un mensaje escrito para cada empresa.", "Mantener las redes de Belfast activas con posteos y reels de obra, sin tener que escribirlos a mano cada día."]}, {"t": "1 · Buscar prospectos con IA", "c": ["Elegí país (Argentina o Uruguay) y tipo (estudios o desarrolladoras) y tocá Buscar.", "La IA trae empresas con web, mail, teléfono e Instagram cuando los encuentra. Quedan en la Base de datos del Comercial.", "\"Redactar mails a prospectos nuevos\" escribe un mail para cada uno y lo deja en la cola."]}, {"t": "2 · Generar posteos", "c": ["Elegí las redes (LinkedIn, Instagram, Facebook), para cuántos días y el idioma, y tocá Generar.", "La IA escribe posteos sobre Belfast: planificación, proceso y ejecución, y terminación.", "Los posteos también van a la cola para que los revises."]}, {"t": "3 · Cola de aprobación", "c": ["Acá está todo lo que el motor preparó: mails y posteos.", "Leelo, corregilo si hace falta, y aprobalo o rechazalo. \"Aprobar todo lo pendiente\" aprueba de una vez.", "Los filtros muestran pendientes, aprobados, enviados, con error y rechazados."]}, {"t": "4 · Videos para Reels", "c": ["Los videos nuevos aparecen solos en esta tarjeta.", "Podés bajarlos y subirlos a mano, o ponerles fecha y hora y tocar \"Programar los elegidos\".", "Los programados entran a la cola; cuando los aprobás, el motor los publica en Instagram el día indicado."]}, {"t": "Topes y calentamiento", "c": ["Topes: cuántos mails y cuántos posteos puede mandar por día como máximo.", "Calentamiento: los primeros días manda pocos mails y va subiendo de a poco, para que no caigan en spam.", "Cada mail lleva un link de baja; si alguien se da de baja, no le escribe más."]}, {"t": "Lo que hace solo", "c": ["Todos los días a las 9 de la mañana manda los mails aprobados y publica los posteos aprobados, respetando los topes.", "\"Enviar ahora lo aprobado\" lo hace en el momento, sin esperar.", "El Registro de actividad muestra todo lo que hizo: búsquedas, aprobaciones y envíos."]}, {"t": "Lo que falta para que ande completo", "c": ["Configurar la casilla info@belfastcm.com: hasta entonces los mails quedan frenados.", "Conectar Instagram, Facebook y LinkedIn de Belfast para que publique solo.", "Mientras tanto ya se puede buscar, redactar y aprobar: queda todo listo para cuando se conecte."]}, {"t": "Rutina semanal sugerida", "c": ["Lunes: buscar prospectos nuevos y redactar los mails.", "Durante la semana: revisar la cola y aprobar lo que esté bien.", "Viernes: generar los posteos de la semana siguiente y programar los reels de las obras en curso.", "A los que contestan, seguilos desde el Embudo del Comercial."]}];
+const GUIA_MOTOR = [{"t": "Qué es el motor", "c": ["Es el ayudante que trabaja solo: busca estudios y desarrolladoras, les escribe mails y prepara los posteos y reels de Belfast.", "Todo lo que prepara queda en una cola. Nada sale hacia afuera sin que vos lo apruebes.", "Se abre con Motor, en la barra de abajo."]}, {"t": "Para qué lo usamos", "c": ["Llenar la base de datos con estudios y desarrolladoras de Argentina y Uruguay.", "Hacer el primer contacto por mail, con un mensaje escrito para cada empresa.", "Mantener las redes de Belfast activas con posteos y reels de obra, sin tener que escribirlos a mano cada día."]}, {"t": "1 · Buscar prospectos con IA", "c": ["Elegí país (Argentina o Uruguay) y tipo (estudios o desarrolladoras) y tocá Buscar.", "La IA trae empresas con web, mail, teléfono e Instagram cuando los encuentra. Quedan en la Base de datos del Comercial.", "\"Redactar mails a prospectos nuevos\" escribe un mail para cada uno y lo deja en la cola."]}, {"t": "2 · Generar posteos", "c": ["Elegí las redes (LinkedIn, Instagram, Facebook), para cuántos días y el idioma, y tocá Generar.", "La IA escribe posteos sobre Belfast: planificación, proceso y ejecución, y terminación.", "Los posteos también van a la cola para que los revises."]}, {"t": "3 · Cola de aprobación", "c": ["Acá está todo lo que el motor preparó: mails y posteos.", "Leelo, corregilo si hace falta, y aprobalo o rechazalo. \"Aprobar todo lo pendiente\" aprueba de una vez.", "Los filtros muestran pendientes, aprobados, enviados, con error y rechazados."]}, {"t": "4 · Videos para Reels", "c": ["Los videos nuevos aparecen solos en esta tarjeta.", "Podés bajarlos y subirlos a mano, o ponerles fecha y hora y tocar \"Programar los elegidos\".", "Los programados entran a la cola; cuando los aprobás, el motor los publica en Instagram el día indicado."]}, {"t": "Topes y calentamiento", "c": ["Topes: cuántos mails y cuántos posteos puede mandar por día como máximo.", "Calentamiento: los primeros días manda pocos mails y va subiendo de a poco, para que no caigan en spam.", "Cada mail lleva un link de baja; si alguien se da de baja, no le escribe más."]}, {"t": "Lo que hace solo", "c": ["Todos los días a las 9 de la mañana manda los mails aprobados y publica los posteos aprobados, respetando los topes.", "\"Enviar ahora lo aprobado\" lo hace en el momento, sin esperar.", "El Registro de actividad muestra todo lo que hizo: búsquedas, aprobaciones y envíos."]}, {"t": "Lo que falta para que ande completo", "c": ["Configurar la casilla info@belfastcm.com: hasta entonces los mails quedan frenados.", "Conectar Instagram, Facebook y LinkedIn de Belfast para que publique solo.", "Mientras tanto ya se puede buscar, redactar y aprobar: queda todo listo para cuando se conecte."]}, {"t": "Rutina semanal sugerida", "c": ["Lunes: buscar prospectos nuevos y redactar los mails.", "Durante la semana: revisar la cola y aprobar lo que esté bien.", "Viernes: generar los posteos de la semana siguiente y programar los reels de las obras en curso.", "A los que contestan, seguilos desde el Embudo del Comercial."]}];
 function GuiaVentas(props) {
   const bloques = (props && props.bloques) || [{"t": "El pitch en 30 segundos", "c": ["Belfast no vende metros cuadrados: vende que el proyecto se construya tal como fue pensado.", "\"Ustedes diseñan; nosotros construimos y dirigimos la obra cuidando cada decisión: planificación, proceso y ejecución, y terminación. Y lo ven todo, semana a semana, sin tener que ir a preguntar.\"", "Después mostrá una obra real: fotos del Instagram y el avance semanal."]}, {"t": "A quién le vendemos", "c": ["Estudios de arquitectura que diseñan casas y edificios de alta gama y necesitan quién los construya bien.", "Desarrolladoras que buscan una constructora que cumpla plazos y les rinda cuentas.", "Argentina (Buenos Aires) y Uruguay."]}, {"t": "Las tres preguntas de apertura", "c": ["¿Qué proyectos tienen para arrancar en los próximos meses?", "¿Con qué constructora trabajan hoy y qué les gustaría que hiciera distinto?", "¿Cómo se enteran hoy de lo que pasa en sus obras?"]}, {"t": "Qué mostrar", "c": ["La web de Belfast, sección Obras: obras terminadas y en curso. El botón \"Insertar link a las obras\" de los mails ya pone ese link.", "Las obras en curso: hoy son 7.", "Construcción y dirección de obra en un mismo equipo, como figura en el cartel de cada obra.", "El seguimiento con NEXO: el estudio y el propietario ven avance, fotos, definiciones pendientes y bitácora de su obra.", "Detalles de obra y terminaciones del Instagram @belfast_cm."]}, {"t": "Cómo sigue después del primer contacto", "c": ["1. Pedí los planos o el anteproyecto.", "2. Invitá a visitar una obra en curso.", "3. Presupuesto con cronograma de obra.", "4. Reunión con quien va a dirigir la obra."]}, {"t": "Objeciones frecuentes", "c": ["\"Ya tenemos constructora\" → No compitas: pedí cotizar la próxima obra para que tengan con qué comparar.", "\"Son caros\" → Mostrá lo que no se ve en un presupuesto: dirección de obra, seguimiento semanal y cuidado en las terminaciones.", "\"¿Cómo sé que cumplen?\" → Invitá a visitar una obra en curso y mostrá el seguimiento semanal real.", "\"Ahora no tenemos obra\" → Quedá cerca: mandá novedades de obra cada mes y preguntá por su próximo proyecto."]}, {"t": "Lo que NO podés prometer", "c": ["Precio cerrado sin planos ni especificaciones.", "Fechas de inicio sin confirmarlas con Dirección de obra.", "Trabajos o gremios que Belfast no confirmó por escrito.", "Si te lo piden: \"lo veo con Dirección y te confirmo\", nunca un sí en la reunión."]}];
   return /*#__PURE__*/React.createElement("div", {
@@ -13736,17 +13741,17 @@ const AREAS = [{
 }, {
   id: "cronograma",
   nombre: "Cronograma de lanzamiento",
-  corto: "📅 Cronograma",
+  corto: "Cronograma",
   activa: true
 }, {
   id: "seguimiento",
   nombre: "Seguimiento técnico",
-  corto: "📊 Seguimiento",
+  corto: "Seguimiento",
   activa: true
 }, {
   id: "motor",
   nombre: "Motor de marketing IA",
-  corto: "🚀 Motor",
+  corto: "Motor",
   activa: true
 }].filter(a => a.id === "comercial" || a.id === "motor");
 function AreaMotor() {
@@ -13838,6 +13843,7 @@ function CentroOperaciones() {
     }
   }, AREAS.map(a => /*#__PURE__*/React.createElement("button", {
     key: a.id,
+    "data-t": a.id,
     className: "co-tab" + (area === a.id ? " act" : ""),
     onClick: () => setArea(a.id)
   }, /*#__PURE__*/React.createElement("i", {
