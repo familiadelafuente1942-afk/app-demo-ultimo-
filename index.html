@@ -9841,7 +9841,7 @@ ${hist}`;
       const lista = await r.json();
       const idx = {};
       lista.forEach(x => { idx[nombreClave(x.empresa)] = x; });
-      let n = 0;
+      let n = 0, nuevos = 0;
       setProspectos(prev => prev.map(p => {
         const x = idx[nombreClave(p.empresa)];
         if (!x) return p;
@@ -9858,8 +9858,16 @@ ${hist}`;
         if (!Object.keys(c).length) return p;
         n++;
         return { ...p, ...c };
-      }));
-      setTimeout(() => setAviso(`Contactos cargados en ${n} empresa${n === 1 ? "" : "s"}`), 50);
+      }).concat((() => {
+        // Empresas nuevas encontradas (por ejemplo en Instagram) que todavía no están en la base.
+        const ya = new Set(prev.map(p => nombreClave(p.empresa)));
+        return lista.filter(x => x.nuevo && x.empresa && !ya.has(nombreClave(x.empresa))).map((x, i) => {
+          const pais = x.pais || "ar";
+          nuevos++;
+          return { id: Date.now() + i, empresa: x.empresa, nombre: "", rol: x.rol || "estudio", obras: x.nota || "", mail: x.email || "", tel: normTelNx(x.telefono, pais, false) || "", whatsapp: normTelNx(x.whatsapp, pais, true) || "", web: x.web || "", instagram: String(x.instagram || "").replace(/^@/, "").toLowerCase(), dolor: "", estado: "nuevo", alta: new Date().toLocaleDateString("es-AR"), altaIso: new Date().toISOString(), historial: [], pais };
+        });
+      })()));
+      setTimeout(() => setAviso(`Contactos cargados en ${n} empresa${n === 1 ? "" : "s"}` + (nuevos ? ` y ${nuevos} empresa${nuevos === 1 ? "" : "s"} nueva${nuevos === 1 ? "" : "s"}` : "")), 50);
     } catch { setAviso("No pude leer el archivo de contactos encontrados."); }
   }
   function bloqueListado() {
