@@ -149,7 +149,15 @@ import re as _re, json as _json
 _g = _json.loads((raiz / "scripts" / "belfast-guia.json").read_text(encoding="utf-8"))
 _m = _re.search(r"function GuiaVentas\(\) \{\n  const bloques = \[.*?\];\n  return", s, _re.S)
 assert _m, "no encontré la guía de ventas"
-s = s[:_m.start()] + "function GuiaVentas() {\n  const bloques = " + _json.dumps(_g, ensure_ascii=False) + ";\n  return" + s[_m.end():]
+_gm = _json.loads((raiz / "scripts" / "belfast-guia-motor.json").read_text(encoding="utf-8"))
+s = s[:_m.start()] + "const GUIA_MOTOR = " + _json.dumps(_gm, ensure_ascii=False) + ";\nfunction GuiaVentas(props) {\n  const bloques = (props && props.bloques) || " + _json.dumps(_g, ensure_ascii=False) + ";\n  return" + s[_m.end():]
+# Pestaña nueva al final: Guía del motor
+_t = '["guia", "Guía de ventas"]].map('
+assert _t in s
+s = s.replace(_t, '["guia", "Guía de ventas"], ["guiamotor", "Guía del motor"]].map(', 1)
+_v = 'vista === "guia" && /*#__PURE__*/React.createElement(GuiaVentas, null)'
+assert _v in s
+s = s.replace(_v, _v + ', vista === "guiamotor" && /*#__PURE__*/React.createElement(GuiaVentas, { bloques: GUIA_MOTOR })', 1)
 # Que el primer pantallazo ya sea Belfast (sin mostrar la portada de NEXO mientras carga).
 cambiar('<body class="no-js">', '<body class="no-js en-ventas con-motor">')
 i = s.rfind("</body>")
