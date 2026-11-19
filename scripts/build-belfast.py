@@ -144,6 +144,12 @@ TEMA = (raiz / "scripts" / "belfast-tema.html").read_text(encoding="utf-8")
 TEMA += "<script>window.DICC_N3=Object.assign(window.DICC_N3||{}," + (raiz / "scripts" / "belfast-dicc.json").read_text(encoding="utf-8") + ");</script>"
 cambiar('<div id="vista-ventas"><div id="root-ventas"></div></div>', '<div id="vista-ventas">' + (raiz / "scripts" / "belfast-portada.html").read_text(encoding="utf-8") + '<div id="root-ventas"></div></div>')
 cambiar("</head>", '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">' + TEMA + '<style>body.en-ventas #barra-volver{display:none!important} html,body{background:#282627}</style></head>')
+# Guía de ventas propia de Belfast (constructora), en lugar de la de NEXO (software).
+import re as _re, json as _json
+_g = _json.loads((raiz / "scripts" / "belfast-guia.json").read_text(encoding="utf-8"))
+_m = _re.search(r"function GuiaVentas\(\) \{\n  const bloques = \[.*?\];\n  return", s, _re.S)
+assert _m, "no encontré la guía de ventas"
+s = s[:_m.start()] + "function GuiaVentas() {\n  const bloques = " + _json.dumps(_g, ensure_ascii=False) + ";\n  return" + s[_m.end():]
 # Que el primer pantallazo ya sea Belfast (sin mostrar la portada de NEXO mientras carga).
 cambiar('<body class="no-js">', '<body class="no-js en-ventas con-motor">')
 i = s.rfind("</body>")
