@@ -36,7 +36,7 @@ redactor_nuevo = ("Sos el redactor comercial de Belfast Construction Management 
                   "cuidado de la materialidad y respeto por la intención del proyecto. El mail va dirigido a un estudio o a una desarrolladora, para ofrecerle a Belfast como constructora de su próxima obra. "
                   "El tono es sobrio y elegante, nunca de oferta ni de descuento. No inventes obras, cifras ni clientes. Si invitás a ver obras, usá {link_app}, que lleva al Instagram de Belfast. El destinatario está en ")
 cambiar(redactor_viejo, redactor_nuevo, veces=0)
-s = re.sub(r"<title>.*?</title>", "<title>Belfast · Motor de Ventas</title>", s, count=1, flags=re.S)
+s = re.sub(r"<title>.*?</title>", "<title>Belfast Construction Management</title>", s, count=1, flags=re.S)
 
 
 # Asistente por prospecto: vende Belfast (la constructora), no el software NEXO.
@@ -96,6 +96,8 @@ cambiar('  const [perfs, setPerfs] = useState(["estudios", "constructoras"]);', 
 # Belfast no sincroniza con la nube de NEXO (son bases separadas).
 cambiar('<script src="supabase-sync.js"></script>', '')
 
+s = s.replace('"Las métricas de correos, respuestas y reuniones necesitan el motor de agentes y el envío de correo. Lo que ves abajo son las herramientas que ya funcionan."', '""')
+
 extra = r'''
 __TEMA__
 <script>
@@ -115,6 +117,21 @@ window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],
     });
   }
   function abrir(){ try { if (typeof abrirVentas==="function") abrirVentas(); } catch(e){} marca(); }
+  // Tocar el logo abre / cierra el panel de ventas (como en NEXO).
+  document.addEventListener("click", function(e){ var t = e.target && e.target.closest && e.target.closest("#bf-logo"); if (!t) return; e.preventDefault(); document.body.classList.toggle("bf-panel"); try { window.scrollTo(0, 0); } catch(x){} });
+  // Espera: después de un rato sin tocar nada en la presentación, pasan las fotos del Instagram.
+  (function(){
+    var fotos = ["06","09","04","02","05","07","03","10","11","08","12","01"].map(function(n){ return "belfast-ig/ig-" + n + ".jpg"; });
+    var ov, img, fondo, i = 0, reloj = null, pase = null, ESPERA = 25000;
+    function mostrar(){ img.classList.remove("vis"); setTimeout(function(){ var f = fotos[i++ % fotos.length]; img.onload = function(){ img.classList.add("vis"); }; img.src = f; fondo.style.backgroundImage = "url(" + f + ")"; }, 450); }
+    function entrar(){ if (document.body.classList.contains("bf-panel")) { armar(); return; } ov.classList.add("on"); mostrar(); pase = setInterval(mostrar, 6000); }
+    function salir(){ if (pase) { clearInterval(pase); pase = null; } if (ov) ov.classList.remove("on"); armar(); }
+    function armar(){ clearTimeout(reloj); reloj = setTimeout(entrar, ESPERA); }
+    function iniciar(){ ov = document.getElementById("bf-espera"); if (!ov) return; img = ov.querySelector(".bf-esp-foto"); fondo = ov.querySelector(".bf-esp-fondo");
+      ["pointerdown","keydown","wheel","touchstart","scroll"].forEach(function(ev){ window.addEventListener(ev, function(){ if (ov.classList.contains("on")) salir(); else armar(); }, { passive: true, capture: true }); });
+      armar(); }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar); else iniciar();
+  })();
   if (document.readyState==="complete") setTimeout(abrir, 300); else window.addEventListener("load", function(){ setTimeout(abrir, 300); });
   new MutationObserver(function(){ marca(); }).observe(document.documentElement, {childList:true, subtree:true});
 })();

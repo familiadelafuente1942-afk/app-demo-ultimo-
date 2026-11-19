@@ -23,9 +23,7 @@ body.en-ventas [style*="background: rgb(156, 135, 0)"],body.en-ventas [style*="b
 .bf-portada{ position:relative; background:var(--bf-carbon2); color:#fff; overflow:hidden; }
 .bf-top{ display:flex; align-items:center; gap:14px; padding:24px 28px; border-bottom:1px solid rgba(255,255,255,.08); }
 .bf-marca{ display:flex; align-items:center; gap:18px; text-decoration:none; color:#fff; }
-.bf-iso{ width:48px; height:36px; position:relative; flex-shrink:0; }
-.bf-iso i{ position:absolute; left:0; right:0; height:15px; background:#fff; border-radius:0 15px 15px 0; }
-.bf-iso i:first-child{ top:0; } .bf-iso i:last-child{ bottom:0; }
+.bf-iso{ width:64px; height:auto; flex-shrink:0; display:block; }
 .bf-marca b{ font-weight:700; letter-spacing:.2em; font-size:24px; line-height:1; }
 .bf-marca small{ display:block; font-size:10.5px; letter-spacing:.24em; text-transform:uppercase; opacity:.7; font-weight:500; margin-top:6px; }
 .bf-top .bf-ig{ margin-left:auto; color:var(--bf-piedra); font-size:12px; text-decoration:none; border:1px solid rgba(255,255,255,.2); border-radius:999px; padding:7px 13px; }
@@ -59,6 +57,24 @@ body.en-ventas [style*="background: rgb(156, 135, 0)"],body.en-ventas [style*="b
   .bf-eti{ margin-top:40px; letter-spacing:.16em; }
   .bf-top,.bf-pie{ padding-left:16px; padding-right:16px; }
   .bf-top .bf-ig{ font-size:11px; padding:6px 10px; }
-  .bf-marca{ gap:12px; } .bf-iso{ width:36px; height:27px; } .bf-iso i{ height:11px; border-radius:0 11px 11px 0; } .bf-marca b{ font-size:18px; letter-spacing:.16em; } .bf-marca small{ font-size:8.5px; letter-spacing:.18em; margin-top:4px; }
+  .bf-marca{ gap:12px; } .bf-iso{ width:46px; } .bf-marca b{ font-size:18px; letter-spacing:.16em; } .bf-marca small{ font-size:8.5px; letter-spacing:.18em; margin-top:4px; }
 }
+
+/* Solo la presentación: el panel de ventas se abre tocando el logo */
+body:not(.bf-panel) #root-ventas{ display:none!important; }
+body.bf-panel .bf-hero, body.bf-panel .bf-cinta, body.bf-panel .bf-pie{ display:none!important; }
+#bf-logo{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.bf-hero{ min-height:calc(100vh - 330px); }
+#root-ventas .ficha-contenido > div:empty{ display:none!important; }
+/* Espera: si nadie toca, van pasando las fotos del Instagram */
+#bf-espera{ position:fixed; inset:0; z-index:99999; background:#111; opacity:0; pointer-events:none; transition:opacity 1.2s ease; overflow:hidden; }
+#bf-espera.on{ opacity:1; pointer-events:auto; cursor:pointer; }
+.bf-esp-fondo{ position:absolute; inset:-40px; background-size:cover; background-position:center; filter:blur(30px) brightness(.45); transition:background-image 1s; }
+.bf-esp-foto{ position:absolute; top:50%; left:50%; height:86vh; max-width:92vw; object-fit:contain; transform:translate(-50%,-50%) scale(1); opacity:0; transition:opacity 1.2s ease; box-shadow:0 30px 80px rgba(0,0,0,.6); }
+.bf-esp-foto.vis{ opacity:1; animation:bfKen 7s ease-out forwards; }
+@keyframes bfKen{ from{ transform:translate(-50%,-50%) scale(1); } to{ transform:translate(-50%,-50%) scale(1.06); } }
+.bf-esp-marca{ position:absolute; left:28px; bottom:24px; display:flex; align-items:center; gap:14px; color:#fff; }
+.bf-esp-marca img{ width:54px; }
+.bf-esp-marca span{ font-weight:700; letter-spacing:.2em; font-size:20px; }
+.bf-esp-marca small{ font-size:12px; letter-spacing:.12em; color:#D4B800; margin-left:6px; }
 </style>

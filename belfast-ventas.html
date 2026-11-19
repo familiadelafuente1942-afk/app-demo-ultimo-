@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="light only" />
-<title>Belfast · Motor de Ventas</title>
+<title>Belfast Construction Management</title>
 <meta name="description" content="Una app con tres paneles — constructora, estudio de arquitectura y propietario — para que los tiempos de la obra se cumplan: tarjetas por tarea, avances con fotos, cronograma y un asistente de IA que responde por vos." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1208,17 +1208,17 @@ header{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 42
 <div id="vista-demo"><iframe id="demo2" title="Demo de NEXO" allow="clipboard-write"></iframe></div>
 <div id="vista-ventas"><section class="bf-portada">
   <div class="bf-top">
-    <a class="bf-marca" href="https://www.instagram.com/belfast_cm/" target="_blank" rel="noopener">
-      <span class="bf-iso"><i></i><i></i></span>
+    <a class="bf-marca" href="#" id="bf-logo" aria-label="Belfast">
+      <img class="bf-iso" src="belfast-isotipo.png" alt="">
       <span><b>BELFAST</b><small>Construction Management</small></span>
     </a>
     <a class="bf-ig" href="https://www.instagram.com/belfast_cm/" target="_blank" rel="noopener">@belfast_cm</a>
   </div>
   <div class="bf-hero">
     <div class="bf-txt">
-      <div class="bf-eti">Motor de ventas · Estudios &amp; Desarrolladoras</div>
+      <div class="bf-eti">Construcciones de alta gama · Buenos Aires &amp; Uruguay</div>
       <h1 class="bf-tit">Cada proyecto tiene<br><em>su propia intención.</em></h1>
-      <p class="bf-sub">Construcciones de alta gama en <b>Buenos Aires &amp; Uruguay</b>. Desde acá buscamos estudios de arquitectura y desarrolladoras, les escribimos y seguimos cada respuesta.</p>
+      <p class="bf-sub">Construimos los proyectos de <b>estudios de arquitectura</b> y <b>desarrolladoras</b>, cuidando cada decisión de obra: planificación, proceso y ejecución, y terminación.</p>
     </div>
     <div class="bf-fotos">
       <a href="https://www.instagram.com/belfast_cm/" target="_blank" rel="noopener"><img src="belfast-ig/ig-06.jpg" alt="Encuentro entre hormigón y mampostería"></a>
@@ -1239,6 +1239,7 @@ header{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 42
   </div>
   <div class="bf-pie"><span>Planificación</span><span>Proceso &amp; ejecución</span><span>Terminación</span></div>
 </section>
+<div id="bf-espera" aria-hidden="true"><div class="bf-esp-fondo"></div><img class="bf-esp-foto" alt=""><div class="bf-esp-marca"><img src="belfast-isotipo.png" alt=""><span>BELFAST</span><small>@belfast_cm</small></div></div>
 <div id="root-ventas"></div></div>
 
 <div id="vista-entorno">
@@ -13292,7 +13293,7 @@ function CentroOperaciones() {
         color: "#6F6100",
         lineHeight: 1.55
       }
-    }, "Las métricas de correos, respuestas y reuniones necesitan el motor de agentes y el envío de correo. Lo que ves abajo son las herramientas que ya funcionan."), /*#__PURE__*/React.createElement(AreaComercial, null))
+    }, ""), /*#__PURE__*/React.createElement(AreaComercial, null))
   }), area === "marketing" && /*#__PURE__*/React.createElement(AreaMarketing, null), area === "operaciones" && /*#__PURE__*/React.createElement(AreaOperaciones, null), area === "mails" && /*#__PURE__*/React.createElement(AreaComercial, { modo: "mails", key: "mails" }), area === "soporte" && /*#__PURE__*/React.createElement(AreaSoporte, null), area === "finanzas" && /*#__PURE__*/React.createElement(AreaFinanzas, null), area === "producto" && /*#__PURE__*/React.createElement(AreaProducto, null), area === "seguridad" && /*#__PURE__*/React.createElement(AreaSeguridad, null), area === "cronograma" && /*#__PURE__*/React.createElement(AreaCronograma, null), area === "seguimiento" && /*#__PURE__*/React.createElement(AreaSeguimiento, null), area === "motor" && /*#__PURE__*/React.createElement(AreaMotor, null));
 }
 
@@ -14676,9 +14677,7 @@ body.en-ventas [style*="background: rgb(156, 135, 0)"],body.en-ventas [style*="b
 .bf-portada{ position:relative; background:var(--bf-carbon2); color:#fff; overflow:hidden; }
 .bf-top{ display:flex; align-items:center; gap:14px; padding:24px 28px; border-bottom:1px solid rgba(255,255,255,.08); }
 .bf-marca{ display:flex; align-items:center; gap:18px; text-decoration:none; color:#fff; }
-.bf-iso{ width:48px; height:36px; position:relative; flex-shrink:0; }
-.bf-iso i{ position:absolute; left:0; right:0; height:15px; background:#fff; border-radius:0 15px 15px 0; }
-.bf-iso i:first-child{ top:0; } .bf-iso i:last-child{ bottom:0; }
+.bf-iso{ width:64px; height:auto; flex-shrink:0; display:block; }
 .bf-marca b{ font-weight:700; letter-spacing:.2em; font-size:24px; line-height:1; }
 .bf-marca small{ display:block; font-size:10.5px; letter-spacing:.24em; text-transform:uppercase; opacity:.7; font-weight:500; margin-top:6px; }
 .bf-top .bf-ig{ margin-left:auto; color:var(--bf-piedra); font-size:12px; text-decoration:none; border:1px solid rgba(255,255,255,.2); border-radius:999px; padding:7px 13px; }
@@ -14712,8 +14711,26 @@ body.en-ventas [style*="background: rgb(156, 135, 0)"],body.en-ventas [style*="b
   .bf-eti{ margin-top:40px; letter-spacing:.16em; }
   .bf-top,.bf-pie{ padding-left:16px; padding-right:16px; }
   .bf-top .bf-ig{ font-size:11px; padding:6px 10px; }
-  .bf-marca{ gap:12px; } .bf-iso{ width:36px; height:27px; } .bf-iso i{ height:11px; border-radius:0 11px 11px 0; } .bf-marca b{ font-size:18px; letter-spacing:.16em; } .bf-marca small{ font-size:8.5px; letter-spacing:.18em; margin-top:4px; }
+  .bf-marca{ gap:12px; } .bf-iso{ width:46px; } .bf-marca b{ font-size:18px; letter-spacing:.16em; } .bf-marca small{ font-size:8.5px; letter-spacing:.18em; margin-top:4px; }
 }
+
+/* Solo la presentación: el panel de ventas se abre tocando el logo */
+body:not(.bf-panel) #root-ventas{ display:none!important; }
+body.bf-panel .bf-hero, body.bf-panel .bf-cinta, body.bf-panel .bf-pie{ display:none!important; }
+#bf-logo{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.bf-hero{ min-height:calc(100vh - 330px); }
+#root-ventas .ficha-contenido > div:empty{ display:none!important; }
+/* Espera: si nadie toca, van pasando las fotos del Instagram */
+#bf-espera{ position:fixed; inset:0; z-index:99999; background:#111; opacity:0; pointer-events:none; transition:opacity 1.2s ease; overflow:hidden; }
+#bf-espera.on{ opacity:1; pointer-events:auto; cursor:pointer; }
+.bf-esp-fondo{ position:absolute; inset:-40px; background-size:cover; background-position:center; filter:blur(30px) brightness(.45); transition:background-image 1s; }
+.bf-esp-foto{ position:absolute; top:50%; left:50%; height:86vh; max-width:92vw; object-fit:contain; transform:translate(-50%,-50%) scale(1); opacity:0; transition:opacity 1.2s ease; box-shadow:0 30px 80px rgba(0,0,0,.6); }
+.bf-esp-foto.vis{ opacity:1; animation:bfKen 7s ease-out forwards; }
+@keyframes bfKen{ from{ transform:translate(-50%,-50%) scale(1); } to{ transform:translate(-50%,-50%) scale(1.06); } }
+.bf-esp-marca{ position:absolute; left:28px; bottom:24px; display:flex; align-items:center; gap:14px; color:#fff; }
+.bf-esp-marca img{ width:54px; }
+.bf-esp-marca span{ font-weight:700; letter-spacing:.2em; font-size:20px; }
+.bf-esp-marca small{ font-size:12px; letter-spacing:.12em; color:#D4B800; margin-left:6px; }
 </style>
 
 <script>
@@ -14733,6 +14750,21 @@ window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],
     });
   }
   function abrir(){ try { if (typeof abrirVentas==="function") abrirVentas(); } catch(e){} marca(); }
+  // Tocar el logo abre / cierra el panel de ventas (como en NEXO).
+  document.addEventListener("click", function(e){ var t = e.target && e.target.closest && e.target.closest("#bf-logo"); if (!t) return; e.preventDefault(); document.body.classList.toggle("bf-panel"); try { window.scrollTo(0, 0); } catch(x){} });
+  // Espera: después de un rato sin tocar nada en la presentación, pasan las fotos del Instagram.
+  (function(){
+    var fotos = ["06","09","04","02","05","07","03","10","11","08","12","01"].map(function(n){ return "belfast-ig/ig-" + n + ".jpg"; });
+    var ov, img, fondo, i = 0, reloj = null, pase = null, ESPERA = 25000;
+    function mostrar(){ img.classList.remove("vis"); setTimeout(function(){ var f = fotos[i++ % fotos.length]; img.onload = function(){ img.classList.add("vis"); }; img.src = f; fondo.style.backgroundImage = "url(" + f + ")"; }, 450); }
+    function entrar(){ if (document.body.classList.contains("bf-panel")) { armar(); return; } ov.classList.add("on"); mostrar(); pase = setInterval(mostrar, 6000); }
+    function salir(){ if (pase) { clearInterval(pase); pase = null; } if (ov) ov.classList.remove("on"); armar(); }
+    function armar(){ clearTimeout(reloj); reloj = setTimeout(entrar, ESPERA); }
+    function iniciar(){ ov = document.getElementById("bf-espera"); if (!ov) return; img = ov.querySelector(".bf-esp-foto"); fondo = ov.querySelector(".bf-esp-fondo");
+      ["pointerdown","keydown","wheel","touchstart","scroll"].forEach(function(ev){ window.addEventListener(ev, function(){ if (ov.classList.contains("on")) salir(); else armar(); }, { passive: true, capture: true }); });
+      armar(); }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar); else iniciar();
+  })();
   if (document.readyState==="complete") setTimeout(abrir, 300); else window.addEventListener("load", function(){ setTimeout(abrir, 300); });
   new MutationObserver(function(){ marca(); }).observe(document.documentElement, {childList:true, subtree:true});
 })();
