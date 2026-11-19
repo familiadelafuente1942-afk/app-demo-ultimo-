@@ -567,8 +567,12 @@ async function handler(req, res) {
 
     // Chequeo público: ¿la clave de servicio de Supabase conecta? No devuelve datos.
     if (accion === "salud") {
-      try { await db("mkt_bajas?select=email&limit=1"); return res.status(200).json({ supabase: "ok" }); }
-      catch (e) { return res.status(200).json({ supabase: "error", detalle: String(e.message || e).slice(0, 160) }); }
+      const out = {};
+      try { await db("mkt_bajas?select=email&limit=1"); out.supabase = "ok"; } catch (e) { out.supabase = "error: " + String(e.message || e).slice(0, 120); }
+      const gu = process.env.GMAIL_USER, gp = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
+      if (!gu || !gp) out.gmail = "falta " + (!gu ? "GMAIL_USER" : "GMAIL_APP_PASSWORD");
+      else { try { await require("nodemailer").createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user: gu, pass: gp } }).verify(); out.gmail = "ok"; } catch (e) { out.gmail = "error: " + String(e.message || e).slice(0, 120); } }
+      return res.status(200).json(out);
     }
 
     // IA para la demo y el Centro de Operaciones: usa la clave de Vercel, así nadie pega claves en el navegador.
