@@ -8084,7 +8084,7 @@ function PanelSoporte() {
       const r = await fetch(`${MKT_SUPA_URL}/functions/v1/enviar-mail`, {
         method: "POST",
         headers: { Authorization: `Bearer ${t}`, apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({ to: destino, subject: item.pregunta || "Respuesta de NEXO", html })
+        body: JSON.stringify({ to: destino, subject: item.pregunta || "Respuesta de Belfast", html })
       });
       const data = await r.json();
       if (!r.ok || data.error) throw new Error((data.error && (data.error.message || JSON.stringify(data.error))) || "No se pudo enviar");
@@ -9164,7 +9164,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
     setSeleccion(prev => prev.size === conEmail.length ? new Set() : new Set(conEmail.map(p => p.id)));
   }
 
-  const [adjuntarFolleto, setAdjuntarFolleto] = useState(true);
+  const [adjuntarFolleto, setAdjuntarFolleto] = useState(false);
   async function enviarALista(asuntoFinal, cuerpoFinal, destinatarios) {
     setEnviando(true);
     setError("");
@@ -9336,11 +9336,10 @@ function CampaniaComercial({ prospectos, setProspectos }) {
         React.createElement("div", { style: { fontSize: 10.5, fontWeight: 700, color: "#D9B57C", marginBottom: 6 } }, "⚡ Modo autónomo — una orden y se manda solo"),
         React.createElement("div", { style: { fontSize: 10.5, color: "rgba(255,255,255,.6)", marginBottom: 8 } }, `Sin revisión previa. Elige sola a quién escribirle: ${destinatariosAuto.length} contacto${destinatariosAuto.length === 1 ? "" : "s"} (nuevos, o esperando hace 30 días o más sin respuesta). No le vuelve a escribir a quien ya avanzó, cerró o se perdió.`),
         React.createElement("label", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,.75)", marginBottom: 9, cursor: "pointer" } },
-          React.createElement("input", { type: "checkbox", checked: adjuntarFolleto, onChange: e => setAdjuntarFolleto(e.target.checked) }),
-          "Adjuntar el folleto de NEXO en PDF"),
+          null, null),
         React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
           React.createElement("input", {
-            placeholder: 'Ej: "Mandales un mail de bienvenida presentando NEXO"',
+            placeholder: 'Ej: "Presentá Belfast a los estudios de Nordelta para su próxima obra"',
             value: ordenAutonoma, onChange: e => setOrdenAutonoma(e.target.value),
             onKeyDown: e => { if (e.key === "Enter") ejecutarOrdenAutonoma(); },
             style: { flex: "1 1 220px", padding: "10px 12px", borderRadius: 8, border: "none", fontSize: 12.5 }
@@ -9360,7 +9359,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
         React.createElement("div", { style: { fontSize: 10.5, fontWeight: 700, color: BRASS, marginBottom: 6 } }, "✦ O redactar y revisar antes de mandar"),
         React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
           React.createElement("input", {
-            placeholder: 'Ej: "Mandales un mail de bienvenida presentando NEXO, corto y cordial"',
+            placeholder: 'Ej: "Presentá Belfast como constructora para su próxima obra, corto y cordial"',
             value: orden, onChange: e => setOrden(e.target.value),
             onKeyDown: e => { if (e.key === "Enter") redactarConIA(); },
             style: { flex: "1 1 260px", padding: "10px 12px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5 }
@@ -9378,7 +9377,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
           type: "button",
           onClick: () => setCuerpo(c => (c.trim() ? c.replace(/\s+$/, "") + "\n\n" : "") + "Pueden ver nuestras obras en {link_app}"),
           style: { ...chipEstilo, background: "#EEF3FA", color: "#2A4F82", padding: "8px 14px" }
-        }, "🔗 Insertar link de la app"),
+        }, "🔗 Insertar link al Instagram"),
         React.createElement("span", { style: { fontSize: 11, color: "#8B95A5" } }, "{link_app} se reemplaza en cada mail por el Instagram de Belfast.")),
       error && React.createElement("div", { style: { background: "#FDECEA", color: "#B3261E", borderRadius: 8, padding: "8px 11px", fontSize: 12, marginBottom: 10 } }, error),
       React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" } },
@@ -9622,31 +9621,23 @@ function AreaComercial({ modo } = {}) {
     setSel(null);
   }
   const PRODUCTO = `
-PRODUCTO: sistema de gestión de obra con IA. Cuatro apps que comparten los mismos datos:
-1. Constructora: obras, avance, bitácora, auditoría, certificados, pedidos.
-2. Estudio de arquitectura: ve los pedidos del capataz apenas se cargan; informes y cronogramas.
-3. Capataz: pide materiales, planos y definiciones desde la obra; los manda al jefe de obra por WhatsApp.
-4. Propietario: solo lectura. Ve avance, fotos, renders, planos e informes. Nunca ve costos internos.
-
-DIFERENCIAL: la IA compara la foto anterior con la de hoy, estima el avance real y redacta el
-informe semanal cruzándolo con las definiciones sin responder. Sale en PDF con las fotos comparadas
-y la bitácora completa.
-
-TRAZABILIDAD: queda registrado quién pidió qué, cuándo, y quién respondió. Si una definición no se
-resuelve a tiempo y frena una cuadrilla, el sistema lo documenta. Ese registro es lo que después se
-discute en un reclamo por perjuicio. Es el argumento de venta más fuerte.
-
-QUIÉN LO HIZO: arquitectos que dirigen obra todos los días, no una software factory.
+EMPRESA: Belfast Construction Management (@belfast_cm). Constructora de alta gama con obras en Buenos Aires y Uruguay.
+QUÉ HACE: construye los proyectos que diseñan los estudios de arquitectura y que llevan adelante las desarrolladoras inmobiliarias.
+Acompaña la obra completa en tres etapas: planificación, proceso y ejecución, y terminación.
+CÓMO TRABAJA: trabajo ordenado en obra, cuidado de la materialidad (hormigón, mampostería, terminaciones) y respeto por la
+intención de cada proyecto. Lema: "Cada proyecto tiene su propia intención. Nuestro trabajo es cuidarla en cada decisión de obra."
+OBRAS PARA MOSTRAR: las publica en su Instagram @belfast_cm (por ejemplo Casa Cielo en obra, piletas, estructuras de hormigón y terminaciones).
+A QUIÉN LE VENDE: estudios de arquitectura (que necesitan una constructora que respete su proyecto) y desarrolladoras (que necesitan cumplir plazos y calidad).
 `.trim();
   const REGLAS = `
-Sos el asistente comercial de una empresa argentina que vende este sistema.
+Sos el asistente comercial de Belfast, una constructora que ofrece construir la próxima obra de estudios y desarrolladoras.
 ESCRIBÍS SIEMPRE EN ${NOMBRE_IDIOMA}. Tono cordial, directo y breve. Nada de floritura comercial.
 
 ${PRODUCTO}
 
 REGLAS QUE NO PODÉS ROMPER:
 - NUNCA pongas un precio, ni un rango, ni un "desde". El precio lo define una persona.
-- NUNCA prometas funciones que no estén en la descripción de arriba.
+- NUNCA inventes obras, clientes, plazos ni cifras que no estén en la descripción de arriba.
 - NUNCA cierres condiciones contractuales.
 - Mails cortos: cinco líneas como máximo.
 `.trim();
@@ -9665,7 +9656,7 @@ REGLAS QUE NO PODÉS ROMPER:
   }, {
     id: "objecion",
     t: "⚖ Responder una objeción",
-    desc: "Precio, tiempo, \"ya tengo Excel\""
+    desc: "Precio, plazos, \"ya tenemos constructora\""
   }, {
     id: "propuesta",
     t: "📄 Armar la propuesta",
@@ -9702,11 +9693,11 @@ REGLAS QUE NO PODÉS ROMPER:
 HISTORIAL DE CONTACTOS:
 ${hist}`;
     const pedidos = {
-      presentacion: `Escribí un mail de primer contacto. Máximo cinco líneas. Arrancá por el problema que tiene él, ` + `no por el producto. Cerrá pidiendo 20 minutos para mostrarle la demo. ` + `Primera línea con el formato "Asunto: ..." y después el cuerpo.`,
+      presentacion: `Escribí un mail de primer contacto. Máximo cinco líneas. Arrancá por el problema que tiene él, ` + `no por el producto. Cerrá pidiendo 20 minutos para mostrarle obras de Belfast. ` + `Primera línea con el formato "Asunto: ..." y después el cuerpo.`,
       seguimiento: `Escribí un mail de seguimiento: ya le escribimos y no contestó. Máximo cuatro líneas. ` + `Mirá el historial para no repetir lo que ya le dijimos. Sumá un motivo nuevo para responder. ` + `Primera línea "Asunto: ...".`,
-      reunion: `Preparame la reunión. Sin markdown:\nQUÉ LE IMPORTA A ESTE PERFIL\n` + `EN QUÉ ORDEN MOSTRAR LA DEMO (4 pasos con funciones reales)\nLAS DOS PREGUNTAS QUE LE TENGO QUE HACER\n` + `CÓMO CIERRO\nMáximo 200 palabras.`,
+      reunion: `Preparame la reunión. Sin markdown:\nQUÉ LE IMPORTA A ESTE PERFIL\n` + `QUÉ OBRAS Y QUÉ ETAPAS MOSTRARLE (4 puntos)\nLAS DOS PREGUNTAS QUE LE TENGO QUE HACER\n` + `CÓMO CIERRO\nMáximo 200 palabras.`,
       objecion: `Puso esta objeción: "${extra || "está caro"}". Sin markdown: cómo responderla en dos o tres ` + `oraciones listas para decir, y una línea aparte con qué NO decir. Máximo 120 palabras.`,
-      propuesta: `Escribí el texto de una propuesta para mandar por mail. Sin precio: poné "[precio a definir]". ` + `Incluí qué problema resuelve en su caso, qué apps le corresponden por su rol, cómo es la ` + `implementación, y un cierre pidiendo confirmación. Máximo 200 palabras, sin markdown.`,
+      propuesta: `Escribí el texto de una propuesta para mandar por mail. Sin precio: poné "[precio a definir]". ` + `Incluí qué problema resuelve en su caso, cómo Belfast acompañaría su obra en cada etapa, cómo es la ` + `implementación, y un cierre pidiendo confirmación. Máximo 200 palabras, sin markdown.`,
       investigar: `Antes de llamarlo, decime qué tengo que saber. Sin markdown:\nQUÉ MIRAR DE SU OPERACIÓN\n` + `CUÁL ES SU DOLOR MÁS PROBABLE SEGÚN EL PERFIL\nCON QUÉ FRASE ABRO LA CONVERSACIÓN\n` + `Máximo 150 palabras.`
     };
     try {

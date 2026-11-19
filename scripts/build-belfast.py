@@ -19,6 +19,9 @@ cambiar('const LINK_APP = "https://app-demo-ultimo.vercel.app/";', 'const LINK_A
 cambiar('const linkP = LINK_APP + "?c=" + encodeURIComponent(p.id);', 'const linkP = LINK_APP;')
 cambiar('"Mirá cómo funciona la app: {link_app}"', '"Pueden ver nuestras obras en {link_app}"')
 cambiar('"{link_app} se reemplaza en cada mail por el link a la presentación de NEXO."', '"{link_app} se reemplaza en cada mail por el Instagram de Belfast."')
+cambiar('const [adjuntarFolleto, setAdjuntarFolleto] = useState(true);', 'const [adjuntarFolleto, setAdjuntarFolleto] = useState(false);')
+cambiar('React.createElement("input", { type: "checkbox", checked: adjuntarFolleto, onChange: e => setAdjuntarFolleto(e.target.checked) }),\n          "Adjuntar el folleto de NEXO en PDF"),', 'null, null),')
+cambiar("placeholder: 'Ej: \"Mandales un mail de bienvenida presentando NEXO\"',", "placeholder: 'Ej: \"Presentá Belfast a los estudios de Nordelta para su próxima obra\"',")
 cambiar('const BD_NOMBRE = "nexo";', 'const BD_NOMBRE = "belfast_ventas";')
 cambiar('];\nfunction paisPorId(id) {',
         '].filter(p => p.id === "ar" || p.id === "uy").map(p => ({ ...p, perfiles: p.perfiles.filter(x => x.id === "estudios" || x.id === "desarrolladores") }));\nfunction paisPorId(id) {')
@@ -34,6 +37,29 @@ redactor_nuevo = ("Sos el redactor comercial de Belfast Construction Management 
                   "El tono es sobrio y elegante, nunca de oferta ni de descuento. No inventes obras, cifras ni clientes. Si invitás a ver obras, usá {link_app}, que lleva al Instagram de Belfast. El destinatario está en ")
 cambiar(redactor_viejo, redactor_nuevo, veces=0)
 s = re.sub(r"<title>.*?</title>", "<title>Belfast · Motor de Ventas</title>", s, count=1, flags=re.S)
+
+
+# Asistente por prospecto: vende Belfast (la constructora), no el software NEXO.
+ini = s.index("  const PRODUCTO = `"); fin = s.index("`.trim();", ini)
+s = s[:ini] + """  const PRODUCTO = `
+EMPRESA: Belfast Construction Management (@belfast_cm). Constructora de alta gama con obras en Buenos Aires y Uruguay.
+QUÉ HACE: construye los proyectos que diseñan los estudios de arquitectura y que llevan adelante las desarrolladoras inmobiliarias.
+Acompaña la obra completa en tres etapas: planificación, proceso y ejecución, y terminación.
+CÓMO TRABAJA: trabajo ordenado en obra, cuidado de la materialidad (hormigón, mampostería, terminaciones) y respeto por la
+intención de cada proyecto. Lema: "Cada proyecto tiene su propia intención. Nuestro trabajo es cuidarla en cada decisión de obra."
+OBRAS PARA MOSTRAR: las publica en su Instagram @belfast_cm (por ejemplo Casa Cielo en obra, piletas, estructuras de hormigón y terminaciones).
+A QUIÉN LE VENDE: estudios de arquitectura (que necesitan una constructora que respete su proyecto) y desarrolladoras (que necesitan cumplir plazos y calidad).
+""" + s[fin:]
+s = s.replace("Sos el asistente comercial de una empresa argentina que vende este sistema.", "Sos el asistente comercial de Belfast, una constructora que ofrece construir la próxima obra de estudios y desarrolladoras.")
+s = s.replace("- NUNCA prometas funciones que no estén en la descripción de arriba.", "- NUNCA inventes obras, clientes, plazos ni cifras que no estén en la descripción de arriba.")
+s = s.replace("Cerrá pidiendo 20 minutos para mostrarle la demo.", "Cerrá pidiendo 20 minutos para mostrarle obras de Belfast.")
+s = s.replace("EN QUÉ ORDEN MOSTRAR LA DEMO (4 pasos con funciones reales)", "QUÉ OBRAS Y QUÉ ETAPAS MOSTRARLE (4 puntos)")
+s = s.replace("qué apps le corresponden por su rol", "cómo Belfast acompañaría su obra en cada etapa")
+s = s.replace('"Ej: \\"Mandales un mail de bienvenida presentando NEXO, corto y cordial\\""', '"Ej: \\"Presentá Belfast como constructora para su próxima obra, corto y cordial\\""')
+s = s.replace("'Ej: \"Mandales un mail de bienvenida presentando NEXO, corto y cordial\"'", "'Ej: \"Presentá Belfast como constructora para su próxima obra, corto y cordial\"'")
+s = s.replace('"🔗 Insertar link de la app"', '"🔗 Insertar link al Instagram"')
+s = s.replace('"Respuesta de NEXO"', '"Respuesta de Belfast"')
+s = s.replace('desc: "Precio, tiempo, \\"ya tengo Excel\\""', 'desc: "Precio, plazos, \\"ya tenemos constructora\\""')
 
 extra = r'''
 __TEMA__
