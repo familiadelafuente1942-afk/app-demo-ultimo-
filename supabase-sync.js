@@ -103,16 +103,9 @@
     // Pide credenciales una sola vez por pestaña. Se puede envolver
     // en una pantalla más prolija más adelante; por ahora usa prompt
     // nativo para no tocar el diseño existente de la app.
-    // Nunca pregunta sola al abrir la página ni una vez por cada cambio: solo si recién tocaste algo, y una vez por pestaña.
-    const ua = navigator.userActivation;
-    const recienTocado = (ua && ua.isActive) || (Date.now() - (window.__mktUltimoToque || 0) < 15000);
-    if (!recienTocado || Date.now() - (window.__supaPreguntoEn || 0) < 20000) throw new Error('Sin sesión: no se sincroniza todavía');
-    window.__supaPreguntoEn = Date.now();
-    const email = (window.prompt('Usuario de la app (mail):') || '').trim();
-    if (!email) throw new Error('Sin correo, no se puede sincronizar');
-    const clave = (window.prompt('Contraseña:') || '').trim();
-    if (!clave) throw new Error('Sin contraseña, no se puede sincronizar');
-    return iniciarSesion(email, clave);
+    // Modo abierto: nunca pide usuario ni contraseña. Sin sesión, la base queda en este dispositivo.
+    throw new Error('Sin sesión: no se sincroniza');
+
   }
 
   // ── llamadas a la API ──

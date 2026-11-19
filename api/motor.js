@@ -129,9 +129,13 @@ async function leerConfig() {
 }
 
 // Verifica quién llama: el token de sesión de Supabase y que su mail esté en mkt_admins.
+// Modo abierto (pedido de Sebastián: sin claves mientras solo lo usan él y Claude): sin sesión, se acepta
+// si el pedido viene de la propia app, y la base se usa con la clave de servicio.
+function vieneDeLaApp(req) { return /^https:\/\/app-demo-ultimo(-[a-z0-9-]+)?\.vercel\.app/.test(String(req.headers.origin || req.headers.referer || "")); }
 async function exigirAdmin(req) {
   const auth = req.headers.authorization || "";
-  const token = auth.replace(/^Bearer\s+/i, "");
+  const token = auth.replace(/^Bearer\s+/i, "").trim();
+  if (!token && vieneDeLaApp(req)) return { mail: "abierto", token: null };
   if (!token) throw Object.assign(new Error("Falta iniciar sesión."), { status: 401 });
   const r = await fetch(SUPA_URL + "/auth/v1/user", { headers: { apikey: SUPA_ANON, Authorization: "Bearer " + token } });
   if (!r.ok) throw Object.assign(new Error("Sesión vencida. Volvé a ingresar."), { status: 401 });
@@ -435,6 +439,11 @@ async function accionCambiarEstado(actor, ids, estado) {
 
 // Envío directo desde la app (campaña, prospecto, respuesta): sale de la casilla de NEXO (GMAIL_USER) por Gmail.
 async function accionEnviarMail(actor, b) {
+  if (actor === "abierto") {
+    const hoy = diaLocal();
+    const n = ((await db("mkt_auditoria?accion=eq.mail_directo&creado=gte." + encodeURIComponent(hoy + "T00:00:00-03:00") + "&select=id")) || []).length;
+    if (n >= 150) throw Object.assign(new Error("Se llegó al tope de 150 mails por hoy."), { status: 429 });
+  }
   const user = process.env.GMAIL_USER, pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
   const to = String(b.to || "").trim().toLowerCase();
   if (!emailValido(to)) throw Object.assign(new Error("Mail de destino inválido."), { status: 400 });
@@ -621,6 +630,15 @@ async function handler(req, res) {
     return await ctx.run({ token: adm.token }, async () => {
     switch (accion) {
       case "estado": out = await accionEstado(); break;
+      case "db": {
+        const ruta = String(b.ruta || "");
+        const tabla = ruta.split(/[?/]/)[0];
+        const PERMITIDAS = ["empresas", "finanzas_gastos", "finanzas_ingresos", "marketing_campanias", "marketing_competencia", "marketing_contenido", "marketing_leads_demo", "marketing_metricas_pagina", "operaciones_clientes", "operaciones_tickets", "producto_items", "respuestas_email", "seguridad_incidentes", "seguridad_respaldos", "soporte_faq"];
+        if (PERMITIDAS.indexOf(tabla) < 0) return res.status(400).json({ error: "Tabla no permitida" });
+        const metodo = ["GET", "POST", "PATCH", "DELETE"].indexOf(String(b.metodo || "GET").toUpperCase()) >= 0 ? String(b.metodo || "GET").toUpperCase() : "GET";
+        out = await db(ruta, { method: metodo, body: b.cuerpo, prefer: b.prefer || "return=representation" });
+        return res.status(200).json(out == null ? null : out);
+      }
       case "enviar_mail": out = await accionEnviarMail(actor, b); break;
       case "config": out = await accionConfig(actor, b); break;
       case "generar_posts": out = await accionGenerarPosts(actor, b); break;

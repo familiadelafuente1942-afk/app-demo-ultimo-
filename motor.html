@@ -56,7 +56,7 @@ var SU="https://agcmhrbxqtibrtmhwrrx.supabase.co",KEY="sb_publishable_kGPLp-DPPg
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function aviso(t,mal){var m=$("msg");m.textContent=t;m.style.display="block";m.style.background=mal?"#ef5b5b":"#c9a35a";m.style.color=mal?"#fff":"#1a1405";clearTimeout(aviso.t);aviso.t=setTimeout(function(){m.style.display="none"},6000)}
-function api(a,b){return fetch("/api/motor?accion="+a,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+T},body:JSON.stringify(b||{})}).then(function(r){return r.json().then(function(j){if(!r.ok){if(r.status==401){salir()}throw new Error(j.error||"Error")}return j})})}
+function api(a,b){return fetch("/api/motor?accion="+a,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+T},body:JSON.stringify(b||{})}).then(function(r){return r.json().then(function(j){if(!r.ok){if(r.status==401&&T){salir()}throw new Error(j.error||"Error")}return j})})}
 function salir(){T=null;try{localStorage.removeItem("motor_tk")}catch(e){}$("app").style.display="none";$("login").style.display="block"}
 function entrar(){fetch(SU+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},body:JSON.stringify({email:$("em").value.trim(),password:$("pw").value})}).then(function(r){return r.json()}).then(function(j){if(!j.access_token){aviso("Mail o contraseña incorrectos.",1);return}T=j.access_token;$("pw").value="";try{localStorage.setItem("motor_tk",JSON.stringify({t:T,e:Date.now()+50*60000}))}catch(e){}iniciar()})}
 function reels(){fetch("/reels/reels.json?v="+Date.now()).then(function(r){return r.json()}).then(function(l){var pub={};try{pub=JSON.parse(localStorage.getItem("reels_pub")||"{}")}catch(e){}
@@ -83,5 +83,5 @@ function copiar(id){var t=$("c"+id);t.select();try{document.execCommand("copy");
 function aprobarTodo(){if(!confirm("¿Aprobar todo lo pendiente? Igual no sale nada si el motor está frenado."))return;api("aprobar_todo",{tipo:$("ft").value}).then(function(r){aviso("Aprobados: "+r.cambiados);estado();cola()}).catch(function(e){aviso(e.message,1)})}
 function enviarYa(){ocupado(0,function(){return api("enviar_ahora").then(function(r){aviso("Mails enviados: "+r.mails.enviados+(r.mails.motivo?" ("+r.mails.motivo+")":"")+". Posteos: "+r.posts.publicados);estado();cola();audit()})})}
 function audit(){api("auditoria").then(function(r){$("aud").innerHTML=r.items.slice(0,25).map(function(i){return esc(i.creado.slice(0,16).replace("T"," "))+" · "+esc(i.actor)+" · <b>"+esc(i.accion)+"</b>"}).join("<br>")||"Sin actividad todavía."}).catch(function(){})}
-(function(){try{var s=JSON.parse(localStorage.getItem("motor_tk")||"null");if(s&&s.e>Date.now()){T=s.t;iniciar();return}}catch(e){}$("login").style.display="block"})();
+(function(){try{var s=JSON.parse(localStorage.getItem("motor_tk")||"null");if(s&&s.e>Date.now()){T=s.t;iniciar();return}}catch(e){}T="";iniciar()})();
 </script></body></html>

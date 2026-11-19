@@ -7321,27 +7321,19 @@ async function mktPedirSesion() {
   if (t) return t;
   const renovado = await mktRenovarSesion();
   if (renovado) return renovado;
-  // Solo pide usuario y contraseña si lo tocaste vos (un botón); al abrir la página no molesta.
-  const ua = navigator.userActivation;
-  const recienTocado = (ua && ua.isActive) || (Date.now() - (window.__mktUltimoToque || 0) < 15000);
-  if (!recienTocado || Date.now() - (window.__supaPreguntoEn || 0) < 20000) throw new Error("Iniciá sesión para sincronizar: se te va a pedir la primera vez que mandes un mail.");
-  window.__supaPreguntoEn = Date.now();
-  const email = (window.prompt("Usuario de la app (mail):") || "").trim();
-  if (!email) throw new Error("Sin correo");
-  const clave = (window.prompt("Contraseña:") || "").trim();
-  if (!clave) throw new Error("Sin contraseña");
-  const r = await fetch(`${MKT_SUPA_URL}/auth/v1/token?grant_type=password`, {
-    method: "POST",
-    headers: { apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password: clave })
-  });
-  const d = await r.json();
-  if (!r.ok) throw new Error(d.error_description || d.msg || "No se pudo iniciar sesión");
-  mktGuardarToken(d.access_token, d.refresh_token);
-  return d.access_token;
+  // Modo abierto: no pide usuario ni contraseña; el servidor acepta los pedidos que vienen de la app.
+  return "";
 }
 async function mktFetch(ruta, opciones, _reintentado) {
   const t = await mktPedirSesion();
+  if (!t) {
+    // Sin sesión: la base se consulta a través del servidor de la app.
+    const o = opciones || {}, h = o.headers || {};
+    const r = await fetch("/api/motor?accion=db", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ruta, metodo: o.method || "GET", cuerpo: o.body ? JSON.parse(o.body) : undefined, prefer: h.Prefer || h.prefer }) });
+    const txt = await r.text();
+    if (!r.ok) throw new Error(`[${ruta}] ${r.status} · ${txt.slice(0, 200)}`);
+    return txt ? JSON.parse(txt) : null;
+  }
   try {
     const r = await fetch(`${MKT_SUPA_URL}/rest/v1/${ruta}`, {
       ...opciones,
