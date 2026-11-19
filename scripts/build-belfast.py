@@ -36,10 +36,7 @@ cambiar(redactor_viejo, redactor_nuevo, veces=0)
 s = re.sub(r"<title>.*?</title>", "<title>Belfast · Motor de Ventas</title>", s, count=1, flags=re.S)
 
 extra = r'''
-<style id="belfast-marca">
-  #barra-volver .vb{display:none!important}
-  img.logo-belfast{background:#000;border-radius:50%}
-</style>
+__TEMA__
 <script>
 window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],["desarrollador","Desarrolladoras inmobiliarias"]];
 (function(){
@@ -60,10 +57,14 @@ window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],
 })();
 </script>
 '''
+extra = extra.replace("__TEMA__", (raiz / "scripts" / "belfast-tema.html").read_text(encoding="utf-8"))
+cambiar('<div id="vista-ventas"><div id="root-ventas"></div></div>', '<div id="vista-ventas">' + (raiz / "scripts" / "belfast-portada.html").read_text(encoding="utf-8") + '<div id="root-ventas"></div></div>')
+cambiar("</head>", '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></head>')
 i = s.rfind("</body>")
 s = s[:i] + extra + s[i:]
 cambiar('href="apple-touch-icon.png"', 'href="belfast-icon-192.png"', veces=0) if 'href="apple-touch-icon.png"' in s else None
-for a, b in [("#B0894F", "#8C8A2E"), ("#E3BE78", "#C9C46A"), ("#9A6B1E", "#6E6C22"), ("#EBDCC0", "#E2E0B8"), ("#FBF2E3", "#F4F3E1"), ("#FBF6EE", "#F7F6EA")]:
+for a, b in [("#B0894F", "#9C8700"), ("#E3BE78", "#D4B800"), ("#9A6B1E", "#6F6100"), ("#EBDCC0", "#ECE6BF"), ("#FBF2E3", "#F7F4E2"), ("#FBF6EE", "#F8F6EC")]:
     s = s.replace(a, b).replace(a.lower(), b)
+s = s.replace('"#0E1520"', '"#1C1B1B"').replace("background:#0E1520", "background:#1C1B1B")
 (raiz / "belfast-ventas.html").write_text(s, encoding="utf-8")
 print("belfast-ventas.html listo,", len(s), "bytes")
