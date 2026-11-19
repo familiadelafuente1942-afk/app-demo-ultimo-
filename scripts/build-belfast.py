@@ -64,6 +64,8 @@ s = s.replace('desc: "Precio, tiempo, \\"ya tengo Excel\\""', 'desc: "Precio, pl
 extra = r'''
 __TEMA__
 <script>
+// Hasta que Belfast tenga su propia casilla configurada, no se manda nada desde la cuenta de NEXO.
+(function(){ var f0 = window.fetch; window.fetch = function(u, o){ if (/\/functions\/v1\/enviar-mail/.test(String(u && u.url || u))) return Promise.resolve(new Response(JSON.stringify({ error: "El mail de Belfast todavía no está configurado. No se mandó nada." }), { status: 409, headers: { "Content-Type": "application/json" } })); return f0.apply(this, arguments); }; })();
 window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],["desarrollador","Desarrolladoras inmobiliarias"]];
 (function(){
   // Solo el área Comercial
