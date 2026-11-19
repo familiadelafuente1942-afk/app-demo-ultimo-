@@ -13120,10 +13120,10 @@ const AREAS = [{
   nombre: "Motor de marketing IA",
   corto: "🚀 Motor",
   activa: true
-}].filter(a => a.id === "comercial");
+}].filter(a => a.id === "comercial" || a.id === "motor");
 function AreaMotor() {
   const h = React.createElement;
-  return h("iframe", { src: "motor.html", title: "Motor de marketing", style: { width: "100%", height: "calc(100vh - 150px)", minHeight: 560, border: "none", borderRadius: 13, background: "#0e1116", display: "block" } });
+  return h("iframe", { src: "belfast-motor.html", title: "Motor de Belfast", style: { width: "100%", height: "calc(100vh - 150px)", minHeight: 560, border: "none", borderRadius: 13, background: "#0e1116", display: "block" } });
 }
 function CentroOperaciones() {
   const [area, setArea] = useState("comercial");
@@ -14652,7 +14652,10 @@ body.en-ventas::before{ display:none!important; }
 body.en-ventas #barra-volver{ display:none!important; }
 body.en-ventas #vista-ventas{ padding-top:0!important; }
 #root-ventas > div{ background:var(--bf-carbon)!important; padding-top:18px!important; }
-#root-ventas div:has(+ .co-nav), #root-ventas .co-nav{ display:none!important; }
+#root-ventas div:has(+ .co-nav){ display:none!important; }
+#root-ventas .co-tab.act{ background:#D4B800!important; color:#1C1B1B!important; border-color:#D4B800!important; box-shadow:none!important; }
+#root-ventas .co-tab{ background:transparent!important; box-shadow:none!important; border:1px solid rgba(255,255,255,.25)!important; color:#e8e6e3!important; }
+#root-ventas .co-tab i{ display:none; }
 #root-ventas .ficha-agente > :not(.ficha-contenido){ display:none!important; }
 
 /* Tarjetas: planas, papel, sin vidrio */

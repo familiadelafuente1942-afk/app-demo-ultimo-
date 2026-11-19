@@ -27,7 +27,8 @@ cambiar('];\nfunction paisPorId(id) {',
         '].filter(p => p.id === "ar" || p.id === "uy").map(p => ({ ...p, perfiles: p.perfiles.filter(x => x.id === "estudios" || x.id === "desarrolladores") }));\nfunction paisPorId(id) {')
 cambiar('PAISES.filter(pp => pp.id === "ar" || pp.id === "br" ||', 'PAISES.filter(pp => pp.id === "ar" || pp.id === "uy" ||')
 cambiar('const [area, setArea] = useState("ceo");', 'const [area, setArea] = useState("comercial");')
-cambiar('  activa: true\n}];\nfunction AreaMotor() {', '  activa: true\n}].filter(a => a.id === "comercial");\nfunction AreaMotor() {')
+cambiar('  activa: true\n}];\nfunction AreaMotor() {', '  activa: true\n}].filter(a => a.id === "comercial" || a.id === "motor");\nfunction AreaMotor() {')
+cambiar('src: "motor.html", title: "Motor de marketing"', 'src: "belfast-motor.html", title: "Motor de Belfast"')
 cambiar('objetivo: "Conseguir, calificar y acompañar constructoras, estudios de arquitectura, desarrolladoras y gerenciadoras hasta convertirlas en clientes de la plataforma."',
         'objetivo: "Conseguir, calificar y acompañar estudios de arquitectura y desarrolladoras inmobiliarias hasta convertirlos en clientes de Belfast."')
 redactor_viejo = "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en "
@@ -147,4 +148,24 @@ for a, b in [("#B0894F", "#9C8700"), ("#E3BE78", "#D4B800"), ("#9A6B1E", "#6F610
     s = s.replace(a, b).replace(a.lower(), b)
 s = s.replace('"#0E1520"', '"#1C1B1B"').replace("background:#0E1520", "background:#1C1B1B")
 (raiz / "belfast-ventas.html").write_text(s, encoding="utf-8")
+
+# Motor de Belfast: el mismo motor de NEXO, con sus datos aparte (marca=belfast) y sin envíos hasta tener su casilla.
+m = (raiz / "motor.html").read_text(encoding="utf-8")
+def mrep(a, b):
+    global m
+    if a not in m: sys.exit("motor: no encontré " + a[:60])
+    m = m.replace(a, b)
+mrep('"/api/motor?accion="+a', '"/api/motor?marca=belfast&accion="+a')
+mrep("<title>Motor de marketing</title>", "<title>Motor de Belfast</title>")
+mrep("--bg:#0e1116;--card:#171c24;--bd:#2a3340;--tx:#e8edf3;--mu:#97a3b3;--br:#c9a35a;", "--bg:#1C1B1B;--card:#282627;--bd:#3a3738;--tx:#f2f1ef;--mu:#a9a6a3;--br:#D4B800;")
+mrep('<select id="pais"><option value="ar">Argentina</option><option value="br">Brasil</option><option value="py">Paraguay</option><option value="cl">Chile</option></select>', '<select id="pais"><option value="ar">Argentina</option><option value="uy">Uruguay</option></select><select id="rubro"><option value="estudios de arquitectura">Estudios de arquitectura</option><option value="desarrolladoras inmobiliarias">Desarrolladoras inmobiliarias</option></select>')
+mrep('<select id="idi"><option value="es">Español</option><option value="pt">Portugués</option><option value="en">Inglés</option></select>', '<select id="idi"><option value="es">Español</option></select>')
+mrep('<button id="btnAct" class="stop" onclick="alternar()">…</button>', '<button id="btnAct" class="stop" style="display:none">…</button><span class="mu">Los envíos quedan frenados hasta configurar info@belfastcm.com. Podés buscar, redactar y aprobar.</span>')
+mrep('<h2 style="margin:0">Estado del motor: <span id="est" class="off">FRENADO</span></h2><div class="mu" id="ayuda"></div>', '<h2 style="margin:0">Motor de Belfast <span id="est" style="display:none"></span></h2><div class="mu" id="ayuda" style="display:none"></div>')
+mrep('<div class="card"><h2>Topes</h2>', '<div class="card" style="display:none"><h2>Topes</h2>')
+mrep('<div class="card"><h2>4 · Videos para Reels</h2>', '<div class="card" style="display:none"><h2>4 · Videos para Reels</h2>')
+mrep('{pais:$("pais").value,zona:$("zona").value}', '{pais:$("pais").value,zona:$("zona").value,rubro:$("rubro").value}')
+m = m.replace(";reels()}", "}")
+(raiz / "belfast-motor.html").write_text(m, encoding="utf-8")
+print("belfast-motor.html listo")
 print("belfast-ventas.html listo,", len(s), "bytes")

@@ -97,8 +97,23 @@ function textoSeguro(t) {
 
 function clave() { return (process.env.SUPABASE_SERVICE_ROLE_KEY || "").replace(/\s+/g, ""); }
 
+function marcaActual() { const st = ctx.getStore(); return st && st.marca ? st.marca : "nexo"; }
+function filtroMarca(ruta, metodo) {
+  const m = marcaActual(); if (m === "todas") return ruta;
+  const sep = ruta.indexOf("?") >= 0 ? "&" : "?";
+  if (/^mkt_cola(\?|$)/.test(ruta) && metodo !== "POST") return ruta + sep + (m === "belfast" ? "meta->>marca=eq.belfast" : "or=(meta->>marca.is.null,meta->>marca.neq.belfast)");
+  if (/^mkt_prospectos(\?|$)/.test(ruta) && metodo !== "POST") return ruta + sep + (m === "belfast" ? "fuente=like.belfast*" : "or=(fuente.is.null,fuente.not.like.belfast*)");
+  return ruta;
+}
+function marcarFilas(ruta, body) {
+  if (marcaActual() !== "belfast" || !body) return body;
+  const una = f => /^mkt_cola$/.test(ruta) ? { ...f, meta: { ...(f.meta || {}), marca: "belfast" } } : /^mkt_prospectos$/.test(ruta) ? { ...f, fuente: "belfast|" + String(f.fuente || "").replace(/^belfast\|/, "") } : f;
+  return Array.isArray(body) ? body.map(una) : una(body);
+}
 async function db(ruta, opts) {
   opts = opts || {};
+  ruta = filtroMarca(ruta, (opts.method || "GET").toUpperCase());
+  if ((opts.method || "").toUpperCase() === "POST") opts = { ...opts, body: marcarFilas(ruta, opts.body) };
   // Con sesión de administrador se usa su token (la base aplica sus permisos);
   // sin sesión (cron, baja) hace falta la clave de servicio.
   const st = ctx.getStore();
@@ -180,6 +195,13 @@ Mensaje central: "El trabajo no se atrasa en la obra. Se atrasa en la gestión."
 Demo pública: https://app-demo-ultimo.vercel.app
 Reglas de redacción: no inventes cifras, clientes, testimonios ni precios; no prometas ahorros; usá la palabra "dinero" y nunca "plata"; tono profesional y cercano; una sola llamada a la acción clara.`;
 
+const MARCA_BELFAST = `Belfast Construction Management (@belfast_cm, belfastcm.com) es una constructora de alta gama con obras en Buenos Aires y Uruguay.
+Construye los proyectos que diseñan los estudios de arquitectura y que llevan adelante las desarrolladoras inmobiliarias, en tres etapas: planificación, proceso y ejecución, y terminación.
+Cómo trabaja: obra ordenada, cuidado de la materialidad (hormigón, mampostería, terminaciones) y respeto por la intención de cada proyecto. Lema: "Cada proyecto tiene su propia intención. Nuestro trabajo es cuidarla en cada decisión de obra."
+Obras para mostrar: en su Instagram https://www.instagram.com/belfast_cm/
+Reglas de redacción: no inventes obras, cifras, clientes, plazos ni precios; tono sobrio y elegante, nunca de oferta; usá la palabra "dinero" y nunca "plata"; una sola llamada a la acción clara (una reunión para mostrar obras).`;
+function textoMarca() { return marcaActual() === "belfast" ? MARCA_BELFAST : MARCA; }
+
 // ───────────────────────── acciones ─────────────────────────
 
 async function accionEstado() {
@@ -218,6 +240,7 @@ async function accionEstado() {
 }
 
 async function accionConfig(actor, b) {
+  if (marcaActual() === "belfast") throw Object.assign(new Error("El motor de Belfast queda frenado hasta configurar info@belfastcm.com."), { status: 409 });
   const cambios = {};
   if (typeof b.activo === "boolean") cambios.activo = b.activo;
   if (b.tope_mails_dia != null) cambios.tope_mails_dia = Math.max(0, Math.min(500, parseInt(b.tope_mails_dia, 10) || 0));
@@ -239,7 +262,7 @@ async function accionGenerarPosts(actor, b) {
   for (const canal of canales) {
     const porDia = canal === "instagram" ? 2 : 1;
     const n = dias * porDia;
-    const prompt = `${MARCA}\n\nEscribí ${n} posteos para ${canal}, pensados para ${dias} días (${porDia} por día), para constructoras, estudios y desarrolladoras de Argentina, Brasil, Paraguay y Chile. ${tema ? "Enfoque pedido: " + tema + "." : ""}\nVariá los formatos: dato, pregunta, caso concreto de la plataforma, consejo de gestión de obra, demo. ${canal === "instagram" ? "Incluí una descripción de la imagen o reel sugerido." : ""} ${canal === "linkedin" ? "Largo 400 a 900 caracteres, con salto de línea entre ideas." : "Largo corto, directo."} Terminá cada uno con hashtags (3 a 6) y, en algunos, el link de la demo.\nIdiomas: ${idiomas.join(", ")} (si hay más de uno, escribí cada posteo en cada idioma como piezas separadas).\nRespondé SOLO con un JSON: [{"idioma":"es","texto":"...","visual":"..."}]`;
+    const prompt = `${textoMarca()}\n\nEscribí ${n} posteos para ${canal}, pensados para ${dias} días (${porDia} por día), ${marcaActual() === "belfast" ? "para estudios de arquitectura y desarrolladoras inmobiliarias de Buenos Aires y Uruguay" : "para constructoras, estudios y desarrolladoras de Argentina, Brasil, Paraguay y Chile"}. ${tema ? "Enfoque pedido: " + tema + "." : ""}\nVariá los formatos: dato, pregunta, caso concreto de la plataforma, consejo de gestión de obra, demo. ${canal === "instagram" ? "Incluí una descripción de la imagen o reel sugerido." : ""} ${canal === "linkedin" ? "Largo 400 a 900 caracteres, con salto de línea entre ideas." : "Largo corto, directo."} Terminá cada uno con hashtags (3 a 6) y, en algunos, el link de la demo.\nIdiomas: ${idiomas.join(", ")} (si hay más de uno, escribí cada posteo en cada idioma como piezas separadas).\nRespondé SOLO con un JSON: [{"idioma":"es","texto":"...","visual":"..."}]`;
     const txt = await claude(prompt, { max: 6000 });
     const lista = limpiarJSON(txt);
     (Array.isArray(lista) ? lista : []).forEach((p, i) => {
@@ -258,7 +281,7 @@ async function accionGenerarPosts(actor, b) {
 
 // ───────────── contactos: normalizar y evitar duplicados ─────────────
 
-const COD_PAIS = { Argentina: "54", Brasil: "55", Paraguay: "595", Chile: "56" };
+const COD_PAIS = { Argentina: "54", Brasil: "55", Paraguay: "595", Chile: "56", Uruguay: "598" };
 
 function soloDigitos(x) { return String(x || "").replace(/\D+/g, ""); }
 
@@ -312,13 +335,14 @@ function claves(p) {
 const CAMPOS_EXTRA = ["telefono", "whatsapp", "linkedin", "instagram", "direccion", "web", "email", "ciudad"];
 
 async function accionCazar(actor, b) {
-  const pais = ({ ar: "Argentina", br: "Brasil", py: "Paraguay", cl: "Chile" })[String(b.pais || "").toLowerCase()] || b.pais;
-  if (!pais || !["Argentina", "Brasil", "Paraguay", "Chile"].includes(pais)) throw Object.assign(new Error("País no válido."), { status: 400 });
-  const rubro = (b.rubro || "constructoras, desarrolladoras inmobiliarias y estudios de arquitectura").slice(0, 200);
+  const esBf = marcaActual() === "belfast";
+  const pais = ({ ar: "Argentina", br: "Brasil", py: "Paraguay", cl: "Chile", uy: "Uruguay" })[String(b.pais || "").toLowerCase()] || b.pais;
+  if (!pais || !(esBf ? ["Argentina", "Uruguay"] : ["Argentina", "Brasil", "Paraguay", "Chile"]).includes(pais)) throw Object.assign(new Error("País no válido."), { status: 400 });
+  const rubro = (b.rubro || (esBf ? "estudios de arquitectura y desarrolladoras inmobiliarias" : "constructoras, desarrolladoras inmobiliarias y estudios de arquitectura")).slice(0, 200);
   const zona = (b.zona || "").slice(0, 120);
   const idioma = idiomaPorPais(pais);
   const cant = Math.min(parseInt(b.cantidad, 10) || 8, 12);
-  const prompt = `Buscá en la web ${cant} empresas reales de ${pais}${zona ? " (zona: " + zona + ")" : ""} del rubro: ${rubro}, medianas o chicas, que dirijan obras activas y podrían usar un sistema de gestión de obra.
+  const prompt = `Buscá en la web ${cant} empresas reales de ${pais}${zona ? " (zona: " + zona + ")" : ""} del rubro: ${rubro}, medianas o chicas, ${esBf ? "que proyecten o desarrollen obras de vivienda o edificios y podrían contratar una constructora de alta gama" : "que dirijan obras activas y podrían usar un sistema de gestión de obra"}.
 Para cada una necesito, solo si figura públicamente en su sitio, en Google Maps, en su página de LinkedIn o en su perfil de Instagram de empresa:
 - nombre, sitio web, ciudad y dirección
 - correo GENÉRICO de empresa (info@, contacto@, ventas@, comercial@); nunca correos personales
@@ -394,7 +418,7 @@ async function accionGenerarMails(actor, b) {
   let creados = 0;
   for (const p of pros) {
     const idioma = p.idioma || idiomaPorPais(p.pais);
-    const prompt = `${MARCA}\n\nEscribí un mail frío corto (90 a 140 palabras) a ${p.empresa} (${p.rubro || "constructora"}, ${p.ciudad || ""}, ${p.pais}), en ${idioma === "pt" ? "portugués de Brasil" : "español neutro rioplatense"}. Es un contacto de empresa, no una persona: saludá a la empresa. Contá UNA idea concreta de cómo NEXO evita atrasos (pedidos atados a tareas y avisos de definiciones que se vencen), mencioná la demo y pedí 15 minutos o que prueben la demo. Sin exagerar, sin cifras inventadas, sin prometer ahorros. NO agregues firma con datos inventados ni link de baja (se agrega solo). Cerrá con "Equipo NEXO".\nRespondé SOLO con un JSON: {"asunto":"...","cuerpo":"..."}`;
+    const prompt = `${textoMarca()}\n\nEscribí un mail frío corto (90 a 140 palabras) a ${p.empresa} (${p.rubro || "constructora"}, ${p.ciudad || ""}, ${p.pais}), en ${idioma === "pt" ? "portugués de Brasil" : "español neutro rioplatense"}. Es un contacto de empresa, no una persona: saludá a la empresa. Contá UNA idea concreta de cómo NEXO evita atrasos (pedidos atados a tareas y avisos de definiciones que se vencen), mencioná la demo y pedí 15 minutos o que prueben la demo. Sin exagerar, sin cifras inventadas, sin prometer ahorros. NO agregues firma con datos inventados ni link de baja (se agrega solo). Cerrá con "Equipo NEXO".\nRespondé SOLO con un JSON: {"asunto":"...","cuerpo":"..."}`;
     try {
       const j = limpiarJSON(await claude(prompt, { max: 900 }));
       if (!j.asunto || !j.cuerpo || !textoSeguro(j.asunto + " " + j.cuerpo)) continue;
@@ -481,6 +505,7 @@ async function accionEnviarMail(actor, b) {
 
 // Envía de la cola los mails aprobados, respetando frenado, tope diario y bajas.
 async function enviarTanda(actor, presupuestoMs) {
+  if (marcaActual() === "belfast") return { enviados: 0, motivo: "Belfast todavía no tiene su casilla (info@belfastcm.com) configurada." };
   const cfg = await leerConfig();
   if (!cfg.activo) return { enviados: 0, motivo: "El motor está frenado." };
   const user = process.env.GMAIL_USER, pass = process.env.GMAIL_APP_PASSWORD;
@@ -529,6 +554,7 @@ async function enviarTanda(actor, presupuestoMs) {
 
 // Publica posteos aprobados en los canales que tengan conexión. Instagram queda para publicación manual.
 async function publicarPosts(actor) {
+  if (marcaActual() === "belfast") return { publicados: 0, motivo: "Las redes de Belfast todavía no están conectadas." };
   const cfg = await leerConfig();
   if (!cfg.activo) return { publicados: 0, motivo: "El motor está frenado." };
   const hoy = diaLocal();
@@ -580,8 +606,8 @@ async function handler(req, res) {
       try { email = Buffer.from(String(q.e || ""), "base64url").toString("utf8").toLowerCase(); } catch (e) { /* */ }
       const ok = secreto && emailValido(email) && String(q.s || "") === firmaBaja(email, secreto);
       if (!ok) { res.status(400).setHeader("Content-Type", "text/html; charset=utf-8"); return res.send("<p>Link de baja no válido.</p>"); }
-      await db("mkt_bajas", { method: "POST", body: { email }, prefer: "resolution=ignore-duplicates,return=minimal" });
-      await db("mkt_cola?destino=eq." + encodeURIComponent(email) + "&estado=in.(pendiente,aprobado)", { method: "PATCH", body: { estado: "cancelado", error: "Baja" }, prefer: "return=minimal" });
+      await ctx.run({ marca: "todas" }, () => db("mkt_bajas", { method: "POST", body: { email }, prefer: "resolution=ignore-duplicates,return=minimal" }));
+      await ctx.run({ marca: "todas" }, () => db("mkt_cola?destino=eq." + encodeURIComponent(email) + "&estado=in.(pendiente,aprobado)", { method: "PATCH", body: { estado: "cancelado", error: "Baja" }, prefer: "return=minimal" }));
       await auditar("publico", "baja", { email });
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       return res.status(200).send('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:system-ui;max-width:480px;margin:60px auto;padding:0 16px"><h2>Listo, te dimos de baja.</h2><p>No vas a recibir más mensajes de NEXO. / Você não receberá mais mensagens do NEXO.</p></body>');
@@ -628,7 +654,8 @@ async function handler(req, res) {
     const actor = adm.mail;
     const b = Object.assign({}, q, leerBody(req));
     let out;
-    return await ctx.run({ token: adm.token }, async () => {
+    const marca = (q.marca || b.marca) === "belfast" ? "belfast" : "nexo";
+    return await ctx.run({ token: adm.token, marca }, async () => {
     switch (accion) {
       case "estado": out = await accionEstado(); break;
       case "db": {
