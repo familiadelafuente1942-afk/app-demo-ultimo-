@@ -134,7 +134,8 @@ async function leerConfig() {
 function vieneDeLaApp(req) { return /^https:\/\/app-demo-ultimo(-[a-z0-9-]+)?\.vercel\.app/.test(String(req.headers.origin || req.headers.referer || "")); }
 async function exigirAdmin(req) {
   const auth = req.headers.authorization || "";
-  const token = auth.replace(/^Bearer\s+/i, "").trim();
+  let token = auth.replace(/^Bearer\s*/i, "").trim();
+  if (token === "null" || token === "undefined") token = "";
   if (!token && vieneDeLaApp(req)) return { mail: "abierto", token: null };
   if (!token) throw Object.assign(new Error("Falta iniciar sesión."), { status: 401 });
   const r = await fetch(SUPA_URL + "/auth/v1/user", { headers: { apikey: SUPA_ANON, Authorization: "Bearer " + token } });
