@@ -91,6 +91,8 @@ s = s[:ini] + """  async function cargarEncontrados() {
       setTimeout(() => setAviso(n ? `Traje ${n} estudios y desarrolladoras de la base de NEXO` : "Ya estaban todos los estudios y desarrolladoras de NEXO."), 80);
     } catch { setAviso("No pude leer la base de NEXO en este navegador."); }
 """ + s[fin:]
+# Desde Belfast todavía no se contactó a nadie: una sola vez, todo lo marcado "contactado" vuelve a "nuevo".
+cambiar('  async function cargarEncontrados() {', '  React.useEffect(() => { if (!prospectosAll.length) return; try { if (localStorage.getItem("bf_reset_contactos_1")) return; localStorage.setItem("bf_reset_contactos_1", "1"); } catch (e) { return; } setProspectos(prev => prev.map(p => p.estado === "contactado" ? { ...p, estado: "nuevo", fechaUltimoContacto: null, historial: [] } : p)); }, [prospectosAll.length]);\n  async function cargarEncontrados() {')
 cambiar('  async function cargarEncontrados() {', '  React.useEffect(() => { if (prospectosAll.length === 0) { const t = setTimeout(() => { try { if (!localStorage.getItem("bf_base_cargada")) { localStorage.setItem("bf_base_cargada", "1"); cargarEncontrados(); } } catch (e) {} }, 1500); return () => clearTimeout(t); } }, []);\n  async function cargarEncontrados() {')
 cambiar('}, "Cargar contactos encontrados por Claude"),', '}, "Traer estudios y desarrolladoras de NEXO"),')
 
@@ -123,8 +125,11 @@ window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],
   }
   function abrir(){ try { if (typeof abrirVentas==="function") abrirVentas(); } catch(e){} marca(); }
   // Tocar el logo abre / cierra el panel de ventas (como en NEXO).
-  document.addEventListener("click", function(e){ var v = document.getElementById("bf-visor"); if (!v) return; var a = e.target && e.target.closest && e.target.closest(".bf-ob"); if (a) { e.preventDefault(); v.querySelector("img").src = a.getAttribute("href"); var sp = a.querySelector("span"); v.querySelector(".bf-vis-t").textContent = sp ? sp.textContent : ""; v.hidden = false; return; } if (!v.hidden && (e.target === v || (e.target.closest && e.target.closest(".bf-vis-x")))) v.hidden = true; });
-  document.addEventListener("keydown", function(e){ var v = document.getElementById("bf-visor"); if (v && e.key === "Escape") v.hidden = true; });
+  document.addEventListener("click", function(e){ var v = document.getElementById("bf-visor"); if (!v) return; var a = e.target && e.target.closest && e.target.closest(".bf-ob"); if (a) { e.preventDefault(); var todas = [].slice.call(document.querySelectorAll(".bf-ob")); window.__bfVer(todas.indexOf(a)); return; } if (v.hidden) return; if (e.target.closest && e.target.closest(".bf-vis-ant")) { window.__bfVer(window.__bfI - 1); return; } if (e.target.closest && e.target.closest(".bf-vis-sig")) { window.__bfVer(window.__bfI + 1); return; } if (e.target === v || (e.target.closest && e.target.closest(".bf-vis-x"))) v.hidden = true; });
+  window.__bfI = 0;
+  window.__bfVer = function(i){ var v = document.getElementById("bf-visor"), todas = document.querySelectorAll(".bf-ob"); if (!v || !todas.length) return; i = (i + todas.length) % todas.length; window.__bfI = i; var a = todas[i], sp = a.querySelector("span"); v.querySelector("img").src = a.getAttribute("href"); v.querySelector(".bf-vis-t").textContent = (sp ? sp.textContent : "") + "  ·  " + (i + 1) + " / " + todas.length; v.hidden = false; };
+  document.addEventListener("keydown", function(e){ var v = document.getElementById("bf-visor"); if (!v || v.hidden) return; if (e.key === "Escape") v.hidden = true; else if (e.key === "ArrowRight") window.__bfVer(window.__bfI + 1); else if (e.key === "ArrowLeft") window.__bfVer(window.__bfI - 1); });
+  (function(){ var x0 = null; document.addEventListener("touchstart", function(e){ var v = document.getElementById("bf-visor"); x0 = (v && !v.hidden && e.touches.length === 1) ? e.touches[0].clientX : null; }, { passive: true }); document.addEventListener("touchend", function(e){ if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 45) window.__bfVer(window.__bfI + (dx < 0 ? 1 : -1)); }, { passive: true }); })();
   document.addEventListener("click", function(e){ var t = e.target && e.target.closest && e.target.closest("#bf-logo"); if (!t) return; e.preventDefault(); document.body.classList.toggle("bf-panel"); try { window.scrollTo(0, 0); } catch(x){} });
   // Apertura: el reel de Belfast al abrir la app (una vez por visita; Saltar o al terminar entra a la portada).
   (function(){

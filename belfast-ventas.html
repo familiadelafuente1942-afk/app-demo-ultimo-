@@ -880,6 +880,9 @@ body:not(.bf-panel){ background:#282627!important; }
 .bf-vis-t{ color:#ddd; font-size:13px; margin-top:12px; text-align:center; }
 .bf-vis-x{ position:absolute; top:12px; right:16px; background:none; border:0; color:#fff; font-size:34px; cursor:pointer; line-height:1; }
 body.bf-panel .bf-obras{ display:none!important; }
+.bf-vis-ant,.bf-vis-sig{ position:absolute; top:50%; transform:translateY(-50%); width:52px; height:52px; border-radius:50%; border:1px solid rgba(255,255,255,.3); background:rgba(0,0,0,.45); color:#fff; font-size:34px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding-bottom:4px; }
+.bf-vis-ant{ left:14px; } .bf-vis-sig{ right:14px; }
+.bf-vis-ant:hover,.bf-vis-sig:hover{ background:var(--bf-am); color:#1c1b1b; border-color:var(--bf-am); }
 @media (max-width:620px){ .bf-obras{ padding:32px 16px 28px; } .bf-obras-grid{ grid-template-columns:repeat(2,1fr); gap:4px; } .bf-ob span{ font-size:10.5px; } }
 
 /* Apertura: reel de Belfast */
@@ -1873,7 +1876,7 @@ body.bf-panel .bf-obras{ display:none!important; }
   </div>
   <div class="bf-pie"><span>Planificación</span><span>Proceso &amp; ejecución</span><span>Terminación</span></div>
 </section>
-<div id="bf-visor" hidden><button type="button" class="bf-vis-x" aria-label="Cerrar">×</button><img alt=""><div class="bf-vis-t"></div></div>
+<div id="bf-visor" hidden><button type="button" class="bf-vis-x" aria-label="Cerrar">×</button><button type="button" class="bf-vis-ant" aria-label="Anterior">‹</button><button type="button" class="bf-vis-sig" aria-label="Siguiente">›</button><img alt=""><div class="bf-vis-t"></div></div>
 <div id="bf-espera" aria-hidden="true"><div class="bf-esp-fondo"></div><img class="bf-esp-foto" alt=""><div class="bf-esp-marca"><img src="belfast-isotipo.png" alt=""><span>BELFAST</span><small>@belfast_cm</small></div></div>
 <div id="root-ventas"></div></div>
 
@@ -10495,6 +10498,7 @@ ${hist}`;
   function nombreClave(n) {
     return String(n || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\([^)]*\)/g, " ").replace(/\b(s\.?a\.?|s\.?r\.?l\.?|srl|sas|ltda|s\.?h\.?)\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
   }
+  React.useEffect(() => { if (!prospectosAll.length) return; try { if (localStorage.getItem("bf_reset_contactos_1")) return; localStorage.setItem("bf_reset_contactos_1", "1"); } catch (e) { return; } setProspectos(prev => prev.map(p => p.estado === "contactado" ? { ...p, estado: "nuevo", fechaUltimoContacto: null, historial: [] } : p)); }, [prospectosAll.length]);
   React.useEffect(() => { if (prospectosAll.length === 0) { const t = setTimeout(() => { try { if (!localStorage.getItem("bf_base_cargada")) { localStorage.setItem("bf_base_cargada", "1"); cargarEncontrados(); } } catch (e) {} }, 1500); return () => clearTimeout(t); } }, []);
   async function cargarEncontrados() {
     try {
@@ -15278,8 +15282,11 @@ window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],
   }
   function abrir(){ try { if (typeof abrirVentas==="function") abrirVentas(); } catch(e){} marca(); }
   // Tocar el logo abre / cierra el panel de ventas (como en NEXO).
-  document.addEventListener("click", function(e){ var v = document.getElementById("bf-visor"); if (!v) return; var a = e.target && e.target.closest && e.target.closest(".bf-ob"); if (a) { e.preventDefault(); v.querySelector("img").src = a.getAttribute("href"); var sp = a.querySelector("span"); v.querySelector(".bf-vis-t").textContent = sp ? sp.textContent : ""; v.hidden = false; return; } if (!v.hidden && (e.target === v || (e.target.closest && e.target.closest(".bf-vis-x")))) v.hidden = true; });
-  document.addEventListener("keydown", function(e){ var v = document.getElementById("bf-visor"); if (v && e.key === "Escape") v.hidden = true; });
+  document.addEventListener("click", function(e){ var v = document.getElementById("bf-visor"); if (!v) return; var a = e.target && e.target.closest && e.target.closest(".bf-ob"); if (a) { e.preventDefault(); var todas = [].slice.call(document.querySelectorAll(".bf-ob")); window.__bfVer(todas.indexOf(a)); return; } if (v.hidden) return; if (e.target.closest && e.target.closest(".bf-vis-ant")) { window.__bfVer(window.__bfI - 1); return; } if (e.target.closest && e.target.closest(".bf-vis-sig")) { window.__bfVer(window.__bfI + 1); return; } if (e.target === v || (e.target.closest && e.target.closest(".bf-vis-x"))) v.hidden = true; });
+  window.__bfI = 0;
+  window.__bfVer = function(i){ var v = document.getElementById("bf-visor"), todas = document.querySelectorAll(".bf-ob"); if (!v || !todas.length) return; i = (i + todas.length) % todas.length; window.__bfI = i; var a = todas[i], sp = a.querySelector("span"); v.querySelector("img").src = a.getAttribute("href"); v.querySelector(".bf-vis-t").textContent = (sp ? sp.textContent : "") + "  ·  " + (i + 1) + " / " + todas.length; v.hidden = false; };
+  document.addEventListener("keydown", function(e){ var v = document.getElementById("bf-visor"); if (!v || v.hidden) return; if (e.key === "Escape") v.hidden = true; else if (e.key === "ArrowRight") window.__bfVer(window.__bfI + 1); else if (e.key === "ArrowLeft") window.__bfVer(window.__bfI - 1); });
+  (function(){ var x0 = null; document.addEventListener("touchstart", function(e){ var v = document.getElementById("bf-visor"); x0 = (v && !v.hidden && e.touches.length === 1) ? e.touches[0].clientX : null; }, { passive: true }); document.addEventListener("touchend", function(e){ if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 45) window.__bfVer(window.__bfI + (dx < 0 ? 1 : -1)); }, { passive: true }); })();
   document.addEventListener("click", function(e){ var t = e.target && e.target.closest && e.target.closest("#bf-logo"); if (!t) return; e.preventDefault(); document.body.classList.toggle("bf-panel"); try { window.scrollTo(0, 0); } catch(x){} });
   // Apertura: el reel de Belfast al abrir la app (una vez por visita; Saltar o al terminar entra a la portada).
   (function(){
