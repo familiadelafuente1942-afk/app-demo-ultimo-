@@ -9137,7 +9137,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
       const obj = JSON.parse(m[0]);
       if (!obj.asunto || !obj.cuerpo) throw new Error("Faltó el asunto o el cuerpo, probá de nuevo.");
       setAsunto(obj.asunto);
-      setCuerpo(obj.cuerpo);
+      setCuerpo(String(obj.cuerpo || "").replace(/\{link_app\}/g, LINK_APP));
     } catch (e) {
       setErrorIA(e.message === "sin_clave" ? "Falta configurar la clave de IA en Configuración." : e.message === "error_api" ? "La IA no respondió, probá de nuevo." : e.message);
     } finally {
@@ -9320,7 +9320,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
       const obj = JSON.parse(m[0]);
       if (!obj.asunto || !obj.cuerpo) throw new Error("Faltó el asunto o el cuerpo, probá de nuevo.");
       setAsunto(obj.asunto);
-      setCuerpo(obj.cuerpo);
+      setCuerpo(String(obj.cuerpo || "").replace(/\{link_app\}/g, LINK_APP));
       await enviarALista(obj.asunto, obj.cuerpo, destinatarios);
     } catch (e) {
       setAutoError(e.message === "sin_clave" ? "Falta configurar la clave de IA en Configuración." : e.message === "error_api" ? "La IA no respondió, probá de nuevo." : e.message);
@@ -9392,10 +9392,10 @@ function CampaniaComercial({ prospectos, setProspectos }) {
       React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 } },
         React.createElement("button", {
           type: "button",
-          onClick: () => setCuerpo(c => (c.trim() ? c.replace(/\s+$/, "") + "\n\n" : "") + "Pueden ver nuestras obras en {link_app}"),
+          onClick: () => setCuerpo(c => (c.trim() ? c.replace(/\s+$/, "") + "\n\n" : "") + "Pueden ver nuestras obras en " + LINK_APP),
           style: { ...chipEstilo, background: "#EEF3FA", color: "#2A4F82", padding: "8px 14px" }
         }, "🔗 Insertar link al Instagram"),
-        React.createElement("span", { style: { fontSize: 11, color: "#8B95A5" } }, "{link_app} se reemplaza en cada mail por el Instagram de Belfast.")),
+        React.createElement("span", { style: { fontSize: 11, color: "#8B95A5" } }, "Agrega al final del mail el link al Instagram de Belfast.")),
       error && React.createElement("div", { style: { background: "#FDECEA", color: "#B3261E", borderRadius: 8, padding: "8px 11px", fontSize: 12, marginBottom: 10 } }, error),
       React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" } },
         React.createElement("button", {

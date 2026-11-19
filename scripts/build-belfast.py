@@ -17,8 +17,8 @@ def cambiar(viejo, nuevo, veces=1):
 
 cambiar('const LINK_APP = "https://app-demo-ultimo.vercel.app/";', 'const LINK_APP = "https://www.instagram.com/belfast_cm/";')
 cambiar('const linkP = LINK_APP + "?c=" + encodeURIComponent(p.id);', 'const linkP = LINK_APP;')
-cambiar('"Mirá cómo funciona la app: {link_app}"', '"Pueden ver nuestras obras en {link_app}"')
-cambiar('"{link_app} se reemplaza en cada mail por el link a la presentación de NEXO."', '"{link_app} se reemplaza en cada mail por el Instagram de Belfast."')
+cambiar('"Mirá cómo funciona la app: " + LINK_APP', '"Pueden ver nuestras obras en " + LINK_APP')
+cambiar('"Agrega al final del mail el link a la presentación de NEXO."', '"Agrega al final del mail el link al Instagram de Belfast."')
 cambiar('const [adjuntarFolleto, setAdjuntarFolleto] = useState(true);', 'const [adjuntarFolleto, setAdjuntarFolleto] = useState(false);')
 cambiar('React.createElement("input", { type: "checkbox", checked: adjuntarFolleto, onChange: e => setAdjuntarFolleto(e.target.checked) }),\n          "Adjuntar el folleto de NEXO en PDF"),', 'null, null),')
 cambiar("placeholder: 'Ej: \"Mandales un mail de bienvenida presentando NEXO\"',", "placeholder: 'Ej: \"Presentá Belfast a los estudios de Nordelta para su próxima obra\"',")
