@@ -433,6 +433,30 @@ async function accionCambiarEstado(actor, ids, estado) {
   return { cambiados: (r || []).length };
 }
 
+// Envío directo desde la app (campaña, prospecto, respuesta): sale de la casilla de NEXO (GMAIL_USER) por Gmail.
+async function accionEnviarMail(actor, b) {
+  const user = process.env.GMAIL_USER, pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
+  if (!user || !pass) throw Object.assign(new Error("Falta conectar el Gmail de NEXO (GMAIL_APP_PASSWORD en Vercel)."), { status: 500 });
+  const to = String(b.to || "").trim().toLowerCase();
+  if (!emailValido(to)) throw Object.assign(new Error("Mail de destino inválido."), { status: 400 });
+  if (!b.subject || !b.html) throw Object.assign(new Error("Faltan el asunto o el mensaje."), { status: 400 });
+  const bajas = (await db("mkt_bajas?select=email&email=eq." + encodeURIComponent(to))) || [];
+  if (bajas.length) throw Object.assign(new Error("Ese contacto se dio de baja."), { status: 409 });
+  const secreto = process.env.BAJA_SECRET || process.env.CRON_SECRET || "";
+  let html = String(b.html);
+  if (secreto) html += '<p style="font-size:11px;color:#888;margin-top:18px">' + TEXTO_BAJA.es + ' <a href="' + linkBaja(to, secreto) + '">dar de baja</a></p>';
+  const msg = { from: "NEXO <" + user + ">", to, subject: String(b.subject).slice(0, 200), html, replyTo: user };
+  if (secreto) msg.headers = { "List-Unsubscribe": "<" + linkBaja(to, secreto) + ">" };
+  if (b.adjuntoUrl && /^https:\/\/agcmhrbxqtibrtmhwrrx\.supabase\.co\/storage\/v1\/object\/public\//.test(String(b.adjuntoUrl))) {
+    msg.attachments = [{ filename: String(b.adjuntoNombre || "adjunto.pdf").slice(0, 80), path: String(b.adjuntoUrl) }];
+  }
+  const nodemailer = require("nodemailer");
+  const tr = nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user, pass } });
+  const info = await tr.sendMail(msg);
+  await auditar(actor, "mail_directo", { to });
+  return { ok: true, id: info.messageId };
+}
+
 // Envía de la cola los mails aprobados, respetando frenado, tope diario y bajas.
 async function enviarTanda(actor, presupuestoMs) {
   const cfg = await leerConfig();
@@ -581,6 +605,7 @@ async function handler(req, res) {
     return await ctx.run({ token: adm.token }, async () => {
     switch (accion) {
       case "estado": out = await accionEstado(); break;
+      case "enviar_mail": out = await accionEnviarMail(actor, b); break;
       case "config": out = await accionConfig(actor, b); break;
       case "generar_posts": out = await accionGenerarPosts(actor, b); break;
       case "generar_mails": out = await accionGenerarMails(actor, b); break;
