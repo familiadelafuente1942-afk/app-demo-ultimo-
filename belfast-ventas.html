@@ -7062,7 +7062,7 @@ function FichaAgente(props) {
     contenido
   } = props;
   const pendiente = estado === "pendiente";
-  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", { className: "ficha-agente" }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: "#fff",
       borderRadius: 13,
@@ -7214,7 +7214,7 @@ function FichaAgente(props) {
   }, metricas.map((m, i) => /*#__PURE__*/React.createElement(Metrica, {
     key: i,
     ...m
-  }))), contenido, /*#__PURE__*/React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", { className: "ficha-contenido" }, contenido), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gap: 12,
@@ -9863,30 +9863,21 @@ ${hist}`;
   }
   async function cargarEncontrados() {
     try {
-      const r = await fetch("contactos-encontrados.json?v=" + Date.now());
-      const lista = await r.json();
-      const idx = {};
-      lista.forEach(x => { idx[nombreClave(x.empresa)] = x; });
+      const lista = await new Promise((ok, mal) => {
+        const rq = indexedDB.open("nexo");
+        rq.onerror = () => mal(rq.error);
+        rq.onsuccess = () => { const db = rq.result; if (!db.objectStoreNames.contains("prospectos")) { db.close(); ok([]); return; }
+          const g = db.transaction("prospectos", "readonly").objectStore("prospectos").getAll(); g.onsuccess = () => { ok(g.result || []); db.close(); }; g.onerror = () => mal(g.error); };
+      });
+      const sirve = lista.filter(x => /^(estud|desarr)/i.test(String(x.rol || "")));
       let n = 0;
-      setProspectos(prev => prev.map(p => {
-        const x = idx[nombreClave(p.empresa)];
-        if (!x) return p;
-        const c = {};
-        const pais = p.pais || "ar";
-        const wa = normTelNx(x.whatsapp, pais, true), tel = normTelNx(x.telefono, pais, false), li = normLinkedinNx(x.linkedin);
-        const ig = String(x.instagram || "").replace(/^@/, "").toLowerCase();
-        if (wa && !p.whatsapp) c.whatsapp = wa;
-        if (tel && !p.tel) c.tel = tel;
-        if (li && !p.linkedin) c.linkedin = li;
-        if (ig && !p.instagram) c.instagram = ig;
-        if (x.email && !p.mail) c.mail = x.email;
-        if (x.web && !p.web) c.web = x.web;
-        if (!Object.keys(c).length) return p;
-        n++;
-        return { ...p, ...c };
-      }));
-      setTimeout(() => setAviso(`Contactos cargados en ${n} empresa${n === 1 ? "" : "s"}`), 50);
-    } catch { setAviso("No pude leer el archivo de contactos encontrados."); }
+      setProspectos(prev => {
+        const ya = new Set(prev.map(p => nombreClave(p.empresa))), mails = new Set(prev.map(p => String(p.mail || "").toLowerCase()).filter(Boolean));
+        const nuevos = sirve.filter(x => !ya.has(nombreClave(x.empresa)) && !(x.mail && mails.has(String(x.mail).toLowerCase()))).map((x, i) => ({ ...x, id: Date.now() + i, estado: "nuevo", historial: [] }));
+        n = nuevos.length; return [...nuevos, ...prev];
+      });
+      setTimeout(() => setAviso(sirve.length ? `Traje ${n} estudios y desarrolladoras de la base de NEXO` : "En este navegador no encontré la base de NEXO. Abrí NEXO acá primero."), 80);
+    } catch { setAviso("No pude leer la base de NEXO en este navegador."); }
   }
   function bloqueListado() {
     const tiene = {
@@ -9916,7 +9907,7 @@ ${hist}`;
     /*#__PURE__*/React.createElement("button", {
       onClick: cargarEncontrados,
       style: { marginTop: 8, width: "100%", background: "#fff", color: T.text, border: "1px solid #D9D0BD", borderRadius: 9, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", minHeight: 44, fontFamily: "inherit" }
-    }, "Cargar contactos encontrados por Claude"),
+    }, "Traer estudios y desarrolladoras de NEXO"),
     verLista && /*#__PURE__*/React.createElement("div", { style: { marginTop: 10 } },
       /*#__PURE__*/React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 } },
         chip("alguno", `Con algún dato (${alguno.length})`), chip("completas", `Con los 4 (${completas.length})`), chip("todas", `Todas (${prospectosAll.length})`)),
@@ -14660,6 +14651,7 @@ body.en-ventas #barra-volver{ display:none!important; }
 body.en-ventas #vista-ventas{ padding-top:0!important; }
 #root-ventas > div{ background:var(--bf-carbon)!important; padding-top:18px!important; }
 #root-ventas div:has(+ .co-nav), #root-ventas .co-nav{ display:none!important; }
+#root-ventas .ficha-agente > :not(.ficha-contenido){ display:none!important; }
 
 /* Tarjetas: planas, papel, sin vidrio */
 body.en-ventas [style*="background: rgb(255, 255, 255)"],body.en-ventas [style*="background:#fff"],body.en-ventas [style*="background: #fff"],body.en-ventas [style*="background:#FFFFFF"]{

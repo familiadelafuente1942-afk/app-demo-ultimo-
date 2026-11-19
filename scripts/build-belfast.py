@@ -61,6 +61,33 @@ s = s.replace('"🔗 Insertar link de la app"', '"🔗 Insertar link al Instagra
 s = s.replace('"Respuesta de NEXO"', '"Respuesta de Belfast"')
 s = s.replace('desc: "Precio, tiempo, \\"ya tengo Excel\\""', 'desc: "Precio, plazos, \\"ya tenemos constructora\\""')
 
+# Sin la ficha grande de "Director Comercial IA" arriba: se entra directo a las herramientas.
+cambiar('  }))), contenido, /*#__PURE__*/React.createElement("div", {', '  }))), /*#__PURE__*/React.createElement("div", { className: "ficha-contenido" }, contenido), /*#__PURE__*/React.createElement("div", {')
+cambiar('''  const pendiente = estado === "pendiente";
+  return /*#__PURE__*/React.createElement("div", null, ''', '''  const pendiente = estado === "pendiente";
+  return /*#__PURE__*/React.createElement("div", { className: "ficha-agente" }, ''')
+# Traer de la base de NEXO (mismo navegador) los estudios y las desarrolladoras.
+ini = s.index("  async function cargarEncontrados() {"); fin = s.index("  }", s.index('setAviso("No pude leer el archivo de contactos encontrados.")'))
+s = s[:ini] + """  async function cargarEncontrados() {
+    try {
+      const lista = await new Promise((ok, mal) => {
+        const rq = indexedDB.open("nexo");
+        rq.onerror = () => mal(rq.error);
+        rq.onsuccess = () => { const db = rq.result; if (!db.objectStoreNames.contains("prospectos")) { db.close(); ok([]); return; }
+          const g = db.transaction("prospectos", "readonly").objectStore("prospectos").getAll(); g.onsuccess = () => { ok(g.result || []); db.close(); }; g.onerror = () => mal(g.error); };
+      });
+      const sirve = lista.filter(x => /^(estud|desarr)/i.test(String(x.rol || "")));
+      let n = 0;
+      setProspectos(prev => {
+        const ya = new Set(prev.map(p => nombreClave(p.empresa))), mails = new Set(prev.map(p => String(p.mail || "").toLowerCase()).filter(Boolean));
+        const nuevos = sirve.filter(x => !ya.has(nombreClave(x.empresa)) && !(x.mail && mails.has(String(x.mail).toLowerCase()))).map((x, i) => ({ ...x, id: Date.now() + i, estado: "nuevo", historial: [] }));
+        n = nuevos.length; return [...nuevos, ...prev];
+      });
+      setTimeout(() => setAviso(sirve.length ? `Traje ${n} estudios y desarrolladoras de la base de NEXO` : "En este navegador no encontré la base de NEXO. Abrí NEXO acá primero."), 80);
+    } catch { setAviso("No pude leer la base de NEXO en este navegador."); }
+""" + s[fin:]
+cambiar('}, "Cargar contactos encontrados por Claude"),', '}, "Traer estudios y desarrolladoras de NEXO"),')
+
 extra = r'''
 __TEMA__
 <script>
