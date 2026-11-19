@@ -6,21 +6,28 @@ body, body *:not(svg):not(svg *):not(i){ font-family:"Playfair Display",Georgia,
 .mvtab[data-t]{ display:inline-flex !important; align-items:center; gap:7px; }
 .mvtab[data-t]::before{ width:17px; height:17px; }
 #root-ventas .co-tab i{ display:none !important; }
-/* barra de abajo (áreas) */
-#root-ventas .co-nav{ position:fixed !important; left:50%; transform:translateX(-50%); bottom:calc(12px + env(safe-area-inset-bottom,0px)); z-index:900; margin:0 !important; max-width:calc(100vw - 24px); display:flex; gap:2px; padding:6px; border-radius:999px; overflow-x:auto; scrollbar-width:none;
-  background:linear-gradient(158deg,rgba(40,46,58,.82),rgba(18,22,30,.88)); -webkit-backdrop-filter:blur(22px) saturate(1.7); backdrop-filter:blur(22px) saturate(1.7);
-  box-shadow:inset 0 1.5px 1px rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.12), 0 14px 30px -10px rgba(0,0,0,.6); }
-#root-ventas .co-nav::-webkit-scrollbar{ display:none; }
-html body #root-ventas .co-nav .co-tab{ box-shadow:none !important; text-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; flex-direction:column !important; gap:3px !important; min-height:0 !important; min-width:64px; padding:7px 10px 6px !important; border-radius:999px !important; border:0 !important; background:none !important; color:#fff !important; font-size:10.5px !important; font-weight:600 !important; letter-spacing:.01em; }
-html body #root-ventas .co-nav .co-tab.act{ border:0 !important; background:rgba(255,255,255,.16) !important; color:#E9C77F !important; text-shadow:none !important; box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 .5px rgba(255,255,255,.25); }
-html body.en-ventas.con-motor #root-ventas .co-nav .co-tab.act{ color:#E2C200 !important; }
+/* barra de abajo (áreas): vidrio líquido igual a NEXO 2 */
+:root{ --g-a:rgba(255,255,255,.17); --g-b:rgba(255,255,255,.035); --g-c:rgba(255,255,255,.075); --g-rim:rgba(255,255,255,.55); --g-edge:rgba(255,255,255,.26); --g-low:rgba(0,0,0,.22); --g-fx:blur(18px) saturate(1.9); --gl-sh:rgba(0,0,0,.5); --gl-bar:rgba(18,19,23,.74); --glint:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.17) 41%,rgba(255,255,255,.04) 50%,transparent 58%); --nx-gold:#d8b077; }
+body.con-motor.en-ventas{ --nx-gold:#E2C200; }
+html body #root-ventas .co-nav{ position:fixed !important; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom,0px)); z-index:900; margin:0 auto !important; max-width:none; display:flex; gap:2px; padding:6px; border-radius:999px; overflow-x:auto; scrollbar-width:none; white-space:nowrap;
+  background:linear-gradient(158deg,var(--g-a),var(--g-b)), var(--gl-bar) !important; -webkit-backdrop-filter:blur(24px) saturate(1.8); backdrop-filter:blur(24px) saturate(1.8);
+  box-shadow:inset 0 1.5px 1px var(--g-rim), inset 0 0 0 1px var(--g-edge), 0 14px 30px -10px var(--gl-sh) !important; }
+@media (min-width:1001px){ html body #root-ventas .co-nav{ left:max(32px,4vw); right:max(32px,4vw); } }
+html body #root-ventas .co-nav::-webkit-scrollbar{ display:none; }
+html body #root-ventas .co-nav .co-tab{ flex:1 0 auto !important; min-width:64px; flex-direction:column !important; align-items:center; justify-content:center; gap:2px !important; min-height:0 !important; padding:7px 8px 6px !important; border-radius:999px !important; border:0 !important; background:none !important; box-shadow:none !important; text-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; color:#f2efe9 !important; font-size:10.5px !important; font-weight:600 !important; letter-spacing:0; }
+html body #root-ventas .co-nav .co-tab::before{ width:22px; height:22px; }
+html body #root-ventas .co-nav .co-tab.act{ color:var(--nx-gold) !important;
+  background:var(--glint), linear-gradient(158deg,var(--g-a) 0%,var(--g-b) 42%,var(--g-c) 100%) !important; -webkit-backdrop-filter:var(--g-fx) !important; backdrop-filter:var(--g-fx) !important;
+  box-shadow:inset 0 2px 1px var(--g-rim), inset 0 0 0 1px var(--g-edge), inset 0 -12px 22px var(--g-low), 0 0 18px -6px rgba(255,255,255,.25), 0 14px 28px -12px var(--gl-sh) !important; }
 #root-ventas > div{ padding-bottom:110px !important; }
-@media (max-width:700px){ html body #root-ventas .co-nav .co-tab{ min-width:58px; padding:7px 7px 6px !important; } }
+@media (max-width:700px){ html body #root-ventas .co-nav .co-tab{ min-width:60px; padding:7px 6px 6px !important; } }
 /* selector de idioma y botón de tema: arriba de la barra cuando está */
-#ui-tema{ position:fixed; right:14px; bottom:calc(14px + env(safe-area-inset-bottom,0px)); z-index:901; width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,.2); background:rgba(16,28,44,.92); color:#fff; display:none; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.28); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); padding:0; }
+#ui-tema{ position:fixed; right:14px; bottom:calc(14px + env(safe-area-inset-bottom,0px)); z-index:901; width:46px; height:46px; border-radius:50%; border:0; color:#f2efe9; display:none; align-items:center; justify-content:center; cursor:pointer; padding:0;
+  background:var(--glint), linear-gradient(158deg,var(--g-a) 0%,var(--g-b) 42%,var(--g-c) 100%), rgba(18,19,23,.66); -webkit-backdrop-filter:var(--g-fx); backdrop-filter:var(--g-fx);
+  box-shadow:inset 0 2px 1px var(--g-rim), inset 0 0 0 1px var(--g-edge), inset 0 -12px 22px var(--g-low), 0 14px 28px -12px var(--gl-sh); }
 #ui-tema svg{ width:20px; height:20px; }
 html.ui-con-barra #ui-tema{ display:flex; }
-@media (max-width:1000px){ html.ui-con-barra #idioma-flotante{ bottom:calc(86px + env(safe-area-inset-bottom,0px)) !important; } html.ui-con-barra #ui-tema{ bottom:calc(86px + env(safe-area-inset-bottom,0px)); } }
+html.ui-con-barra #idioma-flotante{ bottom:calc(88px + env(safe-area-inset-bottom,0px)) !important; } html.ui-con-barra #ui-tema{ bottom:calc(88px + env(safe-area-inset-bottom,0px)); }
 /* modo claro: se invierten los colores (lo negro pasa a blanco y al revés); fotos y videos quedan como son */
 html.ui-con-barra[data-ui-tema="claro"]{ filter:invert(1) hue-rotate(180deg); background:#fff; }
 html.ui-con-barra[data-ui-tema="claro"] img, html.ui-con-barra[data-ui-tema="claro"] video, html.ui-con-barra[data-ui-tema="claro"] picture, html.ui-con-barra[data-ui-tema="claro"] .bf-esp-fondo, html.ui-con-barra[data-ui-tema="claro"] [style*="background-image"]{ filter:invert(1) hue-rotate(180deg); }
@@ -47,4 +54,4 @@ html.ui-con-barra[data-ui-tema="claro"] img, html.ui-con-barra[data-ui-tema="cla
 #ui-sync{ display:none; position:fixed; right:66px; bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:901; font-size:11px; font-weight:600; color:#cfd6df; background:rgba(16,28,44,.85); border:1px solid rgba(255,255,255,.16); border-radius:999px; padding:5px 10px; max-width:46vw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; }
 html.ui-con-barra #ui-sync{ display:block; }
 #ui-sync.ok{ color:#9fdc8a; } #ui-sync.mal{ color:#ff9a8f; border-color:rgba(255,120,110,.5); }
-@media (max-width:1000px){ html.ui-con-barra #ui-sync{ bottom:calc(96px + env(safe-area-inset-bottom,0px)); } }
+html.ui-con-barra #ui-sync{ bottom:calc(99px + env(safe-area-inset-bottom,0px)); }
