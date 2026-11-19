@@ -91,6 +91,8 @@ s = s[:ini] + """  async function cargarEncontrados() {
 cambiar('  async function cargarEncontrados() {', '  React.useEffect(() => { if (prospectosAll.length === 0) { const t = setTimeout(() => { try { if (!localStorage.getItem("bf_base_cargada")) { localStorage.setItem("bf_base_cargada", "1"); cargarEncontrados(); } } catch (e) {} }, 1500); return () => clearTimeout(t); } }, []);\n  async function cargarEncontrados() {')
 cambiar('}, "Cargar contactos encontrados por Claude"),', '}, "Traer estudios y desarrolladoras de NEXO"),')
 
+cambiar('  const [perfs, setPerfs] = useState(["estudios", "constructoras"]);', '  const [perfs, setPerfs] = useState(["estudios", "desarrolladores"]);')
+
 extra = r'''
 __TEMA__
 <script>
