@@ -93,6 +93,9 @@ cambiar('}, "Cargar contactos encontrados por Claude"),', '}, "Traer estudios y 
 
 cambiar('  const [perfs, setPerfs] = useState(["estudios", "constructoras"]);', '  const [perfs, setPerfs] = useState(["estudios", "desarrolladores"]);')
 
+# Belfast no sincroniza con la nube de NEXO (son bases separadas).
+cambiar('<script src="supabase-sync.js"></script>', '')
+
 extra = r'''
 __TEMA__
 <script>

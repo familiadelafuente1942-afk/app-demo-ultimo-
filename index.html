@@ -7315,12 +7315,18 @@ async function mktRenovarSesion() {
     return null;
   }
 }
+try { ["pointerdown", "keydown", "touchend"].forEach(ev => window.addEventListener(ev, () => { window.__mktUltimoToque = Date.now(); }, true)); } catch (e) {}
 async function mktPedirSesion() {
   let t = mktTokenGuardado();
   if (t) return t;
   const renovado = await mktRenovarSesion();
   if (renovado) return renovado;
-  const email = (window.prompt("Correo para sincronizar (Supabase):") || "").trim();
+  // Solo pide usuario y contraseña si lo tocaste vos (un botón); al abrir la página no molesta.
+  const ua = navigator.userActivation;
+  const recienTocado = (ua && ua.isActive) || (Date.now() - (window.__mktUltimoToque || 0) < 15000);
+  if (!recienTocado || Date.now() - (window.__supaPreguntoEn || 0) < 20000) throw new Error("Iniciá sesión para sincronizar: se te va a pedir la primera vez que mandes un mail.");
+  window.__supaPreguntoEn = Date.now();
+  const email = (window.prompt("Usuario de la app (mail):") || "").trim();
   if (!email) throw new Error("Sin correo");
   const clave = (window.prompt("Contraseña:") || "").trim();
   if (!clave) throw new Error("Sin contraseña");
