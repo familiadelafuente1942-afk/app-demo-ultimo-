@@ -121,6 +121,8 @@ window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],
   }
   function abrir(){ try { if (typeof abrirVentas==="function") abrirVentas(); } catch(e){} marca(); }
   // Tocar el logo abre / cierra el panel de ventas (como en NEXO).
+  document.addEventListener("click", function(e){ var v = document.getElementById("bf-visor"); if (!v) return; var a = e.target && e.target.closest && e.target.closest(".bf-ob"); if (a) { e.preventDefault(); v.querySelector("img").src = a.getAttribute("href"); var sp = a.querySelector("span"); v.querySelector(".bf-vis-t").textContent = sp ? sp.textContent : ""; v.hidden = false; return; } if (!v.hidden && (e.target === v || (e.target.closest && e.target.closest(".bf-vis-x")))) v.hidden = true; });
+  document.addEventListener("keydown", function(e){ var v = document.getElementById("bf-visor"); if (v && e.key === "Escape") v.hidden = true; });
   document.addEventListener("click", function(e){ var t = e.target && e.target.closest && e.target.closest("#bf-logo"); if (!t) return; e.preventDefault(); document.body.classList.toggle("bf-panel"); try { window.scrollTo(0, 0); } catch(x){} });
   // Espera: después de un rato sin tocar nada en la presentación, pasan las fotos del Instagram.
   (function(){
