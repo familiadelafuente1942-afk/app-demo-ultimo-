@@ -6,7 +6,7 @@
 //   públicas:      baja
 //   automática:    cron           (Vercel Cron, protegida con CRON_SECRET)
 //   administrador: estado, config, generar_posts, generar_mails, cazar, cola, editar, aprobar, rechazar,
-//                  aprobar_todo, enviar_ahora, prospectos, auditoria
+//                  aprobar_todo, enviar_ahora, prospectos, auditoria, programar_reels
 //
 // Variables de entorno:
 //   SUPABASE_SERVICE_ROLE_KEY  (obligatoria)    clave de servicio de Supabase
@@ -16,6 +16,7 @@
 //   CRON_SECRET                (protege el cron)
 //   MOTOR_MODEL                (por defecto claude-sonnet-5-5)
 //   META_PAGE_ID, META_PAGE_TOKEN        (opcional: publicar en Facebook)
+//   IG_USER_ID (+ META_PAGE_TOKEN)       (opcional: publicar Reels en Instagram, a la fecha programada)
 //   LINKEDIN_TOKEN, LINKEDIN_ORG_URN     (opcional: publicar en LinkedIn)
 
 const crypto = require("crypto");
@@ -584,8 +585,83 @@ async function publicarPosts(actor) {
       await db("mkt_cola?id=eq." + it.id, { method: "PATCH", body: { estado: "error", error: String(e.message || e).slice(0, 300) }, prefer: "return=minimal" });
     }
   }
+  publicados += await publicarReels(Math.max(0, libres));
   if (publicados) await auditar(actor, "publicar_posts", { publicados });
   return { publicados };
+}
+
+// ───────────── Reels en Instagram (queda apagado hasta conectar Meta) ─────────────
+// Necesita IG_USER_ID (cuenta profesional de Instagram) y META_PAGE_TOKEN (de la página de Facebook vinculada).
+// Sin esas dos variables no se publica nada: los reels aprobados quedan en la cola para subir a mano.
+// Solo sale lo APROBADO, con fecha programada ya cumplida, dentro del tope diario de posteos y con el motor activo.
+
+async function igFetch(ruta, params) {
+  const url = "https://graph.facebook.com/v21.0/" + ruta;
+  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ access_token: process.env.META_PAGE_TOKEN }, params)) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.error) throw new Error("Instagram: " + ((j.error && j.error.message) || r.status));
+  return j;
+}
+async function igEstado(id) {
+  const r = await fetch("https://graph.facebook.com/v21.0/" + id + "?fields=status_code&access_token=" + encodeURIComponent(process.env.META_PAGE_TOKEN));
+  const j = await r.json().catch(() => ({}));
+  return j.status_code || "";
+}
+
+async function publicarReels(libres) {
+  const ig = process.env.IG_USER_ID, tk = process.env.META_PAGE_TOKEN;
+  if (!ig || !tk || libres <= 0) return 0;
+  const ahora = Date.now(), fin = ahora + 35000;
+  const items = (await db("mkt_cola?estado=eq.aprobado&tipo=eq.post&canal=eq.instagram&select=*&order=creado.asc&limit=10")) || [];
+  let publicados = 0;
+  for (const it of items) {
+    if (libres <= 0 || Date.now() > fin) break;
+    const m = it.meta || {};
+    if (!m.video) continue; // posteo de texto: se sube a mano
+    if (m.programado && Date.parse(m.programado) > ahora) continue; // todavía no es la fecha
+    try {
+      let cont = m.contenedor;
+      if (!cont) {
+        const video = /^https?:/.test(m.video) ? m.video : SITIO + m.video;
+        cont = (await igFetch(ig + "/media", { media_type: "REELS", video_url: video, caption: it.cuerpo, share_to_feed: true })).id;
+        await db("mkt_cola?id=eq." + it.id, { method: "PATCH", body: { meta: Object.assign({}, m, { contenedor: cont }) }, prefer: "return=minimal" });
+      }
+      let st = await igEstado(cont);
+      while (st === "IN_PROGRESS" && Date.now() < fin) { await new Promise(r => setTimeout(r, 4000)); st = await igEstado(cont); }
+      if (st === "ERROR" || st === "EXPIRED") throw new Error("Instagram no pudo procesar el video (" + st + ")");
+      if (st !== "FINISHED") continue; // sigue procesando: se publica en la próxima pasada
+      await igFetch(ig + "/media_publish", { creation_id: cont });
+      await db("mkt_cola?id=eq." + it.id, { method: "PATCH", body: { estado: "enviado", enviado_en: new Date().toISOString() }, prefer: "return=minimal" });
+      publicados++; libres--;
+    } catch (e) {
+      await db("mkt_cola?id=eq." + it.id, { method: "PATCH", body: { estado: "error", error: String(e.message || e).slice(0, 300) }, prefer: "return=minimal" });
+    }
+  }
+  return publicados;
+}
+
+// Carga reels de la biblioteca en la cola, con fecha y hora. Quedan PENDIENTES: hay que aprobarlos.
+async function accionProgramarReels(actor, b) {
+  if (marcaActual() === "belfast") throw Object.assign(new Error("Los reels de Belfast todavía no están conectados."), { status: 409 });
+  const lista = (Array.isArray(b.reels) ? b.reels : []).slice(0, 60);
+  let lib = [];
+  try { lib = await (await fetch(SITIO + "/reels/reels.json?v=" + Date.now())).json(); } catch (e) { /* */ }
+  const porId = {}; (lib || []).forEach(v => { porId[v.id] = v; });
+  const ya = new Set(((await db("mkt_cola?tipo=eq.post&canal=eq.instagram&estado=in.(pendiente,aprobado)&select=meta")) || []).map(x => x.meta && x.meta.reel_id).filter(Boolean));
+  const filas = [];
+  for (const r of lista) {
+    const v = porId[r.id];
+    if (!v || ya.has(v.id)) continue;
+    const f = Date.parse(r.fecha);
+    if (!f) continue;
+    const texto = (String(v.texto || "") + "\n\n" + String(v.hashtags || "")).trim();
+    if (!textoSeguro(texto)) continue;
+    filas.push({ tipo: "post", canal: "instagram", idioma: "es", cuerpo: texto.slice(0, 2200), estado: "pendiente",
+      meta: { reel_id: v.id, titulo: v.titulo, video: v.video, programado: new Date(f).toISOString(), visual: "Reel: " + v.titulo } });
+  }
+  if (filas.length) await db("mkt_cola", { method: "POST", body: filas, prefer: "return=minimal" });
+  await auditar(actor, "programar_reels", { cantidad: filas.length });
+  return { programados: filas.length, conectado: !!(process.env.IG_USER_ID && process.env.META_PAGE_TOKEN) };
 }
 
 // ───────────────────────── entrada ─────────────────────────
@@ -670,6 +746,7 @@ async function handler(req, res) {
       case "enviar_mail": out = await accionEnviarMail(actor, b); break;
       case "config": out = await accionConfig(actor, b); break;
       case "generar_posts": out = await accionGenerarPosts(actor, b); break;
+      case "programar_reels": out = await accionProgramarReels(actor, b); break;
       case "generar_mails": out = await accionGenerarMails(actor, b); break;
       case "cazar": out = await accionCazar(actor, b); break;
       case "cola": out = await accionCola(b); break;
