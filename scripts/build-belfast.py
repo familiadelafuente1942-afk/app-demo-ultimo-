@@ -138,9 +138,12 @@ window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],
 })();
 </script>
 '''
-extra = extra.replace("__TEMA__", (raiz / "scripts" / "belfast-tema.html").read_text(encoding="utf-8"))
+extra = extra.replace("__TEMA__", "")
+TEMA = (raiz / "scripts" / "belfast-tema.html").read_text(encoding="utf-8")
 cambiar('<div id="vista-ventas"><div id="root-ventas"></div></div>', '<div id="vista-ventas">' + (raiz / "scripts" / "belfast-portada.html").read_text(encoding="utf-8") + '<div id="root-ventas"></div></div>')
-cambiar("</head>", '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></head>')
+cambiar("</head>", '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">' + TEMA + '<style>body.en-ventas #barra-volver{display:none!important} html,body{background:#282627}</style></head>')
+# Que el primer pantallazo ya sea Belfast (sin mostrar la portada de NEXO mientras carga).
+cambiar('<body class="no-js">', '<body class="no-js en-ventas con-motor">')
 i = s.rfind("</body>")
 s = s[:i] + extra + s[i:]
 cambiar('href="apple-touch-icon.png"', 'href="belfast-icon-192.png"', veces=0) if 'href="apple-touch-icon.png"' in s else None

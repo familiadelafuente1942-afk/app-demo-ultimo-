@@ -774,8 +774,97 @@ header{background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 42
 #portada .pt-iaw{display:block;max-width:520px;margin:0 0 20px;cursor:pointer;border-radius:20px;box-shadow:0 14px 36px -16px rgba(0,0,0,.7)}
 #portada .pt-iaw img{width:100%;height:auto;display:block;border-radius:20px}
 </style>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></head>
-<body class="no-js">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style id="belfast-tema">
+/* Entorno Belfast: el mismo lenguaje del Instagram @belfast_cm — carbón, gris piedra y amarillo, serif itálica + sans. */
+:root{ --bf-am:#D4B800; --bf-am-osc:#8A7700; --bf-carbon:#1C1B1B; --bf-carbon2:#282627; --bf-piedra:#D9D7D8; --bf-papel:#F2F1EF; --bf-linea:#E1DFDB; --bf-serif:'Cormorant Garamond',Georgia,serif; }
+body.en-ventas{ background:var(--bf-carbon)!important; font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; }
+body.en-ventas::before{ display:none!important; }
+body.en-ventas #barra-volver{ display:none!important; }
+body.en-ventas #vista-ventas{ padding-top:0!important; }
+#root-ventas > div{ background:var(--bf-carbon)!important; padding-top:18px!important; }
+#root-ventas div:has(+ .co-nav){ display:none!important; }
+#root-ventas .co-tab.act{ background:#D4B800!important; color:#1C1B1B!important; border-color:#D4B800!important; box-shadow:none!important; }
+#root-ventas .co-tab{ background:transparent!important; box-shadow:none!important; border:1px solid rgba(255,255,255,.25)!important; color:#e8e6e3!important; }
+#root-ventas .co-tab i{ display:none; }
+#root-ventas .ficha-agente > :not(.ficha-contenido){ display:none!important; }
+
+/* Tarjetas: planas, papel, sin vidrio */
+body.en-ventas [style*="background: rgb(255, 255, 255)"],body.en-ventas [style*="background:#fff"],body.en-ventas [style*="background: #fff"],body.en-ventas [style*="background:#FFFFFF"]{
+  background:var(--bf-papel)!important; -webkit-backdrop-filter:none!important; backdrop-filter:none!important;
+  border:1px solid var(--bf-linea)!important; box-shadow:none!important; border-radius:6px!important; }
+body.en-ventas button:not(.co-tab):not(.act){ -webkit-backdrop-filter:none!important; backdrop-filter:none!important; }
+body.en-ventas h1,body.en-ventas h2,body.en-ventas h3{ font-family:var(--bf-serif)!important; font-weight:500!important; letter-spacing:0!important; }
+
+/* Botones y chips: amarillo Belfast con texto carbón */
+body.en-ventas [style*="background: rgb(156, 135, 0)"],body.en-ventas [style*="background: rgb(212, 184, 0)"]{ background:var(--bf-am)!important; color:var(--bf-carbon)!important; border-color:var(--bf-am)!important; }
+
+/* Portada Belfast */
+.bf-portada{ position:relative; background:var(--bf-carbon2); color:#fff; overflow:hidden; }
+.bf-top{ display:flex; align-items:center; gap:14px; padding:24px 28px; border-bottom:1px solid rgba(255,255,255,.08); }
+.bf-marca{ display:flex; align-items:center; gap:18px; text-decoration:none; color:#fff; }
+.bf-iso{ width:64px; height:auto; flex-shrink:0; display:block; }
+.bf-marca b{ font-weight:700; letter-spacing:.2em; font-size:24px; line-height:1; }
+.bf-marca small{ display:block; font-size:10.5px; letter-spacing:.24em; text-transform:uppercase; opacity:.7; font-weight:500; margin-top:6px; }
+.bf-top .bf-ig{ margin-left:auto; color:var(--bf-piedra); font-size:12px; text-decoration:none; border:1px solid rgba(255,255,255,.2); border-radius:999px; padding:7px 13px; }
+.bf-top .bf-ig:hover{ border-color:var(--bf-am); color:#fff; }
+.bf-hero{ display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); min-height:330px; }
+.bf-txt{ padding:40px 28px 34px; display:flex; flex-direction:column; justify-content:center; position:relative; }
+.bf-txt:before{ content:""; position:absolute; top:0; left:0; width:92px; height:92px; background:var(--bf-am); border-radius:0 0 92px 0; }
+.bf-eti{ font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--bf-piedra); font-weight:600; margin:62px 0 14px; position:relative; }
+.bf-tit{ font-family:var(--bf-serif); font-size:clamp(30px,4.2vw,50px); line-height:1.06; font-weight:500; margin:0 0 14px; }
+.bf-tit em{ font-style:italic; font-weight:400; color:var(--bf-am); }
+.bf-sub{ font-size:14px; line-height:1.55; color:#cfcdcb; max-width:460px; margin:0; }
+.bf-sub b{ color:#fff; font-weight:600; }
+.bf-fotos{ display:grid; grid-template-columns:repeat(3,1fr); gap:3px; background:var(--bf-carbon); align-self:center; }
+.bf-fotos a{ aspect-ratio:4/5; }
+.bf-fotos a{ display:block; overflow:hidden; position:relative; }
+.bf-fotos img{ width:100%; height:100%; object-fit:cover; display:block; transition:transform .6s ease; }
+.bf-fotos a:hover img{ transform:scale(1.04); }
+.bf-fotos a:nth-child(2){ border-radius:0 0 0 0; }
+.bf-fotos a:nth-child(1){ border-radius:0 0 0 48px; }
+.bf-cinta{ display:flex; gap:3px; overflow-x:auto; scrollbar-width:none; background:var(--bf-carbon); padding-top:3px; }
+.bf-cinta::-webkit-scrollbar{ display:none; }
+.bf-cinta a{ flex:1 0 118px; aspect-ratio:4/5; overflow:hidden; }
+.bf-cinta img{ width:100%; height:100%; object-fit:cover; display:block; filter:saturate(.95); transition:filter .3s; }
+.bf-cinta a:hover img{ filter:none; }
+.bf-pie{ display:flex; gap:22px; flex-wrap:wrap; padding:14px 24px; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#a9a6a3; border-top:1px solid rgba(255,255,255,.08); }
+.bf-pie span:before{ content:""; display:inline-block; width:6px; height:6px; background:var(--bf-am); border-radius:50%; margin-right:8px; vertical-align:1px; }
+@media (max-width:760px){
+  .bf-hero{ grid-template-columns:1fr; }
+  .bf-fotos{ height:auto; }
+  .bf-txt{ padding:30px 18px 26px; }
+  .bf-txt:before{ width:58px; height:58px; border-radius:0 0 58px 0; }
+  .bf-eti{ margin-top:40px; letter-spacing:.16em; }
+  .bf-top,.bf-pie{ padding-left:16px; padding-right:16px; }
+  .bf-top .bf-ig{ font-size:11px; padding:6px 10px; }
+  .bf-marca{ gap:12px; } .bf-iso{ width:46px; } .bf-marca b{ font-size:18px; letter-spacing:.16em; } .bf-marca small{ font-size:8.5px; letter-spacing:.18em; margin-top:4px; }
+}
+
+/* Solo la presentación: el panel de ventas se abre tocando el logo */
+body:not(.bf-panel) #root-ventas{ display:none!important; }
+body.bf-panel .bf-hero, body.bf-panel .bf-cinta, body.bf-panel .bf-pie{ display:none!important; }
+#bf-logo{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.bf-hero{ min-height:0; align-items:center; flex:1; }
+body:not(.bf-panel) .bf-portada{ min-height:100vh; display:flex; flex-direction:column; }
+body:not(.bf-panel){ background:#282627!important; }
+.bf-txt{ align-self:stretch; }
+@media (max-aspect-ratio: 1/1){ .bf-hero{ grid-template-columns:1fr; align-content:center; } .bf-txt{ padding-top:24px; } }
+@media (max-width:1100px){ body:not(.bf-panel) .bf-pie{ padding-bottom:72px; } }
+#root-ventas div:empty[style*="11px 13px"]{ display:none!important; }
+/* Espera: si nadie toca, van pasando las fotos del Instagram */
+#bf-espera{ position:fixed; inset:0; z-index:99999; background:#111; opacity:0; pointer-events:none; transition:opacity 1.2s ease; overflow:hidden; }
+#bf-espera.on{ opacity:1; pointer-events:auto; cursor:pointer; }
+.bf-esp-fondo{ position:absolute; inset:-40px; background-size:cover; background-position:center; filter:blur(30px) brightness(.45); transition:background-image 1s; }
+.bf-esp-foto{ position:absolute; top:50%; left:50%; height:86vh; max-width:92vw; object-fit:contain; transform:translate(-50%,-50%) scale(1); opacity:0; transition:opacity 1.2s ease; box-shadow:0 30px 80px rgba(0,0,0,.6); }
+.bf-esp-foto.vis{ opacity:1; animation:bfKen 7s ease-out forwards; }
+@keyframes bfKen{ from{ transform:translate(-50%,-50%) scale(1); } to{ transform:translate(-50%,-50%) scale(1.06); } }
+.bf-esp-marca{ position:absolute; left:28px; bottom:24px; display:flex; align-items:center; gap:14px; color:#fff; }
+.bf-esp-marca img{ width:54px; }
+.bf-esp-marca span{ font-weight:700; letter-spacing:.2em; font-size:20px; }
+.bf-esp-marca small{ font-size:12px; letter-spacing:.12em; color:#D4B800; margin-left:6px; }
+</style>
+<style>body.en-ventas #barra-volver{display:none!important} html,body{background:#282627}</style></head>
+<body class="no-js en-ventas con-motor">
 
 <div id="vista-landing">
 <div id="portada" role="dialog" aria-label="Presentación de NEXO">
@@ -14644,95 +14733,6 @@ window.addEventListener('resize',fit);window.addEventListener('orientationchange
 </body>
 
 
-<style id="belfast-tema">
-/* Entorno Belfast: el mismo lenguaje del Instagram @belfast_cm — carbón, gris piedra y amarillo, serif itálica + sans. */
-:root{ --bf-am:#D4B800; --bf-am-osc:#8A7700; --bf-carbon:#1C1B1B; --bf-carbon2:#282627; --bf-piedra:#D9D7D8; --bf-papel:#F2F1EF; --bf-linea:#E1DFDB; --bf-serif:'Cormorant Garamond',Georgia,serif; }
-body.en-ventas{ background:var(--bf-carbon)!important; font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; }
-body.en-ventas::before{ display:none!important; }
-body.en-ventas #barra-volver{ display:none!important; }
-body.en-ventas #vista-ventas{ padding-top:0!important; }
-#root-ventas > div{ background:var(--bf-carbon)!important; padding-top:18px!important; }
-#root-ventas div:has(+ .co-nav){ display:none!important; }
-#root-ventas .co-tab.act{ background:#D4B800!important; color:#1C1B1B!important; border-color:#D4B800!important; box-shadow:none!important; }
-#root-ventas .co-tab{ background:transparent!important; box-shadow:none!important; border:1px solid rgba(255,255,255,.25)!important; color:#e8e6e3!important; }
-#root-ventas .co-tab i{ display:none; }
-#root-ventas .ficha-agente > :not(.ficha-contenido){ display:none!important; }
-
-/* Tarjetas: planas, papel, sin vidrio */
-body.en-ventas [style*="background: rgb(255, 255, 255)"],body.en-ventas [style*="background:#fff"],body.en-ventas [style*="background: #fff"],body.en-ventas [style*="background:#FFFFFF"]{
-  background:var(--bf-papel)!important; -webkit-backdrop-filter:none!important; backdrop-filter:none!important;
-  border:1px solid var(--bf-linea)!important; box-shadow:none!important; border-radius:6px!important; }
-body.en-ventas button:not(.co-tab):not(.act){ -webkit-backdrop-filter:none!important; backdrop-filter:none!important; }
-body.en-ventas h1,body.en-ventas h2,body.en-ventas h3{ font-family:var(--bf-serif)!important; font-weight:500!important; letter-spacing:0!important; }
-
-/* Botones y chips: amarillo Belfast con texto carbón */
-body.en-ventas [style*="background: rgb(156, 135, 0)"],body.en-ventas [style*="background: rgb(212, 184, 0)"]{ background:var(--bf-am)!important; color:var(--bf-carbon)!important; border-color:var(--bf-am)!important; }
-
-/* Portada Belfast */
-.bf-portada{ position:relative; background:var(--bf-carbon2); color:#fff; overflow:hidden; }
-.bf-top{ display:flex; align-items:center; gap:14px; padding:24px 28px; border-bottom:1px solid rgba(255,255,255,.08); }
-.bf-marca{ display:flex; align-items:center; gap:18px; text-decoration:none; color:#fff; }
-.bf-iso{ width:64px; height:auto; flex-shrink:0; display:block; }
-.bf-marca b{ font-weight:700; letter-spacing:.2em; font-size:24px; line-height:1; }
-.bf-marca small{ display:block; font-size:10.5px; letter-spacing:.24em; text-transform:uppercase; opacity:.7; font-weight:500; margin-top:6px; }
-.bf-top .bf-ig{ margin-left:auto; color:var(--bf-piedra); font-size:12px; text-decoration:none; border:1px solid rgba(255,255,255,.2); border-radius:999px; padding:7px 13px; }
-.bf-top .bf-ig:hover{ border-color:var(--bf-am); color:#fff; }
-.bf-hero{ display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); min-height:330px; }
-.bf-txt{ padding:40px 28px 34px; display:flex; flex-direction:column; justify-content:center; position:relative; }
-.bf-txt:before{ content:""; position:absolute; top:0; left:0; width:92px; height:92px; background:var(--bf-am); border-radius:0 0 92px 0; }
-.bf-eti{ font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--bf-piedra); font-weight:600; margin:62px 0 14px; position:relative; }
-.bf-tit{ font-family:var(--bf-serif); font-size:clamp(30px,4.2vw,50px); line-height:1.06; font-weight:500; margin:0 0 14px; }
-.bf-tit em{ font-style:italic; font-weight:400; color:var(--bf-am); }
-.bf-sub{ font-size:14px; line-height:1.55; color:#cfcdcb; max-width:460px; margin:0; }
-.bf-sub b{ color:#fff; font-weight:600; }
-.bf-fotos{ display:grid; grid-template-columns:repeat(3,1fr); gap:3px; background:var(--bf-carbon); align-self:center; }
-.bf-fotos a{ aspect-ratio:4/5; }
-.bf-fotos a{ display:block; overflow:hidden; position:relative; }
-.bf-fotos img{ width:100%; height:100%; object-fit:cover; display:block; transition:transform .6s ease; }
-.bf-fotos a:hover img{ transform:scale(1.04); }
-.bf-fotos a:nth-child(2){ border-radius:0 0 0 0; }
-.bf-fotos a:nth-child(1){ border-radius:0 0 0 48px; }
-.bf-cinta{ display:flex; gap:3px; overflow-x:auto; scrollbar-width:none; background:var(--bf-carbon); padding-top:3px; }
-.bf-cinta::-webkit-scrollbar{ display:none; }
-.bf-cinta a{ flex:1 0 118px; aspect-ratio:4/5; overflow:hidden; }
-.bf-cinta img{ width:100%; height:100%; object-fit:cover; display:block; filter:saturate(.95); transition:filter .3s; }
-.bf-cinta a:hover img{ filter:none; }
-.bf-pie{ display:flex; gap:22px; flex-wrap:wrap; padding:14px 24px; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#a9a6a3; border-top:1px solid rgba(255,255,255,.08); }
-.bf-pie span:before{ content:""; display:inline-block; width:6px; height:6px; background:var(--bf-am); border-radius:50%; margin-right:8px; vertical-align:1px; }
-@media (max-width:760px){
-  .bf-hero{ grid-template-columns:1fr; }
-  .bf-fotos{ height:auto; }
-  .bf-txt{ padding:30px 18px 26px; }
-  .bf-txt:before{ width:58px; height:58px; border-radius:0 0 58px 0; }
-  .bf-eti{ margin-top:40px; letter-spacing:.16em; }
-  .bf-top,.bf-pie{ padding-left:16px; padding-right:16px; }
-  .bf-top .bf-ig{ font-size:11px; padding:6px 10px; }
-  .bf-marca{ gap:12px; } .bf-iso{ width:46px; } .bf-marca b{ font-size:18px; letter-spacing:.16em; } .bf-marca small{ font-size:8.5px; letter-spacing:.18em; margin-top:4px; }
-}
-
-/* Solo la presentación: el panel de ventas se abre tocando el logo */
-body:not(.bf-panel) #root-ventas{ display:none!important; }
-body.bf-panel .bf-hero, body.bf-panel .bf-cinta, body.bf-panel .bf-pie{ display:none!important; }
-#bf-logo{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.bf-hero{ min-height:0; align-items:center; flex:1; }
-body:not(.bf-panel) .bf-portada{ min-height:100vh; display:flex; flex-direction:column; }
-body:not(.bf-panel){ background:#282627!important; }
-.bf-txt{ align-self:stretch; }
-@media (max-aspect-ratio: 1/1){ .bf-hero{ grid-template-columns:1fr; align-content:center; } .bf-txt{ padding-top:24px; } }
-@media (max-width:1100px){ body:not(.bf-panel) .bf-pie{ padding-bottom:72px; } }
-#root-ventas div:empty[style*="11px 13px"]{ display:none!important; }
-/* Espera: si nadie toca, van pasando las fotos del Instagram */
-#bf-espera{ position:fixed; inset:0; z-index:99999; background:#111; opacity:0; pointer-events:none; transition:opacity 1.2s ease; overflow:hidden; }
-#bf-espera.on{ opacity:1; pointer-events:auto; cursor:pointer; }
-.bf-esp-fondo{ position:absolute; inset:-40px; background-size:cover; background-position:center; filter:blur(30px) brightness(.45); transition:background-image 1s; }
-.bf-esp-foto{ position:absolute; top:50%; left:50%; height:86vh; max-width:92vw; object-fit:contain; transform:translate(-50%,-50%) scale(1); opacity:0; transition:opacity 1.2s ease; box-shadow:0 30px 80px rgba(0,0,0,.6); }
-.bf-esp-foto.vis{ opacity:1; animation:bfKen 7s ease-out forwards; }
-@keyframes bfKen{ from{ transform:translate(-50%,-50%) scale(1); } to{ transform:translate(-50%,-50%) scale(1.06); } }
-.bf-esp-marca{ position:absolute; left:28px; bottom:24px; display:flex; align-items:center; gap:14px; color:#fff; }
-.bf-esp-marca img{ width:54px; }
-.bf-esp-marca span{ font-weight:700; letter-spacing:.2em; font-size:20px; }
-.bf-esp-marca small{ font-size:12px; letter-spacing:.12em; color:#D4B800; margin-left:6px; }
-</style>
 
 <script>
 // Hasta que Belfast tenga su propia casilla configurada, no se manda nada desde la cuenta de NEXO.
