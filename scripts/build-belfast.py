@@ -76,16 +76,19 @@ s = s[:ini] + """  async function cargarEncontrados() {
         rq.onsuccess = () => { const db = rq.result; if (!db.objectStoreNames.contains("prospectos")) { db.close(); ok([]); return; }
           const g = db.transaction("prospectos", "readonly").objectStore("prospectos").getAll(); g.onsuccess = () => { ok(g.result || []); db.close(); }; g.onerror = () => mal(g.error); };
       });
-      const sirve = lista.filter(x => /^(estud|desarr)/i.test(String(x.rol || "")));
+      let base = [];
+      try { base = await (await fetch("belfast-base.json?v=" + Date.now())).json(); } catch (e) {}
+      const sirve = lista.concat(base).filter(x => /^(estud|desarr)/i.test(String(x.rol || "")));
       let n = 0;
       setProspectos(prev => {
         const ya = new Set(prev.map(p => nombreClave(p.empresa))), mails = new Set(prev.map(p => String(p.mail || "").toLowerCase()).filter(Boolean));
         const nuevos = sirve.filter(x => !ya.has(nombreClave(x.empresa)) && !(x.mail && mails.has(String(x.mail).toLowerCase()))).map((x, i) => ({ ...x, id: Date.now() + i, estado: "nuevo", historial: [] }));
         n = nuevos.length; return [...nuevos, ...prev];
       });
-      setTimeout(() => setAviso(sirve.length ? `Traje ${n} estudios y desarrolladoras de la base de NEXO` : "En este navegador no encontré la base de NEXO. Abrí NEXO acá primero."), 80);
+      setTimeout(() => setAviso(n ? `Traje ${n} estudios y desarrolladoras de la base de NEXO` : "Ya estaban todos los estudios y desarrolladoras de NEXO."), 80);
     } catch { setAviso("No pude leer la base de NEXO en este navegador."); }
 """ + s[fin:]
+cambiar('  async function cargarEncontrados() {', '  React.useEffect(() => { if (prospectosAll.length === 0) { const t = setTimeout(() => { try { if (!localStorage.getItem("bf_base_cargada")) { localStorage.setItem("bf_base_cargada", "1"); cargarEncontrados(); } } catch (e) {} }, 1500); return () => clearTimeout(t); } }, []);\n  async function cargarEncontrados() {')
 cambiar('}, "Cargar contactos encontrados por Claude"),', '}, "Traer estudios y desarrolladoras de NEXO"),')
 
 extra = r'''
