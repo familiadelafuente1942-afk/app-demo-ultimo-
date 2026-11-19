@@ -558,6 +558,34 @@ async function handler(req, res) {
       return res.send(txt);
     }
 
+    // Copia fotos del Instagram de Belfast (solo CDN de Instagram) al almacenamiento público "belfast-ig".
+    if (accion === "espejo_img") {
+      if (req.method === "OPTIONS") return res.status(204).end();
+      if (req.method !== "POST") return res.status(405).json({ error: "Usá POST" });
+      const origen = String(req.headers.origin || req.headers.referer || "");
+      if (!/^https:\/\/app-demo-ultimo(-[a-z0-9-]+)?\.vercel\.app/.test(origen)) return res.status(403).json({ error: "Origen no permitido" });
+      const k = clave();
+      if (!k) return res.status(500).json({ error: "Falta SUPABASE_SERVICE_ROLE_KEY" });
+      const b = leerBody(req) || {};
+      const items = (Array.isArray(b.items) ? b.items : []).slice(0, 24);
+      const H = { apikey: k, Authorization: "Bearer " + k };
+      await fetch(SUPA_URL + "/storage/v1/bucket", { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, H), body: JSON.stringify({ id: "belfast-ig", name: "belfast-ig", public: true }) }).catch(() => {});
+      const hechos = [];
+      for (const it of items) {
+        const nombre = String(it.nombre || "");
+        let u;
+        try { u = new URL(String(it.url || "")); } catch (e) { hechos.push({ nombre, error: "url" }); continue; }
+        if (!/^[a-z0-9-]+\.jpg$/.test(nombre) || u.protocol !== "https:" || !/(^|\.)cdninstagram\.com$|(^|\.)fbcdn\.net$/.test(u.hostname)) { hechos.push({ nombre, error: "no permitido" }); continue; }
+        const r = await fetch(u.toString());
+        if (!r.ok) { hechos.push({ nombre, error: "descarga " + r.status }); continue; }
+        const buf = Buffer.from(await r.arrayBuffer());
+        if (buf.length > 3000000) { hechos.push({ nombre, error: "grande" }); continue; }
+        const s = await fetch(SUPA_URL + "/storage/v1/object/belfast-ig/" + nombre, { method: "POST", headers: Object.assign({ "Content-Type": "image/jpeg", "x-upsert": "true" }, H), body: buf });
+        hechos.push({ nombre, ok: s.ok, bytes: buf.length, status: s.status });
+      }
+      return res.status(200).json({ base: SUPA_URL + "/storage/v1/object/public/belfast-ig/", hechos });
+    }
+
     // Cron automático de Vercel
     if (accion === "cron") {
       const sec = (process.env.CRON_SECRET || "").trim();
