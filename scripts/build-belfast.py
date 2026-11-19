@@ -15,16 +15,23 @@ def cambiar(viejo, nuevo, veces=1):
         sys.exit(f"No encontré (o hay {n}): {viejo[:80]}")
     s = s.replace(viejo, nuevo)
 
+cambiar('const LINK_APP = "https://app-demo-ultimo.vercel.app/";', 'const LINK_APP = "https://www.instagram.com/belfast_cm/";')
+cambiar('const linkP = LINK_APP + "?c=" + encodeURIComponent(p.id);', 'const linkP = LINK_APP;')
+cambiar('"Mirá cómo funciona la app: {link_app}"', '"Pueden ver nuestras obras en {link_app}"')
+cambiar('"{link_app} se reemplaza en cada mail por el link a la presentación de NEXO."', '"{link_app} se reemplaza en cada mail por el Instagram de Belfast."')
 cambiar('const BD_NOMBRE = "nexo";', 'const BD_NOMBRE = "belfast_ventas";')
-cambiar("// Dónde buscar además de la web general.",
-        'PERFILES_BUSQUEDA.splice(0, PERFILES_BUSQUEDA.length, ...PERFILES_BUSQUEDA.filter(p => p.id === "estudios" || p.id === "desarrolladores"));\n// Dónde buscar además de la web general.')
+cambiar('];\nfunction paisPorId(id) {',
+        '].filter(p => p.id === "ar" || p.id === "uy").map(p => ({ ...p, perfiles: p.perfiles.filter(x => x.id === "estudios" || x.id === "desarrolladores") }));\nfunction paisPorId(id) {')
+cambiar('PAISES.filter(pp => pp.id === "ar" || pp.id === "br" ||', 'PAISES.filter(pp => pp.id === "ar" || pp.id === "uy" ||')
 cambiar('const [area, setArea] = useState("ceo");', 'const [area, setArea] = useState("comercial");')
 cambiar('  activa: true\n}];\nfunction AreaMotor() {', '  activa: true\n}].filter(a => a.id === "comercial");\nfunction AreaMotor() {')
 cambiar('objetivo: "Conseguir, calificar y acompañar constructoras, estudios de arquitectura, desarrolladoras y gerenciadoras hasta convertirlas en clientes de la plataforma."',
         'objetivo: "Conseguir, calificar y acompañar estudios de arquitectura y desarrolladoras inmobiliarias hasta convertirlos en clientes de Belfast."')
 redactor_viejo = "Sos el redactor de NEXO, un sistema de gestión de obra para constructoras y estudios de arquitectura en "
-redactor_nuevo = ("Sos el redactor comercial de Belfast Construction Management, empresa constructora y gerenciadora que construye "
-                  "casas y edificios para estudios de arquitectura y desarrolladoras inmobiliarias (obra gris, llave en mano y gerenciamiento), en ")
+redactor_nuevo = ("Sos el redactor comercial de Belfast Construction Management (@belfast_cm), constructora de alta gama con obras en Buenos Aires y Uruguay. "
+                  "Belfast construye los proyectos que diseñan los estudios de arquitectura y que desarrollan las desarrolladoras inmobiliarias: ejecuta la obra con trabajo ordenado, "
+                  "cuidado de la materialidad y respeto por la intención del proyecto. El mail va dirigido a un estudio o a una desarrolladora, para ofrecerle a Belfast como constructora de su próxima obra. "
+                  "El tono es sobrio y elegante, nunca de oferta ni de descuento. No inventes obras, cifras ni clientes. Si invitás a ver obras, usá {link_app}, que lleva al Instagram de Belfast. El destinatario está en ")
 cambiar(redactor_viejo, redactor_nuevo, veces=0)
 s = re.sub(r"<title>.*?</title>", "<title>Belfast · Motor de Ventas</title>", s, count=1, flags=re.S)
 
@@ -56,5 +63,7 @@ window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],
 i = s.rfind("</body>")
 s = s[:i] + extra + s[i:]
 cambiar('href="apple-touch-icon.png"', 'href="belfast-icon-192.png"', veces=0) if 'href="apple-touch-icon.png"' in s else None
+for a, b in [("#B0894F", "#8C8A2E"), ("#E3BE78", "#C9C46A"), ("#9A6B1E", "#6E6C22"), ("#EBDCC0", "#E2E0B8"), ("#FBF2E3", "#F4F3E1"), ("#FBF6EE", "#F7F6EA")]:
+    s = s.replace(a, b).replace(a.lower(), b)
 (raiz / "belfast-ventas.html").write_text(s, encoding="utf-8")
 print("belfast-ventas.html listo,", len(s), "bytes")
