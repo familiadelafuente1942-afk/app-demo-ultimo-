@@ -104,12 +104,12 @@ async function db(ruta, opts) {
   const st = ctx.getStore();
   const k = st && st.token ? st.token : clave();
   if (!k) throw Object.assign(new Error("Falta SUPABASE_SERVICE_ROLE_KEY en Vercel (solo para envíos automáticos y bajas)."), { status: 500 });
+  // Las claves nuevas (sb_secret_…) van solo en "apikey"; las viejas (JWT) también como Bearer.
+  const h = { apikey: st && st.token ? SUPA_ANON : k, "Content-Type": "application/json", Prefer: opts.prefer || "return=representation" };
+  if (!/^sb_/.test(k)) h.Authorization = "Bearer " + k;
   const r = await fetch(SUPA_URL + "/rest/v1/" + ruta, {
     method: opts.method || "GET",
-    headers: Object.assign({
-      apikey: st && st.token ? SUPA_ANON : k, Authorization: "Bearer " + k, "Content-Type": "application/json",
-      Prefer: opts.prefer || "return=representation"
-    }, opts.headers || {}),
+    headers: Object.assign(h, opts.headers || {}),
     body: opts.body ? JSON.stringify(opts.body) : undefined
   });
   const txt = await r.text();
