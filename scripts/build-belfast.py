@@ -140,6 +140,8 @@ window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],
 '''
 extra = extra.replace("__TEMA__", "")
 TEMA = (raiz / "scripts" / "belfast-tema.html").read_text(encoding="utf-8")
+# Textos propios de Belfast para el selector de idiomas (se suman al diccionario de NEXO).
+TEMA += "<script>window.DICC_N3=Object.assign(window.DICC_N3||{}," + (raiz / "scripts" / "belfast-dicc.json").read_text(encoding="utf-8") + ");</script>"
 cambiar('<div id="vista-ventas"><div id="root-ventas"></div></div>', '<div id="vista-ventas">' + (raiz / "scripts" / "belfast-portada.html").read_text(encoding="utf-8") + '<div id="root-ventas"></div></div>')
 cambiar("</head>", '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">' + TEMA + '<style>body.en-ventas #barra-volver{display:none!important} html,body{background:#282627}</style></head>')
 # Que el primer pantallazo ya sea Belfast (sin mostrar la portada de NEXO mientras carga).

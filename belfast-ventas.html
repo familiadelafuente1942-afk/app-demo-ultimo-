@@ -863,7 +863,104 @@ body:not(.bf-panel){ background:#282627!important; }
 .bf-esp-marca span{ font-weight:700; letter-spacing:.2em; font-size:20px; }
 .bf-esp-marca small{ font-size:12px; letter-spacing:.12em; color:#D4B800; margin-left:6px; }
 </style>
-<style>body.en-ventas #barra-volver{display:none!important} html,body{background:#282627}</style></head>
+<script>window.DICC_N3=Object.assign(window.DICC_N3||{},{
+ "Construcciones de alta gama · Buenos Aires & Uruguay": [
+  "High-end construction · Buenos Aires & Uruguay",
+  "Construções de alto padrão · Buenos Aires & Uruguai"
+ ],
+ "Cada proyecto tiene": [
+  "Every project has",
+  "Cada projeto tem"
+ ],
+ "su propia intención.": [
+  "its own intention.",
+  "sua própria intenção."
+ ],
+ "Construimos los proyectos de estudios de arquitectura y desarrolladoras, cuidando cada decisión de obra: planificación, proceso y ejecución, y terminación.": [
+  "We build the projects of architecture studios and developers, caring for every decision on site: planning, process and execution, and finishing.",
+  "Construímos os projetos de escritórios de arquitetura e incorporadoras, cuidando de cada decisão de obra: planejamento, processo e execução, e acabamento."
+ ],
+ "Planificación": [
+  "Planning",
+  "Planejamento"
+ ],
+ "Proceso & ejecución": [
+  "Process & execution",
+  "Processo & execução"
+ ],
+ "Terminación": [
+  "Finishing",
+  "Acabamento"
+ ],
+ "Belfast · Motor de Ventas": [
+  "Belfast · Sales Engine",
+  "Belfast · Motor de Vendas"
+ ],
+ "Estudios de arquitectura y desarrolladoras": [
+  "Architecture studios and developers",
+  "Escritórios de arquitetura e incorporadoras"
+ ],
+ "Traer estudios y desarrolladoras de NEXO": [
+  "Bring studios and developers from NEXO",
+  "Trazer escritórios e incorporadoras do NEXO"
+ ],
+ "🔗 Insertar link al Instagram": [
+  "🔗 Insert Instagram link",
+  "🔗 Inserir link do Instagram"
+ ],
+ "Agrega al final del mail el link al Instagram de Belfast.": [
+  "Adds Belfast's Instagram link at the end of the email.",
+  "Adiciona o link do Instagram da Belfast ao final do e-mail."
+ ],
+ "Ej: \"Presentá Belfast a los estudios de Nordelta para su próxima obra\"": [
+  "E.g.: \"Introduce Belfast to Nordelta studios for their next project\"",
+  "Ex.: \"Apresente a Belfast aos escritórios de Nordelta para a próxima obra\""
+ ],
+ "Estudios de arquitectura": [
+  "Architecture studios",
+  "Escritórios de arquitetura"
+ ],
+ "Desarrolladoras inmobiliarias": [
+  "Real estate developers",
+  "Incorporadoras imobiliárias"
+ ],
+ "Motor de Belfast": [
+  "Belfast Engine",
+  "Motor da Belfast"
+ ],
+ "País": [
+  "Country",
+  "País"
+ ],
+ "Tipo": [
+  "Type",
+  "Tipo"
+ ],
+ "Embudo": [
+  "Funnel",
+  "Funil"
+ ],
+ "Base de datos": [
+  "Database",
+  "Base de dados"
+ ],
+ "✉ Campaña": [
+  "✉ Campaign",
+  "✉ Campanha"
+ ],
+ "🚀 Motor": [
+  "🚀 Engine",
+  "🚀 Motor"
+ ],
+ "Comercial": [
+  "Sales",
+  "Comercial"
+ ],
+ "Todos": [
+  "All",
+  "Todos"
+ ]
+});</script><style>body.en-ventas #barra-volver{display:none!important} html,body{background:#282627}</style></head>
 <body class="no-js en-ventas con-motor">
 
 <div id="vista-landing">
@@ -1307,7 +1404,7 @@ body:not(.bf-panel){ background:#282627!important; }
     <div class="bf-txt">
       <div class="bf-eti">Construcciones de alta gama · Buenos Aires &amp; Uruguay</div>
       <h1 class="bf-tit">Cada proyecto tiene<br><em>su propia intención.</em></h1>
-      <p class="bf-sub">Construimos los proyectos de <b>estudios de arquitectura</b> y <b>desarrolladoras</b>, cuidando cada decisión de obra: planificación, proceso y ejecución, y terminación.</p>
+      <p class="bf-sub">Construimos los proyectos de estudios de arquitectura y desarrolladoras, cuidando cada decisión de obra: planificación, proceso y ejecución, y terminación.</p>
     </div>
     <div class="bf-fotos">
       <a href="https://www.instagram.com/belfast_cm/" target="_blank" rel="noopener"><img src="belfast-ig/ig-06.jpg" alt="Encuentro entre hormigón y mampostería"></a>
@@ -10585,7 +10682,7 @@ ${hist}`;
       flexWrap: "wrap",
       alignItems: "center"
     }
-  }, [["panel", "Panel"], ["embudo", `Embudo${prospectos.length ? " · " + prospectos.length : ""}`], ["buscar", "🔎 Buscar clientes"], ["base", `Base de datos${prospectos.length ? " · " + prospectos.length : ""}`], ["campania", "✉ Campaña"], ["plantillas", `Plantillas${plantillas.length ? " · " + plantillas.length : ""}`], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
+  }, [["panel", "Panel"], ["embudo", ["Embudo", prospectos.length ? " · " + prospectos.length : ""]], ["buscar", "🔎 Buscar clientes"], ["base", ["Base de datos", prospectos.length ? " · " + prospectos.length : ""]], ["campania", "✉ Campaña"], ["plantillas", ["Plantillas", plantillas.length ? " · " + plantillas.length : ""]], ["guia", "Guía de ventas"]].map(([id, t]) => /*#__PURE__*/React.createElement("button", {
     key: id,
     className: "mvtab" + (vista === id ? " act" : ""),
     onClick: () => {
