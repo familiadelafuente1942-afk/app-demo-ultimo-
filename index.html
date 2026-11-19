@@ -11026,7 +11026,7 @@ ${hist}`;
       display: "block",
       marginBottom: 3
     }
-  }, "Lo que le duele"), abierto.dolor), /*#__PURE__*/React.createElement("div", {
+  }, "Lo que le duele"), abierto.dolor), React.createElement(EnvioDirecto, { key: "env-" + abierto.id, p: abierto, actualizar: actualizar, registrarContacto: registrarContacto, borrador: borrador }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9.5,
       fontWeight: 700,
@@ -11207,7 +11207,7 @@ ${hist}`;
       minHeight: 42,
       fontFamily: "inherit"
     }
-  }, "Abrir en Mail"), (abierto.whatsapp || abierto.tel) && ["presentacion", "seguimiento", "propuesta"].indexOf(borrador.accion) >= 0 && /*#__PURE__*/React.createElement("button", {
+  }, "Abrir en mi programa de mail"), (abierto.whatsapp || abierto.tel) && ["presentacion", "seguimiento", "propuesta"].indexOf(borrador.accion) >= 0 && /*#__PURE__*/React.createElement("button", {
     onClick: () => abrirWhatsApp(borrador.texto),
     style: {
       background: "#1FA855",
@@ -13401,6 +13401,52 @@ function abrirDemo() {
   }
   if (yaCapturoLead()) { seguir(); try { registrarConversionPropia(); } catch (e) {} return; }
   mostrarModalLead(() => { seguir(); try { registrarConversionPropia(); } catch (e) {} });
+}
+// Mail suelto a un prospecto: cargar/corregir su mail a mano y mandarle un mensaje desde la casilla de la app.
+function EnvioDirecto({ p, actualizar, registrarContacto, borrador }) {
+  const h = React.createElement;
+  const [mail, setMail] = React.useState(p.mail || "");
+  const [abierto, setAbierto] = React.useState(false);
+  const [asunto, setAsunto] = React.useState("");
+  const [cuerpo, setCuerpo] = React.useState("");
+  const [estado, setEstado] = React.useState("");
+  const [enviando, setEnviando] = React.useState(false);
+  const mailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail.trim());
+  React.useEffect(() => {
+    if (borrador && borrador.texto && ["presentacion", "seguimiento", "propuesta"].indexOf(borrador.accion) >= 0) {
+      const l = String(borrador.texto).split("\n"); const m = l[0].match(/^Asunto:\s*(.+)$/i);
+      setAsunto(m ? m[1].trim() : ""); setCuerpo(m ? l.slice(1).join("\n").trim() : borrador.texto); setAbierto(true);
+    }
+  }, [borrador && borrador.texto]);
+  function guardarMail() { const v = mail.trim().toLowerCase(); if (v !== (p.mail || "")) { actualizar(p.id, { mail: v }); setEstado("Mail guardado."); } }
+  async function enviar() {
+    if (!mailOk) { setEstado("Poné un mail válido."); return; }
+    if (!asunto.trim() || !cuerpo.trim()) { setEstado("Completá el asunto y el mensaje."); return; }
+    guardarMail(); setEnviando(true); setEstado("Enviando…");
+    try {
+      const t = await mktPedirSesion();
+      const html = "<p>" + cuerpo.trim().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>').replace(/\n/g, "<br>") + "</p>";
+      const r = await fetch("/api/motor?accion=enviar_mail", { method: "POST", headers: { Authorization: "Bearer " + t, "Content-Type": "application/json" }, body: JSON.stringify({ to: mail.trim(), subject: asunto.trim(), html }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.error) throw new Error(d.error || ("error " + r.status));
+      registrarContacto(p.id, "mail", asunto.trim());
+      if (p.estado === "nuevo") actualizar(p.id, { estado: "contactado" });
+      setEstado("✓ Enviado a " + mail.trim()); setCuerpo(""); setAsunto("");
+    } catch (e) { setEstado("No se pudo mandar: " + String(e && e.message || e).slice(0, 160)); }
+    finally { setEnviando(false); }
+  }
+  const inp = { width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: 8, border: "1px solid #D9DEE6", fontSize: 13, fontFamily: "inherit", marginBottom: 8, background: "#fff", color: "#1B2430" };
+  const btn = (fondo) => ({ background: fondo, color: "#fff", border: "none", borderRadius: 8, padding: "10px 16px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", minHeight: 40, fontFamily: "inherit" });
+  return h("div", { style: { border: "1px solid #E3E7EE", borderRadius: 10, padding: 12, marginBottom: 14, background: "#FAFBFC" } },
+    h("div", { style: { fontSize: 9.5, fontWeight: 700, letterSpacing: ".13em", textTransform: "uppercase", color: "#8B95A5", marginBottom: 7 } }, "Mail de contacto"),
+    h("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+      h("input", { type: "email", value: mail, placeholder: "nombre@empresa.com", autoCapitalize: "off", autoCorrect: "off", onChange: e => setMail(e.target.value), onBlur: guardarMail, style: { ...inp, flex: "1 1 220px", width: "auto", marginBottom: 0 } }),
+      h("button", { onClick: () => setAbierto(v => !v), style: btn("#B0894F") }, abierto ? "Cerrar" : "✉ Mandar un mail")),
+    abierto && h("div", { style: { marginTop: 10 } },
+      h("input", { value: asunto, placeholder: "Asunto", onChange: e => setAsunto(e.target.value), style: inp }),
+      h("textarea", { value: cuerpo, placeholder: "Escribí el mensaje…", rows: 7, onChange: e => setCuerpo(e.target.value), style: { ...inp, resize: "vertical", lineHeight: 1.5 } }),
+      h("button", { onClick: enviar, disabled: enviando, style: { ...btn("#101C2C"), opacity: enviando ? .6 : 1 } }, enviando ? "Enviando…" : "Enviar")),
+    estado && h("div", { style: { fontSize: 12, marginTop: 8, color: /^✓/.test(estado) ? "#2F7A4F" : /No se pudo|válido|Completá/.test(estado) ? "#B3261E" : "#4A5565" } }, estado));
 }
 function abrirVentas() {
   silenciarSync(false);
