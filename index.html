@@ -9075,7 +9075,9 @@ function diasDesde(fechaIso) {
 }
 const LINK_APP = "https://app-demo-ultimo.vercel.app/";
 function CampaniaComercial({ prospectos, setProspectos }) {
-  const [seleccion, setSeleccion] = useState(() => new Set(prospectos.filter(p => p.mail).map(p => p.id)));
+  const [seleccion, setSeleccion] = useState(() => new Set());
+  const [buscaCamp, setBuscaCamp] = useState("");
+  const [nuevoCamp, setNuevoCamp] = useState({ empresa: "", mail: "" });
   const [asunto, setAsunto] = useState("");
   const [cuerpo, setCuerpo] = useState("");
   const [orden, setOrden] = useState("");
@@ -9116,6 +9118,18 @@ function CampaniaComercial({ prospectos, setProspectos }) {
   const paisMailIdioma = paisFiltro === "todos" ? "español rioplatense" : paisPorId(paisFiltro).idioma;
   const prospectosVista = paisFiltro === "todos" ? prospectos : prospectos.filter(p => (p.pais || "ar") === paisFiltro);
   const conEmail = prospectosVista.filter(p => p.mail);
+  const qCamp = buscaCamp.trim().toLowerCase();
+  const listaCamp = qCamp ? prospectosVista.filter(p => [p.empresa, p.nombre, p.mail, p.web].some(v => String(v || "").toLowerCase().includes(qCamp))) : prospectosVista;
+  function agregarAMano() {
+    const empresa = nuevoCamp.empresa.trim(), mail = nuevoCamp.mail.trim().toLowerCase();
+    if (!empresa || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)) { setError("Para cargar a mano poné la empresa y un mail válido."); return; }
+    const ya = prospectos.find(p => String(p.mail || "").toLowerCase() === mail);
+    if (ya) { setSeleccion(prev => new Set(prev).add(ya.id)); setNuevoCamp({ empresa: "", mail: "" }); setError(""); return; }
+    const p = { id: Date.now(), empresa, nombre: "", rol: "constructora", obras: "", mail, tel: "", web: "", dolor: "", estado: "nuevo", alta: new Date().toLocaleDateString("es-AR"), altaIso: new Date().toISOString(), historial: [], pais: paisFiltro === "todos" ? "ar" : paisFiltro };
+    setProspectos(prev => [p, ...prev]);
+    setSeleccion(prev => new Set(prev).add(p.id));
+    setNuevoCamp({ empresa: "", mail: "" }); setError("");
+  }
   const chipEstilo = { border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
   const th = { textAlign: "left", fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#8B95A5", padding: "0 10px 8px" };
   const td = { padding: "10px", fontSize: 12.5, color: "#1A1A1A", borderTop: "1px solid #EEF0F3" };
@@ -9128,7 +9142,8 @@ function CampaniaComercial({ prospectos, setProspectos }) {
     });
   }
   function toggleTodos() {
-    setSeleccion(prev => prev.size === conEmail.length ? new Set() : new Set(conEmail.map(p => p.id)));
+    const vis = listaCamp.filter(p => p.mail);
+    setSeleccion(prev => { const n = new Set(prev); const todos = vis.length && vis.every(p => n.has(p.id)); vis.forEach(p => todos ? n.delete(p.id) : n.add(p.id)); return n; });
   }
 
   const [adjuntarFolleto, setAdjuntarFolleto] = useState(true);
@@ -9253,8 +9268,11 @@ function CampaniaComercial({ prospectos, setProspectos }) {
 
   async function ejecutarOrdenAutonoma() {
     if (!ordenAutonoma.trim()) { setAutoError("Decime la orden primero."); return; }
-    const destinatarios = calcularDestinatariosAutomaticos();
+    // Si elegiste contactos en la lista, va solo a esos. Si no, a los pendientes, de a 20 por vez como máximo.
+    const elegidos = conEmail.filter(p => seleccion.has(p.id));
+    const destinatarios = elegidos.length ? elegidos : calcularDestinatariosAutomaticos().slice(0, 20);
     if (destinatarios.length === 0) { setAutoError("No hay nadie pendiente: a todos ya se les escribió y siguen esperando, o ya avanzaron."); return; }
+    if (!window.confirm(`¿Mandar este mail a ${destinatarios.length} contacto${destinatarios.length === 1 ? "" : "s"}?`)) return;
     setAutoEjecutando(true);
     setAutoError("");
     try {
@@ -9292,7 +9310,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
         const cant = prospectos.filter(x => x.mail && (pp.id === "todos" || (x.pais || "ar") === pp.id)).length + " con mail / " + prospectos.filter(x => (pp.id === "todos" || (x.pais || "ar") === pp.id)).length;
         return React.createElement("button", {
           key: pp.id,
-          onClick: () => { setPaisFiltro(pp.id); setSeleccion(new Set(prospectos.filter(x => x.mail && (pp.id === "todos" || (x.pais || "ar") === pp.id)).map(x => x.id))); },
+          onClick: () => { setPaisFiltro(pp.id); setSeleccion(new Set()); },
           style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 14px 8px 10px", borderRadius: 10, border: `2px solid ${on ? "#B0894F" : "rgba(255,255,255,.18)"}`, background: on ? "#FBF6EE" : "rgba(255,255,255,.06)", cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700, color: on ? "#8A6A38" : "#C8D0DA", minHeight: 40 }
         }, pp.bandera ? React.createElement("img", { src: pp.bandera, alt: "", style: { width: 30, height: 20, borderRadius: 3, boxShadow: "0 0 0 1px rgba(0,0,0,.15)", display: "block" } }) : null, pp.nombre, React.createElement("span", { style: { opacity: .6, fontWeight: 600 } }, cant));
       })),
@@ -9301,7 +9319,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
       React.createElement("div", { style: { fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 } }, "Campaña · un solo envío a tu base de Comercial"),
       React.createElement("div", { style: { background: NAVY, borderRadius: 9, padding: 13, marginBottom: 12 } },
         React.createElement("div", { style: { fontSize: 10.5, fontWeight: 700, color: "#D9B57C", marginBottom: 6 } }, "⚡ Modo autónomo — una orden y se manda solo"),
-        React.createElement("div", { style: { fontSize: 10.5, color: "rgba(255,255,255,.6)", marginBottom: 8 } }, `Sin revisión previa. Elige sola a quién escribirle: ${destinatariosAuto.length} contacto${destinatariosAuto.length === 1 ? "" : "s"} (nuevos, o esperando hace 30 días o más sin respuesta). No le vuelve a escribir a quien ya avanzó, cerró o se perdió.`),
+        React.createElement("div", { style: { fontSize: 10.5, color: "rgba(255,255,255,.6)", marginBottom: 8 } }, seleccion.size ? `Va solo a los ${seleccion.size} que elegiste en la lista de abajo.` : `Si no elegís a nadie abajo, le escribe a ${Math.min(20, destinatariosAuto.length)} de los pendientes (nuevos, o esperando hace 30 días o más), de a 20 por vez como máximo.`),
         React.createElement("label", { style: { display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,.75)", marginBottom: 9, cursor: "pointer" } },
           React.createElement("input", { type: "checkbox", checked: adjuntarFolleto, onChange: e => setAdjuntarFolleto(e.target.checked) }),
           "Adjuntar el folleto de NEXO en PDF"),
@@ -9358,12 +9376,19 @@ function CampaniaComercial({ prospectos, setProspectos }) {
           `✓ ${resultado.enviados} enviados` + (resultado.fallidos ? `, ${resultado.fallidos} fallaron` : "") + " · marcados como \"contactado\"")
       )
     ),
-    prospectosVista.length === 0 ? React.createElement("div", { style: { fontSize: 12.5, color: T.muted } }, "Todavía no hay contactos cargados en Comercial" + (paisFiltro === "todos" ? "." : " para " + paisMailNombre + ".")) :
-    React.createElement("div", { style: { background: T.card, border: `1px solid ${T.border}`, borderRadius: 11, padding: 14, overflowX: "auto" } }, React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
+    React.createElement("div", { style: { background: T.card, border: `1px solid ${T.border}`, borderRadius: 11, padding: 14, overflowX: "auto" } },
+      React.createElement("div", { style: { fontSize: 12.5, fontWeight: 700, color: "#1A1A1A", marginBottom: 8 } }, `Elegí a quién mandarle · ${seleccion.size} elegido${seleccion.size === 1 ? "" : "s"}`, seleccion.size > 0 && React.createElement("button", { type: "button", onClick: () => setSeleccion(new Set()), style: { ...chipEstilo, background: "#F1F2F4", color: "#4A5565", marginLeft: 8 } }, "Quitar todos")),
+      React.createElement("input", { placeholder: "Buscar empresa o mail para elegirla…", value: buscaCamp, onChange: e => setBuscaCamp(e.target.value), style: { width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 13, marginBottom: 8, fontFamily: "inherit" } }),
+      React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 } },
+        React.createElement("input", { placeholder: "Cargar a mano: empresa", value: nuevoCamp.empresa, onChange: e => setNuevoCamp({ ...nuevoCamp, empresa: e.target.value }), style: { flex: "1 1 180px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5, fontFamily: "inherit" } }),
+        React.createElement("input", { placeholder: "mail", type: "email", autoCapitalize: "off", value: nuevoCamp.mail, onChange: e => setNuevoCamp({ ...nuevoCamp, mail: e.target.value }), style: { flex: "1 1 200px", padding: "9px 11px", borderRadius: 8, border: "1px solid #E6E9EE", fontSize: 12.5, fontFamily: "inherit" } }),
+        React.createElement("button", { type: "button", onClick: agregarAMano, style: { ...chipEstilo, background: "#EAF3EC", color: "#2F7A4F", padding: "9px 14px" } }, "+ Agregar y elegir")),
+      prospectosVista.length === 0 && React.createElement("div", { style: { fontSize: 12.5, color: T.muted, marginBottom: 8 } }, "Todavía no hay contactos cargados en Comercial" + (paisFiltro === "todos" ? "." : " para " + paisMailNombre + ".")),
+      React.createElement("table", { style: { width: "100%", borderCollapse: "collapse" } },
       React.createElement("thead", null, React.createElement("tr", null,
-        React.createElement("th", { style: th }, React.createElement("input", { type: "checkbox", checked: seleccion.size === conEmail.length && conEmail.length > 0, onChange: toggleTodos })),
+        React.createElement("th", { style: th }, React.createElement("input", { type: "checkbox", title: "Marcar o desmarcar los que se ven", checked: listaCamp.some(p => p.mail) && listaCamp.filter(p => p.mail).every(p => seleccion.has(p.id)), onChange: toggleTodos })),
         React.createElement("th", { style: th }, "Empresa"), React.createElement("th", { style: th }, "Mail"), React.createElement("th", { style: th }, "Estado"))),
-      React.createElement("tbody", null, prospectosVista.map(p => React.createElement("tr", { key: p.id },
+      React.createElement("tbody", null, listaCamp.map(p => React.createElement("tr", { key: p.id },
         React.createElement("td", { style: td }, p.mail ? React.createElement("input", { type: "checkbox", checked: seleccion.has(p.id), onChange: () => toggle(p.id) }) : null),
         React.createElement("td", { style: td }, p.empresa || p.nombre || "—"),
         React.createElement("td", { style: td }, p.mail ? p.mail : React.createElement("input", {
