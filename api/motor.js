@@ -541,6 +541,12 @@ async function handler(req, res) {
       return res.status(200).send('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:system-ui;max-width:480px;margin:60px auto;padding:0 16px"><h2>Listo, te dimos de baja.</h2><p>No vas a recibir más mensajes de NEXO. / Você não receberá mais mensagens do NEXO.</p></body>');
     }
 
+    // Chequeo público: ¿la clave de servicio de Supabase conecta? No devuelve datos.
+    if (accion === "salud") {
+      try { await db("mkt_bajas?select=email&limit=1"); return res.status(200).json({ supabase: "ok" }); }
+      catch (e) { return res.status(200).json({ supabase: "error", detalle: String(e.message || e).slice(0, 160) }); }
+    }
+
     // IA para la demo y el Centro de Operaciones: usa la clave de Vercel, así nadie pega claves en el navegador.
     if (accion === "ia") {
       if (req.method === "OPTIONS") return res.status(204).end();
