@@ -143,184 +143,152 @@
     }
   }
 
-  // ── mapeo de campos ──
-  // El prospecto local y la fila de Supabase no tienen la misma forma.
-  // Estas dos funciones traducen en cada sentido.
-  function normalizarZona(z) {
-    if (!z) return null;
-    return String(z).split(',')[0].trim();
+  // ── sincronización completa de la base de prospectos ──
+  // Cada prospecto se guarda entero (todos sus campos) en la tabla
+  // ventas_prospectos, separado por app (nexo / belfast). Al abrir, cada
+  // 45 segundos y al volver a la app se mezcla lo local con la nube:
+  // nada se pierde, lo nuevo de cualquier aparato aparece en los demás.
+  const APP = /belfast/.test(location.pathname) ? 'belfast' : 'nexo';
+  const K_META = 'sync_v2_' + APP; // { id: huella } de lo último que quedó igual en la nube
+  let guardarOriginal = null, listarOriginal = null, subiendo = false, colaSubida = null;
+
+  function huella(o) { const t = JSON.stringify(o); let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return String(h); }
+  function leerMeta() { try { return JSON.parse(localStorage.getItem(K_META) || '{}') || {}; } catch { return {}; } }
+  function guardarMeta(m) { try { localStorage.setItem(K_META, JSON.stringify(m)); } catch {} }
+
+  async function bajarTodo() {
+    const filas = [];
+    for (let desde = 0; ; desde += 1000) {
+      const tanda = await supaFetch(`ventas_prospectos?app=eq.${APP}&select=id,datos,t,borrado&order=id`, { headers: { Range: `${desde}-${desde + 999}`, 'Range-Unit': 'items' } });
+      if (!tanda || !tanda.length) break;
+      filas.push(...tanda);
+      if (tanda.length < 1000) break;
+    }
+    return filas;
   }
 
-  function prospectoASupabase(p) {
-    return {
-      origen_local_id: String(p.id),
-      nombre: p.empresa || p.nombre || 'Sin nombre',
-      tipo: p.rol || null,
-      email: p.mail || null,
-      telefono: p.tel || null,
-      web: p.web || null,
-      obras_estimadas: p.obras ? (parseInt(p.obras, 10) || null) : null,
-      observaciones: p.dolor || null,
-      estado: mapearEstado(p.estado),
-      pais_id: null // se completa del lado del servidor si falta; ver nota abajo
-    };
-  }
-
-  const MAPA_ESTADO = {
-    nuevo: 'no_investigada',
-    contactado: 'investigada',
-    'reunión': 'calificada',
-    reunion: 'calificada',
-    propuesta: 'calificada',
-    cerrado: 'cliente',
-    perdido: 'descartada'
-  };
-  function mapearEstado(e) {
-    return MAPA_ESTADO[String(e || '').toLowerCase()] || 'no_investigada';
-  }
-  const MAPA_ESTADO_INVERSO = {
-    no_investigada: 'nuevo',
-    investigada: 'contactado',
-    calificada: 'propuesta',
-    cliente: 'cerrado',
-    descartada: 'perdido'
-  };
-
-  function supabaseAProspecto(e) {
-    return {
-      id: e.origen_local_id ? Number(e.origen_local_id) || e.origen_local_id : e.id,
-      empresa: e.nombre,
-      rol: e.tipo || '',
-      mail: e.email || '',
-      tel: e.telefono || '',
-      web: e.web || '',
-      obras: e.obras_estimadas != null ? String(e.obras_estimadas) : '',
-      dolor: e.observaciones || '',
-      estado: MAPA_ESTADO_INVERSO[e.estado] || 'nuevo',
-      alta: e.fecha_alta ? new Date(e.fecha_alta).toLocaleDateString('es-AR') : '',
-      notas: [],
-      _supabase_id: e.id // se conserva para referencia; no lo usa el resto de la app
-    };
-  }
-
-  // ── subir ──
-  async function subirProspecto(p) {
-    if (evitarRebote) return;
-    try {
-      estadoSync.pendientes++;
-
-      let fila;
-      try {
-        fila = prospectoASupabase(p);
-      } catch (e) {
-        throw new Error(`[mapeo de datos] ${e.message}`);
-      }
-
-      // pais_id: se asume Argentina. Se resuelve una vez y se cachea.
-      try {
-        fila.pais_id = await paisArgentinaId();
-      } catch (e) {
-        throw new Error(`[buscar país] ${e.message}`);
-      }
-
-      try {
-        await supaFetch(`empresas?on_conflict=origen_local_id`, {
-          method: 'POST',
-          headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-          body: JSON.stringify(fila)
-        });
-      } catch (e) {
-        throw new Error(`[guardar en Supabase] ${e.message}`);
-      }
-
-      estadoSync.ultimaSubida = new Date().toISOString();
-      estadoSync.ultimoError = null;
-    } catch (e) {
-      estadoSync.ultimoError = e.message;
-      console.warn('[sync] no se pudo subir', p && p.id, e.message);
-    } finally {
-      estadoSync.pendientes = Math.max(0, estadoSync.pendientes - 1);
+  async function subirFilas(filas) {
+    for (let i = 0; i < filas.length; i += 300) {
+      await supaFetch('ventas_prospectos?on_conflict=app,id', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(filas.slice(i, i + 300))
+      });
     }
   }
 
-  let _paisArgentinaId = null;
-  async function paisArgentinaId() {
-    if (_paisArgentinaId) return _paisArgentinaId;
-    const filas = await supaFetch('paises?codigo=eq.AR&select=id');
-    _paisArgentinaId = filas && filas[0] && filas[0].id;
-    return _paisArgentinaId;
-  }
-
-  async function subirTodos(prospectos) {
-    for (const p of prospectos) {
-      if (p && p.id != null) await subirProspecto(p);
+  // Sube lo que cambió en este aparato desde la última vez.
+  async function subirCambios(lista) {
+    const meta = leerMeta(), ahora = Date.now(), filas = [], vistos = new Set();
+    for (const p of lista || []) {
+      if (!p || p.id == null) continue;
+      const id = String(p.id), h = huella(p); vistos.add(id);
+      if (meta[id] !== h) filas.push({ app: APP, id, datos: p, t: ahora, borrado: false, _h: h });
     }
+    for (const id of Object.keys(meta)) if (!vistos.has(id) && meta[id] !== 'x') filas.push({ app: APP, id, datos: {}, t: ahora, borrado: true, _h: 'x' });
+    if (!filas.length) return 0;
+    await subirFilas(filas.map(({ _h, ...f }) => f));
+    filas.forEach(f => { if (f._h === 'x') meta[f.id] = 'x'; else meta[f.id] = f._h; });
+    guardarMeta(meta);
+    estadoSync.ultimaSubida = new Date().toISOString();
+    return filas.length;
   }
 
-  // ── bajar y mezclar ──
-  async function bajarYMezclar() {
-    if (sincronizando) return;
+  // Mezcla la nube con lo local y deja las dos iguales.
+  async function mezclar() {
+    if (sincronizando || !listarOriginal) return;
     sincronizando = true;
     try {
-      const filas = await supaFetch('empresas?select=*&order=fecha_alta.desc&limit=500');
-      const prospectos = filas
-        .filter(e => e.origen_local_id) // solo lo que vino de un dispositivo, no lo que cargue un agente
-        .map(supabaseAProspecto);
-
-      evitarRebote = true;
-      await window.bd.guardar('prospectos', prospectos);
-      evitarRebote = false;
-
+      const nube = await bajarTodo();
+      const local = await listarOriginal('prospectos') || [];
+      const meta = leerMeta();
+      const porId = new Map(local.map(p => [String(p.id), p]));
+      const idsNube = new Set(nube.filter(f => !f.borrado).map(f => String(f.id)));
+      // La misma empresa cargada por separado en dos aparatos tiene distinto id: se queda la de la nube.
+      const clave = p => { const n = String(p && (p.empresa || p.nombre) || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, ''); const m = String(p && p.mail || '').trim().toLowerCase(); return [n ? 'n:' + n : '', m ? 'm:' + m : ''].filter(Boolean); };
+      const localPorClave = new Map();
+      for (const p of local) for (const k of clave(p)) if (!localPorClave.has(k)) localPorClave.set(k, String(p.id));
+      let cambioLocal = false;
+      for (const f of nube) {
+        if (f.borrado || porId.has(String(f.id))) continue;
+        for (const k of clave(f.datos)) { const otro = localPorClave.get(k); if (otro && otro !== String(f.id) && !idsNube.has(otro) && porId.has(otro)) { porId.delete(otro); delete meta[otro]; cambioLocal = true; } }
+      }
+      for (const f of nube) {
+        const id = String(f.id), loc = porId.get(id);
+        const locSinTocar = loc && meta[id] === huella(loc);
+        if (f.borrado) {
+          if (loc && locSinTocar) { porId.delete(id); cambioLocal = true; }
+          if (!loc || locSinTocar) meta[id] = 'x';
+          continue;
+        }
+        const hn = huella(f.datos);
+        if (!loc) { porId.set(id, f.datos); meta[id] = hn; cambioLocal = true; }
+        else if (huella(loc) === hn) meta[id] = hn;
+        else if (locSinTocar) { porId.set(id, f.datos); meta[id] = hn; cambioLocal = true; }
+        // si cambió en este aparato, gana lo local y se sube abajo
+      }
+      guardarMeta(meta);
+      const final = [...porId.values()];
+      if (cambioLocal) {
+        evitarRebote = true;
+        try { await guardarOriginal('prospectos', final); } finally { evitarRebote = false; }
+        try { window.dispatchEvent(new StorageEvent('storage', { key: 'bd_ver_prospectos' })); } catch (e) {}
+      }
+      await subirCambios(final);
       estadoSync.ultimaBajada = new Date().toISOString();
       estadoSync.ultimoError = null;
-      if (typeof window.avisarBD === 'function') window.avisarBD();
+      estadoSync.conectado = true;
+      estadoSync.total = final.length;
     } catch (e) {
       estadoSync.ultimoError = e.message;
-      console.warn('[sync] no se pudo bajar', e.message);
+      console.warn('[sync] no se pudo sincronizar', e.message);
     } finally {
       sincronizando = false;
+      if (typeof window.avisarBD === 'function') window.avisarBD();
     }
+  }
+
+  function programarSubida(filas) {
+    colaSubida = filas;
+    if (subiendo) return;
+    subiendo = true;
+    setTimeout(async () => {
+      try { while (colaSubida) { const f = colaSubida; colaSubida = null; await subirCambios(f); } }
+      catch (e) { estadoSync.ultimoError = e.message; console.warn('[sync] no se pudo subir', e.message); }
+      finally { subiendo = false; }
+    }, 1500);
   }
 
   // ── engancharse al objeto bd existente sin romperlo ──
   function engancharBD() {
     if (!window.bd || window.bd.__sincronizado) return false;
-
-    const guardarOriginal = window.bd.guardar.bind(window.bd);
+    guardarOriginal = window.bd.guardar.bind(window.bd);
+    listarOriginal = window.bd.listar.bind(window.bd);
     window.bd.guardar = async function (tabla, filas) {
       const ok = await guardarOriginal(tabla, filas);
-      if (ok && tabla === 'prospectos' && !evitarRebote) {
-        subirTodos(filas).catch(() => {});
-      }
+      if (ok && tabla === 'prospectos' && !evitarRebote) programarSubida(filas || []);
       return ok;
     };
-
     const actualizarOriginal = window.bd.actualizar.bind(window.bd);
     window.bd.actualizar = async function (tabla, fila) {
       const ok = await actualizarOriginal(tabla, fila);
-      if (ok && tabla === 'prospectos' && !evitarRebote) {
-        subirProspecto(fila).catch(() => {});
-      }
+      if (ok && tabla === 'prospectos' && !evitarRebote) listarOriginal('prospectos').then(programarSubida).catch(() => {});
       return ok;
     };
-
     window.bd.__sincronizado = true;
     return true;
   }
 
   // ── arranque ──
   function intentarArrancar() {
-    if (!window.bd) {
-      // el objeto bd todavía no existe en este punto de la carga; reintenta
-      setTimeout(intentarArrancar, 200);
-      return;
-    }
+    if (!window.bd) { setTimeout(intentarArrancar, 200); return; }
     engancharBD();
-    bajarYMezclar();
+    setTimeout(mezclar, 800);
+    setInterval(mezclar, 45000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) mezclar(); });
+    window.addEventListener('focus', () => mezclar());
   }
 
-  // API manual, por si se quiere forzar una sincronización desde la interfaz
-  window.sincronizarAhora = bajarYMezclar;
-
+  window.sincronizarAhora = mezclar;
   intentarArrancar();
 })();

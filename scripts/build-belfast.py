@@ -100,8 +100,7 @@ cambiar('  const [perfs, setPerfs] = useState(["estudios", "constructoras"]);', 
 
 # Todo lo que la app de Belfast le pide al motor va marcado como Belfast (el servidor frena los mails hasta tener info@belfastcm.com).
 s = s.replace('"/api/motor?accion=enviar_mail"', '"/api/motor?accion=enviar_mail&marca=belfast"')
-# Belfast no sincroniza con la nube de NEXO (son bases separadas).
-cambiar('<script src="supabase-sync.js"></script>', '')
+# Belfast sincroniza su propia base (separada de la de NEXO) entre PC, iPad e iPhone.
 
 s = s.replace('"Las métricas de correos, respuestas y reuniones necesitan el motor de agentes y el envío de correo. Lo que ves abajo son las herramientas que ya funcionan."', '""')
 

@@ -8,6 +8,12 @@
     if (!document.getElementById("ui-tema")) { var b = document.createElement("button"); b.type = "button"; b.id = "ui-tema"; document.body.appendChild(b);
       b.addEventListener("click", function(){ var t = leer() === "claro" ? "oscuro" : "claro"; try { localStorage.setItem(K, t); } catch(e){} aplicar(t); }); }
     aplicar(leer());
+    var sy = document.createElement("div"); sy.id = "ui-sync"; document.body.appendChild(sy);
+    setInterval(function(){ var e = window.estadoSincronizacion; if (!e) { sy.style.display = "none"; return; } sy.style.display = "";
+      if (e.ultimaBajada && !e.ultimoError) { sy.className = "ok"; sy.textContent = "☁ Sincronizado" + (e.total != null ? " · " + e.total : ""); }
+      else if (/Sin sesión/.test(e.ultimoError || "")) { sy.className = "mal"; sy.textContent = "Sin sesión: los contactos quedan solo en este aparato"; }
+      else if (e.ultimoError) { sy.className = "mal"; sy.textContent = "No se pudo sincronizar"; sy.title = e.ultimoError; }
+      else { sy.className = ""; sy.textContent = "☁ Sincronizando…"; } }, 1500);
     setInterval(function(){ var nav = document.querySelector("#root-ventas .co-nav"); var vis = !!(nav && nav.offsetParent !== null || (nav && getComputedStyle(nav).position === "fixed" && nav.getBoundingClientRect().width > 0)); document.documentElement.classList.toggle("ui-con-barra", vis); }, 700);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar); else iniciar();
