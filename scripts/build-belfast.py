@@ -20,7 +20,7 @@ WEB_BELFAST = "https://belfastcm.contact-deploystudio.workers.dev"
 cambiar('const LINK_APP = "https://app-demo-ultimo.vercel.app/";', 'const LINK_APP = "' + WEB_BELFAST + '/obras";')
 cambiar('const linkP = LINK_APP + "?c=" + encodeURIComponent(p.id);', 'const linkP = LINK_APP;')
 cambiar('"Mirá cómo funciona la app: " + LINK_APP', '"Pueden ver nuestras obras en " + LINK_APP')
-cambiar('"Agrega al final del mail el link a la presentación de NEXO."', '"Agrega al final del mail el link al Instagram de Belfast."')
+cambiar('"Agrega al final del mail el link a la presentación de NEXO."', '"Agrega al final del mail el link a las obras en la web de Belfast."')
 cambiar('const [adjuntarFolleto, setAdjuntarFolleto] = useState(true);', 'const [adjuntarFolleto, setAdjuntarFolleto] = useState(false);')
 cambiar('React.createElement("input", { type: "checkbox", checked: adjuntarFolleto, onChange: e => setAdjuntarFolleto(e.target.checked) }),\n          "Adjuntar el folleto de NEXO en PDF"),', 'null, null),')
 cambiar("placeholder: 'Ej: \"Mandales un mail de bienvenida presentando NEXO\"',", "placeholder: 'Ej: \"Presentá Belfast a los estudios de Nordelta para su próxima obra\"',")
@@ -60,7 +60,7 @@ s = s.replace("EN QUÉ ORDEN MOSTRAR LA DEMO (4 pasos con funciones reales)", "Q
 s = s.replace("qué apps le corresponden por su rol", "cómo Belfast acompañaría su obra en cada etapa")
 s = s.replace('"Ej: \\"Mandales un mail de bienvenida presentando NEXO, corto y cordial\\""', '"Ej: \\"Presentá Belfast como constructora para su próxima obra, corto y cordial\\""')
 s = s.replace("'Ej: \"Mandales un mail de bienvenida presentando NEXO, corto y cordial\"'", "'Ej: \"Presentá Belfast como constructora para su próxima obra, corto y cordial\"'")
-s = s.replace('"🔗 Insertar link de la app"', '"🔗 Insertar link al Instagram"')
+s = s.replace('"🔗 Insertar link de la app"', '"🔗 Insertar link a las obras"')
 s = s.replace('"Respuesta de NEXO"', '"Respuesta de Belfast"')
 s = s.replace('desc: "Precio, tiempo, \\"ya tengo Excel\\""', 'desc: "Precio, plazos, \\"ya tenemos constructora\\""')
 
