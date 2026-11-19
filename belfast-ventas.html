@@ -8251,7 +8251,7 @@ function PanelMarketing() {
       for (const lead of destinatarios) {
         try {
           const html = "<p>" + cuerpo.replace(/\n/g, "<br>") + "</p>";
-          const r = await fetch("/api/motor?accion=enviar_mail", {
+          const r = await fetch("/api/motor?accion=enviar_mail&marca=belfast", {
             method: "POST",
             headers: { Authorization: `Bearer ${t}`, apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
             body: JSON.stringify({ to: lead.email, subject: asunto, html })
@@ -8715,7 +8715,7 @@ function PanelSoporte() {
     try {
       const t = await mktPedirSesion();
       const html = "<p>" + String(item.respuesta || "").replace(/\n/g, "<br>") + "</p>";
-      const r = await fetch("/api/motor?accion=enviar_mail", {
+      const r = await fetch("/api/motor?accion=enviar_mail&marca=belfast", {
         method: "POST",
         headers: { Authorization: `Bearer ${t}`, apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({ to: destino, subject: item.pregunta || "Respuesta de Belfast", html })
@@ -9825,7 +9825,7 @@ function CampaniaComercial({ prospectos, setProspectos }) {
     let motivo = "";
     // Una sola vez por mail: si el servidor dice que la sesión venció (401), la renueva y reintenta.
     async function mandarUno(cuerpoPedido, reintento) {
-      const r = await fetch("/api/motor?accion=enviar_mail", {
+      const r = await fetch("/api/motor?accion=enviar_mail&marca=belfast", {
         method: "POST",
         headers: { Authorization: `Bearer ${t}`, apikey: MKT_SUPA_KEY, "Content-Type": "application/json" },
         body: JSON.stringify(cuerpoPedido)
@@ -14083,7 +14083,7 @@ function EnvioDirecto({ p, actualizar, registrarContacto, borrador }) {
     try {
       const t = await mktPedirSesion();
       const html = "<p>" + cuerpo.trim().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>').replace(/\n/g, "<br>") + "</p>";
-      const r = await fetch("/api/motor?accion=enviar_mail", { method: "POST", headers: { Authorization: "Bearer " + t, "Content-Type": "application/json" }, body: JSON.stringify({ to: mail.trim(), subject: asunto.trim(), html }) });
+      const r = await fetch("/api/motor?accion=enviar_mail&marca=belfast", { method: "POST", headers: { Authorization: "Bearer " + t, "Content-Type": "application/json" }, body: JSON.stringify({ to: mail.trim(), subject: asunto.trim(), html }) });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || d.error) throw new Error(d.error || ("error " + r.status));
       registrarContacto(p.id, "mail", asunto.trim());

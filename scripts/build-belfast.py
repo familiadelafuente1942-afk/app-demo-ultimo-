@@ -96,6 +96,8 @@ cambiar('}, "Cargar contactos encontrados por Claude"),', '}, "Traer estudios y 
 
 cambiar('  const [perfs, setPerfs] = useState(["estudios", "constructoras"]);', '  const [perfs, setPerfs] = useState(["estudios", "desarrolladores"]);')
 
+# Todo lo que la app de Belfast le pide al motor va marcado como Belfast (el servidor frena los mails hasta tener info@belfastcm.com).
+s = s.replace('"/api/motor?accion=enviar_mail"', '"/api/motor?accion=enviar_mail&marca=belfast"')
 # Belfast no sincroniza con la nube de NEXO (son bases separadas).
 cambiar('<script src="supabase-sync.js"></script>', '')
 

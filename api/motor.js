@@ -474,6 +474,7 @@ async function accionCambiarEstado(actor, ids, estado) {
 
 // Envío directo desde la app (campaña, prospecto, respuesta): sale de la casilla de NEXO (GMAIL_USER) por Gmail.
 async function accionEnviarMail(actor, b) {
+  if (marcaActual() === "belfast") throw Object.assign(new Error("Los mails de Belfast quedan frenados hasta configurar info@belfastcm.com."), { status: 409 });
   if (actor === "abierto") {
     const hoy = diaLocal();
     const n = ((await db("mkt_auditoria?accion=eq.mail_directo&creado=gte." + encodeURIComponent(hoy + "T00:00:00-03:00") + "&select=id")) || []).length;
