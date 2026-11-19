@@ -1,9 +1,63 @@
 [
- {"t":"El pitch en 30 segundos","c":["Belfast no vende metros cuadrados: vende que el proyecto se construya tal como fue pensado.","\"Ustedes diseñan; nosotros construimos y dirigimos la obra cuidando cada decisión: planificación, proceso y ejecución, y terminación. Y lo ven todo, semana a semana, sin tener que ir a preguntar.\"","Después mostrá una obra real: fotos del Instagram y el avance semanal."]},
- {"t":"A quién le vendemos","c":["Estudios de arquitectura que diseñan casas y edificios de alta gama y necesitan quién los construya bien.","Desarrolladoras que buscan una constructora que cumpla plazos y les rinda cuentas.","Argentina (Buenos Aires) y Uruguay."]},
- {"t":"Las tres preguntas de apertura","c":["¿Qué proyectos tienen para arrancar en los próximos meses?","¿Con qué constructora trabajan hoy y qué les gustaría que hiciera distinto?","¿Cómo se enteran hoy de lo que pasa en sus obras?"]},
- {"t":"Qué mostrar","c":["Las obras en curso: hoy son 7.","Construcción y dirección de obra en un mismo equipo, como figura en el cartel de cada obra.","El seguimiento con NEXO: el estudio y el propietario ven avance, fotos, definiciones pendientes y bitácora de su obra.","Detalles de obra y terminaciones del Instagram @belfast_cm."]},
- {"t":"Cómo sigue después del primer contacto","c":["1. Pedí los planos o el anteproyecto.","2. Invitá a visitar una obra en curso.","3. Presupuesto con cronograma de obra.","4. Reunión con quien va a dirigir la obra."]},
- {"t":"Objeciones frecuentes","c":["\"Ya tenemos constructora\" → No compitas: pedí cotizar la próxima obra para que tengan con qué comparar.","\"Son caros\" → Mostrá lo que no se ve en un presupuesto: dirección de obra, seguimiento semanal y cuidado en las terminaciones.","\"¿Cómo sé que cumplen?\" → Invitá a visitar una obra en curso y mostrá el seguimiento semanal real.","\"Ahora no tenemos obra\" → Quedá cerca: mandá novedades de obra cada mes y preguntá por su próximo proyecto."]},
- {"t":"Lo que NO podés prometer","c":["Precio cerrado sin planos ni especificaciones.","Fechas de inicio sin confirmarlas con Dirección de obra.","Trabajos o gremios que Belfast no confirmó por escrito.","Si te lo piden: \"lo veo con Dirección y te confirmo\", nunca un sí en la reunión."]}
+ {
+  "t": "El pitch en 30 segundos",
+  "c": [
+   "Belfast no vende metros cuadrados: vende que el proyecto se construya tal como fue pensado.",
+   "\"Ustedes diseñan; nosotros construimos y dirigimos la obra cuidando cada decisión: planificación, proceso y ejecución, y terminación. Y lo ven todo, semana a semana, sin tener que ir a preguntar.\"",
+   "Después mostrá una obra real: fotos del Instagram y el avance semanal."
+  ]
+ },
+ {
+  "t": "A quién le vendemos",
+  "c": [
+   "Estudios de arquitectura que diseñan casas y edificios de alta gama y necesitan quién los construya bien.",
+   "Desarrolladoras que buscan una constructora que cumpla plazos y les rinda cuentas.",
+   "Argentina (Buenos Aires) y Uruguay."
+  ]
+ },
+ {
+  "t": "Las tres preguntas de apertura",
+  "c": [
+   "¿Qué proyectos tienen para arrancar en los próximos meses?",
+   "¿Con qué constructora trabajan hoy y qué les gustaría que hiciera distinto?",
+   "¿Cómo se enteran hoy de lo que pasa en sus obras?"
+  ]
+ },
+ {
+  "t": "Qué mostrar",
+  "c": [
+   "La web de Belfast, sección Obras: obras terminadas y en curso. El botón \"Insertar link\" de los mails ya pone ese link.",
+   "Las obras en curso: hoy son 7.",
+   "Construcción y dirección de obra en un mismo equipo, como figura en el cartel de cada obra.",
+   "El seguimiento con NEXO: el estudio y el propietario ven avance, fotos, definiciones pendientes y bitácora de su obra.",
+   "Detalles de obra y terminaciones del Instagram @belfast_cm."
+  ]
+ },
+ {
+  "t": "Cómo sigue después del primer contacto",
+  "c": [
+   "1. Pedí los planos o el anteproyecto.",
+   "2. Invitá a visitar una obra en curso.",
+   "3. Presupuesto con cronograma de obra.",
+   "4. Reunión con quien va a dirigir la obra."
+  ]
+ },
+ {
+  "t": "Objeciones frecuentes",
+  "c": [
+   "\"Ya tenemos constructora\" → No compitas: pedí cotizar la próxima obra para que tengan con qué comparar.",
+   "\"Son caros\" → Mostrá lo que no se ve en un presupuesto: dirección de obra, seguimiento semanal y cuidado en las terminaciones.",
+   "\"¿Cómo sé que cumplen?\" → Invitá a visitar una obra en curso y mostrá el seguimiento semanal real.",
+   "\"Ahora no tenemos obra\" → Quedá cerca: mandá novedades de obra cada mes y preguntá por su próximo proyecto."
+  ]
+ },
+ {
+  "t": "Lo que NO podés prometer",
+  "c": [
+   "Precio cerrado sin planos ni especificaciones.",
+   "Fechas de inicio sin confirmarlas con Dirección de obra.",
+   "Trabajos o gremios que Belfast no confirmó por escrito.",
+   "Si te lo piden: \"lo veo con Dirección y te confirmo\", nunca un sí en la reunión."
+  ]
+ }
 ]

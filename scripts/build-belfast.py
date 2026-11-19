@@ -15,7 +15,9 @@ def cambiar(viejo, nuevo, veces=1):
         sys.exit(f"No encontré (o hay {n}): {viejo[:80]}")
     s = s.replace(viejo, nuevo)
 
-cambiar('const LINK_APP = "https://app-demo-ultimo.vercel.app/";', 'const LINK_APP = "https://www.instagram.com/belfast_cm/";')
+# Web de Belfast (versión de prueba de Deploy Studio; cuando esté en belfastcm.com, cambiar solo esta línea)
+WEB_BELFAST = "https://belfastcm.contact-deploystudio.workers.dev"
+cambiar('const LINK_APP = "https://app-demo-ultimo.vercel.app/";', 'const LINK_APP = "' + WEB_BELFAST + '/obras";')
 cambiar('const linkP = LINK_APP + "?c=" + encodeURIComponent(p.id);', 'const linkP = LINK_APP;')
 cambiar('"Mirá cómo funciona la app: " + LINK_APP', '"Pueden ver nuestras obras en " + LINK_APP')
 cambiar('"Agrega al final del mail el link a la presentación de NEXO."', '"Agrega al final del mail el link al Instagram de Belfast."')
