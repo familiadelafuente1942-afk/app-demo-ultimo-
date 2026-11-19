@@ -569,7 +569,7 @@ async function handler(req, res) {
       const b = leerBody(req) || {};
       const items = (Array.isArray(b.items) ? b.items : []).slice(0, 24);
       const H = { apikey: k, Authorization: "Bearer " + k };
-      await fetch(SUPA_URL + "/storage/v1/bucket", { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, H), body: JSON.stringify({ id: "belfast-ig", name: "belfast-ig", public: true }) }).catch(() => {});
+      const cb = await fetch(SUPA_URL + "/storage/v1/bucket", { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, H), body: JSON.stringify({ id: "belfast-ig", name: "belfast-ig", public: true }) }).then(r => r.text()).catch(e => String(e));
       const hechos = [];
       for (const it of items) {
         const nombre = String(it.nombre || "");
@@ -581,9 +581,9 @@ async function handler(req, res) {
         const buf = Buffer.from(await r.arrayBuffer());
         if (buf.length > 3000000) { hechos.push({ nombre, error: "grande" }); continue; }
         const s = await fetch(SUPA_URL + "/storage/v1/object/belfast-ig/" + nombre, { method: "POST", headers: Object.assign({ "Content-Type": "image/jpeg", "x-upsert": "true" }, H), body: buf });
-        hechos.push({ nombre, ok: s.ok, bytes: buf.length, status: s.status });
+        hechos.push({ nombre, ok: s.ok, bytes: buf.length, status: s.status, det: s.ok ? undefined : (await s.text()).slice(0, 200) });
       }
-      return res.status(200).json({ base: SUPA_URL + "/storage/v1/object/public/belfast-ig/", hechos });
+      return res.status(200).json({ base: SUPA_URL + "/storage/v1/object/public/belfast-ig/", bucket: String(cb).slice(0, 200), hechos });
     }
 
     // Cron automático de Vercel
