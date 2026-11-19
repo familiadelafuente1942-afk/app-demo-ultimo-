@@ -9,9 +9,22 @@
       b.addEventListener("click", function(){ var t = leer() === "claro" ? "oscuro" : "claro"; try { localStorage.setItem(K, t); } catch(e){} aplicar(t); }); }
     aplicar(leer());
     var sy = document.createElement("div"); sy.id = "ui-sync"; document.body.appendChild(sy);
+    sy.addEventListener("click", function(){ if (sy.className !== "mal") return; abrirIngreso(); });
+    function abrirIngreso(){
+      if (document.getElementById("ui-ingreso")) return;
+      var m = document.createElement("div"); m.id = "ui-ingreso";
+      m.innerHTML = '<form><b>Conectar este aparato</b><p>Con tu cuenta de administrador los contactos quedan iguales en la PC, el iPad y el iPhone.</p><input type="email" name="e" placeholder="Mail" autocomplete="username" required><input type="password" name="c" placeholder="Contraseña" autocomplete="current-password" required><div class="ui-ing-err"></div><div class="ui-ing-bt"><button type="button" class="ui-ing-no">Cancelar</button><button type="submit" class="ui-ing-si">Conectar</button></div></form>';
+      document.body.appendChild(m);
+      var f = m.querySelector("form"), err = m.querySelector(".ui-ing-err");
+      m.querySelector(".ui-ing-no").onclick = function(){ m.remove(); };
+      f.onsubmit = function(ev){ ev.preventDefault(); err.textContent = "Conectando…";
+        Promise.resolve(window.iniciarSesionSync ? window.iniciarSesionSync(f.e.value.trim(), f.c.value) : Promise.reject(new Error("No cargó la sincronización")))
+          .then(function(){ m.remove(); }).catch(function(x){ err.textContent = "No se pudo: " + (x && x.message || x); }); };
+      setTimeout(function(){ try { f.e.focus(); } catch(e){} }, 50);
+    }
     setInterval(function(){ var e = window.estadoSincronizacion; if (!e) { sy.style.display = "none"; return; } sy.style.display = "";
       if (e.ultimaBajada && !e.ultimoError) { sy.className = "ok"; sy.textContent = "☁ Sincronizado" + (e.total != null ? " · " + e.total : ""); }
-      else if (/Sin sesión/.test(e.ultimoError || "")) { sy.className = "mal"; sy.textContent = "Sin sesión: los contactos quedan solo en este aparato"; }
+      else if (/Sin sesión/.test(e.ultimoError || "")) { sy.className = "mal"; sy.textContent = "Sin sesión · tocá acá para conectar este aparato"; }
       else if (e.ultimoError) { sy.className = "mal"; sy.textContent = "No se pudo sincronizar"; sy.title = e.ultimoError; }
       else { sy.className = ""; sy.textContent = "☁ Sincronizando…"; } }, 1500);
     setInterval(function(){ var nav = document.querySelector("#root-ventas .co-nav"); var vis = !!(nav && nav.offsetParent !== null || (nav && getComputedStyle(nav).position === "fixed" && nav.getBoundingClientRect().width > 0)); document.documentElement.classList.toggle("ui-con-barra", vis); }, 700);

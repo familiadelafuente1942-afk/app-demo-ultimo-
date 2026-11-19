@@ -290,5 +290,7 @@
   }
 
   window.sincronizarAhora = mezclar;
+  // Iniciar sesión desde el aviso "Sin sesión" (la persona escribe su mail y contraseña).
+  window.iniciarSesionSync = async function (email, clave) { await iniciarSesion(email, clave); estadoSync.ultimoError = null; await mezclar(); return estadoSync; };
   intentarArrancar();
 })();
