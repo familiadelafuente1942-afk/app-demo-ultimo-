@@ -8,7 +8,7 @@ body, body *:not(svg):not(svg *):not(i){ font-family:"Playfair Display",Georgia,
 #root-ventas .co-tab i{ display:none !important; }
 /* barra de abajo (áreas): vidrio líquido igual a NEXO 2 */
 :root{ --g-a:rgba(255,255,255,.17); --g-b:rgba(255,255,255,.035); --g-c:rgba(255,255,255,.075); --g-rim:rgba(255,255,255,.55); --g-edge:rgba(255,255,255,.26); --g-low:rgba(0,0,0,.22); --g-fx:blur(18px) saturate(1.9); --gl-sh:rgba(0,0,0,.5); --gl-bar:rgba(18,19,23,.74); --glint:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.17) 41%,rgba(255,255,255,.04) 50%,transparent 58%); --nx-gold:#d8b077; }
-body.con-motor.en-ventas{ --nx-gold:#E2C200; }
+html:has(.bf-portada){ --nx-gold:#E2C200; }
 html body #root-ventas .co-nav{ position:fixed !important; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom,0px)); z-index:900; margin:0 auto !important; max-width:none; display:flex; gap:2px; padding:6px; border-radius:999px; overflow-x:auto; scrollbar-width:none; white-space:nowrap;
   background:linear-gradient(158deg,var(--g-a),var(--g-b)), var(--gl-bar) !important; -webkit-backdrop-filter:blur(24px) saturate(1.8); backdrop-filter:blur(24px) saturate(1.8);
   box-shadow:inset 0 1.5px 1px var(--g-rim), inset 0 0 0 1px var(--g-edge), 0 14px 30px -10px var(--gl-sh) !important; }
@@ -62,3 +62,84 @@ html.ui-con-barra #ui-sync{ bottom:calc(99px + env(safe-area-inset-bottom,0px));
 .ui-ing-err{ min-height:18px; font-size:12.5px; color:#ff9a8f; margin-bottom:8px; }
 .ui-ing-bt{ display:flex; gap:8px; justify-content:flex-end; } .ui-ing-bt button{ border-radius:999px; padding:10px 18px; font-size:14px; font-weight:700; cursor:pointer; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:#fff; }
 .ui-ing-bt .ui-ing-si{ background:var(--nx-gold); color:#1c1b1b; border-color:transparent; }
+
+/* ===== Entorno igual a NEXO 2: fondo oscuro, tarjetas y botones de vidrio ===== */
+:root{ --nx-fg:#ece8e1; --nx-muted:#a29d95; --nx-soft:#c9c4bb; --g-c2:rgba(255,255,255,.075); }
+html body.en-ventas, html body.en-ventas.bf-panel{ background:radial-gradient(1100px 700px at 12% 8%, rgba(184,145,90,.13), transparent 60%), radial-gradient(1000px 650px at 88% 28%, rgba(70,100,170,.16), transparent 62%), radial-gradient(900px 600px at 50% 100%, rgba(184,145,90,.08), transparent 60%), #0d0e10 fixed !important; color:var(--nx-fg); }
+html body #root-ventas > div, html body #root-ventas [style*="background: rgb(14, 21, 32)"],html body #root-ventas [style*="background-color: rgb(14, 21, 32)"],
+html body #root-ventas [style*="background: rgb(28, 27, 27)"],html body #root-ventas [style*="background-color: rgb(28, 27, 27)"],
+html body #root-ventas [style*="background: rgb(14, 17, 22)"],html body #root-ventas [style*="background-color: rgb(14, 17, 22)"]{ background:transparent !important; }
+/* tarjetas */
+html body #root-ventas [style*="background: rgb(255, 255, 255)"],html body #root-ventas [style*="background-color: rgb(255, 255, 255)"],
+html body #root-ventas [style*="background: rgb(243, 245, 248)"],html body #root-ventas [style*="background-color: rgb(243, 245, 248)"],
+html body #root-ventas [style*="background: rgb(245, 246, 248)"],html body #root-ventas [style*="background-color: rgb(245, 246, 248)"],
+html body #root-ventas [style*="background: rgb(250, 251, 252)"],html body #root-ventas [style*="background-color: rgb(250, 251, 252)"],
+html body #root-ventas [style*="background: rgb(247, 248, 250)"],html body #root-ventas [style*="background-color: rgb(247, 248, 250)"],
+html body #root-ventas [style*="background: rgb(242, 242, 247)"],html body #root-ventas [style*="background-color: rgb(242, 242, 247)"],
+html body #root-ventas [style*="background: rgb(238, 240, 243)"],html body #root-ventas [style*="background-color: rgb(238, 240, 243)"],
+html body #root-ventas [style*="background: rgb(234, 240, 250)"],html body #root-ventas [style*="background-color: rgb(234, 240, 250)"],
+html body #root-ventas [style*="background: rgb(238, 243, 250)"],html body #root-ventas [style*="background-color: rgb(238, 243, 250)"],
+html body #root-ventas [style*="background: rgb(242, 241, 239)"],html body #root-ventas [style*="background-color: rgb(242, 241, 239)"]{
+  background:var(--glint), linear-gradient(158deg,var(--g-a) 0%,var(--g-b) 42%,var(--g-c) 100%) !important;
+  -webkit-backdrop-filter:var(--g-fx); backdrop-filter:var(--g-fx);
+  box-shadow:inset 0 2px 1px var(--g-rim), inset 0 0 0 1px var(--g-edge), inset 0 -12px 22px var(--g-low), 0 14px 28px -12px var(--gl-sh) !important;
+  border-color:transparent !important; color:var(--nx-fg); }
+/* pistas, barras y fondos suaves */
+html body #root-ventas [style*="background: rgb(238, 241, 245)"],html body #root-ventas [style*="background-color: rgb(238, 241, 245)"]{ background:rgba(255,255,255,.09) !important; }
+html body #root-ventas [style*="background: rgb(234, 243, 236)"],html body #root-ventas [style*="background-color: rgb(234, 243, 236)"]{ background:rgba(80,190,120,.16) !important; }
+html body #root-ventas [style*="background: rgb(251, 246, 238)"],html body #root-ventas [style*="background-color: rgb(251, 246, 238)"],
+html body #root-ventas [style*="background: rgb(248, 246, 236)"],html body #root-ventas [style*="background-color: rgb(248, 246, 236)"],
+html body #root-ventas [style*="background: rgb(251, 242, 227)"],html body #root-ventas [style*="background-color: rgb(251, 242, 227)"],
+html body #root-ventas [style*="background: rgb(247, 244, 226)"],html body #root-ventas [style*="background-color: rgb(247, 244, 226)"],
+html body #root-ventas [style*="background: rgb(247, 242, 232)"],html body #root-ventas [style*="background-color: rgb(247, 242, 232)"]{ background:linear-gradient(158deg,rgba(232,197,133,.30),rgba(232,197,133,.07) 50%,var(--g-c)) !important; box-shadow:inset 0 1.5px 1px var(--g-rim), inset 0 0 0 1px rgba(216,176,119,.55) !important; }
+html body #root-ventas [style*="background: rgb(253, 236, 234)"],html body #root-ventas [style*="background-color: rgb(253, 236, 234)"]{ background:rgba(240,104,92,.16) !important; }
+html body #root-ventas [style*="background: rgb(16, 28, 44)"],html body #root-ventas [style*="background-color: rgb(16, 28, 44)"],
+html body #root-ventas [style*="background: rgb(19, 28, 43)"],html body #root-ventas [style*="background-color: rgb(19, 28, 43)"]{ background:var(--glint), linear-gradient(158deg,var(--g-a),var(--g-b) 42%,var(--g-c)) !important; box-shadow:inset 0 2px 1px var(--g-rim), inset 0 0 0 1px var(--g-edge) !important; color:#fff !important; }
+/* textos */
+html body #root-ventas [style*="color: rgb(26, 26, 26)"]:not([style*="background-color: rgb(26, 26, 26)"]),
+html body #root-ventas [style*="color: rgb(16, 28, 44)"]:not([style*="background-color: rgb(16, 28, 44)"]),
+html body #root-ventas [style*="color: rgb(19, 28, 43)"]:not([style*="background-color: rgb(19, 28, 43)"]),
+html body #root-ventas [style*="color: rgb(28, 27, 27)"]:not([style*="background-color: rgb(28, 27, 27)"]){ color:var(--nx-fg) !important; }
+html body #root-ventas [style*="color: rgb(74, 85, 101)"]:not([style*="background-color: rgb(74, 85, 101)"]),
+html body #root-ventas [style*="color: rgb(108, 119, 135)"]:not([style*="background-color: rgb(108, 119, 135)"]){ color:var(--nx-soft) !important; }
+html body #root-ventas [style*="color: rgb(139, 149, 165)"]:not([style*="background-color: rgb(139, 149, 165)"]),
+html body #root-ventas [style*="color: rgb(154, 163, 174)"]:not([style*="background-color: rgb(154, 163, 174)"]){ color:var(--nx-muted) !important; }
+html body #root-ventas [style*="color: rgb(47, 122, 79)"]:not([style*="background-color: rgb(47, 122, 79)"]){ color:#74d394 !important; }
+html body #root-ventas [style*="color: rgb(179, 38, 30)"]:not([style*="background-color: rgb(179, 38, 30)"]){ color:#ff7d70 !important; }
+html body #root-ventas [style*="color: rgb(59, 108, 168)"]:not([style*="background-color: rgb(59, 108, 168)"]),html body #root-ventas [style*="color: rgb(42, 79, 130)"]:not([style*="background-color: rgb(42, 79, 130)"]){ color:#86b6f0 !important; }
+html body #root-ventas [style*="color: rgb(154, 107, 30)"]:not([style*="background-color: rgb(154, 107, 30)"]),html body #root-ventas [style*="color: rgb(138, 106, 56)"]:not([style*="background-color: rgb(138, 106, 56)"]),html body #root-ventas [style*="color: rgb(176, 137, 79)"]:not([style*="background-color: rgb(176, 137, 79)"]){ color:#e2bb7c !important; }
+html body #root-ventas [style*="color: rgb(156, 135, 0)"]:not([style*="background-color: rgb(156, 135, 0)"]),html body #root-ventas [style*="color: rgb(111, 97, 0)"]:not([style*="background-color: rgb(111, 97, 0)"]){ color:#E2C200 !important; }
+html body #root-ventas [style*="color: rgb(107, 79, 160)"]:not([style*="background-color: rgb(107, 79, 160)"]){ color:#bba3ee !important; }
+html body #root-ventas [style*="color: rgb(192, 122, 30)"]:not([style*="background-color: rgb(192, 122, 30)"]){ color:#f2b45e !important; }
+/* bordes */
+html body #root-ventas [style*="rgb(230, 233, 238)"],
+html body #root-ventas [style*="rgb(215, 221, 229)"],
+html body #root-ventas [style*="rgb(235, 220, 192)"],
+html body #root-ventas [style*="rgb(236, 230, 191)"],
+html body #root-ventas [style*="rgb(217, 208, 189)"],
+html body #root-ventas [style*="rgb(238, 240, 243)"]{ border-color:rgba(255,255,255,.14) !important; }
+html body #root-ventas [style*="rgb(241, 201, 197)"]{ border-color:rgba(255,125,112,.45) !important; }
+/* tablas y separadores */
+html body #root-ventas th{ color:var(--nx-muted) !important; } html body #root-ventas td{ color:var(--nx-fg) !important; border-color:rgba(255,255,255,.10) !important; }
+html body #root-ventas hr{ border-color:rgba(255,255,255,.12) !important; }
+/* campos */
+html body #root-ventas input:not([type=checkbox]):not([type=radio]):not([type=range]), html body #root-ventas select, html body #root-ventas textarea, html body #root-ventas .vinput{
+  background:linear-gradient(158deg,var(--g-b),var(--g-c)) !important; color:var(--nx-fg) !important; border:1px solid var(--g-edge) !important; box-shadow:inset 0 1px 3px rgba(0,0,0,.25) !important; }
+html body #root-ventas input::placeholder, html body #root-ventas textarea::placeholder{ color:var(--nx-muted) !important; }
+html body #root-ventas select option{ color:#111; background:#f4f4f6; }
+/* botones de pestañas y filtros: vidrio; el elegido, dorado */
+html body #root-ventas .mvtab, html body #root-ventas button[style*="rgba(255, 255, 255, 0.06)"]{
+  background:var(--glint), linear-gradient(158deg,var(--g-a) 0%,var(--g-b) 42%,var(--g-c) 100%) !important; border:0 !important; color:#f2efe9 !important; border-radius:999px !important;
+  -webkit-backdrop-filter:var(--g-fx); backdrop-filter:var(--g-fx); box-shadow:inset 0 2px 1px var(--g-rim), inset 0 0 0 1px var(--g-edge), inset 0 -10px 18px var(--g-low), 0 10px 22px -12px var(--gl-sh) !important; }
+html body #root-ventas .mvtab.act, html body #root-ventas button[style*="rgb(251, 246, 238)"], html body #root-ventas button[style*="rgb(248, 246, 236)"]{
+  background:var(--glint), linear-gradient(180deg,rgba(244,218,160,.95),rgba(199,156,85,.75)) !important; color:#2a1c05 !important; border:0 !important; border-radius:999px !important;
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.85), inset 0 -8px 14px rgba(120,80,20,.28), 0 10px 22px -8px rgba(199,156,85,.7) !important; }
+html:has(.bf-portada) body #root-ventas .mvtab.act, html:has(.bf-portada) body #root-ventas button[style*="rgb(248, 246, 236)"][style*="color"]{ background:var(--glint), linear-gradient(180deg,#f0dc55,#c9ad00) !important; color:#1c1b1b !important; box-shadow:inset 0 2px 1px rgba(255,255,255,.8), inset 0 -8px 14px rgba(90,75,0,.3), 0 10px 22px -8px rgba(212,184,0,.6) !important; }
+html body #root-ventas .mvtab.act *, html body #root-ventas button[style*="rgb(251, 246, 238)"][style*="color"], html body #root-ventas button[style*="rgb(251, 246, 238)"] *, html body #root-ventas button[style*="rgb(248, 246, 236)"][style*="color"], html body #root-ventas button[style*="rgb(248, 246, 236)"] *{ color:#2a1c05 !important; }
+html:has(.bf-portada) body #root-ventas button[style*="rgb(248, 246, 236)"][style*="color"], html:has(.bf-portada) body #root-ventas button[style*="rgb(248, 246, 236)"] *{ color:#1c1b1b !important; }
+/* encabezado de Belfast como la barra de arriba de NEXO 2 */
+html body.bf-panel .bf-top{ background:linear-gradient(158deg,var(--g-a),var(--g-b)), rgba(18,19,23,.55) !important; -webkit-backdrop-filter:blur(24px) saturate(1.8); backdrop-filter:blur(24px) saturate(1.8); box-shadow:inset 0 -1px 0 var(--g-edge), 0 14px 30px -18px var(--gl-sh); position:sticky; top:0; z-index:50; }
+html body.bf-panel .bf-portada{ background:transparent !important; }
+html body .bf-top .bf-ig{ background:var(--glint), linear-gradient(158deg,var(--g-a) 0%,var(--g-b) 42%,var(--g-c) 100%) !important; border:0 !important; box-shadow:inset 0 2px 1px var(--g-rim), inset 0 0 0 1px var(--g-edge) !important; color:#f2efe9 !important; }
+#idioma-flotante{ background:var(--glint), linear-gradient(158deg,var(--g-a) 0%,var(--g-b) 42%,var(--g-c) 100%), rgba(18,19,23,.66) !important; border:0 !important; -webkit-backdrop-filter:var(--g-fx); backdrop-filter:var(--g-fx); box-shadow:inset 0 2px 1px var(--g-rim), inset 0 0 0 1px var(--g-edge), 0 14px 28px -12px var(--gl-sh) !important; }
+#ui-sync{ background:var(--glint), linear-gradient(158deg,var(--g-a),var(--g-b) 42%,var(--g-c)), rgba(18,19,23,.66) !important; border:0 !important; box-shadow:inset 0 1.5px 1px var(--g-rim), inset 0 0 0 1px var(--g-edge) !important; }
