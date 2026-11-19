@@ -103,6 +103,7 @@ function filtroMarca(ruta, metodo) {
   const m = marcaActual(); if (m === "todas") return ruta;
   const sep = ruta.indexOf("?") >= 0 ? "&" : "?";
   if (/^mkt_cola(\?|$)/.test(ruta) && metodo !== "POST") return ruta + sep + (m === "belfast" ? "meta->>marca=eq.belfast" : "or=(meta->>marca.is.null,meta->>marca.neq.belfast)");
+  if (/^mkt_auditoria(\?|$)/.test(ruta) && metodo !== "POST") return ruta + sep + (m === "belfast" ? "detalle->>marca=eq.belfast" : "or=(detalle->>marca.is.null,detalle->>marca.neq.belfast)");
   if (/^mkt_prospectos(\?|$)/.test(ruta) && metodo !== "POST") return ruta + sep + (m === "belfast" ? "fuente=like.belfast*" : "or=(fuente.is.null,fuente.not.like.belfast*)");
   return ruta;
 }
@@ -136,7 +137,9 @@ async function db(ruta, opts) {
 }
 
 async function auditar(actor, accion, detalle) {
-  try { await db("mkt_auditoria", { method: "POST", body: { actor, accion, detalle: detalle || {} }, prefer: "return=minimal" }); } catch (e) { /* no frena la acción */ }
+  const d = Object.assign({}, detalle || {});
+  if (marcaActual() === "belfast") d.marca = "belfast";
+  try { await db("mkt_auditoria", { method: "POST", body: { actor, accion, detalle: d }, prefer: "return=minimal" }); } catch (e) { /* no frena la acción */ }
 }
 
 async function leerConfig() {

@@ -166,6 +166,7 @@ mrep('<div class="card"><h2>Topes</h2>', '<div class="card" style="display:none"
 mrep('<div class="card"><h2>4 · Videos para Reels</h2>', '<div class="card" style="display:none"><h2>4 · Videos para Reels</h2>')
 mrep('{pais:$("pais").value,zona:$("zona").value}', '{pais:$("pais").value,zona:$("zona").value,rubro:$("rubro").value}')
 m = m.replace(";reels()}", "}")
+mrep('["Gmail",k.gmail]', '["Mail de Belfast (info@belfastcm.com, falta configurar)",false]')
 (raiz / "belfast-motor.html").write_text(m, encoding="utf-8")
 print("belfast-motor.html listo")
 print("belfast-ventas.html listo,", len(s), "bytes")
