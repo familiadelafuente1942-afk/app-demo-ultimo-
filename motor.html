@@ -85,4 +85,28 @@ function aprobarTodo(){if(!confirm("¿Aprobar todo lo pendiente? Igual no sale n
 function enviarYa(){ocupado(0,function(){return api("enviar_ahora").then(function(r){aviso("Mails enviados: "+r.mails.enviados+(r.mails.motivo?" ("+r.mails.motivo+")":"")+". Posteos: "+r.posts.publicados);estado();cola();audit()})})}
 function audit(){api("auditoria").then(function(r){$("aud").innerHTML=r.items.slice(0,25).map(function(i){return esc(i.creado.slice(0,16).replace("T"," "))+" · "+esc(i.actor)+" · <b>"+esc(i.accion)+"</b>"}).join("<br>")||"Sin actividad todavía."}).catch(function(){})}
 (function(){try{var s=JSON.parse(localStorage.getItem("motor_tk")||"null");if(s&&s.e>Date.now()){T=s.t;iniciar();return}}catch(e){}T="";iniciar()})();
+</script><script src="dicc-extra.js?v=2"></script>
+<script>
+// Idioma del motor: sigue al de la página (ES / EN / PT).
+(function(){
+  var D=window.DICC_N3||{}, IDX={en:0,pt:1}, MAP=new WeakMap(), idioma="es";
+  function leer(){ try{ return localStorage.getItem("idioma")||"es"; }catch(e){ return "es"; } }
+  function tr(base){ if(idioma==="es") return base; var a=D[base]; return a ? (a[IDX[idioma]]||base) : base; }
+  function recorrer(){
+    var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null), n, cambios=[];
+    while((n=w.nextNode())){ var p=n.parentNode; if(!p||p.nodeName==="SCRIPT"||p.nodeName==="STYLE"||p.closest(".reel,[data-notr]")) continue;
+      var crudo=n.nodeValue, t=crudo.trim(); if(t.length<2) continue;
+      var r=MAP.get(n), base=(r&&r.puesto===t)?r.base:t, nuevo=tr(base);
+      if(nuevo!==t) cambios.push([n,crudo.replace(t,nuevo),base,nuevo]); }
+    cambios.forEach(function(c){ c[0].nodeValue=c[1]; MAP.set(c[0],{base:c[2],puesto:c[3]}); });
+    document.querySelectorAll("[placeholder]").forEach(function(e){ if(!e.hasAttribute("data-ph-es")) e.setAttribute("data-ph-es",e.getAttribute("placeholder")); var v=tr(e.getAttribute("data-ph-es")); if(e.getAttribute("placeholder")!==v) e.setAttribute("placeholder",v); });
+    document.documentElement.lang=idioma;
+  }
+  var obs=new MutationObserver(function(){ obs.disconnect(); try{recorrer();}catch(e){} obs.observe(document.body,{childList:true,subtree:true,characterData:true}); });
+  function poner(l){ if(l!=="es"&&!IDX.hasOwnProperty(l)) return; idioma=l; obs.disconnect(); try{recorrer();}catch(e){} obs.observe(document.body,{childList:true,subtree:true,characterData:true}); }
+  window.addEventListener("message",function(e){ if(e.data&&e.data.idioma) poner(e.data.idioma); });
+  window.addEventListener("storage",function(e){ if(e.key==="idioma") poner(leer()); });
+  setInterval(function(){ var l=leer(); if(l!==idioma) poner(l); },1500);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",function(){ poner(leer()); }); else poner(leer());
+})();
 </script></body></html>

@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="es">
 <head>
+<script src="dicc-extra.js?v=2"></script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="light only" />
@@ -676,7 +677,7 @@ window.iaErrTxt=async function(r){var m="";try{var j=await r.clone().json();m=(j
   var hint=r.status===401?" (la clave no es válida)":r.status===404?" (el modelo no está disponible)":r.status===429?" (límite de uso, esperá un momento)":r.status===400&&/credit/i.test(m)?" (sin crédito en la cuenta de Anthropic)":"";
   return "error "+r.status+hint+(m?": "+m.slice(0,140):"")};
 </script>
-<script src="landing-i18n.js"></script>
+<script src="landing-i18n.js?v=2"></script>
 <style id="glass-centro">
 /* Centro de Operaciones en vidrio brillante (mismo estilo que NEXO 2.0) */
 body.en-ventas::before{content:"";position:fixed;inset:0;z-index:4;pointer-events:none;mix-blend-mode:screen;opacity:.55;
