@@ -124,12 +124,26 @@ window.ROLES_VENTAS = [["todos","Todos"],["estudio","Estudios de arquitectura"],
   document.addEventListener("click", function(e){ var v = document.getElementById("bf-visor"); if (!v) return; var a = e.target && e.target.closest && e.target.closest(".bf-ob"); if (a) { e.preventDefault(); v.querySelector("img").src = a.getAttribute("href"); var sp = a.querySelector("span"); v.querySelector(".bf-vis-t").textContent = sp ? sp.textContent : ""; v.hidden = false; return; } if (!v.hidden && (e.target === v || (e.target.closest && e.target.closest(".bf-vis-x")))) v.hidden = true; });
   document.addEventListener("keydown", function(e){ var v = document.getElementById("bf-visor"); if (v && e.key === "Escape") v.hidden = true; });
   document.addEventListener("click", function(e){ var t = e.target && e.target.closest && e.target.closest("#bf-logo"); if (!t) return; e.preventDefault(); document.body.classList.toggle("bf-panel"); try { window.scrollTo(0, 0); } catch(x){} });
+  // Apertura: el reel de Belfast al abrir la app (una vez por visita; Saltar o al terminar entra a la portada).
+  (function(){
+    function quitar(ov){ if (!ov || ov.classList.contains("fuera")) return; ov.classList.add("fuera"); try { ov.querySelector("video").pause(); } catch(e){} setTimeout(function(){ if (ov.parentNode) ov.parentNode.removeChild(ov); }, 750); }
+    function iniciar(){ var ov = document.getElementById("bf-intro"); if (!ov) return; var v = ov.querySelector("video");
+      var visto = false; try { visto = sessionStorage.getItem("bf-intro") === "1"; sessionStorage.setItem("bf-intro", "1"); } catch(e){}
+      if (visto || !v) { ov.parentNode.removeChild(ov); return; }
+      v.addEventListener("ended", function(){ quitar(ov); });
+      v.addEventListener("error", function(){ quitar(ov); });
+      ov.querySelector(".bf-intro-saltar").addEventListener("click", function(){ quitar(ov); });
+      ov.querySelector(".bf-intro-son").addEventListener("click", function(){ v.muted = false; try { v.currentTime = 0; } catch(e){} v.play(); this.style.display = "none"; });
+      var p = v.play(); if (p && p.catch) p.catch(function(){ /* sin autoplay: queda el póster y los botones */ });
+      setTimeout(function(){ quitar(ov); }, 40000); }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar); else iniciar();
+  })();
   // Espera: después de un rato sin tocar nada en la presentación, pasan las fotos del Instagram.
   (function(){
     var fotos = ["06","09","04","02","05","07","03","10","11","08","12","01"].map(function(n){ return "belfast-ig/ig-" + n + ".jpg"; });
     var ov, img, fondo, i = 0, reloj = null, pase = null, ESPERA = 25000;
     function mostrar(){ img.classList.remove("vis"); setTimeout(function(){ var f = fotos[i++ % fotos.length]; img.onload = function(){ img.classList.add("vis"); }; img.src = f; fondo.style.backgroundImage = "url(" + f + ")"; }, 450); }
-    function entrar(){ if (document.body.classList.contains("bf-panel")) { armar(); return; } ov.classList.add("on"); mostrar(); pase = setInterval(mostrar, 6000); }
+    function entrar(){ if (document.body.classList.contains("bf-panel") || document.getElementById("bf-intro")) { armar(); return; } ov.classList.add("on"); mostrar(); pase = setInterval(mostrar, 6000); }
     function salir(){ if (pase) { clearInterval(pase); pase = null; } if (ov) ov.classList.remove("on"); armar(); }
     function armar(){ clearTimeout(reloj); reloj = setTimeout(entrar, ESPERA); }
     function iniciar(){ ov = document.getElementById("bf-espera"); if (!ov) return; img = ov.querySelector(".bf-esp-foto"); fondo = ov.querySelector(".bf-esp-fondo");

@@ -104,4 +104,12 @@ body:not(.bf-panel){ background:#282627!important; }
 .bf-vis-x{ position:absolute; top:12px; right:16px; background:none; border:0; color:#fff; font-size:34px; cursor:pointer; line-height:1; }
 body.bf-panel .bf-obras{ display:none!important; }
 @media (max-width:620px){ .bf-obras{ padding:32px 16px 28px; } .bf-obras-grid{ grid-template-columns:repeat(2,1fr); gap:4px; } .bf-ob span{ font-size:10.5px; } }
+
+/* Apertura: reel de Belfast */
+#bf-intro{ position:fixed; inset:0; z-index:100000; background:#0d0d0d; display:flex; align-items:center; justify-content:center; transition:opacity .7s; }
+#bf-intro.fuera{ opacity:0; pointer-events:none; }
+#bf-intro video{ height:100%; width:100%; object-fit:contain; background:#0d0d0d; }
+.bf-intro-bar{ position:absolute; right:16px; bottom:calc(18px + env(safe-area-inset-bottom)); display:flex; gap:8px; }
+.bf-intro-bar button{ font:600 13px/1 system-ui,sans-serif; color:#fff; background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.35); border-radius:999px; padding:10px 16px; cursor:pointer; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+.bf-intro-bar .bf-intro-saltar{ background:var(--bf-am); color:#1c1b1b; border-color:var(--bf-am); }
 </style>
