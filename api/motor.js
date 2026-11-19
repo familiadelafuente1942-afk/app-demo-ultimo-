@@ -455,7 +455,7 @@ async function accionEnviarMail(actor, b) {
     const r = await fetch(SUPA_URL + "/functions/v1/enviar-mail", {
       method: "POST",
       headers: { Authorization: "Bearer " + (st && st.token || ""), apikey: SUPA_ANON, "Content-Type": "application/json" },
-      body: JSON.stringify({ to, subject: msg.subject, html, replyTo: user || "nexoentorno@gmail.com", adjuntoUrl: msg.attachments ? b.adjuntoUrl : undefined, adjuntoNombre: msg.attachments ? msg.attachments[0].filename : undefined })
+      body: JSON.stringify({ to, from: "NEXO <nexo@nexorarq.com>", subject: msg.subject, html, replyTo: user || "nexoentorno@gmail.com", adjuntoUrl: msg.attachments ? b.adjuntoUrl : undefined, adjuntoNombre: msg.attachments ? msg.attachments[0].filename : undefined })
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok || d.error) throw Object.assign(new Error("No se pudo mandar: " + JSON.stringify(d.error || d).slice(0, 160)), { status: 502 });
