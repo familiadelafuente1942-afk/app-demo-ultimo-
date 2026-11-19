@@ -2911,5 +2911,70 @@
 "rol": "constructora",
 "pais": "ar",
 "nota": "Estructuras premoldeadas de hormigón, Córdoba"
+},
+{
+"empresa": "Habitar Arquitectura",
+"email": "gabrielcagno@habitar.com.uy",
+"telefono": "+598 2641 5400",
+"whatsapp": "",
+"web": "https://habitararquitectura.com.uy",
+"linkedin": "",
+"instagram": "",
+"nuevo": true,
+"rol": "estudio",
+"pais": "uy",
+"nota": "Viviendas y espacios comerciales, de la idea a la obra (Uruguay XXI)"
+},
+{
+"empresa": "Estudio Uno a Uno",
+"email": "estudiounoauno@gmail.com",
+"telefono": "+598 99 555 424",
+"whatsapp": "",
+"web": "https://unoauno-estudio.com",
+"linkedin": "",
+"instagram": "",
+"nuevo": true,
+"rol": "estudio",
+"pais": "uy",
+"nota": "Arquitectura e interiorismo a medida (Uruguay XXI)"
+},
+{
+"empresa": "Grupo Dominus",
+"email": "scitrin@grupodominus.com.uy",
+"telefono": "+598 2408 3854",
+"whatsapp": "",
+"web": "https://grupodominus.com.uy",
+"linkedin": "",
+"instagram": "",
+"nuevo": true,
+"rol": "estudio",
+"pais": "uy",
+"nota": "Obras nuevas, ampliaciones y reformas (Uruguay XXI)"
+},
+{
+"empresa": "Carolina Palombo Piriz",
+"email": "carolina@carolinapalombo.com",
+"telefono": "+598 2708 8521",
+"whatsapp": "",
+"web": "",
+"linkedin": "",
+"instagram": "",
+"nuevo": true,
+"rol": "estudio",
+"pais": "uy",
+"nota": "Diseño y construcción de espacios (Uruguay XXI)"
+},
+{
+"empresa": "Grupo CEOSA",
+"email": "contacto@grupoceosa.com",
+"telefono": "+54 261 462 3800",
+"whatsapp": "",
+"web": "https://grupoceosa.com",
+"linkedin": "",
+"instagram": "ceosaconstructora",
+"nuevo": true,
+"rol": "constructora",
+"pais": "ar",
+"nota": "Constructora, Mendoza"
 }
 ]
