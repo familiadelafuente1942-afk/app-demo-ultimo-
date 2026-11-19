@@ -436,7 +436,6 @@ async function accionCambiarEstado(actor, ids, estado) {
 // Envío directo desde la app (campaña, prospecto, respuesta): sale de la casilla de NEXO (GMAIL_USER) por Gmail.
 async function accionEnviarMail(actor, b) {
   const user = process.env.GMAIL_USER, pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
-  if (!user || !pass) throw Object.assign(new Error("Falta conectar el Gmail de NEXO (GMAIL_APP_PASSWORD en Vercel)."), { status: 500 });
   const to = String(b.to || "").trim().toLowerCase();
   if (!emailValido(to)) throw Object.assign(new Error("Mail de destino inválido."), { status: 400 });
   if (!b.subject || !b.html) throw Object.assign(new Error("Faltan el asunto o el mensaje."), { status: 400 });
@@ -449,6 +448,19 @@ async function accionEnviarMail(actor, b) {
   if (secreto) msg.headers = { "List-Unsubscribe": "<" + linkBaja(to, secreto) + ">" };
   if (b.adjuntoUrl && /^https:\/\/agcmhrbxqtibrtmhwrrx\.supabase\.co\/storage\/v1\/object\/public\//.test(String(b.adjuntoUrl))) {
     msg.attachments = [{ filename: String(b.adjuntoNombre || "adjunto.pdf").slice(0, 80), path: String(b.adjuntoUrl) }];
+  }
+  if (!pass) {
+    // Sin la contraseña de Gmail: sale por el servicio de envíos (Resend) como "NEXO" y las respuestas vuelven a la casilla de NEXO.
+    const st = ctx.getStore();
+    const r = await fetch(SUPA_URL + "/functions/v1/enviar-mail", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + (st && st.token || ""), apikey: SUPA_ANON, "Content-Type": "application/json" },
+      body: JSON.stringify({ to, subject: msg.subject, html, replyTo: user || "nexoentorno@gmail.com", adjuntoUrl: msg.attachments ? b.adjuntoUrl : undefined, adjuntoNombre: msg.attachments ? msg.attachments[0].filename : undefined })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.error) throw Object.assign(new Error("No se pudo mandar: " + JSON.stringify(d.error || d).slice(0, 160)), { status: 502 });
+    await auditar(actor, "mail_directo", { to, via: "resend" });
+    return { ok: true, id: d.id };
   }
   const nodemailer = require("nodemailer");
   const tr = nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user, pass } });
