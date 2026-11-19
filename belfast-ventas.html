@@ -14719,7 +14719,7 @@ body:not(.bf-panel) #root-ventas{ display:none!important; }
 body.bf-panel .bf-hero, body.bf-panel .bf-cinta, body.bf-panel .bf-pie{ display:none!important; }
 #bf-logo{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .bf-hero{ min-height:calc(100vh - 330px); }
-#root-ventas .ficha-contenido > div:empty{ display:none!important; }
+#root-ventas div:empty[style*="11px 13px"]{ display:none!important; }
 /* Espera: si nadie toca, van pasando las fotos del Instagram */
 #bf-espera{ position:fixed; inset:0; z-index:99999; background:#111; opacity:0; pointer-events:none; transition:opacity 1.2s ease; overflow:hidden; }
 #bf-espera.on{ opacity:1; pointer-events:auto; cursor:pointer; }
