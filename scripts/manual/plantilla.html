@@ -74,6 +74,8 @@ h2{font-size:22px;margin:0 0 6px;font-weight:600}
 .obra .tira{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;-webkit-overflow-scrolling:touch}.obra .tf{position:relative;flex:0 0 auto;width:150px}.obra .tf img{width:150px;height:110px;object-fit:cover;border-radius:12px;display:block;cursor:zoom-in}.obra .tf small{display:block;font-size:12px;opacity:.8;margin-top:4px}
 .obra .tx{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:17px;line-height:1;cursor:pointer}
 .subir{cursor:pointer;display:inline-flex}.estado{margin-left:10px;font-size:13px;opacity:.85}
+.mal .tira{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}.mal .tf{flex:0 0 auto;width:150px}.mal .tf img{width:150px;height:110px;object-fit:cover;border-radius:12px;display:block;cursor:zoom-in;box-shadow:0 0 0 2px var(--rojo)}
+.foto figcaption.malcap{background:rgba(190,40,30,.85)}
 #visor{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:16px}#visor.on{display:flex}#visor img{max-width:100%;max-height:100%;border-radius:12px}
 html[data-tema=claro] .foto img,html[data-tema=claro] .mini,html[data-tema=claro] #visor img{filter:none}
 .mat{display:flex;flex-wrap:wrap;gap:8px}.mat span{font-size:14px;padding:7px 13px;border-radius:14px;background:linear-gradient(158deg,var(--g-b),var(--g-c));box-shadow:inset 0 1.5px 1px rgba(255,255,255,.3),inset 0 0 0 1px var(--g-edge)}
@@ -181,7 +183,7 @@ const total=M.reduce((a,c)=>a+c.s.length,0);
 function ir(r){location.hash=r?'#'+r:'#';}
 function tema(){const c=document.documentElement.getAttribute('data-tema')==='claro';if(c)document.documentElement.removeAttribute('data-tema');else document.documentElement.setAttribute('data-tema','claro');lset('manual_tema',c?'oscuro':'claro');try{localStorage.setItem('manual_tema',c?'oscuro':'claro')}catch(e){}pintarTema()}
 function pintarTema(){$('#b-tema').innerHTML=svg(document.documentElement.getAttribute('data-tema')==='claro'?'luna':'sol');$('#b-buscar').innerHTML=svg('lupa')}
-const SUG=['vigas invertidas','losa radiante','cielorraso durlock','hormigón calor','parrilla','protex','seal 77 flex baño','contrapiso alivianado','pendiente subsuelo','impermeabilización tabiques','compactación','nylon platea','encofrados','niveles','membrana','cloaca pendiente','revoque exterior','porcelanato','puesta a tierra'];
+const SUG=['canaletas','vigas invertidas','losa radiante','cielorraso durlock','hormigón calor','parrilla','protex','seal 77 flex baño','contrapiso alivianado','pendiente subsuelo','impermeabilización tabiques','compactación','nylon platea','encofrados','niveles','membrana','cloaca pendiente','revoque exterior','porcelanato','puesta a tierra'];
 function nav(act){const it=[['','Inicio','inicio'],['capitulos','Capítulos','libro'],['buscar','Buscar','lupa'],['controles','Controles','check'],['guardados','Guardados','marca']];
  $('#nav').innerHTML=it.map(([r,l,i])=>`<button onclick="ir('${r}')" ${act===r?'aria-current="page"':''}><span class="o">${svg(i)}</span><span class="l">${svg(i,true)}</span>${l}</button>`).join('')}
 function tarjCap(c){const hechos=c.s.reduce((a,s)=>a+(s.ctrl||[]).filter((x,i)=>CHK[c.id+'/'+s.id+'/'+i]).length,0);
@@ -209,8 +211,9 @@ function vSec(cid,sid){const c=cap(cid),s=secc(cid,sid);if(!s)return vCap(cid);c
  return `<button class="volver" onclick="ir('c/${c.id}')">${svg('atras')} ${esc(c.t)}</button>
  <div class="eti">${esc(c.t)}</div><h1>${esc(s.t)}</h1>
  <div class="acc"><button class="chip vid" onclick="guardar('${k}')">${fav?'★ Guardado':'☆ Guardar'}</button><button class="chip vid" onclick="window.print()">Imprimir</button><button class="chip vid" onclick="compartir('${k}')">Compartir</button></div>
- ${(()=>{const ob=OBRA[k]||[];const re=s.reales||[];const u=ob.length?ob[0].u:(re.length?re[0]:s.foto);if(!u)return'';return `<figure class="foto vid" onclick="verFoto('${u}')"><img src="${u}" alt="${esc(s.t)}" loading="lazy" onerror="this.parentNode.style.display='none'"><figcaption>${ob.length||re.length||s.fr?'Obra Belfast':'Imagen ilustrativa'}</figcaption></figure>`})()}
+ ${(()=>{const ob=OBRA[k]||[];const re=s.reales||[];const u=ob.length?ob[0].u:(re.length?re[0]:s.foto);if(!u)return'';return `<figure class="foto vid" onclick="verFoto('${u}')"><img src="${u}" alt="${esc(s.t)}" loading="lazy" onerror="this.parentNode.style.display='none'"><figcaption class="${!ob.length&&!re.length&&(s.malas||[]).includes(u)?'malcap':''}">${!ob.length&&!re.length&&(s.malas||[]).includes(u)?'✕ Mala ejecución — no se acepta':(ob.length||re.length||s.fr?'Obra Belfast':'Imagen ilustrativa')}</figcaption></figure>`})()}
  ${bloqueObra(k,s)}
+ ${(s.malas||[]).length?`<div class="bloque mal"><h3>${svg('no')} Así NO: mala ejecución <span class="prog">${s.malas.length}</span></h3><div class="tira">${s.malas.map(u=>`<div class="tf"><img src="${u}" loading="lazy" onclick="verFoto('${u}')" alt=""></div>`).join('')}</div><p class="ref" style="margin:4px 0 0">Fotos reales de obras. Esto no se acepta: se rehace.</p></div>`:''}
  <div class="bloque vid"><p class="que" style="margin:0">${esc(s.que)}</p></div>
  ${s.mat&&s.mat.length?`<div class="bloque vid"><h3>${svg('mat')} Materiales y equipos</h3><div class="mat">${s.mat.map(m=>`<span>${esc(m)}</span>`).join('')}</div></div>`:''}
  ${s.pasos&&s.pasos.length?`<div class="bloque vid"><h3>${svg('pasos')} Cómo se hace</h3><ol class="pasos">${s.pasos.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`:''}

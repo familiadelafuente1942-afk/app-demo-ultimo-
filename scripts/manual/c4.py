@@ -237,3 +237,25 @@ for c in C:
     if c["id"] == "revoques":
         c["s"][0:0] = [MALLA, SALP]
         c["d"] = "Malla en encuentros, salpicado, fajas, azotado hidrófugo, grueso, fino y yeso."
+
+# Canaletas: lo que no se acepta (con fotos de mala ejecución reales)
+PICADO = S("canaletas","Canaletas para instalaciones: reglas y lo que NO se acepta","canaletas picado cañerias cajon hidrofugo capa aisladora fajas ceresita mala ejecucion diagonal cruzar pared",
+ "Las canaletas se planifican antes de picar. Un picado mal hecho rompe la capa aisladora, el cajón hidrófugo o las fajas, y genera humedad y fisuras que aparecen meses después. Las fotos de este tema son ejemplos reales de lo que no se hace.",
+ ["Amoladora con disco diamantado (corte de los dos bordes) y cortafierro solo para vaciar","Mortero de reparación; Protex 1 o Seal 77 si hay que rehacer el cajón hidrófugo","Malla soldada para tapar canaletas"],
+ ["Nunca picar la capa aisladora ni el cajón hidrófugo para pasar cañerías. Los caños que van por el piso pasan por el contrapiso, por encima de la capa aisladora, y suben por el muro desde ahí.",
+  "Si por excepción hubo que cortar el cajón: avisar a Dirección de obra, rehacer la capa aisladora y el cajón hidrófugo completos en esa zona (con Protex 1 / Seal 77, solapando 20 cm con lo existente) y registrarlo con foto en NEXO antes de tapar. Se controla uno por uno.",
+  "Canaletas siempre rectas: verticales hacia el techo (o hacia el piso) desde la caja o el artefacto. Nunca en diagonal.",
+  "Nunca una cañería cruzando una pared de punta a punta en horizontal. Los recorridos horizontales van por la losa, el cielorraso o el contrapiso; en el muro solo tramos horizontales cortos a la altura de artefactos, según plano.",
+  "Marcar todas las canaletas con tiza o láser y que las apruebe el capataz antes de picar.",
+  "Cortar con amoladora los dos bordes (canaleta prolija del ancho justo), no a maza.",
+  "Si las fajas del revoque ya están hechas, no se pican. Las instalaciones se hacen antes de las fajas; si falta algo, se consulta a Dirección de obra.",
+  "En baños y locales húmedos, el salpicado y las fajas suelen tener hidrófugo (Ceresita): no se pican; si se rompen, se rehace la capa hidrófuga completa en la zona.",
+  "No picar el revoque terminado para agregar cajas o caños; cualquier agregado se aprueba y se repara con el mismo material y malla.",
+  "Caños de desagüe o pluviales a la vista sobre revoque: solo si el proyecto lo indica; si no, van embutidos o en plenos.",
+  "Tapar las canaletas con mortero y malla (15 cm a cada lado), recién con la prueba de la instalación aprobada."],
+ ["Canaletas marcadas y aprobadas antes de picar","Capa aisladora y cajón hidrófugo sin cortes (foto)","Todas las canaletas verticales o según plano, sin diagonales","Ninguna cañería cruzando la pared en horizontal","Fajas y revoque hidrófugo sin picar","Si hubo corte del cajón: reparación registrada en NEXO"],
+ ["Picar el cajón hidrófugo o la capa aisladora","Canaletas en diagonal","Caños cruzando toda la pared","Picar fajas o revoque ya hecho","Picar a maza sin cortar los bordes","Tapar sin probar la instalación"],
+ "Criterio de obra Belfast. Fotos: ejemplos reales de mala ejecución en obras.")
+for c in C:
+    if c["id"] == "mamposteria":
+        c["s"].append(PICADO)
