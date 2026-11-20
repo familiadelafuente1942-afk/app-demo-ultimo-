@@ -50,8 +50,27 @@ module.exports = async function handler(req, res) {
       const ind = await leerIndice();
       return res.status(200).json({ fotos: ind });
     }
+    if (accion === "obras") {
+      const r = await fetch(SUPA_URL + "/storage/v1/object/" + BUCKET + "/obras.json?t=" + Date.now(), { headers: cab() });
+      let o = {}; if (r.ok) { try { o = JSON.parse(await r.text()) || {}; } catch (e) { o = {}; } }
+      return res.status(200).json({ obras: o });
+    }
     if (req.method !== "POST") return res.status(405).json({ error: "Usá POST" });
     if (!vieneDeLaApp(req)) return res.status(403).json({ error: "Solo desde la app del manual." });
+    if (accion === "obra") {
+      if (!/^o[a-z0-9]{6,30}$/.test(String(b.id || "")) || !b.obra || typeof b.obra !== "object") return res.status(400).json({ error: "Obra no válida." });
+      const txt = JSON.stringify(b.obra); if (txt.length > 50000) return res.status(413).json({ error: "Demasiado grande." });
+      await asegurarBucket();
+      const r = await fetch(SUPA_URL + "/storage/v1/object/" + BUCKET + "/obras.json?t=" + Date.now(), { headers: cab() });
+      let o = {}; if (r.ok) { try { o = JSON.parse(await r.text()) || {}; } catch (e) { o = {}; } }
+      const vieja = o[b.id];
+      if (!vieja || (Number(b.obra.t) || 0) >= (Number(vieja.t) || 0)) {
+        o[b.id] = b.borrar ? { borrada: 1, t: Date.now() } : { nombre: String(b.obra.nombre || "Obra").slice(0, 120), c: b.obra.c || {}, ok: b.obra.ok || {}, t: Number(b.obra.t) || Date.now() };
+        const w = await fetch(SUPA_URL + "/storage/v1/object/" + BUCKET + "/obras.json", { method: "POST", headers: cab({ "Content-Type": "application/json", "x-upsert": "true", "cache-control": "no-cache" }), body: JSON.stringify(o) });
+        if (!w.ok) throw new Error("No se pudo guardar la obra: " + (await w.text()).slice(0, 200));
+      }
+      return res.status(200).json({ ok: true });
+    }
     if (!claveOk(b.k)) return res.status(400).json({ error: "Tema no válido." });
     await asegurarBucket();
     if (accion === "subir") {

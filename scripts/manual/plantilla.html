@@ -115,7 +115,7 @@ nav.bottom button[aria-current=page] .o{display:none}nav.bottom button[aria-curr
 </style></head><body>
 <header class="top">
   <div class="marca" onclick="ir('')"><img src="belfast-isotipo.png" alt=""><div><b>BELFAST</b><small>Manual de obra</small></div></div>
-  <div class="ib"><button class="ibtn vid" onclick="ir('buscar')" aria-label="Buscar" id="b-buscar"></button><button class="ibtn vid" onclick="tema()" aria-label="Claro u oscuro" id="b-tema"></button></div>
+  <div class="ib"><button class="ibtn vid" onclick="tema()" aria-label="Claro u oscuro" id="b-tema"></button></div>
 </header>
 <main id="app"></main>
 <nav class="bottom" aria-label="Secciones"><div class="in" id="nav"></div></nav>
@@ -188,7 +188,7 @@ const secc=(cid,sid)=>{const c=cap(cid);return c&&c.s.find(s=>s.id===sid)};
 const total=M.reduce((a,c)=>a+c.s.length,0);
 function ir(r){location.hash=r?'#'+r:'#';}
 function tema(){const c=document.documentElement.getAttribute('data-tema')==='claro';if(c)document.documentElement.removeAttribute('data-tema');else document.documentElement.setAttribute('data-tema','claro');lset('manual_tema',c?'oscuro':'claro');try{localStorage.setItem('manual_tema',c?'oscuro':'claro')}catch(e){}pintarTema()}
-function pintarTema(){$('#b-tema').innerHTML=svg(document.documentElement.getAttribute('data-tema')==='claro'?'luna':'sol');$('#b-buscar').innerHTML=svg('lupa')}
+function pintarTema(){$('#b-tema').innerHTML=svg(document.documentElement.getAttribute('data-tema')==='claro'?'luna':'sol')}
 const SUG=['canaletas','vigas invertidas','losa radiante','cielorraso durlock','hormigón calor','parrilla','protex','seal 77 flex baño','contrapiso alivianado','pendiente subsuelo','impermeabilización tabiques','compactación','nylon platea','encofrados','niveles','membrana','cloaca pendiente','revoque exterior','porcelanato','puesta a tierra'];
 function nav(act){const it=[['','Inicio','inicio'],['capitulos','Capítulos','libro'],['buscar','Buscar','lupa'],['controles','Controles','check']];
  $('#nav').innerHTML=it.map(([r,l,i])=>`<button onclick="ir('${r}')" ${act===r?'aria-current="page"':''}><span class="o">${svg(i)}</span><span class="l">${svg(i,true)}</span>${l}</button>`).join('')}
@@ -197,13 +197,11 @@ function tarjCap(c){
 function vInicio(){const pr=cap('principios').s[0];
  return `<div class="eti">Así construye Belfast</div><h1>Una sola forma de construir,<br><em>en todas las obras.</em></h1>
  <p class="sub">Este manual es la referencia única de obra: desde el movimiento de suelos hasta la entrega. Si tenés una duda, se consulta acá; si el manual no la cubre, se consulta a Dirección de obra antes de ejecutar.</p>
- <div class="busca vid"><span>${svg('lupa')}</span><input id="q0" placeholder="¿Qué querés consultar? Ej.: contrapiso alivianado" onkeydown="if(event.key==='Enter')ir('buscar/'+encodeURIComponent(this.value))"></div>
- <div class="sug">${SUG.slice(0,8).map(s=>`<button class="chip vid" onclick="ir('buscar/${encodeURIComponent(s)}')">${esc(s)}</button>`).join('')}</div>
  <div class="reglas"><div class="eti">Reglas de oro</div><ol>${pr.pasos.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>
  <h2>Cómo se usa</h2>
  <div class="lista">
  <button class="fila vid" onclick="ir('capitulos')"><div class="n">1</div><div><b>Capítulos: cómo se hace</b><span>${M.length} capítulos y ${total} temas en el orden de la obra, con materiales, pasos, errores que no se aceptan y fotos.</span></div><div class="go">${svg('go')}</div></button>
- <button class="fila vid" onclick="ir('controles')"><div class="n">2</div><div><b>Controles: qué se revisa en cada etapa</b><span>Lista de chequeo por etapa. Cada etapa se aprueba antes de pasar a la siguiente.</span></div><div class="go">${svg('go')}</div></button>
+ <button class="fila vid" onclick="ir('controles')"><div class="n">2</div><div><b>Controles: checklist de cada obra</b><span>Cargás la obra y ves en qué etapa está. Cada etapa se aprueba antes de pasar a la siguiente.</span></div><div class="go">${svg('go')}</div></button>
  <button class="fila vid" onclick="ir('buscar')"><div class="n">3</div><div><b>Buscar</b><span>Escribí lo que necesitás y te lleva al tema.</span></div><div class="go">${svg('go')}</div></button>
  </div>
  <p class="pie">Valores de referencia para vivienda de alta gama en Argentina. El cálculo estructural, los proyectos de instalaciones firmados y las fichas técnicas de los fabricantes siempre prevalecen sobre este manual.</p>`}
@@ -246,18 +244,32 @@ function listaRes(q,r){if(!q.trim())return '';if(!r.length)return `<div class="v
  return `<p class="num" style="margin:0">${r.length} resultado${r.length===1?'':'s'}</p>`+r.slice(0,40).map(x=>`<button class="fila vid" onclick="ir('s/${x.c.id}/${x.s.id}')"><div><span style="color:var(--gold);margin:0 0 2px">${esc(x.c.t)}</span><b>${resaltar(x.s.t,q)}</b><span>${resaltar(x.frag.length>190?x.frag.slice(0,187)+'…':x.frag,q)}</span></div><div class="go">${svg('go')}</div></button>`).join('')}
 function res(q){const e=$('#res');if(e)e.innerHTML=listaRes(q,buscar(q))}
 const PROT=__PROT__;
-let PR=lget('manual_proto',{obra:'',c:{},ok:{}});if(!PR.c)PR={obra:'',c:{},ok:{}};
-function guardaPR(){lset('manual_proto',PR)}
+let OBRAS=lget('manual_obras',{});let ACT=lget('manual_obra_act','');
+(()=>{const v=lget('manual_proto',null);if(v&&v.c&&Object.keys(v.c).length&&!Object.keys(OBRAS).length){const id='o'+Date.now();OBRAS[id]={nombre:v.obra||'Obra 1',c:v.c,ok:v.ok||{},t:Date.now()};ACT=id}})();
+let PR={c:{},ok:{}};function fijarPR(){PR=OBRAS[ACT]||{c:{},ok:{}}}fijarPR();
+let _tg=null;function guardaPR(){if(!OBRAS[ACT])return;PR.t=Date.now();lset('manual_obras',OBRAS);lset('manual_obra_act',ACT);clearTimeout(_tg);const id=ACT,o=OBRAS[id];_tg=setTimeout(()=>subirObra(id,o),600)}
+function subirObra(id,o,borrar){fetch(API_F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'obra',id,obra:o,borrar:!!borrar})}).catch(()=>{})}
+function traerObras(){fetch(API_F+'?accion=obras',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{if(!d||!d.obras)return;let cambio=false;
+ for(const [id,o] of Object.entries(d.obras)){if(o.borrada){if(OBRAS[id]){delete OBRAS[id];cambio=true}continue}if(!OBRAS[id]||(o.t||0)>(OBRAS[id].t||0)){OBRAS[id]=o;cambio=true}}
+ for(const [id,o] of Object.entries(OBRAS)){if(!d.obras[id]||(o.t||0)>(d.obras[id].t||0))subirObra(id,o)}
+ if(ACT&&!OBRAS[ACT])ACT='';if(cambio){lset('manual_obras',OBRAS);fijarPR();if(/^#controles/.test(location.hash))pintar()}}).catch(()=>{})}
+window.addEventListener('DOMContentLoaded',traerObras);
+function elegirObra(id){ACT=id;lset('manual_obra_act',ACT);fijarPR();pintar()}
+function nuevaObra(){const n=prompt('Nombre de la obra (ej.: Casa Nordelta lote 12):','');if(!n||!n.trim())return;const id='o'+Date.now()+Math.random().toString(36).slice(2,5);OBRAS[id]={nombre:n.trim(),c:{},ok:{},t:Date.now()};ACT=id;fijarPR();guardaPR();pintar()}
+function borrarObra(){if(!OBRAS[ACT])return;if(!confirm('¿Borrar el checklist de "'+OBRAS[ACT].nombre+'"? No se puede deshacer.'))return;const id=ACT;delete OBRAS[id];subirObra(id,{borrada:1,t:Date.now()},true);ACT='';lset('manual_obras',OBRAS);lset('manual_obra_act','');fijarPR();pintar()}
+function estadoObra(o){const ap=PROT.filter(e=>o.ok&&o.ok[e.id]).length;const sig=PROT.find(e=>!(o.ok&&o.ok[e.id]));return {ap,sig}}
 function etTot(e){return e.g.reduce((a,g)=>a+g.i.length,0)}
 function etHechos(e){let h=0;e.g.forEach((g,gi)=>g.i.forEach((x,ii)=>{if(PR.c[e.id+'/'+gi+'/'+ii])h++}));return h}
 function vControles(){
- return `<div class="eti">Calidad</div><h1>Controles por etapa</h1><p class="sub">Protocolo de inspección de Dirección de obra. Ninguna etapa empieza sin la anterior aprobada. Usalo en obra como lista de chequeo: tildá lo revisado y aprobá la etapa.</p>
- <div class="lista">${PROT.map((e,n)=>{const t=etTot(e),h=etHechos(e),ok=PR.ok[e.id];
+ return `<div class="eti">Calidad</div><h1>Controles por etapa</h1><p class="sub">Checklist de Dirección de obra, de principio a fin. Ninguna etapa empieza sin la anterior aprobada.</p>
+ <div class="bloque vid"><h3>${svg('casco')} Obras</h3>${Object.keys(OBRAS).length?`<div class="lista">${Object.entries(OBRAS).sort((a,b)=>a[1].nombre.localeCompare(b[1].nombre)).map(([id,o])=>{const s=estadoObra(o);return `<button class="fila vid ${id===ACT?'sel':''}" onclick="elegirObra('${id}')"><div class="n" style="${id===ACT?'background:var(--gold);color:#1a1408':''}">${s.ap}</div><div><b>${esc(o.nombre)}</b><span>${s.ap} de ${PROT.length} etapas aprobadas${s.sig?' · sigue: '+esc(s.sig.t):' · obra completa'}</span></div></button>`}).join('')}</div>`:`<p class="ref" style="margin:0 0 10px">Cargá la obra para llevar su checklist. Se ve igual en la PC, el iPhone y el iPad.</p>`}
+ <div class="acc" style="margin:12px 0 0"><button class="chip vid" onclick="nuevaObra()">＋ Nueva obra</button></div></div>
+ ${OBRAS[ACT]?`<h2>${esc(OBRAS[ACT].nombre)}</h2><div class="lista">`:`<p class="sub">Elegí o creá una obra para tildar sus controles.</p><div class="lista" style="opacity:.55;pointer-events:none">`}${PROT.map((e,n)=>{const t=etTot(e),h=etHechos(e),ok=PR.ok[e.id];
   return `<button class="fila vid" onclick="ir('controles/${e.id}')"><div class="n" style="${ok?'background:var(--gold);color:#1a1408':''}">${ok?'✓':n+1}</div><div><b>${esc(e.t)}</b><span>${ok?'Aprobada el '+ok:h+' de '+t+' controles'} · ${esc(e.d)}</span></div><div class="go">${svg('go')}</div></button>`}).join('')}</div>
- <div class="acc" style="margin-top:16px"><button class="chip vid" onclick="window.print()">Imprimir protocolo</button><button class="chip vid" onclick="if(confirm('¿Borrar todas las tildes?')){PR={obra:'',c:{},ok:{}};guardaPR();pintar()}">Borrar tildes</button></div>`}
-function vEtapa(id){const e=PROT.find(x=>x.id===id);if(!e)return vControles();const n=PROT.indexOf(e),t=etTot(e),h=etHechos(e),ok=PR.ok[e.id],sig=PROT[n+1],[vc,vs]=e.ver.split('/');
+ <div class="acc" style="margin-top:16px"><button class="chip vid" onclick="window.print()">Imprimir protocolo</button>${OBRAS[ACT]?`<button class="chip vid" onclick="borrarObra()">Borrar esta obra</button>`:''}</div>`}
+function vEtapa(id){const e=PROT.find(x=>x.id===id);if(!e||!OBRAS[ACT])return vControles();const n=PROT.indexOf(e),t=etTot(e),h=etHechos(e),ok=PR.ok[e.id],sig=PROT[n+1],[vc,vs]=e.ver.split('/');
  return `<button class="volver" onclick="ir('controles')">${svg('atras')} Controles</button>
- <div class="eti">Etapa ${n+1} de ${PROT.length}</div><h1>${esc(e.t)}</h1><p class="sub">${esc(e.d)}</p>
+ <div class="eti">${esc(OBRAS[ACT].nombre)} · Etapa ${n+1} de ${PROT.length}</div><h1>${esc(e.t)}</h1><p class="sub">${esc(e.d)}</p>
  <div class="acc"><button class="chip vid" onclick="ir('s/${e.ver}')">Ver cómo se hace</button><button class="chip vid" onclick="window.print()">Imprimir</button></div>
  ${e.g.map((g,gi)=>`<div class="bloque vid ctrl"><h3>${svg('check')} ${esc(g.t)}</h3>${g.i.map((x,ii)=>{const k=e.id+'/'+gi+'/'+ii;return `<label><input type="checkbox" ${PR.c[k]?'checked':''} onchange="tildar('${e.id}','${k}',this.checked)"><span>${esc(x)}</span></label>`}).join('')}</div>`).join('')}
  <div class="bloque vid" id="aprob">${aprobHtml(e)}</div>
