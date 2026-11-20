@@ -43,6 +43,7 @@ const claveOk = k => /^[a-z0-9]+\/[a-z0-9]+$/.test(String(k || ""));
 
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
+  if (req.method === "GET") res.setHeader("Access-Control-Allow-Origin", "*");
   try {
     const b = req.method === "POST" ? leerBody(req) : {};
     const accion = (req.query && req.query.accion) || b.accion || "lista";
@@ -59,13 +60,13 @@ module.exports = async function handler(req, res) {
     if (!vieneDeLaApp(req)) return res.status(403).json({ error: "Solo desde la app del manual." });
     if (accion === "obra") {
       if (!/^o[a-z0-9]{6,30}$/.test(String(b.id || "")) || !b.obra || typeof b.obra !== "object") return res.status(400).json({ error: "Obra no válida." });
-      const txt = JSON.stringify(b.obra); if (txt.length > 50000) return res.status(413).json({ error: "Demasiado grande." });
+      const txt = JSON.stringify(b.obra); if (txt.length > 120000) return res.status(413).json({ error: "Demasiado grande." });
       await asegurarBucket();
       const r = await fetch(SUPA_URL + "/storage/v1/object/" + BUCKET + "/obras.json?t=" + Date.now(), { headers: cab() });
       let o = {}; if (r.ok) { try { o = JSON.parse(await r.text()) || {}; } catch (e) { o = {}; } }
       const vieja = o[b.id];
       if (!vieja || (Number(b.obra.t) || 0) >= (Number(vieja.t) || 0)) {
-        o[b.id] = b.borrar ? { borrada: 1, t: Date.now() } : { nombre: String(b.obra.nombre || "Obra").slice(0, 120), c: b.obra.c || {}, ok: b.obra.ok || {}, t: Number(b.obra.t) || Date.now() };
+        o[b.id] = b.borrar ? { borrada: 1, t: Date.now() } : { nombre: String(b.obra.nombre || "Obra").slice(0, 120), c: b.obra.c || {}, ok: b.obra.ok || {}, t: Number(b.obra.t) || Date.now(), nexo: String(b.obra.nexo || "").slice(0, 40), res: Array.isArray(b.obra.res) ? b.obra.res.slice(0, 30) : [] };
         const w = await fetch(SUPA_URL + "/storage/v1/object/" + BUCKET + "/obras.json", { method: "POST", headers: cab({ "Content-Type": "application/json", "x-upsert": "true", "cache-control": "no-cache" }), body: JSON.stringify(o) });
         if (!w.ok) throw new Error("No se pudo guardar la obra: " + (await w.text()).slice(0, 200));
       }

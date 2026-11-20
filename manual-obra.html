@@ -82,6 +82,7 @@ details.pl>summary h3:after{content:'';margin-left:auto;width:9px;height:9px;bor
 details.pl[open]>summary h3:after{transform:rotate(-135deg)}
 details.pl .prog{margin-left:6px;font-size:12px;opacity:.7;letter-spacing:0;text-transform:none;font-weight:400}
 .lis{margin:0;padding-left:20px}.lis li{margin:6px 0;line-height:1.45}
+.gfotos{margin-top:10px;padding-top:10px;border-top:1px solid rgba(127,127,127,.18)}.gfotos .tira{display:flex;gap:8px;overflow-x:auto;margin-bottom:8px}.gfotos .tf{position:relative;flex:0 0 auto}.gfotos .tf img{width:96px;height:72px;object-fit:cover;border-radius:10px;display:block}.ctrl .gfotos label.subir{display:inline-flex;width:auto;padding:7px 14px;border-top:0;gap:6px;align-items:center}.gfotos .tx{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:15px;line-height:1;cursor:pointer}.gfotos .falta{display:block;margin:0 0 8px;color:var(--rojo)}
 #visor{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:16px}#visor.on{display:flex}#visor img{max-width:100%;max-height:100%;border-radius:12px}
 html[data-tema=claro] .foto img,html[data-tema=claro] .mini,html[data-tema=claro] #visor img{filter:none}
 .mat{display:flex;flex-wrap:wrap;gap:8px}.mat span{font-size:14px;padding:7px 13px;border-radius:14px;background:linear-gradient(158deg,var(--g-b),var(--g-c));box-shadow:inset 0 1.5px 1px rgba(255,255,255,.3),inset 0 0 0 1px var(--g-edge)}
@@ -129,12 +130,12 @@ function bloqueObra(k,s){const ob=OBRA[k]||[];const re=(s.reales||[]).map(u=>({u
  <label class="chip vid subir"><input type="file" accept="image/*" multiple hidden onchange="subirFotos('${k}',this)">＋ Cargar foto de obra</label>
  <span class="estado" id="est-f"></span></div>`}
 function achicar(file){return new Promise((ok,mal)=>{const img=new Image();img.onload=()=>{const m=1600,e=Math.min(1,m/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*e);c.height=Math.round(img.height*e);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);ok(c.toDataURL('image/jpeg',.82))};img.onerror=()=>mal(new Error('No se pudo leer la foto'));img.src=URL.createObjectURL(file)})}
-async function subirFotos(k,inp){const fs=[...inp.files];if(!fs.length)return;const est=document.getElementById('est-f');
- const nota=prompt('Obra o comentario (opcional):','')||'';
+async function subirFotos(k,inp,sinNota){const fs=[...inp.files];if(!fs.length)return;const est=document.getElementById('est-'+k.replace(/\W/g,''))||document.getElementById('est-f')||{};
+ const nota=sinNota?'':(prompt('Obra o comentario (opcional):','')||'');
  for(let i=0;i<fs.length;i++){est.textContent='Subiendo '+(i+1)+' de '+fs.length+'…';
   try{const img=await achicar(fs[i]);const r=await fetch(API_F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'subir',k,img,nota})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Error');OBRA[k]=d.fotos}
   catch(e){est.textContent='No se pudo subir: '+e.message;return}}
- const y=window.scrollY;pintar();window.scrollTo(0,y);const e2=document.getElementById('est-f');if(e2)e2.textContent='Listo, foto cargada.'}
+ if(sinNota&&typeof guardaPR==='function')guardaPR();const y=window.scrollY;pintar();window.scrollTo(0,y);const e2=document.getElementById('est-'+k.replace(/\W/g,''))||document.getElementById('est-f');if(e2)e2.textContent='Listo, foto cargada.'}
 async function borrarFoto(k,path){if(!confirm('¿Quitar esta foto del manual?'))return;
  try{const r=await fetch(API_F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'borrar',k,path})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Error');if(d.fotos.length)OBRA[k]=d.fotos;else delete OBRA[k];const y=window.scrollY;pintar();window.scrollTo(0,y)}catch(e){alert('No se pudo quitar: '+e.message)}}
 </script>
@@ -247,12 +248,14 @@ const PROT=[{"id": "inicio", "t": "Inicio de obra y replanteo", "d": "Antes de e
 let OBRAS=lget('manual_obras',{});let ACT=lget('manual_obra_act','');
 (()=>{const v=lget('manual_proto',null);if(v&&v.c&&Object.keys(v.c).length&&!Object.keys(OBRAS).length){const id='o'+Date.now();OBRAS[id]={nombre:v.obra||'Obra 1',c:v.c,ok:v.ok||{},t:Date.now()};ACT=id}})();
 let PR={c:{},ok:{}};function fijarPR(){PR=OBRAS[ACT]||{c:{},ok:{}}}fijarPR();
-let _tg=null;function guardaPR(){if(!OBRAS[ACT])return;PR.t=Date.now();lset('manual_obras',OBRAS);lset('manual_obra_act',ACT);clearTimeout(_tg);const id=ACT,o=OBRAS[id];_tg=setTimeout(()=>subirObra(id,o),600)}
+function resumenObra(id){const o=OBRAS[id];return PROT.map(e=>{let h=0;e.g.forEach((g,gi)=>g.i.forEach((x,ii)=>{if(o.c[e.id+'/'+gi+'/'+ii])h++}));const f=[];e.g.forEach((g,gi)=>(OBRA[id+'/'+e.id+gi]||[]).forEach(x=>f.push(x.u)));return {id:e.id,t:e.t,tot:etTot(e),h,ok:o.ok[e.id]||'',f:f.slice(0,12)}})}
+let _tg=null;function guardaPR(){if(!OBRAS[ACT])return;PR.t=Date.now();try{PR.res=resumenObra(ACT)}catch(e){}lset('manual_obras',OBRAS);lset('manual_obra_act',ACT);clearTimeout(_tg);const id=ACT,o=OBRAS[id];_tg=setTimeout(()=>subirObra(id,o),600)}
 function subirObra(id,o,borrar){fetch(API_F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'obra',id,obra:o,borrar:!!borrar})}).catch(()=>{})}
 function traerObras(){fetch(API_F+'?accion=obras',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{if(!d||!d.obras)return;let cambio=false;
  for(const [id,o] of Object.entries(d.obras)){if(o.borrada){if(OBRAS[id]){delete OBRAS[id];cambio=true}continue}if(!OBRAS[id]||(o.t||0)>(OBRAS[id].t||0)){OBRAS[id]=o;cambio=true}}
  for(const [id,o] of Object.entries(OBRAS)){if(!d.obras[id]||(o.t||0)>(d.obras[id].t||0))subirObra(id,o)}
  if(ACT&&!OBRAS[ACT])ACT='';if(cambio){lset('manual_obras',OBRAS);fijarPR();if(/^#controles/.test(location.hash))pintar()}}).catch(()=>{})}
+(()=>{try{const u=new URLSearchParams(location.search),id=u.get('obra'),nom=u.get('nombre');if(id&&/^o[a-z0-9]{6,30}$/.test(id)){if(!OBRAS[id]){OBRAS[id]={nombre:nom||'Obra',c:{},ok:{},t:Date.now(),nexo:u.get('nexo')||''};ACT=id;fijarPR();setTimeout(guardaPR,1500)}else{ACT=id;fijarPR()}lset('manual_obra_act',ACT);history.replaceState(null,'',location.pathname+(location.hash||'#controles'))}}catch(e){}})();
 window.addEventListener('DOMContentLoaded',traerObras);
 function elegirObra(id){ACT=id;lset('manual_obra_act',ACT);fijarPR();pintar()}
 function nuevaObra(){const n=prompt('Nombre de la obra (ej.: Casa Nordelta lote 12):','');if(!n||!n.trim())return;const id='o'+Date.now()+Math.random().toString(36).slice(2,5);OBRAS[id]={nombre:n.trim(),c:{},ok:{},t:Date.now()};ACT=id;fijarPR();guardaPR();pintar()}
@@ -261,7 +264,7 @@ function estadoObra(o){const ap=PROT.filter(e=>o.ok&&o.ok[e.id]).length;const si
 function etTot(e){return e.g.reduce((a,g)=>a+g.i.length,0)}
 function etHechos(e){let h=0;e.g.forEach((g,gi)=>g.i.forEach((x,ii)=>{if(PR.c[e.id+'/'+gi+'/'+ii])h++}));return h}
 function vControles(){
- return `<div class="eti">Calidad</div><h1>Controles por etapa</h1><p class="sub">Checklist de Dirección de obra, de principio a fin. Ninguna etapa empieza sin la anterior aprobada.</p>
+ return `<div class="eti">Calidad</div><h1>Controles por etapa</h1><p class="sub">Checklist de Dirección de obra, de principio a fin. Cada etapa se aprueba con todo tildado y con foto de respaldo de cada punto, antes de tapar. Se ve también en NEXO 2, en cada obra.</p>
  <div class="bloque vid"><h3>${svg('casco')} Obras</h3>${Object.keys(OBRAS).length?`<div class="lista">${Object.entries(OBRAS).sort((a,b)=>a[1].nombre.localeCompare(b[1].nombre)).map(([id,o])=>{const s=estadoObra(o);return `<button class="fila vid ${id===ACT?'sel':''}" onclick="elegirObra('${id}')"><div class="n" style="${id===ACT?'background:var(--gold);color:#1a1408':''}">${s.ap}</div><div><b>${esc(o.nombre)}</b><span>${s.ap} de ${PROT.length} etapas aprobadas${s.sig?' · sigue: '+esc(s.sig.t):' · obra completa'}</span></div></button>`}).join('')}</div>`:`<p class="ref" style="margin:0 0 10px">Cargá la obra para llevar su checklist. Se ve igual en la PC, el iPhone y el iPad.</p>`}
  <div class="acc" style="margin:12px 0 0"><button class="chip vid" onclick="nuevaObra()">＋ Nueva obra</button></div></div>
  ${OBRAS[ACT]?`<h2>${esc(OBRAS[ACT].nombre)}</h2><div class="lista">`:`<p class="sub">Elegí o creá una obra para tildar sus controles.</p><div class="lista" style="opacity:.55;pointer-events:none">`}${PROT.map((e,n)=>{const t=etTot(e),h=etHechos(e),ok=PR.ok[e.id];
@@ -271,12 +274,17 @@ function vEtapa(id){const e=PROT.find(x=>x.id===id);if(!e||!OBRAS[ACT])return vC
  return `<button class="volver" onclick="ir('controles')">${svg('atras')} Controles</button>
  <div class="eti">${esc(OBRAS[ACT].nombre)} · Etapa ${n+1} de ${PROT.length}</div><h1>${esc(e.t)}</h1><p class="sub">${esc(e.d)}</p>
  <div class="acc"><button class="chip vid" onclick="ir('s/${e.ver}')">Ver cómo se hace</button><button class="chip vid" onclick="window.print()">Imprimir</button></div>
- ${e.g.map((g,gi)=>`<div class="bloque vid ctrl"><h3>${svg('check')} ${esc(g.t)}</h3>${g.i.map((x,ii)=>{const k=e.id+'/'+gi+'/'+ii;return `<label><input type="checkbox" ${PR.c[k]?'checked':''} onchange="tildar('${e.id}','${k}',this.checked)"><span>${esc(x)}</span></label>`}).join('')}</div>`).join('')}
+ ${e.g.map((g,gi)=>`<div class="bloque vid ctrl"><h3>${svg('check')} ${esc(g.t)}</h3>${g.i.map((x,ii)=>{const k=e.id+'/'+gi+'/'+ii;return `<label><input type="checkbox" ${PR.c[k]?'checked':''} onchange="tildar('${e.id}','${k}',this.checked)"><span>${esc(x)}</span></label>`}).join('')}${fotosGrupo(e,gi)}</div>`).join('')}
  <div class="bloque vid" id="aprob">${aprobHtml(e)}</div>
  ${sig?`<button class="fila vid" onclick="ir('controles/${sig.id}')"><div><span style="color:var(--gold);margin:0 0 2px">Etapa siguiente</span><b>${esc(sig.t)}</b></div><div class="go">${svg('go')}</div></button>`:''}`}
-function aprobHtml(e){const t=etTot(e),h=etHechos(e),ok=PR.ok[e.id];
+function kFoto(e,gi){return ACT+'/'+e.id+gi}
+function fotosGrupo(e,gi){const k=kFoto(e,gi),fs=OBRA[k]||[];
+ return `<div class="gfotos"><div class="gft">${fs.length?`<div class="tira">${fs.map(f=>`<div class="tf"><img src="${f.u}" loading="lazy" onclick="verFoto('${f.u}')" alt=""><button class="tx" onclick="borrarFoto('${k}','${f.path}')">×</button></div>`).join('')}</div>`:`<span class="ref falta">📷 Falta la foto de respaldo</span>`}</div>
+ <label class="chip vid subir"><input type="file" accept="image/*" multiple hidden onchange="subirFotos('${k}',this,1)">＋ Foto</label> <span class="estado" id="est-${k.replace(/\W/g,'')}"></span></div>`}
+function sinFoto(e){return e.g.map((g,gi)=>gi).filter(gi=>!(OBRA[kFoto(e,gi)]||[]).length)}
+function aprobHtml(e){const t=etTot(e),h=etHechos(e),ok=PR.ok[e.id],sf=sinFoto(e);
  if(ok)return `<h3>${svg('check')} Etapa aprobada</h3><p class="ref" style="margin:0 0 10px">Aprobada el ${ok}. Ya se puede pasar a la etapa siguiente.</p><button class="chip vid" onclick="delete PR.ok['${e.id}'];guardaPR();document.getElementById('aprob').innerHTML=aprobHtml(PROT.find(x=>x.id==='${e.id}'))">Quitar aprobación</button>`;
- return `<h3>${svg('check')} ${h} de ${t} controles</h3>${h<t?`<p class="ref" style="margin:0">Faltan ${t-h}. La etapa siguiente no empieza hasta tener todo tildado y aprobado.</p>`:`<button class="chip vid" onclick="PR.ok['${e.id}']=new Date().toLocaleDateString('es-AR');guardaPR();document.getElementById('aprob').innerHTML=aprobHtml(PROT.find(x=>x.id==='${e.id}'))">Aprobar etapa</button>`}`}
+ return `<h3>${svg('check')} ${h} de ${t} controles</h3>${h<t||sf.length?`<p class="ref" style="margin:0">${h<t?`Faltan ${t-h} controles. `:''}${sf.length?`Faltan fotos de respaldo en: ${sf.map(gi=>esc(e.g[gi].t)).join(', ')}. `:''}La etapa se aprueba con todo tildado y con foto de cada punto.</p>`:`<button class="chip vid" onclick="PR.ok['${e.id}']=new Date().toLocaleDateString('es-AR');guardaPR();document.getElementById('aprob').innerHTML=aprobHtml(PROT.find(x=>x.id==='${e.id}'))">Aprobar etapa</button>`}`}
 function tildar(eid,k,v){if(v)PR.c[k]=1;else{delete PR.c[k];delete PR.ok[eid]}guardaPR();const e=PROT.find(x=>x.id===eid);document.getElementById('aprob').innerHTML=aprobHtml(e)}
 function pintar(){const h=decodeURIComponent(location.hash.slice(1));const p=h.split('/');let v,act='';
  if(p[0]==='c')v=vCap(p[1]),act='capitulos';else if(p[0]==='s')v=vSec(p[1],p[2]),act='capitulos';else if(p[0]==='buscar')v=vBuscar(p.slice(1).join('/')),act='buscar';
