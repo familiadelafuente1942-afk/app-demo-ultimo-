@@ -13,8 +13,8 @@ URLS=json.loads((aqui.parent.parent/"manual-fotos/urls.json").read_text())
 REALES={"principios/registro":["planos-obrador"],"mamposteria/capaaisladora":["arranque-columnas"],"revoques/exterior":["malla-encuentro"],"mamposteria/muros":["malla-encuentro"],
  "seco/colgadas":["colgadas-pasillo","colgadas-planta"],"electrica/canerias":["canaleta-malla","canos-piso"],"electrica/tablero":["tablero"],
  "protex/cristalizante":["junta-hidroexpansiva"],"subsuelos/tabiques":["junta-hidroexpansiva","tabique-armadura"],"estructura/armaduras":["tabique-armadura"],
- "cubiertas/azotea":["terraza-parapeto","terraza-contrapiso"],"contrapisos/pendientes":["terraza-contrapiso"],"clima/radiante":["losa-radiante"]}
-OTRA={"seco/cielorraso":"manual-fotos/seco-placas.jpg","estructura/calor":"manual-fotos/estructura-curado.jpg"}
+ "cubiertas/azotea":["terraza-parapeto","terraza-contrapiso"],"contrapisos/pendientes":["terraza-contrapiso"],"contrapisos/invertidas":["terraza-contrapiso","terraza-parapeto"],"clima/radiante":["losa-radiante"]}
+OTRA={"contrapisos/invertidas":"manual-fotos/contrapisos-alivianado.jpg","seco/cielorraso":"manual-fotos/seco-placas.jpg","estructura/calor":"manual-fotos/estructura-curado.jpg"}
 for c in g["C"]:
     for s in c["s"]:
         k=c["id"]+"/"+s["id"]

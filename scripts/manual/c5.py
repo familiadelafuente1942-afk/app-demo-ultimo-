@@ -61,7 +61,7 @@ E("impermeab", "Impermeabilizaciones y cubiertas", "Antes de taparlas con piso o
 ]),
 E("revoques", "Revoques y contrapisos", "Antes de pisos, revestimientos y pintura.", "revoques/exterior", [
  ("Revoques", ["Azotado hidrófugo continuo hasta la capa aisladora", "Mallas en encuentros de materiales", "Plomo y planeidad 3 mm en 2 m; aristas rectas", "Cajas eléctricas al ras del revoque"]),
- ("Contrapisos y carpetas", ["Niveles de piso terminado de cada local según plano (incluye diferencias por tipo de piso y umbrales)", "Pendientes en locales húmedos y exteriores", "Juntas perimetrales y de contracción", "Planeidad 2 mm en 2 m; sin sonido hueco"]),
+ ("Contrapisos y carpetas", ["Relleno entre vigas invertidas con el material aprobado por el calculista (Isocret o cascote) y pases de desagote en cada cajón", "Niveles de piso terminado de cada local según plano (incluye diferencias por tipo de piso y umbrales)", "Pendientes en locales húmedos y exteriores", "Juntas perimetrales y de contracción", "Planeidad 2 mm en 2 m; sin sonido hueco"]),
 ]),
 E("terminaciones", "Pisos, revestimientos y carpinterías", "Antes de pintura final.", "pisos/porcelanato", [
  ("Pisos y revestimientos", ["Despiece aprobado por arquitectura antes de colocar (arranques, cortes, juntas)", "Material del lote único y verificado (tono, calibre)", "Adhesivo correcto para cada uso (radiante, exterior, gran formato)", "Juntas alineadas y del ancho especificado", "Sin piezas huecas (golpear)"]),

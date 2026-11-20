@@ -170,3 +170,37 @@ for c in C:
     if c["id"] == "estructura":
         i = [s["id"] for s in c["s"]].index("curado")
         c["s"].insert(i, CALOR)
+
+# Relleno entre vigas invertidas (azoteas y losas sobre planta baja)
+INVERTIDAS = S("invertidas","Relleno entre vigas invertidas (azotea y losa sobre PB)","vigas invertidas relleno cascote isocret perlas eps contrapiso alivianado azotea losa planta baja 20 28 cm peso",
+ "Con vigas invertidas la losa queda abajo y las vigas sobresalen: entre viga y viga quedan cajones de 20 a 28 cm que hay que rellenar hasta el nivel del contrapiso. Ese relleno pesa mucho si se hace mal, así que el material lo aprueba el calculista antes de empezar.",
+ ["Isocret (perlas de EPS aditivadas): bolsa de 170 l, rinde 0,20 m³ (5 bolsas por m³) — sistema preferido Belfast",
+  "Cemento portland (para Isocret: 60 kg por bolsa de 170 l para densidad 300 kg/m³)",
+  "Cascote limpio de ladrillo u hormigón, sin yeso, madera, plástico ni tierra (solo si el calculista lo aprueba)",
+  "Mortero para carpeta cementicia sobre el relleno",
+  "Caño camisa para pases a través de las vigas (dejados al hormigonar)"],
+ ["Antes de hormigonar las vigas: definir con el calculista el material de relleno y dejar los pases (caño camisa) en el punto más bajo de cada cajón, para que el agua que entre al relleno pueda salir y no quede atrapada, y para el paso de desagües.",
+  "Peso de referencia por cada cm de relleno: cascote ≈ 16–19 kg/m²; Isocret a 300 kg/m³ ≈ 3 kg/m². Un relleno de 25 cm pesa ≈ 400–470 kg/m² con cascote y ≈ 75 kg/m² con Isocret (más la carpeta: ≈ 20 kg/m² por cm). El cascote se usa solo con aprobación escrita del calculista.",
+  "Instalaciones dentro del relleno (desagües de azotea, cañerías): colocadas, fijadas y probadas antes de rellenar, con su pendiente.",
+  "Losa limpia y humedecida (sin charcos). En azoteas, barrera de vapor si el proyecto la pide.",
+  "Fajas de nivel (o de pendiente en azoteas) con mortero, cada 1,5–2 m, para dar la altura final.",
+  "Isocret — dosificación por bolsa de 170 l: 60 kg de cemento y ≈ 30 l de agua (densidad ≈ 300 kg/m³). Para más liviano: 50 kg y 25 l (250 kg/m³); para más firme: 70 kg y 35 l (350 kg/m³). Sin arena. Seguir siempre lo impreso en la bolsa.",
+  "Mezclar en hormigonera: primero agua y cemento, después las perlas, hasta que estén todas cubiertas. Se puede bombear.",
+  "Volcar entre las fajas y nivelar con regla sin apisonar (se aplastan las perlas). Admite grandes espesores en una sola colada; espesor mínimo 5 cm por encima de cualquier caño.",
+  "No colocar con lluvia, con menos de 5 °C, riesgo de helada ni más de 35 °C.",
+  "Cascote (si está aprobado): en capas de 10–15 cm, regado y trabado con mortero pobre, compactado, sin huecos ni piezas grandes sueltas; terminar con contrapiso de nivelación.",
+  "Dejar secar (fragüe total ≈ 48 h; más tiempo antes de la carpeta si el espesor es grande) y no transitar con carretillas directo sobre el Isocret: usar tablones.",
+  "Carpeta cementicia encima de mínimo 3 cm (el Isocret no tiene resistencia superficial). En azoteas la carpeta lleva la pendiente final hacia los embudos y después la impermeabilización Protex.",
+  "Junta perimetral contra vigas, muros y parapetos.",
+  "Cómputo de ejemplo: 100 m² × 0,25 m = 25 m³ → 125 bolsas de Isocret y 7.500 kg de cemento (150 bolsas de 50 kg) a 300 kg/m³."],
+ ["Material de relleno aprobado por escrito por el calculista","Pases de desagote en el punto bajo de cada cajón","Instalaciones probadas antes de rellenar","Dosificación de Isocret según bolsa (cemento pesado, no a ojo)","Carpeta ≥ 3 cm sobre el relleno","Nivel o pendiente verificada antes de la carpeta"],
+ ["Rellenar con cascote sin aprobación del calculista","Cajones sin salida para el agua","Escombro con yeso, madera o tierra","Porcelanato o membrana directo sobre el Isocret","Agregar arena o agua de más al Isocret"],
+ "Ficha técnica Isocret (Tecnisec): dosificaciones por densidad, rendimiento y condiciones de aplicación. Pesos de referencia para cómputo de cargas; manda siempre el cálculo estructural.")
+for c in C:
+    if c["id"] == "contrapisos":
+        i = [s["id"] for s in c["s"]].index("alivianado")
+        c["s"].insert(i + 1, INVERTIDAS)
+        for s in c["s"]:
+            if s["id"] == "alivianado":
+                s["mat"][0] = "Isocret (perlas de EPS aditivadas, bolsa de 170 l = 0,20 m³) y cemento — producto Belfast"
+                s["pasos"][0] = "Dosificación Isocret por bolsa de 170 l: 60 kg de cemento y ≈ 30 l de agua (≈ 300 kg/m³), sin arena; seguir lo impreso en la bolsa. Ver también Relleno entre vigas invertidas."
