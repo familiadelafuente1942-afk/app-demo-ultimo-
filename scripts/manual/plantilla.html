@@ -45,7 +45,7 @@ h2{font-size:22px;margin:0 0 6px;font-weight:600}
 .busca input{flex:1;border:0;background:none;outline:none;font-size:17px;padding:10px 0;min-width:0}
 .busca input::placeholder{color:var(--muted)}
 .sug{display:flex;gap:8px;flex-wrap:wrap;margin:-10px 0 22px}
-.chip{border:0;border-radius:999px;padding:8px 14px;font-size:13.5px;cursor:pointer;color:var(--fg)}
+.chip{border:0;border-radius:999px;padding:8px 14px;font-size:13.5px;cursor:pointer;color:var(--fg)}.edl{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:14px 0 6px}.edq,.edrow textarea{width:100%;box-sizing:border-box;font:inherit;font-size:16px;color:var(--fg)!important;-webkit-text-fill-color:var(--fg);background:rgba(127,127,127,.13)!important;border:1px solid rgba(127,127,127,.35);border-radius:12px;padding:10px 12px;resize:vertical}.edrow{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px}.edx{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid rgba(127,127,127,.35);background:none;color:var(--rojo,#d03a2f);cursor:pointer;font-size:14px}.chip.edok{background:linear-gradient(180deg,#e2b96f,#b98a41);color:#2a1c05;font-weight:700}@media print{#editor{display:none}}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
 .cap{padding:18px;cursor:pointer;display:flex;gap:14px;align-items:flex-start;border:0;text-align:left;width:100%;transition:transform .15s}
 .cap:active{transform:scale(.985)}
@@ -144,6 +144,31 @@ async function borrarFoto(k,path){if(!confirm('¿Quitar esta foto del manual?'))
 </script>
 <script>
 const M=__DATOS__;
+/* ===== Edición del manual con código: cada tema se puede corregir o sumar puntos ===== */
+const CAMPOS=[['que','Qué es'],['pasos','Cómo se hace'],['err','No se acepta'],['mat','Materiales'],['ctrl','Qué se controla']];
+const BASE={};M.forEach(c=>c.s.forEach(s=>{BASE[c.id+'/'+s.id]=JSON.stringify({que:s.que||'',pasos:s.pasos||[],err:s.err||[],mat:s.mat||[],ctrl:s.ctrl||[]})}));
+let ED={},EDITANDO='';
+function aplicarEd(){M.forEach(c=>c.s.forEach(s=>{const k=c.id+'/'+s.id,b=JSON.parse(BASE[k]),e=ED[k]||{};CAMPOS.forEach(([f])=>{s[f]=e[f]!==undefined?e[f]:b[f]});s.ed=e.t?{t:e.t,por:e.por}:null}))}
+function edCod(){try{return sessionStorage.getItem('manual_edcod')||''}catch(e){return ''}}
+function edQuien(){try{return localStorage.getItem('manual_edquien')||''}catch(e){return ''}}
+async function edPost(b){const r=await fetch(API_F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'No se pudo');return d}
+async function abrirEd(k){let c=edCod();if(!c){c=prompt('Código para editar el manual:');if(!c)return;try{await edPost({accion:'edcheck',clave:c})}catch(e){alert(e.message);return}try{sessionStorage.setItem('manual_edcod',c)}catch(e){}}
+ if(!edQuien()){const q=prompt('¿Quién edita? (tu nombre, queda registrado)')||'';try{localStorage.setItem('manual_edquien',q.trim())}catch(e){}}
+ EDITANDO=k;pintar();const el=$('#editor');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}
+function edFila(x){return `<div class="edrow"><textarea rows="2">${esc(x)}</textarea><button class="edx" title="Quitar" onclick="this.parentNode.remove()">✕</button></div>`}
+function edAdd(f){const l=document.querySelector('.edlist[data-f="'+f+'"]');if(!l)return;l.insertAdjacentHTML('beforeend',edFila(''));const t=l.lastElementChild.querySelector('textarea');t.focus()}
+function vEditor(k,s){const e=ED[k];return `<div class="bloque vid" id="editor"><h3>✎ Editando este tema</h3><p class="ref" style="margin:2px 0 10px">Corregí lo que haga falta o sumá puntos con “＋ Agregar punto”. Queda guardado para todos, con tu nombre (${esc(edQuien()||'sin nombre')}).</p>
+ <label class="edl">Qué es</label><textarea class="edq" rows="4">${esc(s.que||'')}</textarea>
+ ${CAMPOS.slice(1).map(([f,n])=>`<label class="edl">${n}</label><div class="edlist" data-f="${f}">${(s[f]||[]).map(edFila).join('')}</div><button class="chip vid" onclick="edAdd('${f}')">＋ Agregar punto</button>`).join('')}
+ <div class="acc" style="margin-top:16px"><button class="chip vid" onclick="EDITANDO='';pintar()">Cancelar</button><button class="chip edok" onclick="edGuardar('${k}')">Guardar cambios</button></div>
+ ${e?`<p class="ref" style="margin-top:12px">Editado por ${esc(e.por||'—')} el ${new Date(e.t).toLocaleDateString('es-AR')}. <a href="javascript:void 0" onclick="edRestaurar('${k}')">Volver al texto original</a></p>`:''}
+ <p class="ref" style="margin-top:8px"><a href="javascript:void 0" onclick="edCambiarCodigo()">Cambiar el código de edición (Dirección)</a></p></div>`}
+async function edGuardar(k){const b=JSON.parse(BASE[k]),c={},q=$('#editor .edq').value.trim();if(q!==b.que)c.que=q;
+ CAMPOS.slice(1).forEach(([f])=>{const v=[...document.querySelectorAll('.edlist[data-f="'+f+'"] textarea')].map(t=>t.value.trim()).filter(Boolean);if(JSON.stringify(v)!==JSON.stringify(b[f]))c[f]=v});
+ try{const d=await edPost({accion:'editar',k,campos:Object.keys(c).length?c:null,clave:edCod(),quien:edQuien()});ED=d.ed||{};aplicarEd();EDITANDO='';pintar();setTimeout(()=>alert('Guardado ✓'),50)}catch(e){if(/código/i.test(e.message))try{sessionStorage.removeItem('manual_edcod')}catch(x){}alert('No se pudo guardar: '+e.message)}}
+async function edRestaurar(k){if(!confirm('¿Volver al texto original de este tema? Se pierden los cambios cargados.'))return;try{const d=await edPost({accion:'editar',k,campos:null,clave:edCod(),quien:edQuien()});ED=d.ed||{};aplicarEd();EDITANDO='';pintar()}catch(e){alert('No se pudo: '+e.message)}}
+async function edCambiarCodigo(){const c=prompt('Clave de Dirección:');if(!c)return;const n=prompt('Nuevo código de edición (para técnicos e ingenieros):');if(!n)return;try{await edPost({accion:'edcodigo',clave:c,nuevo:n});try{sessionStorage.setItem('manual_edcod',n)}catch(e){}alert('Código cambiado ✓')}catch(e){alert(e.message)}}
+window.addEventListener('DOMContentLoaded',()=>fetch(API_F+'?accion=ediciones',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{if(d&&d.ed){ED=d.ed;aplicarEd();pintar()}}).catch(()=>{}));
 const IC={
 inicio:'<path d="M3.5 10.6 12 3.8l8.5 6.8V19a1.6 1.6 0 0 1-1.6 1.6h-4.1v-5.4a1.2 1.2 0 0 0-1.2-1.2h-3.2a1.2 1.2 0 0 0-1.2 1.2v5.4H5.1A1.6 1.6 0 0 1 3.5 19z"/>',
 libro:'<path d="M12 6.4C10.4 5 8 4.4 3.4 4.6v14.2c4.6-.2 7 .4 8.6 1.8 1.6-1.4 4-2 8.6-1.8V4.6C16 4.4 13.6 5 12 6.4z"/><path d="M12 6.4v14.2" fill="none"/>',
@@ -218,14 +243,14 @@ function vSec(cid,sid){const c=cap(cid),s=secc(cid,sid);if(!s)return vCap(cid);c
  const ctrl=(s.ctrl||[]);const i=c.s.indexOf(s),sig=c.s[i+1],ant=c.s[i-1];
  return `<button class="volver" onclick="ir('c/${c.id}')">${svg('atras')} ${esc(c.t)}</button>
  <div class="eti">${esc(c.t)}</div><h1>${esc(s.t)}</h1>
- <div class="acc"><button class="chip vid" onclick="window.print()">Imprimir</button><button class="chip vid" onclick="compartir('${k}')">Compartir</button></div>
+ <div class="acc"><button class="chip vid" onclick="window.print()">Imprimir</button><button class="chip vid" onclick="compartir('${k}')">Compartir</button><button class="chip vid" onclick="abrirEd('${k}')">✎ Editar</button></div>${s.ed?`<p class="ref" style="margin:-2px 4px 10px;font-size:12.5px">Actualizado por ${esc(s.ed.por||'—')} el ${new Date(s.ed.t).toLocaleDateString('es-AR')}</p>`:''}
  ${(()=>{const ob=OBRA[k]||[];const re=s.reales||[];const u=ob.length?ob[0].u:(re.length?re[0]:s.foto);if(!u)return'';return `<figure class="foto vid" onclick="verFoto('${u}')"><img src="${u}" alt="${esc(s.t)}" loading="lazy" onerror="this.parentNode.style.display='none'"><figcaption class="${!ob.length&&!re.length&&(s.malas||[]).includes(u)?'malcap':''}">${!ob.length&&!re.length&&(s.malas||[]).includes(u)?'✕ Mala ejecución — no se acepta':(ob.length||re.length||s.fr?'Obra Belfast':'Imagen ilustrativa')}</figcaption></figure>`})()}
  ${(s.malas||[]).length?`<div class="bloque mal"><h3>${svg('no')} Así NO: mala ejecución <span class="prog">${s.malas.length}</span></h3><div class="tira">${s.malas.map(u=>`<div class="tf"><img src="${u}" loading="lazy" onclick="verFoto('${u}')" alt=""></div>`).join('')}</div><p class="ref" style="margin:4px 0 0">Fotos reales de obras. Esto no se acepta: se rehace.</p></div>`:''}
- <div class="bloque vid"><p class="que" style="margin:0">${esc(s.que)}</p></div>
+ ${EDITANDO===k?vEditor(k,s):`<div class="bloque vid"><p class="que" style="margin:0">${esc(s.que)}</p></div>
  ${s.pasos&&s.pasos.length?`<details class="bloque vid pl" open><summary><h3>${svg('pasos')} Cómo se hace <span class="prog">${s.pasos.length} pasos</span></h3></summary><ol class="pasos">${s.pasos.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></details>`:''}
  ${s.err&&s.err.length?`<details class="bloque mal pl" open><summary><h3>${svg('no')} No se acepta</h3></summary><ul class="err" style="margin:0;padding-left:20px">${s.err.map(e=>`<li>${esc(e)}</li>`).join('')}</ul></details>`:''}
  ${s.mat&&s.mat.length?`<details class="bloque vid pl"><summary><h3>${svg('mat')} Materiales <span class="prog">${s.mat.length}</span></h3></summary><ul class="lis">${s.mat.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></details>`:''}
- ${ctrl.length?`<details class="bloque vid pl"><summary><h3>${svg('check')} Qué se controla <span class="prog">${ctrl.length}</span></h3></summary><ul class="lis">${ctrl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`:''}
+ ${ctrl.length?`<details class="bloque vid pl"><summary><h3>${svg('check')} Qué se controla <span class="prog">${ctrl.length}</span></h3></summary><ul class="lis">${ctrl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`:''}`}
  ${s.ref?`<p class="pie" style="margin:4px 4px 14px">${esc(s.ref)}</p>`:''}
  ${bloqueObra(k,s)}
  <div class="lista" style="margin-top:6px">${ant?`<button class="fila vid" onclick="ir('s/${c.id}/${ant.id}')"><div class="go" style="margin:0">${svg('atras')}</div><div><span>Anterior</span><b>${esc(ant.t)}</b></div></button>`:''}${sig?`<button class="fila vid" onclick="ir('s/${c.id}/${sig.id}')"><div><span>Siguiente</span><b>${esc(sig.t)}</b></div><div class="go">${svg('go')}</div></button>`:''}</div>`}

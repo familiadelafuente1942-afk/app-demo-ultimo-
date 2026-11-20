@@ -56,8 +56,44 @@ module.exports = async function handler(req, res) {
       let o = {}; if (r.ok) { try { o = JSON.parse(await r.text()) || {}; } catch (e) { o = {}; } }
       return res.status(200).json({ obras: o });
     }
+    if (accion === "ediciones") {
+      const r = await fetch(SUPA_URL + "/storage/v1/object/" + BUCKET + "/ediciones.json?t=" + Date.now(), { headers: cab() });
+      let e = {}; if (r.ok) { try { e = JSON.parse(await r.text()) || {}; } catch (x) { e = {}; } }
+      return res.status(200).json({ ed: e.ed || {} });
+    }
     if (req.method !== "POST") return res.status(405).json({ error: "Usá POST" });
     if (!vieneDeLaApp(req)) return res.status(403).json({ error: "Solo desde la app del manual." });
+    if (accion === "edcheck" || accion === "editar" || accion === "edcodigo") {
+      // edición del contenido del manual: solo con el código de edición (o el de Dirección)
+      const sha = (x) => require("crypto").createHash("sha256").update(String(x || "").trim()).digest("hex");
+      const DIR_H = "1d15d754bd6fe1657e5b718e12b0b80fb0919a22fcd70811edcae6cb2730d3da";
+      const rr = await fetch(SUPA_URL + "/storage/v1/object/" + BUCKET + "/ediciones.json?t=" + Date.now(), { headers: cab() });
+      let E = {}; if (rr.ok) { try { E = JSON.parse(await rr.text()) || {}; } catch (x) { E = {}; } }
+      const codH = E.h || "f58af215464df7854bb27ced09cee3295e659df87bcba64836b43ca707feaaee";
+      const guardarE = async () => { await asegurarBucket(); const w = await fetch(SUPA_URL + "/storage/v1/object/" + BUCKET + "/ediciones.json", { method: "POST", headers: cab({ "Content-Type": "application/json", "x-upsert": "true", "cache-control": "no-cache" }), body: JSON.stringify(E) }); if (!w.ok) throw new Error("No se pudo guardar: " + (await w.text()).slice(0, 200)); };
+      if (accion === "edcodigo") {
+        if (sha(b.clave) !== DIR_H) return res.status(403).json({ error: "Clave de Dirección incorrecta." });
+        if (String(b.nuevo || "").trim().length < 4) return res.status(400).json({ error: "El código nuevo tiene que tener al menos 4 caracteres." });
+        E.h = sha(b.nuevo); await guardarE(); return res.status(200).json({ ok: true });
+      }
+      const h = sha(b.clave); if (h !== codH && h !== DIR_H) return res.status(403).json({ error: "Código de edición incorrecto." });
+      if (accion === "edcheck") return res.status(200).json({ ok: true });
+      if (!claveOk(b.k)) return res.status(400).json({ error: "Tema no válido." });
+      const lim = (v, n) => String(v == null ? "" : v).slice(0, n);
+      E.ed = E.ed || {}; E.log = Array.isArray(E.log) ? E.log : [];
+      const quien = lim(b.quien, 60) || "Sin nombre", t = Date.now();
+      if (!b.campos) { delete E.ed[b.k]; E.log.push({ k: b.k, t, quien, que: "restauró el original" }); }
+      else {
+        const c = {}, C = b.campos;
+        if (typeof C.que === "string") c.que = lim(C.que, 3000);
+        ["pasos", "err", "mat", "ctrl"].forEach((f) => { if (Array.isArray(C[f])) c[f] = C[f].map((x) => lim(x, 1500).trim()).filter(Boolean).slice(0, 80); });
+        if (!Object.keys(c).length) { delete E.ed[b.k]; } else E.ed[b.k] = { ...c, t, por: quien };
+        E.log.push({ k: b.k, t, quien, que: "editó " + Object.keys(c).join(", ") });
+      }
+      E.log = E.log.slice(-400);
+      await guardarE();
+      return res.status(200).json({ ok: true, ed: E.ed });
+    }
     if (accion === "obra") {
       if (b.borrar) { const ok = require("crypto").createHash("sha256").update(String(b.clave || "")).digest("hex") === "1d15d754bd6fe1657e5b718e12b0b80fb0919a22fcd70811edcae6cb2730d3da"; if (!ok) return res.status(403).json({ error: "Clave de Dirección incorrecta." }); }
       if (!/^o[a-z0-9]{6,30}$/.test(String(b.id || "")) || !b.obra || typeof b.obra !== "object") return res.status(400).json({ error: "Obra no válida." });
