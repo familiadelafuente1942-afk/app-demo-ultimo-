@@ -259,3 +259,32 @@ PICADO = S("canaletas","Canaletas para instalaciones: reglas y lo que NO se acep
 for c in C:
     if c["id"] == "mamposteria":
         c["s"].append(PICADO)
+
+# Vibrado: siempre 2 vibradores en obra (uno de uso y uno de emergencia)
+VIB2 = "2 vibradores de inmersión en obra, probados antes de empezar: uno de uso y otro de emergencia por si se rompe (con su combustible o alargue)"
+VIBRADO = S("vibrado","Vibrado del hormigón (2 vibradores siempre)","vibrado vibrador inmersion aguja hormigon nidos burbujas emergencia respaldo platea losa columnas tabiques",
+ "El vibrado saca el aire del hormigón y lo hace entrar en todos los rincones de la armadura. Sin vibrado aparecen nidos, huecos y hormigón débil. Por eso en todo hormigonado (plateas, vigas, columnas, tabiques y losas) hay siempre dos vibradores en obra: uno trabajando y otro de emergencia, porque si el único se rompe a mitad del colado no hay forma de parar el camión.",
+ ["Vibrador de inmersión con aguja de 35–50 mm (columnas y tabiques finos: aguja de 25–35 mm)",
+  "Segundo vibrador completo de emergencia (motor y aguja), probado",
+  "Combustible de reserva o alargue y tablero con protección para los eléctricos",
+  "Martillo de goma para golpear encofrados de columnas y vigas"],
+ ["El día anterior: confirmar que hay 2 vibradores en obra, arrancarlos y probarlos. Sin los 2 vibradores funcionando, no se cuela.",
+  "Asignar un operario solo al vibrado (y otro que lo releve); el vibrador de emergencia queda armado al lado, listo para usar.",
+  "Introducir la aguja vertical, rápido, hasta que penetre 10 cm en la capa anterior; sacarla despacio.",
+  "Puntos de vibrado cada 40–50 cm (≈ 8 a 10 veces el diámetro de la aguja), en cuadrícula, sin dejar zonas sin vibrar.",
+  "Vibrar cada punto 5 a 15 segundos: hasta que deja de salir aire y la superficie brilla. No sobrevibrar (se separa el agregado).",
+  "Nunca mover el hormigón de lado con el vibrador ni apoyarlo en la armadura o el encofrado.",
+  "Columnas y tabiques: colar en capas de 40–50 cm y vibrar cada capa; golpear el encofrado con martillo de goma.",
+  "Plateas y losas: vibrar en todo el espesor antes de reglear; en losas finas, la aguja inclinada.",
+  "Si se rompe el vibrador en uso: seguir de inmediato con el de emergencia y avisar para reponer o reparar el roto antes del próximo colado."],
+ ["2 vibradores en obra y probados antes del colado","Operario asignado al vibrado","Sin nidos ni huecos al desencofrar (foto)"],
+ ["Colar con un solo vibrador o con uno sin probar","Arrastrar el hormigón con el vibrador","Vibrar tocando la armadura","Dejar zonas sin vibrar"],
+ "Buena práctica de hormigonado (CIRSOC 201 y fabricantes de vibradores). Criterio Belfast: siempre 2 vibradores en obra.")
+for c in C:
+    if c["id"] == "estructura":
+        i = [s["id"] for s in c["s"]].index("hormigonado")
+        c["s"].insert(i + 1, VIBRADO)
+    for s in c["s"]:
+        if (c["id"], s["id"]) in [("fundaciones","platea"),("fundaciones","vigasfund"),("subsuelos","tabiques"),("estructura","hormigonado"),("estructura","visto"),("estructura","calor")]:
+            s["mat"] = [m for m in s["mat"] if not m.lower().startswith("vibradores de inmersión")] + [VIB2]
+            s["ctrl"] = s["ctrl"] + ["2 vibradores en obra y probados (uno de uso, uno de emergencia)"]

@@ -16,17 +16,17 @@ E("fundaciones", "Fundaciones y platea", "Antes de cada hormigonado.", "fundacio
  ("Base", ["Film de polietileno 200 µ continuo, con solapes de 20 cm y sin roturas", "Hormigón de limpieza ejecutado donde corresponde"]),
  ("Armaduras", ["Diámetros, separaciones y cantidades según plano de estructura", "Recubrimientos con separadores (no piedras ni ladrillos)", "Pelos de columnas y tabiques en posición y con su largo de empalme", "Armadura limpia, atada y firme (se puede caminar sin que se mueva)"]),
  ("Instalaciones embutidas", ["Desagües, pases y cañerías bajo platea en posición según plano y probados", "Pases para gas, agua y electricidad dejados con camisa", "Pozo de bombeo y rejillas en su lugar (subsuelos)"]),
- ("Hormigonado", ["Pedido de hormigón con resistencia y asentamiento del plano", "Probetas tomadas y rotuladas", "Curado iniciado y registrado"]),
+ ("Hormigonado", ["2 vibradores en obra y probados (uno de uso y uno de emergencia)", "Pedido de hormigón con resistencia y asentamiento del plano", "Probetas tomadas y rotuladas", "Curado iniciado y registrado"]),
 ]),
 E("subsuelo", "Subsuelo e impermeabilización enterrada", "Antes de rellenar contra los tabiques.", "subsuelos/impermeab", [
- ("Hormigón", ["Juntas platea-tabique con Hidro-Swell P o waterstop colocado (foto)", "Pasadores de encofrado sellados", "Nidos reparados con Concretex"]),
+ ("Hormigón", ["Tabiques colados en capas y vibrados, con 2 vibradores en obra", "Juntas platea-tabique con Hidro-Swell P o waterstop colocado (foto)", "Pasadores de encofrado sellados", "Nidos reparados con Concretex"]),
  ("Impermeabilización", ["Media caña en encuentro tabique-platea", "Protex Seal 77: 3 manos con fecha y foto de cada una", "Consumo real ≈ 3 kg/m² verificado", "Remate por encima del terreno terminado"]),
  ("Drenaje y relleno", ["Placa drenante colocada antes de rellenar", "Caño de drenaje con geotextil y pendiente verificada", "Bombas probadas (arranque, corte y alarma)"]),
 ]),
 E("estructura", "Estructura de hormigón", "Antes de cada colado de columnas, vigas y losas.", "estructura/encofrados", [
  ("Encofrados", ["Medidas, niveles y plomos según plano", "Puntales y arriostramientos firmes, sobre base resistente", "Desmoldante aplicado; encofrado limpio y estanco", "Contraflechas donde lo indica el calculista"]),
  ("Armaduras", ["Armadura según planilla de doblado y aprobada por el calculista o Dirección de obra", "Separadores de recubrimiento colocados", "Pases de instalaciones en vigas y losas según plano (nunca perforar después)"]),
- ("Antes de colar", ["Cañerías eléctricas y cajas en losa atadas a la armadura y tapadas", "Insertos, anclajes y placas para carpinterías y barandas colocados", "Pronóstico del día revisado (calor, lluvia, frío)"]),
+ ("Antes de colar", ["2 vibradores en obra y probados (uno de uso y uno de emergencia)", "Cañerías eléctricas y cajas en losa atadas a la armadura y tapadas", "Insertos, anclajes y placas para carpinterías y barandas colocados", "Pronóstico del día revisado (calor, lluvia, frío)"]),
  ("Colado y curado", ["Temperatura del hormigón medida en cada camión", "Probetas tomadas", "Curado húmedo 7 días registrado", "Desencofrado en los plazos indicados"]),
 ]),
 E("mamposteria", "Mampostería", "Antes de revocar.", "mamposteria/muros", [
