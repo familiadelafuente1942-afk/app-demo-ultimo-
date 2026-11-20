@@ -1,0 +1,15 @@
+name: Probar API fotos del manual
+on: workflow_dispatch
+jobs:
+  probar:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          B=https://app-demo-ultimo.vercel.app
+          curl -s "$B/api/motor?accion=salud"; echo
+          curl -s "$B/api/manual-fotos?accion=lista"; echo
+          IMG=$(convert -size 8x8 xc:gray jpeg:- | base64 -w0)
+          R=$(curl -s -X POST "$B/api/manual-fotos" -H "Origin: $B" -H "Content-Type: application/json" -d "{\"accion\":\"subir\",\"k\":\"principios/reglas\",\"img\":\"data:image/jpeg;base64,$IMG\",\"nota\":\"prueba\"}")
+          echo "$R"
+          P=$(echo "$R" | jq -r '.fotos[0].path')
+          curl -s -X POST "$B/api/manual-fotos" -H "Origin: $B" -H "Content-Type: application/json" -d "{\"accion\":\"borrar\",\"k\":\"principios/reglas\",\"path\":\"$P\"}"; echo

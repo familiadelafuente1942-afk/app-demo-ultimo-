@@ -71,6 +71,9 @@ h2{font-size:22px;margin:0 0 6px;font-weight:600}
 .foto{position:relative;margin:0 0 14px;padding:0;overflow:hidden;cursor:zoom-in}.foto img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:inherit}
 .foto figcaption{position:absolute;left:12px;bottom:12px;font-size:12px;letter-spacing:.06em;padding:5px 11px;border-radius:12px;background:rgba(0,0,0,.55);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .mini{width:58px;height:58px;flex:0 0 58px;object-fit:cover;border-radius:14px;box-shadow:inset 0 0 0 1px var(--g-edge)}
+.obra .tira{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;-webkit-overflow-scrolling:touch}.obra .tf{position:relative;flex:0 0 auto;width:150px}.obra .tf img{width:150px;height:110px;object-fit:cover;border-radius:12px;display:block;cursor:zoom-in}.obra .tf small{display:block;font-size:12px;opacity:.8;margin-top:4px}
+.obra .tx{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:17px;line-height:1;cursor:pointer}
+.subir{cursor:pointer;display:inline-flex}.estado{margin-left:10px;font-size:13px;opacity:.85}
 #visor{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:16px}#visor.on{display:flex}#visor img{max-width:100%;max-height:100%;border-radius:12px}
 html[data-tema=claro] .foto img,html[data-tema=claro] .mini,html[data-tema=claro] #visor img{filter:none}
 .mat{display:flex;flex-wrap:wrap;gap:8px}.mat span{font-size:14px;padding:7px 13px;border-radius:14px;background:linear-gradient(158deg,var(--g-b),var(--g-c));box-shadow:inset 0 1.5px 1px rgba(255,255,255,.3),inset 0 0 0 1px var(--g-edge)}
@@ -107,6 +110,25 @@ nav.bottom button[aria-current=page] .o{display:none}nav.bottom button[aria-curr
 </header>
 <main id="app"></main>
 <nav class="bottom" aria-label="Secciones"><div class="in" id="nav"></div></nav>
+<script>
+let OBRA={};
+const API_F='/api/manual-fotos';
+window.addEventListener('DOMContentLoaded',()=>fetch(API_F+'?accion=lista',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{if(d&&d.fotos){OBRA=d.fotos;pintar()}}).catch(()=>{}));
+function bloqueObra(k,s){const ob=OBRA[k]||[];
+ return `<div class="bloque vid obra"><h3>${svg('mat')} Fotos de obra Belfast <span class="prog">${ob.length}</span></h3>
+ ${ob.length?`<div class="tira">${ob.map(f=>`<div class="tf"><img src="${f.u}" loading="lazy" onclick="verFoto('${f.u}')" alt=""><button class="tx" title="Quitar" onclick="borrarFoto('${k}','${f.path}')">×</button>${f.nota?`<small>${esc(f.nota)}</small>`:''}</div>`).join('')}</div>`:`<p class="ref" style="margin:0 0 12px">Todavía no hay fotos de trabajos terminados. Cargá la primera cuando esté hecho: va a reemplazar a la imagen ilustrativa.</p>`}
+ <label class="chip vid subir"><input type="file" accept="image/*" multiple hidden onchange="subirFotos('${k}',this)">＋ Cargar foto de obra</label>
+ <span class="estado" id="est-f"></span></div>`}
+function achicar(file){return new Promise((ok,mal)=>{const img=new Image();img.onload=()=>{const m=1600,e=Math.min(1,m/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*e);c.height=Math.round(img.height*e);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);ok(c.toDataURL('image/jpeg',.82))};img.onerror=()=>mal(new Error('No se pudo leer la foto'));img.src=URL.createObjectURL(file)})}
+async function subirFotos(k,inp){const fs=[...inp.files];if(!fs.length)return;const est=document.getElementById('est-f');
+ const nota=prompt('Obra o comentario (opcional):','')||'';
+ for(let i=0;i<fs.length;i++){est.textContent='Subiendo '+(i+1)+' de '+fs.length+'…';
+  try{const img=await achicar(fs[i]);const r=await fetch(API_F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'subir',k,img,nota})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Error');OBRA[k]=d.fotos}
+  catch(e){est.textContent='No se pudo subir: '+e.message;return}}
+ const y=window.scrollY;pintar();window.scrollTo(0,y);const e2=document.getElementById('est-f');if(e2)e2.textContent='Listo, foto cargada.'}
+async function borrarFoto(k,path){if(!confirm('¿Quitar esta foto del manual?'))return;
+ try{const r=await fetch(API_F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'borrar',k,path})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Error');if(d.fotos.length)OBRA[k]=d.fotos;else delete OBRA[k];const y=window.scrollY;pintar();window.scrollTo(0,y)}catch(e){alert('No se pudo quitar: '+e.message)}}
+</script>
 <script>
 const M=__DATOS__;
 const IC={
@@ -175,13 +197,14 @@ function vCaps(){return `<div class="eti">Índice</div><h1>Capítulos</h1><p cla
 function vCap(id){const c=cap(id);if(!c)return vInicio();
  return `<button class="volver" onclick="history.length>1?history.back():ir('capitulos')">${svg('atras')} Capítulos</button>
  <div class="eti">Capítulo ${M.indexOf(c)+1}</div><h1>${esc(c.t)}</h1><p class="sub">${esc(c.d)}</p>
- <div class="lista">${c.s.map((s,i)=>`<button class="fila vid" onclick="ir('s/${c.id}/${s.id}')">${s.foto?`<img class="mini" src="${s.foto}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;n&quot;>${i+1}</div>'">`:`<div class="n">${i+1}</div>`}<div><b>${esc(s.t)}</b><span>${esc(s.que.length>140?s.que.slice(0,137)+'…':s.que)}</span></div><div class="go">${svg('go')}</div></button>`).join('')}</div>`}
+ <div class="lista">${c.s.map((s,i)=>`<button class="fila vid" onclick="ir('s/${c.id}/${s.id}')">${s.foto?`<img class="mini" src="${(OBRA[c.id+'/'+s.id]||[])[0]?OBRA[c.id+'/'+s.id][0].u:s.foto}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;n&quot;>${i+1}</div>'">`:`<div class="n">${i+1}</div>`}<div><b>${esc(s.t)}</b><span>${esc(s.que.length>140?s.que.slice(0,137)+'…':s.que)}</span></div><div class="go">${svg('go')}</div></button>`).join('')}</div>`}
 function vSec(cid,sid){const c=cap(cid),s=secc(cid,sid);if(!s)return vCap(cid);const k=cid+'/'+sid,fav=FAV.includes(k);
  const ctrl=(s.ctrl||[]);const hechos=ctrl.filter((x,i)=>CHK[k+'/'+i]).length;const i=c.s.indexOf(s),sig=c.s[i+1],ant=c.s[i-1];
  return `<button class="volver" onclick="ir('c/${c.id}')">${svg('atras')} ${esc(c.t)}</button>
  <div class="eti">${esc(c.t)}</div><h1>${esc(s.t)}</h1>
  <div class="acc"><button class="chip vid" onclick="guardar('${k}')">${fav?'★ Guardado':'☆ Guardar'}</button><button class="chip vid" onclick="window.print()">Imprimir</button><button class="chip vid" onclick="compartir('${k}')">Compartir</button></div>
- ${s.foto?`<figure class="foto vid" onclick="verFoto('${s.foto}')"><img src="${s.foto}" alt="${esc(s.t)}" loading="lazy" onerror="this.parentNode.style.display='none'"><figcaption>${s.fr?'Obra Belfast':'Imagen ilustrativa'}</figcaption></figure>`:''}
+ ${(()=>{const ob=OBRA[k]||[];const u=ob.length?ob[0].u:s.foto;if(!u)return'';return `<figure class="foto vid" onclick="verFoto('${u}')"><img src="${u}" alt="${esc(s.t)}" loading="lazy" onerror="this.parentNode.style.display='none'"><figcaption>${ob.length||s.fr?'Obra Belfast':'Imagen ilustrativa'}</figcaption></figure>`})()}
+ ${bloqueObra(k,s)}
  <div class="bloque vid"><p class="que" style="margin:0">${esc(s.que)}</p></div>
  ${s.mat&&s.mat.length?`<div class="bloque vid"><h3>${svg('mat')} Materiales y equipos</h3><div class="mat">${s.mat.map(m=>`<span>${esc(m)}</span>`).join('')}</div></div>`:''}
  ${s.pasos&&s.pasos.length?`<div class="bloque vid"><h3>${svg('pasos')} Cómo se hace</h3><ol class="pasos">${s.pasos.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`:''}
@@ -220,6 +243,7 @@ function pintar(){const h=decodeURIComponent(location.hash.slice(1));const p=h.s
  $('#app').innerHTML=v;nav(act);if(p[0]==='buscar'){const i=$('#q');if(i&&!('ontouchstart' in window)){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}}
 let _ultimo='';window.addEventListener('hashchange',()=>{const h=location.hash;const solo=h.startsWith('#buscar')&&_ultimo.startsWith('#buscar')&&document.activeElement&&document.activeElement.id==='q';_ultimo=h;if(!solo){pintar();window.scrollTo(0,0)}});
 _ultimo=location.hash;pintarTema();pintar();
-</script><div id="visor" onclick="this.classList.remove('on')"><img alt=""></div>
+</script>
+<div id="visor" onclick="this.classList.remove('on')"><img alt=""></div>
 <script>function verFoto(u){const v=document.getElementById('visor');v.querySelector('img').src=u;v.classList.add('on')}</script>
 </body></html>
