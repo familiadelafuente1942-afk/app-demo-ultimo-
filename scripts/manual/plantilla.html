@@ -68,6 +68,11 @@ h2{font-size:22px;margin:0 0 6px;font-weight:600}
 .bloque h3{margin:0 0 10px;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:9px}
 .bloque h3 svg{width:18px;height:18px}
 .que{font-size:18px;line-height:1.55}
+.foto{position:relative;margin:0 0 14px;padding:0;overflow:hidden;cursor:zoom-in}.foto img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:inherit}
+.foto figcaption{position:absolute;left:12px;bottom:12px;font-size:12px;letter-spacing:.06em;padding:5px 11px;border-radius:12px;background:rgba(0,0,0,.55);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.mini{width:58px;height:58px;flex:0 0 58px;object-fit:cover;border-radius:14px;box-shadow:inset 0 0 0 1px var(--g-edge)}
+#visor{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:16px}#visor.on{display:flex}#visor img{max-width:100%;max-height:100%;border-radius:12px}
+html[data-tema=claro] .foto img,html[data-tema=claro] .mini,html[data-tema=claro] #visor img{filter:none}
 .mat{display:flex;flex-wrap:wrap;gap:8px}.mat span{font-size:14px;padding:7px 13px;border-radius:14px;background:linear-gradient(158deg,var(--g-b),var(--g-c));box-shadow:inset 0 1.5px 1px rgba(255,255,255,.3),inset 0 0 0 1px var(--g-edge)}
 ol.pasos{list-style:none;margin:0;padding:0;counter-reset:p}
 ol.pasos li{counter-increment:p;position:relative;padding:10px 0 10px 46px;border-top:1px solid rgba(127,127,127,.18)}
@@ -170,12 +175,13 @@ function vCaps(){return `<div class="eti">Índice</div><h1>Capítulos</h1><p cla
 function vCap(id){const c=cap(id);if(!c)return vInicio();
  return `<button class="volver" onclick="history.length>1?history.back():ir('capitulos')">${svg('atras')} Capítulos</button>
  <div class="eti">Capítulo ${M.indexOf(c)+1}</div><h1>${esc(c.t)}</h1><p class="sub">${esc(c.d)}</p>
- <div class="lista">${c.s.map((s,i)=>`<button class="fila vid" onclick="ir('s/${c.id}/${s.id}')"><div class="n">${i+1}</div><div><b>${esc(s.t)}</b><span>${esc(s.que.length>140?s.que.slice(0,137)+'…':s.que)}</span></div><div class="go">${svg('go')}</div></button>`).join('')}</div>`}
+ <div class="lista">${c.s.map((s,i)=>`<button class="fila vid" onclick="ir('s/${c.id}/${s.id}')">${s.foto?`<img class="mini" src="${s.foto}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;n&quot;>${i+1}</div>'">`:`<div class="n">${i+1}</div>`}<div><b>${esc(s.t)}</b><span>${esc(s.que.length>140?s.que.slice(0,137)+'…':s.que)}</span></div><div class="go">${svg('go')}</div></button>`).join('')}</div>`}
 function vSec(cid,sid){const c=cap(cid),s=secc(cid,sid);if(!s)return vCap(cid);const k=cid+'/'+sid,fav=FAV.includes(k);
  const ctrl=(s.ctrl||[]);const hechos=ctrl.filter((x,i)=>CHK[k+'/'+i]).length;const i=c.s.indexOf(s),sig=c.s[i+1],ant=c.s[i-1];
  return `<button class="volver" onclick="ir('c/${c.id}')">${svg('atras')} ${esc(c.t)}</button>
  <div class="eti">${esc(c.t)}</div><h1>${esc(s.t)}</h1>
  <div class="acc"><button class="chip vid" onclick="guardar('${k}')">${fav?'★ Guardado':'☆ Guardar'}</button><button class="chip vid" onclick="window.print()">Imprimir</button><button class="chip vid" onclick="compartir('${k}')">Compartir</button></div>
+ ${s.foto?`<figure class="foto vid" onclick="verFoto('${s.foto}')"><img src="${s.foto}" alt="${esc(s.t)}" loading="lazy" onerror="this.parentNode.style.display='none'"><figcaption>${s.fr?'Obra Belfast':'Imagen ilustrativa'}</figcaption></figure>`:''}
  <div class="bloque vid"><p class="que" style="margin:0">${esc(s.que)}</p></div>
  ${s.mat&&s.mat.length?`<div class="bloque vid"><h3>${svg('mat')} Materiales y equipos</h3><div class="mat">${s.mat.map(m=>`<span>${esc(m)}</span>`).join('')}</div></div>`:''}
  ${s.pasos&&s.pasos.length?`<div class="bloque vid"><h3>${svg('pasos')} Cómo se hace</h3><ol class="pasos">${s.pasos.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`:''}
@@ -214,4 +220,6 @@ function pintar(){const h=decodeURIComponent(location.hash.slice(1));const p=h.s
  $('#app').innerHTML=v;nav(act);if(p[0]==='buscar'){const i=$('#q');if(i&&!('ontouchstart' in window)){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}}
 let _ultimo='';window.addEventListener('hashchange',()=>{const h=location.hash;const solo=h.startsWith('#buscar')&&_ultimo.startsWith('#buscar')&&document.activeElement&&document.activeElement.id==='q';_ultimo=h;if(!solo){pintar();window.scrollTo(0,0)}});
 _ultimo=location.hash;pintarTema();pintar();
-</script></body></html>
+</script><div id="visor" onclick="this.classList.remove('on')"><img alt=""></div>
+<script>function verFoto(u){const v=document.getElementById('visor');v.querySelector('img').src=u;v.classList.add('on')}</script>
+</body></html>
