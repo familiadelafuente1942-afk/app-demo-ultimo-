@@ -24,7 +24,7 @@ S("radiante","Losa radiante: capas, espesores y niveles de piso","losa radiante 
   "Primera prueba hidráulica antes de llenar: llenar y purgar, 3 bar; a la hora subir a 3,5 bar; a las 24 h verificar 3 bar durante 1 hora sin pérdidas. Dejar los tubos con agua a 3 bar durante el llenado del mortero.",
   "Llenar con el mortero del fabricante, sin pisar los tubos (tablones), vibrando o compactando bien alrededor del tubo.",
   "No pisar 3 días; no encender antes de 21 días; no colocar el piso antes de 30 días.",
-  "Primer encendido gradual: 3 días a 25 °C y después 4 días a la temperatura de diseño. Registrar en NEXO.",
+  "Primer encendido gradual: 3 días a 25 °C y después 4 días a la temperatura de diseño. Registrar en la app general de Belfast.",
   "Segunda prueba hidráulica antes de colocar el revestimiento.",
   "Piso: cerámico, porcelanato o piedra son los mejores. Madera solo apta para radiante, encolada, con humedad de carpeta medida. Temperatura de superficie máx. 27–29 °C en estar, 33 °C en baños."],
  ["Altura del paquete en plano y en replanteo (nivel 0,00 y nivel de piso terminado marcados en obra)","Banda perimetral continua","Foto de cada circuito con su número antes de llenar","Prueba hidráulica 1 aprobada (manómetro + foto)","Mortero ≥ 3,5 cm sobre el tubo (medir en 3 puntos por local)","21 días antes de encender; protocolo de encendido registrado","Prueba hidráulica 2 antes del piso"],
@@ -40,7 +40,7 @@ S("salamaquinas","Sala de máquinas, caldera y colector","sala de maquinas calde
   "Cañerías de ida y retorno aisladas en todo su recorrido no calefaccionado.",
   "Tablero o circuito eléctrico exclusivo con protección propia; termostatos por zona cableados antes de cerrar.",
   "Puesta en marcha por el instalador con planilla de presiones, caudales y temperaturas."],
- ["Accesos libres al equipo y al colector","Circuitos rotulados","Ventilaciones aprobadas por gasista","Planilla de puesta en marcha en NEXO"],
+ ["Accesos libres al equipo y al colector","Circuitos rotulados","Ventilaciones aprobadas por gasista","Planilla de puesta en marcha en la app general de Belfast"],
  ["Caldera en placard sin ventilación","Colectores tapados sin acceso","Válvula de seguridad sin desagüe"],
  REF_RAD),
 S("aire","Aire acondicionado: preinstalación y equipos","aire acondicionado split cañeria cobre preinstalacion desague condensado vacio nitrogeno unidad exterior soporte",
@@ -53,8 +53,8 @@ S("aire","Aire acondicionado: preinstalación y equipos","aire acondicionado spl
   "Prueba de hermeticidad con nitrógeno (presión indicada por el fabricante) y foto del manómetro.",
   "Al colocar el equipo: vacío con bomba (no \"purgar con el gas del equipo\"), abrir válvulas, verificar carga y presiones.",
   "Unidad exterior nivelada, con 30 cm libres detrás y a los lados (o lo que pida el manual), fijada con tacos químicos o bulones.",
-  "Registrar marca, modelo, número de serie y ubicación de cada equipo en NEXO."],
- ["Puntas tapadas hasta la conexión","Desagüe probado con agua","Prueba con nitrógeno registrada","Vacío realizado (foto del vacuómetro)","Equipos registrados en NEXO"],
+  "Registrar marca, modelo, número de serie y ubicación de cada equipo en la app general de Belfast."],
+ ["Puntas tapadas hasta la conexión","Desagüe probado con agua","Prueba con nitrógeno registrada","Vacío realizado (foto del vacuómetro)","Equipos registrados en la app general de Belfast"],
  ["Desagüe con contrapendiente o sin sifón a cloaca","Caños sin aislación o con aislación rota","Unidad exterior encerrada sin ventilación","Conectar sin hacer vacío"],
  "Manuales de instalación del fabricante de cada equipo; Reglamento AEA 90364 para la parte eléctrica."),
 ])
@@ -86,7 +86,7 @@ S("colgadas","Instalaciones colgadas bajo losa (plomería, electricidad y aire)"
   "Caños eléctricos fijados cada 1 m como máximo y a 30 cm de cada caja o curva; cajas de paso fijadas a la losa, accesibles.",
   "Separar agua y desagües de electricidad (agua siempre por debajo de lo eléctrico, nunca encima de un tablero).",
   "Agua caliente y cañerías de aire con aislación continua, sin aplastarla en las abrazaderas.",
-  "Fotografiar todo el plenum por local antes de cerrar el cielorraso y subirlo a NEXO (sirve para reparar sin romper)."],
+  "Fotografiar todo el plenum por local antes de cerrar el cielorraso y subirlo a la app general de Belfast (sirve para reparar sin romper)."],
  ["Ningún caño apoyado en el cielorraso","Pendientes de desagües verificadas con nivel","Soportes a la distancia indicada","Foto del plenum antes de cerrar"],
  ["Cañerías atadas con alambre a los perfiles del cielorraso","Desagüe con panza (sin soporte intermedio)","Agua sobre tableros o cajas eléctricas"],
  "Manuales de instalación de los fabricantes de cañerías (PVC/PP, PP-R) y Reglamento AEA 90364 para canalizaciones."),
@@ -144,7 +144,7 @@ for c in C:
                   "Tablero principal y seccionales por planta según proyecto; circuitos de aire acondicionado, caldera, bomba y portón con protección propia.",
                   "Durante la obra, el tablero se protege con nylon y cinta (polvo y revoque) y queda señalizado.",
                   "Cables peinados, con terminales y borneras; nada de empalmes dentro del tablero.",
-                  "Esquema unifilar actualizado pegado en la puerta y cargado en NEXO."]
+                  "Esquema unifilar actualizado pegado en la puerta y cargado en la app general de Belfast."]
                 s["ctrl"] += ["Unifilar en la puerta", "Tablero protegido durante la obra"]
 
 # Hormigonado con calor (y frío)
@@ -162,7 +162,7 @@ CALOR = S("calor","Hormigonado con calor (y con frío)","hormigon calor tiempo c
   "Curado inmediato apenas terminada la superficie: Antisol en una mano pareja, o arpillera mojada y film. Mantener húmedo como mínimo 7 días (losas y tabiques), sin dejar que se seque entre riegos.",
   "El agua de curado no debe estar mucho más fría que el hormigón (no más de 11 °C de diferencia).",
   "Con frío: no colar si se esperan menos de 5 °C en las 48 h siguientes sin protección; cubrir con film y mantas, no usar acelerantes con cloruros y alargar los plazos de desencofrado.",
-  "Registrar en NEXO: hora de cada camión, temperatura del hormigón, temperatura ambiente, probetas y curado aplicado."],
+  "Registrar en la app general de Belfast: hora de cada camión, temperatura del hormigón, temperatura ambiente, probetas y curado aplicado."],
  ["Pronóstico revisado el día anterior","Temperatura del hormigón medida en cada camión (≤ 32 °C)","Descarga dentro de los 90 min","Curado aplicado dentro de la primera hora","7 días de curado húmedo registrados"],
  ["Agregar agua en obra","Colar al mediodía con 35 °C","Dejar la losa al sol sin curar","Camiones esperando al sol"],
  "CIRSOC 201 (referencias de hormigonado en tiempo caluroso y frío) y bibliografía técnica de la cátedra de Tecnología del Hormigón (UNC, adaptado de Kosmatka et al.). Prevalecen las indicaciones de la hormigonera y del calculista.")
@@ -243,7 +243,7 @@ PICADO = S("canaletas","Canaletas para instalaciones: reglas y lo que NO se acep
  "Las canaletas se planifican antes de picar. Un picado mal hecho rompe la capa aisladora, el cajón hidrófugo o las fajas, y genera humedad y fisuras que aparecen meses después. Las fotos de este tema son ejemplos reales de lo que no se hace.",
  ["Amoladora con disco diamantado (corte de los dos bordes) y cortafierro solo para vaciar","Mortero de reparación; Protex 1 o Seal 77 si hay que rehacer el cajón hidrófugo","Malla soldada para tapar canaletas"],
  ["Nunca picar la capa aisladora ni el cajón hidrófugo para pasar cañerías. Los caños que van por el piso pasan por el contrapiso, por encima de la capa aisladora, y suben por el muro desde ahí.",
-  "Si por excepción hubo que cortar el cajón: avisar a Dirección de obra, rehacer la capa aisladora y el cajón hidrófugo completos en esa zona (con Protex 1 / Seal 77, solapando 20 cm con lo existente) y registrarlo con foto en NEXO antes de tapar. Se controla uno por uno.",
+  "Si por excepción hubo que cortar el cajón: avisar a Dirección de obra, rehacer la capa aisladora y el cajón hidrófugo completos en esa zona (con Protex 1 / Seal 77, solapando 20 cm con lo existente) y registrarlo con foto en la app general de Belfast antes de tapar. Se controla uno por uno.",
   "Canaletas siempre rectas: verticales hacia el techo (o hacia el piso) desde la caja o el artefacto. Nunca en diagonal.",
   "Nunca una cañería cruzando una pared de punta a punta en horizontal. Los recorridos horizontales van por la losa, el cielorraso o el contrapiso; en el muro solo tramos horizontales cortos a la altura de artefactos, según plano.",
   "Marcar todas las canaletas con tiza o láser y que las apruebe el capataz antes de picar.",
@@ -253,7 +253,7 @@ PICADO = S("canaletas","Canaletas para instalaciones: reglas y lo que NO se acep
   "No picar el revoque terminado para agregar cajas o caños; cualquier agregado se aprueba y se repara con el mismo material y malla.",
   "Caños de desagüe o pluviales a la vista sobre revoque: solo si el proyecto lo indica; si no, van embutidos o en plenos.",
   "Tapar las canaletas con mortero y malla (15 cm a cada lado), recién con la prueba de la instalación aprobada."],
- ["Canaletas marcadas y aprobadas antes de picar","Capa aisladora y cajón hidrófugo sin cortes (foto)","Todas las canaletas verticales o según plano, sin diagonales","Ninguna cañería cruzando la pared en horizontal","Fajas y revoque hidrófugo sin picar","Si hubo corte del cajón: reparación registrada en NEXO"],
+ ["Canaletas marcadas y aprobadas antes de picar","Capa aisladora y cajón hidrófugo sin cortes (foto)","Todas las canaletas verticales o según plano, sin diagonales","Ninguna cañería cruzando la pared en horizontal","Fajas y revoque hidrófugo sin picar","Si hubo corte del cajón: reparación registrada en la app general de Belfast"],
  ["Picar el cajón hidrófugo o la capa aisladora","Canaletas en diagonal","Caños cruzando toda la pared","Picar fajas o revoque ya hecho","Picar a maza sin cortar los bordes","Tapar sin probar la instalación"],
  "Criterio de obra Belfast. Fotos: ejemplos reales de mala ejecución en obras.")
 for c in C:

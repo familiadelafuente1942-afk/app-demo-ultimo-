@@ -38,7 +38,7 @@ S("protexguia","¿Qué producto Protex uso? (tabla rápida)","protex tabla elegi
   "Nidos, fisuras y reparación de hormigón → Concretex / Protex Rep; inyecciones: Protex Hydrofoam",
   "Juntas con movimiento → Protex PU 40 C sobre fondo de junta Protex Pol",
   "Pegado de revoque sobre Seal 77 → Protex Látex o Superligante; cerámicos → Pegatex Impermeable o Flexible"],
- ["Elegir el producto con esta tabla y registrar la elección en NEXO (obra, lugar, producto, lote).",
+ ["Elegir el producto con esta tabla y registrar la elección en la app general de Belfast (obra, lugar, producto, lote).",
   "Pedir la ficha técnica vigente del lote y dejarla en la carpeta de obra.",
   "Verificar el vencimiento: los cementicios bicomponentes duran 6 meses en envase cerrado; Protex 1, 3 años.",
   "Nunca mezclar productos de marcas distintas en un mismo sistema sin consultar."],

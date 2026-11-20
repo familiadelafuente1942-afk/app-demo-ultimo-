@@ -6,7 +6,7 @@ def E(id, t, d, ver, grupos):
 PROT = [
 E("inicio", "Inicio de obra y replanteo", "Antes de excavar.", "replanteo/ejes", [
  ("Documentación", ["Planos aprobados y última revisión en obra (arquitectura, estructura e instalaciones)", "Estudio de suelos en obra", "Seguro, ART y programa de seguridad firmados", "Planos de cada rubro guardados y rotulados en el obrador"]),
- ("Replanteo", ["Punto fijo y nivel 0,00 materializados y protegidos", "Ejes replanteados y verificados por Dirección de obra (diagonales)", "Retiros y FOS/FOT verificados contra el plano municipal y el reglamento del barrio", "Ejes y niveles fotografiados y cargados en NEXO"]),
+ ("Replanteo", ["Punto fijo y nivel 0,00 materializados y protegidos", "Ejes replanteados y verificados por Dirección de obra (diagonales)", "Retiros y FOS/FOT verificados contra el plano municipal y el reglamento del barrio", "Ejes y niveles fotografiados y cargados en la app general de Belfast"]),
 ]),
 E("excavacion", "Excavación y rellenos", "Antes de hormigonar fundaciones.", "suelos/rellenos", [
  ("Excavación", ["Cota de fondo según plano (nivel verificado en varios puntos)", "Fondo limpio, sin agua ni suelo removido", "Taludes estables o apuntalados", "Suelo del fondo coincide con el estudio de suelos (si no, consultar al geotécnico)"]),
