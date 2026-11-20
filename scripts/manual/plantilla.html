@@ -92,6 +92,7 @@ ol.pasos li:before{content:counter(p);position:absolute;left:0;top:9px;width:30p
 .ref{font-size:14px;color:var(--muted)}
 .acc{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 16px}
 .res mark{background:rgba(226,194,0,.35);color:inherit;border-radius:3px;padding:0 2px}
+.obra-in{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:12px 14px;border-radius:14px;border:0;color:inherit;background:linear-gradient(158deg,var(--g-b),var(--g-c));box-shadow:inset 0 0 0 1px var(--g-edge)}
 .vacio{color:var(--muted);text-align:center;padding:30px 10px}
 nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:0 12px calc(12px + env(safe-area-inset-bottom));pointer-events:none;display:flex;justify-content:center}
 nav.bottom .in{pointer-events:auto;width:100%;max-width:820px;display:flex;gap:2px;padding:6px;border-radius:999px;background:linear-gradient(158deg,var(--g-a),var(--g-b)),var(--gl-bar);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:inset 0 1.5px 1px var(--g-rim),inset 0 0 0 1px var(--g-edge),0 14px 30px -10px var(--gl-sh)}
@@ -191,8 +192,12 @@ function vInicio(){const pr=cap('principios').s[0];
  <div class="busca vid"><span>${svg('lupa')}</span><input id="q0" placeholder="¿Qué querés consultar? Ej.: contrapiso alivianado" onkeydown="if(event.key==='Enter')ir('buscar/'+encodeURIComponent(this.value))"></div>
  <div class="sug">${SUG.slice(0,8).map(s=>`<button class="chip vid" onclick="ir('buscar/${encodeURIComponent(s)}')">${esc(s)}</button>`).join('')}</div>
  <div class="reglas"><div class="eti">Reglas de oro</div><ol>${pr.pasos.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>
- <h2>Capítulos</h2><p class="num" style="margin:0 0 12px">${M.length} capítulos · ${total} temas</p>
- <div class="grid">${M.map(tarjCap).join('')}</div>
+ <h2>Cómo se usa</h2>
+ <div class="lista">
+ <button class="fila vid" onclick="ir('capitulos')"><div class="n">1</div><div><b>Capítulos: cómo se hace</b><span>${M.length} capítulos y ${total} temas en el orden de la obra, con materiales, pasos, errores que no se aceptan y fotos.</span></div><div class="go">${svg('go')}</div></button>
+ <button class="fila vid" onclick="ir('controles')"><div class="n">2</div><div><b>Controles: qué se revisa en cada etapa</b><span>Protocolo de inspección por obra. Cada etapa se aprueba antes de pasar a la siguiente.</span></div><div class="go">${svg('go')}</div></button>
+ <button class="fila vid" onclick="ir('buscar')"><div class="n">3</div><div><b>Buscar</b><span>Escribí lo que necesitás y te lleva al tema.</span></div><div class="go">${svg('go')}</div></button>
+ </div>
  <p class="pie">Valores de referencia para vivienda de alta gama en Argentina. El cálculo estructural, los proyectos de instalaciones firmados y las fichas técnicas de los fabricantes siempre prevalecen sobre este manual.</p>`}
 function vCaps(){return `<div class="eti">Índice</div><h1>Capítulos</h1><p class="sub">En el orden en que se construye la obra.</p><div class="grid">${M.map(tarjCap).join('')}</div>`}
 function vCap(id){const c=cap(id);if(!c)return vInicio();
@@ -232,15 +237,33 @@ function vBuscar(q){q=q||'';const r=buscar(q);
 function listaRes(q,r){if(!q.trim())return '';if(!r.length)return `<div class="vacio">No encontré nada con “${esc(q)}”. Probá con otra palabra (por ejemplo: contrapiso, membrana, pendiente).<br>Si no está en el manual, consultá a Dirección de obra.</div>`;
  return `<p class="num" style="margin:0">${r.length} resultado${r.length===1?'':'s'}</p>`+r.slice(0,40).map(x=>`<button class="fila vid" onclick="ir('s/${x.c.id}/${x.s.id}')"><div><span style="color:var(--gold);margin:0 0 2px">${esc(x.c.t)}</span><b>${resaltar(x.s.t,q)}</b><span>${resaltar(x.frag.length>190?x.frag.slice(0,187)+'…':x.frag,q)}</span></div><div class="go">${svg('go')}</div></button>`).join('')}
 function res(q){const e=$('#res');if(e)e.innerHTML=listaRes(q,buscar(q))}
-function vControles(){return `<div class="eti">Calidad</div><h1>Controles por etapa</h1><p class="sub">Lo que se revisa antes de pasar a la tarea siguiente. Las tildes quedan guardadas en este aparato.</p>
- <div class="lista">${M.map(c=>{const tot=c.s.reduce((a,s)=>a+(s.ctrl||[]).length,0);if(!tot)return '';const h=c.s.reduce((a,s)=>a+(s.ctrl||[]).filter((x,i)=>CHK[c.id+'/'+s.id+'/'+i]).length,0);
-  return `<button class="fila vid" onclick="ir('c/${c.id}')"><div class="ico" style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--gold)">${svg(c.ico)}</div><div><b>${esc(c.t)}</b><span>${h} de ${tot} controles tildados</span></div><div class="go">${svg('go')}</div></button>`}).join('')}</div>
- <div class="acc" style="margin-top:16px"><button class="chip vid" onclick="if(confirm('¿Borrar todas las tildes de este aparato?')){CHK={};lset('manual_chk',CHK);pintar()}">Empezar de cero (nueva obra)</button></div>`}
+const PROT=__PROT__;
+let PR=lget('manual_proto',{obra:'',c:{},ok:{}});if(!PR.c)PR={obra:'',c:{},ok:{}};
+function guardaPR(){lset('manual_proto',PR)}
+function etTot(e){return e.g.reduce((a,g)=>a+g.i.length,0)}
+function etHechos(e){let h=0;e.g.forEach((g,gi)=>g.i.forEach((x,ii)=>{if(PR.c[e.id+'/'+gi+'/'+ii])h++}));return h}
+function vControles(){
+ return `<div class="eti">Calidad</div><h1>Controles por etapa</h1><p class="sub">Protocolo de inspección de Dirección de obra. Ninguna etapa empieza sin la anterior aprobada. Las tildes se guardan en este aparato, por obra.</p>
+ <div class="bloque vid"><h3>${svg('casco')} Obra</h3><input class="obra-in" value="${esc(PR.obra||'')}" placeholder="Nombre de la obra (ej.: Casa Nordelta lote 12)" onchange="PR.obra=this.value;guardaPR()"></div>
+ <div class="lista">${PROT.map((e,n)=>{const t=etTot(e),h=etHechos(e),ok=PR.ok[e.id];
+  return `<button class="fila vid" onclick="ir('controles/${e.id}')"><div class="n" style="${ok?'background:var(--gold);color:#1a1408':''}">${ok?'✓':n+1}</div><div><b>${esc(e.t)}</b><span>${ok?'Aprobada el '+ok:h+' de '+t+' controles'} · ${esc(e.d)}</span></div><div class="go">${svg('go')}</div></button>`}).join('')}</div>
+ <div class="acc" style="margin-top:16px"><button class="chip vid" onclick="window.print()">Imprimir protocolo</button><button class="chip vid" onclick="if(confirm('¿Empezar una obra nueva? Se borran las tildes de este aparato.')){PR={obra:'',c:{},ok:{}};guardaPR();pintar()}">Empezar obra nueva</button></div>`}
+function vEtapa(id){const e=PROT.find(x=>x.id===id);if(!e)return vControles();const n=PROT.indexOf(e),t=etTot(e),h=etHechos(e),ok=PR.ok[e.id],sig=PROT[n+1],[vc,vs]=e.ver.split('/');
+ return `<button class="volver" onclick="ir('controles')">${svg('atras')} Controles</button>
+ <div class="eti">Etapa ${n+1} de ${PROT.length}${PR.obra?' · '+esc(PR.obra):''}</div><h1>${esc(e.t)}</h1><p class="sub">${esc(e.d)}</p>
+ <div class="acc"><button class="chip vid" onclick="ir('s/${e.ver}')">Ver cómo se hace</button><button class="chip vid" onclick="window.print()">Imprimir</button></div>
+ ${e.g.map((g,gi)=>`<div class="bloque vid ctrl"><h3>${svg('check')} ${esc(g.t)}</h3>${g.i.map((x,ii)=>{const k=e.id+'/'+gi+'/'+ii;return `<label><input type="checkbox" ${PR.c[k]?'checked':''} onchange="tildar('${e.id}','${k}',this.checked)"><span>${esc(x)}</span></label>`}).join('')}</div>`).join('')}
+ <div class="bloque vid" id="aprob">${aprobHtml(e)}</div>
+ ${sig?`<button class="fila vid" onclick="ir('controles/${sig.id}')"><div><span style="color:var(--gold);margin:0 0 2px">Etapa siguiente</span><b>${esc(sig.t)}</b></div><div class="go">${svg('go')}</div></button>`:''}`}
+function aprobHtml(e){const t=etTot(e),h=etHechos(e),ok=PR.ok[e.id];
+ if(ok)return `<h3>${svg('check')} Etapa aprobada</h3><p class="ref" style="margin:0 0 10px">Aprobada el ${ok}. Ya se puede pasar a la etapa siguiente.</p><button class="chip vid" onclick="delete PR.ok['${e.id}'];guardaPR();document.getElementById('aprob').innerHTML=aprobHtml(PROT.find(x=>x.id==='${e.id}'))">Quitar aprobación</button>`;
+ return `<h3>${svg('check')} ${h} de ${t} controles</h3>${h<t?`<p class="ref" style="margin:0">Faltan ${t-h}. La etapa siguiente no empieza hasta tener todo tildado y aprobado.</p>`:`<button class="chip vid" onclick="PR.ok['${e.id}']=new Date().toLocaleDateString('es-AR');guardaPR();document.getElementById('aprob').innerHTML=aprobHtml(PROT.find(x=>x.id==='${e.id}'))">Aprobar etapa</button>`}`}
+function tildar(eid,k,v){if(v)PR.c[k]=1;else{delete PR.c[k];delete PR.ok[eid]}guardaPR();const e=PROT.find(x=>x.id===eid);document.getElementById('aprob').innerHTML=aprobHtml(e)}
 function vFav(){const l=FAV.map(k=>{const [c,s]=k.split('/');return {c:cap(c),s:secc(c,s)}}).filter(x=>x.s);
  return `<div class="eti">Para tener a mano</div><h1>Guardados</h1>${l.length?`<div class="lista">${l.map(x=>`<button class="fila vid" onclick="ir('s/${x.c.id}/${x.s.id}')"><div><span style="color:var(--gold);margin:0 0 2px">${esc(x.c.t)}</span><b>${esc(x.s.t)}</b></div><div class="go">${svg('go')}</div></button>`).join('')}</div>`:`<div class="vacio">Todavía no guardaste temas. Abrí uno y tocá “☆ Guardar”.</div>`}`}
 function pintar(){const h=decodeURIComponent(location.hash.slice(1));const p=h.split('/');let v,act='';
  if(p[0]==='c')v=vCap(p[1]),act='capitulos';else if(p[0]==='s')v=vSec(p[1],p[2]),act='capitulos';else if(p[0]==='buscar')v=vBuscar(p.slice(1).join('/')),act='buscar';
- else if(p[0]==='capitulos')v=vCaps(),act='capitulos';else if(p[0]==='controles')v=vControles(),act='controles';else if(p[0]==='guardados')v=vFav(),act='guardados';else v=vInicio();
+ else if(p[0]==='capitulos')v=vCaps(),act='capitulos';else if(p[0]==='controles')v=p[1]?vEtapa(p[1]):vControles(),act='controles';else if(p[0]==='guardados')v=vFav(),act='guardados';else v=vInicio();
  $('#app').innerHTML=v;nav(act);if(p[0]==='buscar'){const i=$('#q');if(i&&!('ontouchstart' in window)){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}}
 let _ultimo='';window.addEventListener('hashchange',()=>{const h=location.hash;const solo=h.startsWith('#buscar')&&_ultimo.startsWith('#buscar')&&document.activeElement&&document.activeElement.id==='q';_ultimo=h;if(!solo){pintar();window.scrollTo(0,0)}});
 _ultimo=location.hash;pintarTema();pintar();
