@@ -26,5 +26,9 @@ for c in g["C"]:
         else: s["foto"]="manual-fotos/"+c["id"]+"-"+s["id"]+".jpg"; s["fr"]=0
         if s["fr"]==0 and s["reales"] and not (aqui.parent.parent/s["foto"]).exists() and c["id"]+"-"+s["id"] not in URLS: s["foto"]=s["reales"][0]; s["fr"]=1
 t = (aqui / "plantilla.html").read_text(encoding="utf-8").replace("__DATOS__", json.dumps(g["C"], ensure_ascii=False)).replace("__PROT__", json.dumps(g["PROT"], ensure_ascii=False))
+import time as _t, hashlib as _h
+_v = _h.sha1(t.encode("utf-8")).hexdigest()[:12]
+t = t.replace("__BUILD__", _v)
 (aqui.parent.parent / "manual-obra.html").write_text(t, encoding="utf-8")
+(aqui.parent.parent / "manual-version.json").write_text(json.dumps({"v": _v}), encoding="utf-8")
 print("manual-obra.html listo:", len(g["C"]), "capítulos,", sum(len(c["s"]) for c in g["C"]), "temas")

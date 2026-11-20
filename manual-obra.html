@@ -315,4 +315,13 @@ _ultimo=location.hash;pintarTema();pintar();
  document.addEventListener('keydown',e=>{if(!v.classList.contains('on'))return;if(e.key==='ArrowRight')mover(1);else if(e.key==='ArrowLeft')mover(-1);else if(e.key==='Escape')cerrar()});
 })();
 </script>
+<script>
+/* Actualización automática: si hay una versión nueva publicada, avisa y recarga sola */
+(()=>{const B='248c9a3d113c';let avisado=false;
+ function chequear(){fetch('manual-version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{if(!d||!d.v||d.v===B||avisado)return;avisado=true;
+  const b=document.createElement('div');b.textContent='Hay una nueva versión del manual · actualizando…';b.style.cssText='position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:100000;background:#c9a35b;color:#1a1408;padding:10px 16px;border-radius:14px;font:600 14px Playfair Display,serif;box-shadow:0 6px 24px rgba(0,0,0,.35)';document.body.appendChild(b);
+  setTimeout(()=>{const u=new URL(location.href);u.searchParams.set('v',d.v);location.replace(u.toString())},1500)}).catch(()=>{})}
+ window.addEventListener('load',()=>setTimeout(chequear,1500));document.addEventListener('visibilitychange',()=>{if(!document.hidden)chequear()});setInterval(chequear,60000);
+})();
+</script>
 </body></html>
