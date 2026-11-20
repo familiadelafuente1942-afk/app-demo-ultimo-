@@ -60,7 +60,7 @@ E("impermeab", "Impermeabilizaciones y cubiertas", "Antes de taparlas con piso o
  ("Azoteas y terrazas", ["Pendiente hacia embudos verificada", "Medias cañas y babetas ≥ 20 cm", "Consumo del producto Protex según ficha (kg usados ÷ m²)", "Prueba de estanqueidad 48–72 h aprobada"]),
 ]),
 E("revoques", "Revoques y contrapisos", "Antes de pisos, revestimientos y pintura.", "revoques/exterior", [
- ("Revoques", ["Azotado hidrófugo continuo hasta la capa aisladora", "Mallas en encuentros de materiales", "Plomo y planeidad 3 mm en 2 m; aristas rectas", "Cajas eléctricas al ras del revoque"]),
+ ("Revoques", ["Malla soldada en todos los encuentros hormigón-ladrillo y canaletas, con solape ≥ 15 cm", "Salpicado parejo (con promotor de adherencia sobre hormigón)", "Fajas a plomo cada 1–1,5 m hechas después de las instalaciones", "Azotado hidrófugo continuo hasta la capa aisladora", "Mallas en encuentros de materiales", "Plomo y planeidad 3 mm en 2 m; aristas rectas", "Cajas eléctricas al ras del revoque"]),
  ("Contrapisos y carpetas", ["Relleno entre vigas invertidas con el material aprobado por el calculista (Isocret o cascote) y pases de desagote en cada cajón", "Niveles de piso terminado de cada local según plano (incluye diferencias por tipo de piso y umbrales)", "Pendientes en locales húmedos y exteriores", "Juntas perimetrales y de contracción", "Planeidad 2 mm en 2 m; sin sonido hueco"]),
 ]),
 E("terminaciones", "Pisos, revestimientos y carpinterías", "Antes de pintura final.", "pisos/porcelanato", [

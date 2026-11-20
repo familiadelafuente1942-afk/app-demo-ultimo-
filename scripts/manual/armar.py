@@ -10,11 +10,11 @@ exec((aqui / "c5.py").read_text(encoding="utf-8"), g)
 REAL={"principios/reglas":"ob-01","principios/roles":"ob-05","principios/registro":"ob-07","obrador/cerco":"ob-13","obrador/acopio":"ob-11","obrador/seguridad":"ob-12","subsuelos/tabiques":"ob-02","estructura/encofrados":"ob-04","estructura/armaduras":"ob-08","fundaciones/vigasfund":"ob-09","estructura/hormigonado":"ob-06"}
 URLS=json.loads((aqui.parent.parent/"manual-fotos/urls.json").read_text())
 # Fotos reales de obras Belfast enviadas por Sebastián (manual-reales/)
-REALES={"principios/registro":["planos-obrador"],"mamposteria/capaaisladora":["arranque-columnas"],"revoques/exterior":["malla-encuentro"],"mamposteria/muros":["malla-encuentro"],
+REALES={"principios/registro":["planos-obrador"],"mamposteria/capaaisladora":["cajon-hidrofugo-1","cajon-hidrofugo-2","cajon-hidrofugo-3","capa-aisladora-muros","arranque-columnas"],"revoques/exterior":["malla-encuentro"],"mamposteria/muros":["obra-belfast-equipo","capa-aisladora-muros"],"revoques/malla":["malla-columna-1","malla-columna-2","malla-columna-3","malla-encuentro","canaleta-malla"],"revoques/salpicado":["fajas-1","fajas-2","canaleta-malla"],"revoques/interior":["revoque-terminado","fajas-1"],"subsuelos/contrapisosub":["contrapiso-subsuelo-1","contrapiso-subsuelo-2"],"contrapisos/carpetas":["contrapiso-subsuelo-1"],
  "seco/colgadas":["colgadas-pasillo","colgadas-planta"],"electrica/canerias":["canaleta-malla","canos-piso"],"electrica/tablero":["tablero"],
  "protex/cristalizante":["junta-hidroexpansiva"],"subsuelos/tabiques":["junta-hidroexpansiva","tabique-armadura"],"estructura/armaduras":["tabique-armadura"],
  "cubiertas/azotea":["terraza-parapeto","terraza-contrapiso"],"contrapisos/pendientes":["terraza-contrapiso"],"contrapisos/invertidas":["terraza-contrapiso","terraza-parapeto"],"clima/radiante":["losa-radiante"]}
-OTRA={"contrapisos/invertidas":"manual-fotos/contrapisos-alivianado.jpg","seco/cielorraso":"manual-fotos/seco-placas.jpg","estructura/calor":"manual-fotos/estructura-curado.jpg"}
+OTRA={"revoques/malla":"manual-fotos/revoques-exterior.jpg","revoques/salpicado":"manual-fotos/revoques-exterior.jpg","contrapisos/invertidas":"manual-fotos/contrapisos-alivianado.jpg","seco/cielorraso":"manual-fotos/seco-placas.jpg","estructura/calor":"manual-fotos/estructura-curado.jpg"}
 for c in g["C"]:
     for s in c["s"]:
         k=c["id"]+"/"+s["id"]

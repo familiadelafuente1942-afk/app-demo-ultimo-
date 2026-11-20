@@ -204,3 +204,35 @@ for c in C:
             if s["id"] == "alivianado":
                 s["mat"][0] = "Isocret (perlas de EPS aditivadas, bolsa de 170 l = 0,20 m³) y cemento — producto Belfast"
                 s["pasos"][0] = "Dosificación Isocret por bolsa de 170 l: 60 kg de cemento y ≈ 30 l de agua (≈ 300 kg/m³), sin arena; seguir lo impreso en la bolsa. Ver también Relleno entre vigas invertidas."
+
+# Revoques: malla en encuentros y salpicado + fajas
+MALLA = S("malla","Malla soldada en encuentros de mampostería con columnas y vigas","malla soldada encuentro mamposteria columna viga fisura revoque canaleta",
+ "Donde el ladrillo se encuentra con el hormigón (columnas, vigas, tabiques) o sobre canaletas de instalaciones, el revoque se fisura si no lleva malla. La malla se coloca antes del salpicado y queda dentro del revoque grueso.",
+ ["Malla soldada galvanizada de alambre fino (cuadrícula de ≈ 12–25 mm) en rollos o tiras","Clavos de acero con arandela o tacos con tornillo para fijarla","Salpicado cementicio (con promotor de adherencia sobre hormigón liso)"],
+ ["Colocar después de terminar y probar las instalaciones de esa pared.",
+  "Cortar tiras que cubran el encuentro y pasen al menos 15–20 cm sobre cada material (ladrillo y hormigón). Sobre canaletas, 15 cm a cada lado de la canaleta.",
+  "Fijar la malla separada 3–5 mm del muro (que quede dentro del revoque, no pegada al ladrillo), con fijaciones cada 30–40 cm.",
+  "Tiras continuas en toda la altura del encuentro, de piso a viga; empalmes solapados 10 cm.",
+  "En esquinas de vanos (puertas y ventanas), tira de malla a 45° en cada esquina.",
+  "Sobre la malla, salpicado y después grueso, embebiendo completamente la malla."],
+ ["Malla en todos los encuentros hormigón-ladrillo y sobre canaletas (foto de cada pared)","Solape ≥ 15 cm a cada lado","Malla fija y separada del muro","Esquinas de vanos reforzadas a 45°"],
+ ["Revocar encuentros sin malla","Malla suelta que se mueve al revocar","Malla pegada al ladrillo sin revoque detrás"],
+ "Buena práctica de obra Belfast; prevalecen las indicaciones del proyecto y del fabricante del mortero.")
+SALP = S("salpicado","Salpicado (cervecita) y fajas","salpicado cervecita chicoteo puente de adherencia fajas plomo revoque grueso subsuelo hormigon",
+ "El salpicado (la \"cervecita\") es la capa de agarre: un mortero cementicio bien fluido que se tira con fuerza para dejar la superficie rugosa. Sin salpicado el revoque se despega, sobre todo en hormigón. Las fajas son las guías a plomo que fijan el espesor y la planeidad del revoque.",
+ ["Salpicado: cemento y arena gruesa 1:2 o 1:3, muy fluido (sobre hormigón, con promotor de adherencia tipo Protex Látex en el agua)","Fajas: mortero del grueso con regla y plomada o láser","Reglas de aluminio de 2–3 m"],
+ ["Superficie limpia, sin polvo, desmoldante ni partes flojas; humedecer antes.",
+  "Tirar el salpicado con cuchara o máquina, cubriendo toda la superficie de forma pareja y rugosa (no se alisa).",
+  "En hormigón liso (columnas, vigas, tabiques de subsuelo), salpicado siempre con promotor de adherencia.",
+  "En subsuelos, el salpicado se hace sobre la impermeabilización solo si el sistema lo admite (Seal 77: puente con Protex Látex o Superligante).",
+  "Mantener húmedo y dejar que endurezca (mínimo 24 h) antes del grueso.",
+  "Fajas: hacerlas después de colocar las instalaciones eléctricas y sanitarias y las mallas, para que el espesor cubra todo.",
+  "Fajas verticales a plomo cada 1–1,5 m y en todas las aristas, con el espesor final del grueso (1,5–2 cm).",
+  "Verificar las fajas con regla y plomada o láser antes de cargar el grueso entre ellas."],
+ ["Salpicado parejo en toda la superficie","Promotor de adherencia en hormigón","Fajas a plomo verificadas","Cajas eléctricas a la altura del revoque terminado según las fajas"],
+ ["Revocar sobre hormigón liso sin salpicado","Salpicado seco o muy espeso que no agarra","Fajas a ojo o separadas más de 1,5 m"],
+ "Buena práctica de obra Belfast; prevalecen las fichas del fabricante del mortero y del promotor de adherencia.")
+for c in C:
+    if c["id"] == "revoques":
+        c["s"][0:0] = [MALLA, SALP]
+        c["d"] = "Malla en encuentros, salpicado, fajas, azotado hidrófugo, grueso, fino y yeso."
