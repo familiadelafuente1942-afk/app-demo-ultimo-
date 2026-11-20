@@ -59,6 +59,7 @@ module.exports = async function handler(req, res) {
     if (req.method !== "POST") return res.status(405).json({ error: "Usá POST" });
     if (!vieneDeLaApp(req)) return res.status(403).json({ error: "Solo desde la app del manual." });
     if (accion === "obra") {
+      if (b.borrar) { const ok = require("crypto").createHash("sha256").update(String(b.clave || "")).digest("hex") === "1d15d754bd6fe1657e5b718e12b0b80fb0919a22fcd70811edcae6cb2730d3da"; if (!ok) return res.status(403).json({ error: "Clave de Dirección incorrecta." }); }
       if (!/^o[a-z0-9]{6,30}$/.test(String(b.id || "")) || !b.obra || typeof b.obra !== "object") return res.status(400).json({ error: "Obra no válida." });
       const txt = JSON.stringify(b.obra); if (txt.length > 120000) return res.status(413).json({ error: "Demasiado grande." });
       await asegurarBucket();

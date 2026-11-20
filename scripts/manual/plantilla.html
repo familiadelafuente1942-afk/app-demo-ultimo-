@@ -261,7 +261,8 @@ function traerObras(){fetch(API_F+'?accion=obras',{cache:'no-store'}).then(r=>r.
 window.addEventListener('DOMContentLoaded',traerObras);
 function elegirObra(id){ACT=id;lset('manual_obra_act',ACT);fijarPR();pintar()}
 function nuevaObra(){const n=prompt('Nombre de la obra (ej.: Casa Nordelta lote 12):','');if(!n||!n.trim())return;const id='o'+Date.now()+Math.random().toString(36).slice(2,5);OBRAS[id]={nombre:n.trim(),c:{},ok:{},t:Date.now()};ACT=id;fijarPR();guardaPR();pintar()}
-function borrarObra(){if(!OBRAS[ACT])return;if(!confirm('¿Borrar el checklist de "'+OBRAS[ACT].nombre+'"? No se puede deshacer.'))return;const id=ACT;delete OBRAS[id];subirObra(id,{borrada:1,t:Date.now()},true);ACT='';lset('manual_obras',OBRAS);lset('manual_obra_act','');fijarPR();pintar()}
+function borrarObra(){if(!OBRAS[ACT])return;const clave=prompt('Borrar "'+OBRAS[ACT].nombre+'".\nSolo Dirección: ingresá la clave.','');if(!clave)return;const id=ACT;
+ fetch(API_F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'obra',id,obra:{borrada:1,t:Date.now()},borrar:true,clave})}).then(r=>r.json().then(d=>({ok:r.ok,d}))).then(({ok,d})=>{if(!ok){alert(d.error||'No se pudo borrar.');return}delete OBRAS[id];ACT='';lset('manual_obras',OBRAS);lset('manual_obra_act','');fijarPR();pintar()}).catch(()=>alert('Sin conexión: no se pudo borrar.'))}
 function etEstado(id,e){const o=OBRAS[id];if(!o)return 'nada';let h=0;e.g.forEach((g,gi)=>g.i.forEach((x,ii)=>{if(o.c[e.id+'/'+gi+'/'+ii])h++}));const nf=e.g.filter((g,gi)=>!(OBRA[id+'/'+e.id+gi]||[]).length).length;
  if(o.ok&&o.ok[e.id]&&!nf)return 'ok';if(h===etTot(e)||(o.ok&&o.ok[e.id]))return 'faltafoto';return h?'curso':'nada'}
 const EST_TXT={ok:'Completa con fotos',faltafoto:'Faltan fotos de respaldo',curso:'En curso',nada:'Sin empezar'};
@@ -274,7 +275,7 @@ function vControles(){
  <div class="acc" style="margin:12px 0 0"><button class="chip vid" onclick="nuevaObra()">＋ Nueva obra</button></div></div>
  ${OBRAS[ACT]?`<h2>${esc(OBRAS[ACT].nombre)}</h2><p class="ref" style="margin:-6px 0 12px"><em class="es-t es-ok">● Verde</em> completa con fotos · <em class="es-t es-faltafoto">● Rojo</em> faltan fotos · <em class="es-t es-curso">● Amarillo</em> en curso</p><div class="lista">`:`<p class="sub">Elegí o creá una obra para tildar sus controles.</p><div class="lista" style="opacity:.55;pointer-events:none">`}${PROT.map((e,n)=>{const t=etTot(e),h=etHechos(e),ok=PR.ok[e.id],es=etEstado(ACT,e);
   return `<button class="fila vid" onclick="ir('controles/${e.id}')"><div class="n es-${es}">${es==='ok'?'✓':es==='faltafoto'?'!':n+1}</div><div><b>${esc(e.t)}</b><span><em class="es-t es-${es}">${EST_TXT[es]}</em> · ${es==='ok'?'aprobada el '+ok:h+' de '+t+' controles'}</span></div><div class="go">${svg('go')}</div></button>`}).join('')}</div>
- <div class="acc" style="margin-top:16px"><button class="chip vid" onclick="window.print()">Imprimir protocolo</button>${OBRAS[ACT]?`<button class="chip vid" onclick="borrarObra()">Borrar esta obra</button>`:''}</div>`}
+ <div class="acc" style="margin-top:16px"><button class="chip vid" onclick="window.print()">Imprimir protocolo</button>${OBRAS[ACT]?`<button class="chip vid" onclick="borrarObra()">Borrar esta obra (Dirección)</button>`:''}</div>`}
 function vEtapa(id){const e=PROT.find(x=>x.id===id);if(!e||!OBRAS[ACT])return vControles();const n=PROT.indexOf(e),t=etTot(e),h=etHechos(e),ok=PR.ok[e.id],sig=PROT[n+1],[vc,vs]=e.ver.split('/');
  return `<button class="volver" onclick="ir('controles')">${svg('atras')} Controles</button>
  <div class="eti">${esc(OBRAS[ACT].nombre)} · Etapa ${n+1} de ${PROT.length}</div><h1>${esc(e.t)}</h1><p class="sub">${esc(e.d)}</p>

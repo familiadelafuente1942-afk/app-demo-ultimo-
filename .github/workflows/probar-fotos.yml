@@ -5,4 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          curl -s "https://app-demo-ultimo.vercel.app/api/manual-fotos?accion=obras" | jq -c '.obras | to_entries[] | {id:.key, nombre:.value.nombre, borrada:.value.borrada, nexo:.value.nexo, h:([.value.c//{}|keys[]]|length), t:.value.t}'
+          B=https://app-demo-ultimo.vercel.app
+          curl -s -X POST "$B/api/manual-fotos" -H "Origin: $B" -H "Content-Type: application/json" -d '{"accion":"obra","id":"o1795142429361m6h","obra":{"borrada":1,"t":9999999999999},"borrar":true,"clave":"mal"}'; echo
+          curl -s -X POST "$B/api/manual-fotos" -H "Origin: $B" -H "Content-Type: application/json" -d "{\"accion\":\"obra\",\"id\":\"o1795142429361m6h\",\"obra\":{\"borrada\":1,\"t\":9999999999999},\"borrar\":true,\"clave\":\"${{ secrets.NO_EXISTE }}dir1942\"}"; echo
+          curl -s "$B/api/manual-fotos?accion=obras" | jq -c '.obras | to_entries[] | {id:.key, nombre:.value.nombre, borrada:.value.borrada}'
