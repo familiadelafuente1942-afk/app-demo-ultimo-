@@ -76,6 +76,12 @@ h2{font-size:22px;margin:0 0 6px;font-weight:600}
 .subir{cursor:pointer;display:inline-flex}.estado{margin-left:10px;font-size:13px;opacity:.85}
 .mal .tira{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}.mal .tf{flex:0 0 auto;width:150px}.mal .tf img{width:150px;height:110px;object-fit:cover;border-radius:12px;display:block;cursor:zoom-in;box-shadow:0 0 0 2px var(--rojo)}
 .foto figcaption.malcap{background:rgba(190,40,30,.85)}
+details.pl>summary{list-style:none;cursor:pointer}details.pl>summary::-webkit-details-marker{display:none}
+details.pl>summary h3{margin:0}details.pl[open]>summary h3{margin-bottom:10px}
+details.pl>summary h3:after{content:'';margin-left:auto;width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .2s;opacity:.8}
+details.pl[open]>summary h3:after{transform:rotate(-135deg)}
+details.pl .prog{margin-left:6px;font-size:12px;opacity:.7;letter-spacing:0;text-transform:none;font-weight:400}
+.lis{margin:0;padding-left:20px}.lis li{margin:6px 0;line-height:1.45}
 #visor{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:16px}#visor.on{display:flex}#visor img{max-width:100%;max-height:100%;border-radius:12px}
 html[data-tema=claro] .foto img,html[data-tema=claro] .mini,html[data-tema=claro] #visor img{filter:none}
 .mat{display:flex;flex-wrap:wrap;gap:8px}.mat span{font-size:14px;padding:7px 13px;border-radius:14px;background:linear-gradient(158deg,var(--g-b),var(--g-c));box-shadow:inset 0 1.5px 1px rgba(255,255,255,.3),inset 0 0 0 1px var(--g-edge)}
@@ -105,7 +111,7 @@ nav.bottom button[aria-current=page]{color:var(--gold);background:var(--glint),l
 nav.bottom button[aria-current=page] .o{display:none}nav.bottom button[aria-current=page] .l{display:block}
 .pie{color:var(--muted);font-size:12.5px;margin:26px 0 0;line-height:1.5}
 @media (max-width:620px){.grid{grid-template-columns:1fr}.bloque{padding:18px}.que{font-size:17px}.cap{padding:16px}}
-@media print{header.top,nav.bottom,.acc,.volver,.busca{display:none!important}body{background:#fff!important;color:#000;padding:0}.vid,.bloque{box-shadow:none!important;background:none!important;border:1px solid #ccc}.bloque h3{color:#7a5a20}}
+@media print{details.pl>*{display:block!important}header.top,nav.bottom,.acc,.volver,.busca{display:none!important}body{background:#fff!important;color:#000;padding:0}.vid,.bloque{box-shadow:none!important;background:none!important;border:1px solid #ccc}.bloque h3{color:#7a5a20}}
 </style></head><body>
 <header class="top">
   <div class="marca" onclick="ir('')"><img src="belfast-isotipo.png" alt=""><div><b>BELFAST</b><small>Manual de obra</small></div></div>
@@ -118,8 +124,8 @@ let OBRA={};
 const API_F='/api/manual-fotos';
 window.addEventListener('DOMContentLoaded',()=>fetch(API_F+'?accion=lista',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{if(d&&d.fotos){OBRA=d.fotos;pintar()}}).catch(()=>{}));
 function bloqueObra(k,s){const ob=OBRA[k]||[];const re=(s.reales||[]).map(u=>({u,fija:1}));const todas=ob.concat(re);
- return `<div class="bloque vid obra"><h3>${svg('mat')} Fotos de obra Belfast <span class="prog">${todas.length}</span></h3>
- ${todas.length?`<div class="tira">${todas.map(f=>`<div class="tf"><img src="${f.u}" loading="lazy" onclick="verFoto('${f.u}')" alt="">${f.fija?'':`<button class="tx" title="Quitar" onclick="borrarFoto('${k}','${f.path}')">×</button>`}${f.nota?`<small>${esc(f.nota)}</small>`:''}</div>`).join('')}</div>`:`<p class="ref" style="margin:0 0 12px">Todavía no hay fotos de trabajos terminados. Cargá la primera cuando esté hecho: va a reemplazar a la imagen ilustrativa.</p>`}
+ return `<div class="bloque vid obra">${todas.length?`<h3>${svg('mat')} Fotos de obra Belfast <span class="prog">${todas.length}</span></h3>`:''}
+ ${todas.length?`<div class="tira">${todas.map(f=>`<div class="tf"><img src="${f.u}" loading="lazy" onclick="verFoto('${f.u}')" alt="">${f.fija?'':`<button class="tx" title="Quitar" onclick="borrarFoto('${k}','${f.path}')">×</button>`}${f.nota?`<small>${esc(f.nota)}</small>`:''}</div>`).join('')}</div>`:''}
  <label class="chip vid subir"><input type="file" accept="image/*" multiple hidden onchange="subirFotos('${k}',this)">＋ Cargar foto de obra</label>
  <span class="estado" id="est-f"></span></div>`}
 function achicar(file){return new Promise((ok,mal)=>{const img=new Image();img.onload=()=>{const m=1600,e=Math.min(1,m/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*e);c.height=Math.round(img.height*e);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);ok(c.toDataURL('image/jpeg',.82))};img.onerror=()=>mal(new Error('No se pudo leer la foto'));img.src=URL.createObjectURL(file)})}
@@ -186,7 +192,7 @@ function pintarTema(){$('#b-tema').innerHTML=svg(document.documentElement.getAtt
 const SUG=['canaletas','vigas invertidas','losa radiante','cielorraso durlock','hormigón calor','parrilla','protex','seal 77 flex baño','contrapiso alivianado','pendiente subsuelo','impermeabilización tabiques','compactación','nylon platea','encofrados','niveles','membrana','cloaca pendiente','revoque exterior','porcelanato','puesta a tierra'];
 function nav(act){const it=[['','Inicio','inicio'],['capitulos','Capítulos','libro'],['buscar','Buscar','lupa'],['controles','Controles','check']];
  $('#nav').innerHTML=it.map(([r,l,i])=>`<button onclick="ir('${r}')" ${act===r?'aria-current="page"':''}><span class="o">${svg(i)}</span><span class="l">${svg(i,true)}</span>${l}</button>`).join('')}
-function tarjCap(c){const hechos=c.s.reduce((a,s)=>a+(s.ctrl||[]).filter((x,i)=>CHK[c.id+'/'+s.id+'/'+i]).length,0);
+function tarjCap(c){
  return `<button class="cap vid" onclick="ir('c/${c.id}')"><div class="ico">${svg(c.ico)}</div><div><b>${esc(c.t)}</b><span>${esc(c.d)}</span><i>${c.s.length} ${c.s.length===1?'tema':'temas'}</i></div></button>`}
 function vInicio(){const pr=cap('principios').s[0];
  return `<div class="eti">Así construye Belfast</div><h1>Una sola forma de construir,<br><em>en todas las obras.</em></h1>
@@ -197,7 +203,7 @@ function vInicio(){const pr=cap('principios').s[0];
  <h2>Cómo se usa</h2>
  <div class="lista">
  <button class="fila vid" onclick="ir('capitulos')"><div class="n">1</div><div><b>Capítulos: cómo se hace</b><span>${M.length} capítulos y ${total} temas en el orden de la obra, con materiales, pasos, errores que no se aceptan y fotos.</span></div><div class="go">${svg('go')}</div></button>
- <button class="fila vid" onclick="ir('controles')"><div class="n">2</div><div><b>Controles: qué se revisa en cada etapa</b><span>Protocolo de inspección por obra. Cada etapa se aprueba antes de pasar a la siguiente.</span></div><div class="go">${svg('go')}</div></button>
+ <button class="fila vid" onclick="ir('controles')"><div class="n">2</div><div><b>Controles: qué se revisa en cada etapa</b><span>Lista de chequeo por etapa. Cada etapa se aprueba antes de pasar a la siguiente.</span></div><div class="go">${svg('go')}</div></button>
  <button class="fila vid" onclick="ir('buscar')"><div class="n">3</div><div><b>Buscar</b><span>Escribí lo que necesitás y te lleva al tema.</span></div><div class="go">${svg('go')}</div></button>
  </div>
  <p class="pie">Valores de referencia para vivienda de alta gama en Argentina. El cálculo estructural, los proyectos de instalaciones firmados y las fichas técnicas de los fabricantes siempre prevalecen sobre este manual.</p>`}
@@ -206,23 +212,22 @@ function vCap(id){const c=cap(id);if(!c)return vInicio();
  return `<button class="volver" onclick="history.length>1?history.back():ir('capitulos')">${svg('atras')} Capítulos</button>
  <div class="eti">Capítulo ${M.indexOf(c)+1}</div><h1>${esc(c.t)}</h1><p class="sub">${esc(c.d)}</p>
  <div class="lista">${c.s.map((s,i)=>`<button class="fila vid" onclick="ir('s/${c.id}/${s.id}')">${s.foto?`<img class="mini" src="${(OBRA[c.id+'/'+s.id]||[])[0]?OBRA[c.id+'/'+s.id][0].u:((s.reales||[])[0]||s.foto)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;n&quot;>${i+1}</div>'">`:`<div class="n">${i+1}</div>`}<div><b>${esc(s.t)}</b><span>${esc(s.que.length>140?s.que.slice(0,137)+'…':s.que)}</span></div><div class="go">${svg('go')}</div></button>`).join('')}</div>`}
-function vSec(cid,sid){const c=cap(cid),s=secc(cid,sid);if(!s)return vCap(cid);const k=cid+'/'+sid,fav=FAV.includes(k);
- const ctrl=(s.ctrl||[]);const hechos=ctrl.filter((x,i)=>CHK[k+'/'+i]).length;const i=c.s.indexOf(s),sig=c.s[i+1],ant=c.s[i-1];
+function vSec(cid,sid){const c=cap(cid),s=secc(cid,sid);if(!s)return vCap(cid);const k=cid+'/'+sid;
+ const ctrl=(s.ctrl||[]);const i=c.s.indexOf(s),sig=c.s[i+1],ant=c.s[i-1];
  return `<button class="volver" onclick="ir('c/${c.id}')">${svg('atras')} ${esc(c.t)}</button>
  <div class="eti">${esc(c.t)}</div><h1>${esc(s.t)}</h1>
  <div class="acc"><button class="chip vid" onclick="window.print()">Imprimir</button><button class="chip vid" onclick="compartir('${k}')">Compartir</button></div>
  ${(()=>{const ob=OBRA[k]||[];const re=s.reales||[];const u=ob.length?ob[0].u:(re.length?re[0]:s.foto);if(!u)return'';return `<figure class="foto vid" onclick="verFoto('${u}')"><img src="${u}" alt="${esc(s.t)}" loading="lazy" onerror="this.parentNode.style.display='none'"><figcaption class="${!ob.length&&!re.length&&(s.malas||[]).includes(u)?'malcap':''}">${!ob.length&&!re.length&&(s.malas||[]).includes(u)?'✕ Mala ejecución — no se acepta':(ob.length||re.length||s.fr?'Obra Belfast':'Imagen ilustrativa')}</figcaption></figure>`})()}
- ${bloqueObra(k,s)}
  ${(s.malas||[]).length?`<div class="bloque mal"><h3>${svg('no')} Así NO: mala ejecución <span class="prog">${s.malas.length}</span></h3><div class="tira">${s.malas.map(u=>`<div class="tf"><img src="${u}" loading="lazy" onclick="verFoto('${u}')" alt=""></div>`).join('')}</div><p class="ref" style="margin:4px 0 0">Fotos reales de obras. Esto no se acepta: se rehace.</p></div>`:''}
  <div class="bloque vid"><p class="que" style="margin:0">${esc(s.que)}</p></div>
- ${s.mat&&s.mat.length?`<div class="bloque vid"><h3>${svg('mat')} Materiales y equipos</h3><div class="mat">${s.mat.map(m=>`<span>${esc(m)}</span>`).join('')}</div></div>`:''}
- ${s.pasos&&s.pasos.length?`<div class="bloque vid"><h3>${svg('pasos')} Cómo se hace</h3><ol class="pasos">${s.pasos.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`:''}
- ${ctrl.length?`<div class="bloque vid ctrl"><h3>${svg('check')} Control antes de seguir <span class="prog" id="prog">${hechos} de ${ctrl.length}</span></h3>${ctrl.map((x,j)=>`<label><input type="checkbox" ${CHK[k+'/'+j]?'checked':''} onchange="marcar('${k}',${j},this.checked,${ctrl.length})"><span>${esc(x)}</span></label>`).join('')}</div>`:''}
- ${s.err&&s.err.length?`<div class="bloque mal"><h3>${svg('no')} No se acepta</h3><ul class="err" style="margin:0;padding-left:20px">${s.err.map(e=>`<li>${esc(e)}</li>`).join('')}</ul></div>`:''}
- ${s.ref?`<div class="bloque vid"><h3>${svg('norma')} Normas y referencias</h3><div class="ref">${esc(s.ref)}</div></div>`:''}
+ ${s.pasos&&s.pasos.length?`<details class="bloque vid pl" open><summary><h3>${svg('pasos')} Cómo se hace <span class="prog">${s.pasos.length} pasos</span></h3></summary><ol class="pasos">${s.pasos.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></details>`:''}
+ ${s.err&&s.err.length?`<details class="bloque mal pl" open><summary><h3>${svg('no')} No se acepta</h3></summary><ul class="err" style="margin:0;padding-left:20px">${s.err.map(e=>`<li>${esc(e)}</li>`).join('')}</ul></details>`:''}
+ ${s.mat&&s.mat.length?`<details class="bloque vid pl"><summary><h3>${svg('mat')} Materiales <span class="prog">${s.mat.length}</span></h3></summary><ul class="lis">${s.mat.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></details>`:''}
+ ${ctrl.length?`<details class="bloque vid pl"><summary><h3>${svg('check')} Qué se controla <span class="prog">${ctrl.length}</span></h3></summary><ul class="lis">${ctrl.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`:''}
+ ${s.ref?`<p class="pie" style="margin:4px 4px 14px">${esc(s.ref)}</p>`:''}
+ ${bloqueObra(k,s)}
  <div class="lista" style="margin-top:6px">${ant?`<button class="fila vid" onclick="ir('s/${c.id}/${ant.id}')"><div class="go" style="margin:0">${svg('atras')}</div><div><span>Anterior</span><b>${esc(ant.t)}</b></div></button>`:''}${sig?`<button class="fila vid" onclick="ir('s/${c.id}/${sig.id}')"><div><span>Siguiente</span><b>${esc(sig.t)}</b></div><div class="go">${svg('go')}</div></button>`:''}</div>`}
 function marcar(k,j,v,n){if(v)CHK[k+'/'+j]=1;else delete CHK[k+'/'+j];lset('manual_chk',CHK);let h=0;for(let i=0;i<n;i++)if(CHK[k+'/'+i])h++;const p=$('#prog');if(p)p.textContent=h+' de '+n}
-function guardar(k){FAV=FAV.includes(k)?FAV.filter(x=>x!==k):FAV.concat(k);lset('manual_fav',FAV);pintar()}
 function compartir(k){const [c,s]=k.split('/');const x=secc(c,s);const url=location.href.split('#')[0]+'#s/'+k;if(navigator.share)navigator.share({title:'Manual Belfast · '+x.t,url}).catch(()=>{});else{try{navigator.clipboard.writeText(url)}catch(e){}alert('Link copiado')}}
 function buscar(q){const t=norm(q).split(/\s+/).filter(w=>w.length>1);if(!t.length)return[];const r=[];
  M.forEach(c=>c.s.forEach(s=>{const campos=[[s.t,8],[s.tags,6],[c.t,3],[s.que,2],[(s.mat||[]).join(' '),1],[(s.pasos||[]).join(' '),1],[(s.ctrl||[]).join(' '),1],[(s.err||[]).join(' '),1]];
@@ -235,7 +240,7 @@ function resaltar(txt,q){let h=esc(txt);const t=norm(q).split(/\s+/).filter(w=>w
 function vBuscar(q){q=q||'';const r=buscar(q);
  return `<div class="eti">Consulta</div><h1>Buscar en el manual</h1>
  <div class="busca vid"><span>${svg('lupa')}</span><input id="q" value="${esc(q)}" placeholder="Ej.: pendiente de un subsuelo" oninput="clearTimeout(window._t);window._t=setTimeout(()=>{history.replaceState(null,'','#buscar/'+encodeURIComponent(this.value));res(this.value)},160)"></div>
- <div class="sug">${SUG.map(s=>`<button class="chip vid" onclick="ir('buscar/${encodeURIComponent(s)}')">${esc(s)}</button>`).join('')}</div>
+ <div class="sug">${SUG.slice(0,10).map(s=>`<button class="chip vid" onclick="ir('buscar/${encodeURIComponent(s)}')">${esc(s)}</button>`).join('')}</div>
  <div id="res" class="lista res">${listaRes(q,r)}</div>`}
 function listaRes(q,r){if(!q.trim())return '';if(!r.length)return `<div class="vacio">No encontré nada con “${esc(q)}”. Probá con otra palabra (por ejemplo: contrapiso, membrana, pendiente).<br>Si no está en el manual, consultá a Dirección de obra.</div>`;
  return `<p class="num" style="margin:0">${r.length} resultado${r.length===1?'':'s'}</p>`+r.slice(0,40).map(x=>`<button class="fila vid" onclick="ir('s/${x.c.id}/${x.s.id}')"><div><span style="color:var(--gold);margin:0 0 2px">${esc(x.c.t)}</span><b>${resaltar(x.s.t,q)}</b><span>${resaltar(x.frag.length>190?x.frag.slice(0,187)+'…':x.frag,q)}</span></div><div class="go">${svg('go')}</div></button>`).join('')}
@@ -261,8 +266,6 @@ function aprobHtml(e){const t=etTot(e),h=etHechos(e),ok=PR.ok[e.id];
  if(ok)return `<h3>${svg('check')} Etapa aprobada</h3><p class="ref" style="margin:0 0 10px">Aprobada el ${ok}. Ya se puede pasar a la etapa siguiente.</p><button class="chip vid" onclick="delete PR.ok['${e.id}'];guardaPR();document.getElementById('aprob').innerHTML=aprobHtml(PROT.find(x=>x.id==='${e.id}'))">Quitar aprobación</button>`;
  return `<h3>${svg('check')} ${h} de ${t} controles</h3>${h<t?`<p class="ref" style="margin:0">Faltan ${t-h}. La etapa siguiente no empieza hasta tener todo tildado y aprobado.</p>`:`<button class="chip vid" onclick="PR.ok['${e.id}']=new Date().toLocaleDateString('es-AR');guardaPR();document.getElementById('aprob').innerHTML=aprobHtml(PROT.find(x=>x.id==='${e.id}'))">Aprobar etapa</button>`}`}
 function tildar(eid,k,v){if(v)PR.c[k]=1;else{delete PR.c[k];delete PR.ok[eid]}guardaPR();const e=PROT.find(x=>x.id===eid);document.getElementById('aprob').innerHTML=aprobHtml(e)}
-function vFav(){const l=FAV.map(k=>{const [c,s]=k.split('/');return {c:cap(c),s:secc(c,s)}}).filter(x=>x.s);
- return `<div class="eti">Para tener a mano</div><h1>Guardados</h1>${l.length?`<div class="lista">${l.map(x=>`<button class="fila vid" onclick="ir('s/${x.c.id}/${x.s.id}')"><div><span style="color:var(--gold);margin:0 0 2px">${esc(x.c.t)}</span><b>${esc(x.s.t)}</b></div><div class="go">${svg('go')}</div></button>`).join('')}</div>`:`<div class="vacio">Todavía no guardaste temas. Abrí uno y tocá “☆ Guardar”.</div>`}`}
 function pintar(){const h=decodeURIComponent(location.hash.slice(1));const p=h.split('/');let v,act='';
  if(p[0]==='c')v=vCap(p[1]),act='capitulos';else if(p[0]==='s')v=vSec(p[1],p[2]),act='capitulos';else if(p[0]==='buscar')v=vBuscar(p.slice(1).join('/')),act='buscar';
  else if(p[0]==='capitulos')v=vCaps(),act='capitulos';else if(p[0]==='controles')v=p[1]?vEtapa(p[1]):vControles(),act='controles';else v=vInicio();
