@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Manual Belfast">
+<meta name="apple-mobile-web-app-title" content="Manual de Obra">
 <meta name="theme-color" content="#0d0e10">
 <link rel="apple-touch-icon" href="belfast-icon-192.png">
 <title>Manual de Obra Belfast</title>
@@ -85,6 +85,7 @@ details.pl .prog{margin-left:6px;font-size:12px;opacity:.7;letter-spacing:0;text
 .gfotos{margin-top:10px;padding-top:10px;border-top:1px solid rgba(127,127,127,.18)}.gfotos .tira{display:flex;gap:8px;overflow-x:auto;margin-bottom:8px}.gfotos .tf{position:relative;flex:0 0 auto}.gfotos .tf img{width:96px;height:72px;object-fit:cover;border-radius:10px;display:block}.ctrl .gfotos label.subir{display:inline-flex;width:auto;padding:7px 14px;border-top:0;gap:6px;align-items:center}.gfotos .tx{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:15px;line-height:1;cursor:pointer}.gfotos .falta{display:block;margin:0 0 8px;color:var(--rojo)}
 .n.es-ok{background:#2e9e5b!important;color:#fff!important;box-shadow:none}.n.es-faltafoto{background:#c8463b!important;color:#fff!important;box-shadow:none}.n.es-curso{background:#e0b04a!important;color:#1a1408!important;box-shadow:none}
 em.es-t{font-style:normal;font-weight:600}em.es-ok{color:#4cc27f}em.es-faltafoto{color:#ff7d70}em.es-curso{color:#e8c06a}
+.titman{margin:6px 0 22px;padding:18px 18px 16px;border-radius:20px;text-align:center;background:linear-gradient(158deg,var(--g-b),var(--g-c));box-shadow:inset 0 0 0 1px var(--g-edge)}.titman span{display:block;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}.titman b{display:block;font-size:clamp(28px,7vw,44px);line-height:1.1;font-weight:700}
 #visor{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:16px}#visor.on{display:flex}#visor img{max-width:100%;max-height:100%;border-radius:12px}
 html[data-tema=claro] .foto img,html[data-tema=claro] .mini,html[data-tema=claro] #visor img{filter:none}
 .mat{display:flex;flex-wrap:wrap;gap:8px}.mat span{font-size:14px;padding:7px 13px;border-radius:14px;background:linear-gradient(158deg,var(--g-b),var(--g-c));box-shadow:inset 0 1.5px 1px rgba(255,255,255,.3),inset 0 0 0 1px var(--g-edge)}
@@ -117,7 +118,7 @@ nav.bottom button[aria-current=page] .o{display:none}nav.bottom button[aria-curr
 @media print{details.pl>*{display:block!important}header.top,nav.bottom,.acc,.volver,.busca{display:none!important}body{background:#fff!important;color:#000;padding:0}.vid,.bloque{box-shadow:none!important;background:none!important;border:1px solid #ccc}.bloque h3{color:#7a5a20}}
 </style></head><body>
 <header class="top">
-  <div class="marca" onclick="ir('')"><img src="belfast-isotipo.png" alt=""><div><b>BELFAST</b><small>Manual de obra</small></div></div>
+  <div class="marca" onclick="ir('')"><img src="belfast-isotipo.png" alt=""><div><b>BELFAST</b><small>Manual de Obra Belfast</small></div></div>
   <div class="ib"><button class="ibtn vid" onclick="tema()" aria-label="Claro u oscuro" id="b-tema"></button></div>
 </header>
 <main id="app"></main>
@@ -198,7 +199,7 @@ function nav(act){const it=[['','Inicio','inicio'],['capitulos','Capítulos','li
 function tarjCap(c){
  return `<button class="cap vid" onclick="ir('c/${c.id}')"><div class="ico">${svg(c.ico)}</div><div><b>${esc(c.t)}</b><span>${esc(c.d)}</span><i>${c.s.length} ${c.s.length===1?'tema':'temas'}</i></div></button>`}
 function vInicio(){const pr=cap('principios').s[0];
- return `<div class="eti">Así construye Belfast</div><h1>Una sola forma de construir,<br><em>en todas las obras.</em></h1>
+ return `<div class="titman"><span>Belfast Construction Management</span><b>Manual de Obra Belfast</b></div><div class="eti">Así construye Belfast</div><h1>Una sola forma de construir,<br><em>en todas las obras.</em></h1>
  <p class="sub">Este manual es la referencia única de obra: desde el movimiento de suelos hasta la entrega. Si tenés una duda, se consulta acá; si el manual no la cubre, se consulta a Dirección de obra antes de ejecutar.</p>
  <div class="reglas"><div class="eti">Reglas de oro</div><ol>${pr.pasos.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>
  <h2>Cómo se usa</h2>
