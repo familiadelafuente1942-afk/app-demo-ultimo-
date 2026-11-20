@@ -44,7 +44,7 @@ S("cerco","Cerco y obrador","cerco obrador baño vestuario comedor oficina técn
   "Ubicar obrador, acopio y volquete fuera de la huella de la casa y sin bloquear accesos ni futuros trabajos.",
   "Comedor y vestuario con piso firme, techados y limpios. Agua potable disponible.",
   "Tablero de obra con disyuntor diferencial y puesta a tierra, cables aéreos o protegidos.",
-  "Matafuegos en obrador, tablero y sectores con soldadura o membranas."],
+  "Matafuegos: uno en el obrador, uno al lado del tablero eléctrico y uno junto a cualquier trabajo con fuego (soldadura de hierros o membrana colocada con soplete)."],
  ["Cerco cerrado y sin huecos","Cartel de obra colocado","Tablero con diferencial probado (botón de test)","Matafuegos con carga vigente","Botiquín completo"],
  ["Cables por el piso o empalmes con cinta","Obrador ubicado donde después molesta","Comida en sectores de trabajo"],
  "Ley 19.587 de Higiene y Seguridad y Decreto 911/96 (construcción). Reglamento del barrio privado."),
