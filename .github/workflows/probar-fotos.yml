@@ -6,6 +6,9 @@ jobs:
     steps:
       - run: |
           B=https://app-demo-ultimo.vercel.app
-          curl -s "$B/api/manual-fotos?accion=obras"; echo
-          curl -s -X POST "$B/api/manual-fotos" -H "Origin: $B" -H "Content-Type: application/json" -d '{"accion":"obra","id":"oprueba123","obra":{"nombre":"prueba","c":{},"ok":{},"t":1},"borrar":true}'; echo
-          curl -s "$B/api/manual-fotos?accion=obras"; echo
+          J=$(curl -s "$B/api/manual-fotos?accion=obras")
+          echo "$J" | jq -c '.obras | to_entries[] | {id:.key, nombre:.value.nombre, borrada:.value.borrada}'
+          for id in $(echo "$J" | jq -r '.obras | to_entries[] | select(.value.nombre=="Obra 1" or .key=="oprueba123") | .key'); do
+            curl -s -X POST "$B/api/manual-fotos" -H "Origin: $B" -H "Content-Type: application/json" -d "{\"accion\":\"obra\",\"id\":\"$id\",\"obra\":{\"borrada\":1,\"t\":9999999999999},\"borrar\":true}"; echo " borrada $id"
+          done
+          curl -s "$B/api/manual-fotos?accion=obras" | jq -c '.obras | to_entries[] | {id:.key, nombre:.value.nombre, borrada:.value.borrada}'
