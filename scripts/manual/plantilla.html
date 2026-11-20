@@ -249,7 +249,7 @@ function res(q){const e=$('#res');if(e)e.innerHTML=listaRes(q,buscar(q))}
 const PROT=__PROT__;
 let OBRAS=lget('manual_obras',{});let ACT=lget('manual_obra_act','');
 let PR={c:{},ok:{}};function fijarPR(){PR=OBRAS[ACT]||{c:{},ok:{}}}fijarPR();
-function resumenObra(id){const o=OBRAS[id];return PROT.map(e=>{let h=0;e.g.forEach((g,gi)=>g.i.forEach((x,ii)=>{if(o.c[e.id+'/'+gi+'/'+ii])h++}));const f=[];e.g.forEach((g,gi)=>(OBRA[id+'/'+e.id+gi]||[]).forEach(x=>f.push(x.u)));const es=etEstado(id,e);return {id:e.id,t:e.t,tot:etTot(e),h,ok:es==='ok'?(o.ok[e.id]||''):'',estado:es,f:f.slice(0,12)}})}
+function resumenObra(id){const o=OBRAS[id];return PROT.map(e=>{let h=0;e.g.forEach((g,gi)=>g.i.forEach((x,ii)=>{if(o.c[e.id+'/'+gi+'/'+ii])h++}));const f=[];e.g.forEach((g,gi)=>(OBRA[id+'/'+e.id+gi]||[]).forEach(x=>f.push(x.u)));const es=etEstado(id,e);return {id:e.id,t:e.t,tot:etTot(e),h,ok:es==='ok'?(o.ok[e.id]||''):'',estado:es,f:f.slice(0,12),g:e.g.map((g,gi)=>({t:g.t,n:(OBRA[id+'/'+e.id+gi]||[]).length,i:g.i.map((it,ii)=>[it,o.c[e.id+'/'+gi+'/'+ii]?1:0])}))}})}
 function refrescarResumenes(){try{for(const [id,o] of Object.entries(OBRAS)){const r=resumenObra(id);if(JSON.stringify(r)!==JSON.stringify(o.res||[])){o.res=r;o.t=Date.now();subirObra(id,o)}}lset('manual_obras',OBRAS)}catch(e){}}
 let _tg=null;function guardaPR(){if(!OBRAS[ACT])return;PR.t=Date.now();try{PR.res=resumenObra(ACT)}catch(e){}lset('manual_obras',OBRAS);lset('manual_obra_act',ACT);clearTimeout(_tg);const id=ACT,o=OBRAS[id];_tg=setTimeout(()=>subirObra(id,o),600)}
 function subirObra(id,o,borrar){fetch(API_F,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'obra',id,obra:o,borrar:!!borrar})}).catch(()=>{})}
