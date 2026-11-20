@@ -86,7 +86,7 @@ details.pl .prog{margin-left:6px;font-size:12px;opacity:.7;letter-spacing:0;text
 .n.es-ok{background:#2e9e5b!important;color:#fff!important;box-shadow:none}.n.es-faltafoto{background:#c8463b!important;color:#fff!important;box-shadow:none}.n.es-curso{background:#e0b04a!important;color:#1a1408!important;box-shadow:none}
 em.es-t{font-style:normal;font-weight:600}em.es-ok{color:#4cc27f}em.es-faltafoto{color:#ff7d70}em.es-curso{color:#e8c06a}
 .titman{margin:6px 0 22px;padding:18px 18px 16px;border-radius:20px;text-align:center;background:linear-gradient(158deg,var(--g-b),var(--g-c));box-shadow:inset 0 0 0 1px var(--g-edge)}.titman span{display:block;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}.titman b{display:block;font-size:clamp(28px,7vw,44px);line-height:1.1;font-weight:700}
-#visor{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:16px}#visor.on{display:flex}#visor img{max-width:100%;max-height:100%;border-radius:12px}
+#visor{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:16px}#visor.on{display:flex}#visor img{max-width:100%;max-height:100%;border-radius:12px;user-select:none;-webkit-user-select:none}#visor button{position:absolute;border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:50%;width:46px;height:46px;font-size:26px;line-height:1;cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}#visor .vx{top:calc(14px + env(safe-area-inset-top));right:14px;font-size:20px}#visor .vp{left:10px;top:50%;transform:translateY(-50%)}#visor .vn{right:10px;top:50%;transform:translateY(-50%)}#visor .vp,#visor .vn{display:none}#visor.multi .vp,#visor.multi .vn{display:block}#visor .vc{position:absolute;bottom:calc(18px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#fff;font-size:14px;letter-spacing:.05em}
 html[data-tema=claro] .foto img,html[data-tema=claro] .mini,html[data-tema=claro] #visor img{filter:none}
 .mat{display:flex;flex-wrap:wrap;gap:8px}.mat span{font-size:14px;padding:7px 13px;border-radius:14px;background:linear-gradient(158deg,var(--g-b),var(--g-c));box-shadow:inset 0 1.5px 1px rgba(255,255,255,.3),inset 0 0 0 1px var(--g-edge)}
 ol.pasos{list-style:none;margin:0;padding:0;counter-reset:p}
@@ -214,7 +214,7 @@ function vCap(id){const c=cap(id);if(!c)return vInicio();
  return `<button class="volver" onclick="history.length>1?history.back():ir('capitulos')">${svg('atras')} Capítulos</button>
  <div class="eti">Capítulo ${M.indexOf(c)+1}</div><h1>${esc(c.t)}</h1><p class="sub">${esc(c.d)}</p>
  <div class="lista">${c.s.map((s,i)=>`<button class="fila vid" onclick="ir('s/${c.id}/${s.id}')">${s.foto?`<img class="mini" src="${(OBRA[c.id+'/'+s.id]||[])[0]?OBRA[c.id+'/'+s.id][0].u:((s.reales||[])[0]||s.foto)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;n&quot;>${i+1}</div>'">`:`<div class="n">${i+1}</div>`}<div><b>${esc(s.t)}</b><span>${esc(s.que.length>140?s.que.slice(0,137)+'…':s.que)}</span></div><div class="go">${svg('go')}</div></button>`).join('')}</div>`}
-function vSec(cid,sid){const c=cap(cid),s=secc(cid,sid);if(!s)return vCap(cid);const k=cid+'/'+sid;
+function vSec(cid,sid){const c=cap(cid),s=secc(cid,sid);if(!s)return vCap(cid);const k=cid+'/'+sid;window.GAL=[...new Set([...(OBRA[k]||[]).map(f=>f.u),...(s.reales||[]),...(s.malas||[]),...(s.foto?[s.foto]:[])])];
  const ctrl=(s.ctrl||[]);const i=c.s.indexOf(s),sig=c.s[i+1],ant=c.s[i-1];
  return `<button class="volver" onclick="ir('c/${c.id}')">${svg('atras')} ${esc(c.t)}</button>
  <div class="eti">${esc(c.t)}</div><h1>${esc(s.t)}</h1>
@@ -277,7 +277,7 @@ function vControles(){
  ${OBRAS[ACT]?`<h2>${esc(OBRAS[ACT].nombre)}</h2><p class="ref" style="margin:-6px 0 12px"><em class="es-t es-ok">● Verde</em> completa con fotos · <em class="es-t es-faltafoto">● Rojo</em> faltan fotos · <em class="es-t es-curso">● Amarillo</em> en curso</p><div class="lista">`:`<p class="sub">Elegí o creá una obra para tildar sus controles.</p><div class="lista" style="opacity:.55;pointer-events:none">`}${PROT.map((e,n)=>{const t=etTot(e),h=etHechos(e),ok=PR.ok[e.id],es=etEstado(ACT,e);
   return `<button class="fila vid" onclick="ir('controles/${e.id}')"><div class="n es-${es}">${es==='ok'?'✓':es==='faltafoto'?'!':n+1}</div><div><b>${esc(e.t)}</b><span><em class="es-t es-${es}">${EST_TXT[es]}</em> · ${es==='ok'?'aprobada el '+ok:h+' de '+t+' controles'}</span></div><div class="go">${svg('go')}</div></button>`}).join('')}</div>
  <div class="acc" style="margin-top:16px"><button class="chip vid" onclick="window.print()">Imprimir protocolo</button>${OBRAS[ACT]?`<button class="chip vid" onclick="borrarObra()">Borrar esta obra (Dirección)</button>`:''}</div>`}
-function vEtapa(id){const e=PROT.find(x=>x.id===id);if(!e||!OBRAS[ACT])return vControles();const n=PROT.indexOf(e),t=etTot(e),h=etHechos(e),ok=PR.ok[e.id],sig=PROT[n+1],[vc,vs]=e.ver.split('/');
+function vEtapa(id){const e=PROT.find(x=>x.id===id);if(!e||!OBRAS[ACT])return vControles();window.GAL=e.g.flatMap((g,gi)=>(OBRA[ACT+'/'+e.id+gi]||[]).map(f=>f.u));const n=PROT.indexOf(e),t=etTot(e),h=etHechos(e),ok=PR.ok[e.id],sig=PROT[n+1],[vc,vs]=e.ver.split('/');
  return `<button class="volver" onclick="ir('controles')">${svg('atras')} Controles</button>
  <div class="eti">${esc(OBRAS[ACT].nombre)} · Etapa ${n+1} de ${PROT.length}</div><h1>${esc(e.t)}</h1><p class="sub">${esc(e.d)}</p>
  <div class="acc"><button class="chip vid" onclick="ir('s/${e.ver}')">Ver cómo se hace</button><button class="chip vid" onclick="window.print()">Imprimir</button></div>
@@ -300,6 +300,19 @@ function pintar(){const h=decodeURIComponent(location.hash.slice(1));const p=h.s
 let _ultimo='';window.addEventListener('hashchange',()=>{const h=location.hash;const solo=h.startsWith('#buscar')&&_ultimo.startsWith('#buscar')&&document.activeElement&&document.activeElement.id==='q';_ultimo=h;if(!solo){pintar();window.scrollTo(0,0)}});
 _ultimo=location.hash;pintarTema();pintar();
 </script>
-<div id="visor" onclick="this.classList.remove('on')"><img alt=""></div>
-<script>function verFoto(u){const v=document.getElementById('visor');v.querySelector('img').src=u;v.classList.add('on')}</script>
+<div id="visor"><img alt=""><button class="vx" aria-label="Cerrar">✕</button><button class="vp" aria-label="Anterior">‹</button><button class="vn" aria-label="Siguiente">›</button><div class="vc"></div></div>
+<script>
+(()=>{let L=[],i=0,x0=null;const v=document.getElementById('visor'),im=v.querySelector('img'),c=v.querySelector('.vc');
+ function mostrar(){im.src=L[i];c.textContent=L.length>1?(i+1)+' de '+L.length:'';v.classList.toggle('multi',L.length>1)}
+ function mover(d){if(L.length<2)return;i=(i+d+L.length)%L.length;mostrar()}
+ window.verFoto=function(u){L=(window.GAL||[]).includes(u)?window.GAL.slice():[u];i=Math.max(0,L.indexOf(u));mostrar();v.classList.add('on')};
+ const cerrar=()=>v.classList.remove('on');
+ v.querySelector('.vx').onclick=e=>{e.stopPropagation();cerrar()};v.querySelector('.vp').onclick=e=>{e.stopPropagation();mover(-1)};v.querySelector('.vn').onclick=e=>{e.stopPropagation();mover(1)};
+ v.addEventListener('click',e=>{if(e.target===v)cerrar()});
+ im.addEventListener('click',e=>{e.stopPropagation();if(L.length>1)mover(e.offsetX<im.clientWidth/2?-1:1)});
+ v.addEventListener('touchstart',e=>{x0=e.touches[0].clientX},{passive:true});
+ v.addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>40)mover(dx<0?1:-1)});
+ document.addEventListener('keydown',e=>{if(!v.classList.contains('on'))return;if(e.key==='ArrowRight')mover(1);else if(e.key==='ArrowLeft')mover(-1);else if(e.key==='Escape')cerrar()});
+})();
+</script>
 </body></html>
