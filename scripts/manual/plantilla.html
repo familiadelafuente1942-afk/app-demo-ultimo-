@@ -152,7 +152,7 @@ const total=M.reduce((a,c)=>a+c.s.length,0);
 function ir(r){location.hash=r?'#'+r:'#';}
 function tema(){const c=document.documentElement.getAttribute('data-tema')==='claro';if(c)document.documentElement.removeAttribute('data-tema');else document.documentElement.setAttribute('data-tema','claro');lset('manual_tema',c?'oscuro':'claro');try{localStorage.setItem('manual_tema',c?'oscuro':'claro')}catch(e){}pintarTema()}
 function pintarTema(){$('#b-tema').innerHTML=svg(document.documentElement.getAttribute('data-tema')==='claro'?'luna':'sol');$('#b-buscar').innerHTML=svg('lupa')}
-const SUG=['contrapiso alivianado','pendiente subsuelo','impermeabilización tabiques','compactación','nylon platea','encofrados','niveles','membrana','cloaca pendiente','revoque exterior','porcelanato','puesta a tierra'];
+const SUG=['protex','seal 77 flex baño','contrapiso alivianado','pendiente subsuelo','impermeabilización tabiques','compactación','nylon platea','encofrados','niveles','membrana','cloaca pendiente','revoque exterior','porcelanato','puesta a tierra'];
 function nav(act){const it=[['','Inicio','inicio'],['capitulos','Capítulos','libro'],['buscar','Buscar','lupa'],['controles','Controles','check'],['guardados','Guardados','marca']];
  $('#nav').innerHTML=it.map(([r,l,i])=>`<button onclick="ir('${r}')" ${act===r?'aria-current="page"':''}><span class="o">${svg(i)}</span><span class="l">${svg(i,true)}</span>${l}</button>`).join('')}
 function tarjCap(c){const hechos=c.s.reduce((a,s)=>a+(s.ctrl||[]).filter((x,i)=>CHK[c.id+'/'+s.id+'/'+i]).length,0);
