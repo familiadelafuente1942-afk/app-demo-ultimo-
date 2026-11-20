@@ -1,0 +1,27 @@
+name: Bajar fotos del manual
+on:
+  push:
+    paths: ['manual-fotos/urls.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  bajar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descargar y achicar
+        run: |
+          sudo apt-get install -y -qq imagemagick jq >/dev/null
+          cd manual-fotos
+          for k in $(jq -r 'keys[]' urls.json); do
+            [ -f "$k.jpg" ] && continue
+            u=$(jq -r --arg k "$k" '.[$k]' urls.json)
+            curl -fsSL "$u" -o tmp.jpg && convert tmp.jpg -resize 1200x1200\> -strip -quality 78 "$k.jpg"
+          done
+          rm -f tmp.jpg; ls | wc -l
+      - name: Commit
+        run: |
+          git config user.name "fotos-bot"; git config user.email "actions@users.noreply.github.com"
+          git add manual-fotos
+          git diff --cached --quiet || (git commit -m "Fotos del manual descargadas" && git push)
